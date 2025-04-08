@@ -5,13 +5,12 @@ option.SHADER_VERSION_LABEL = Bliss In-Dev Version
 profile.QUALITY=Quality
 profile.PERFORMANCE=Performance
 
-screen.Misc_Settings = §cDebugging§r/Experimental Settings
-screen.Sun_and_Moon_Colors = Sun/Moon Colors
+
 option.sunPathRotation = Sun Angle
 option.sun_illuminance = Sun Illuminance
 option.moon_illuminance = Moon Illuminance
 option.MOONPHASE_BASED_MOONLIGHT = Moonphase brightness levels
-
+screen.Misc_Settings = §cDebugging§r/Experimental Settings
 screen.Mod_support = Settings For Supported Mods
 
 option.RESOURCEPACK_SKY = Resource Pack Sky
@@ -85,7 +84,12 @@ screen.Direct_Light = Direct Light
             value.entityShadowDistanceMul.0.75 = 75% of Shadow Distance
             value.entityShadowDistanceMul.1.00 = 100% of Shadow Distance
 
+    screen.Sun_and_Moon_Colors = Sun/Moon Colors
+	option.Sun_temp = Sun Temperature
+	option.Moon_temp = Moon Temperature
+
     screen.Filtering = Shadow Filtering Settings
+	option.BASIC_SHADOW_FILTER = Basic Shadow Filter
         option.SHADOW_FILTER_SAMPLE_COUNT = Basic Shadow Filter Samples
         option.Min_Shadow_Filter_Radius = Minimum Shadow filter Radius
         option.Variable_Penumbra_Shadows = Variable Penumbra Shadows
@@ -113,18 +117,21 @@ screen.Direct_Light = Direct Light
         option.LPV_VL_FOG_ILLUMINATION = Fog Light Propagation
         option.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS = Fog Light Propagation Brightness
             suffix.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS=%
+	option.VANILLA_LIGHTMAP_MASK = Vanilla Lightmap Mask
 
 screen.Subsurface_Scattering = Sub-Surface Scattering
     option.LabSSS_Curve = LabSSS Curve
-    option.MISC_BLOCK_SSS = SSS for random blocks
-    option.MOB_SSS = SSS for mobs
-    option.Ambient_SSS = SSS from the sky
+    option.MISC_BLOCK_SSS = SSS for Random Blocks
+    option.MOB_SSS = SSS for Mobs
+    option.Ambient_SSS = SSS from the Sky
     option.ambientsss_brightness = Sky SSS Brightness
     option.SSS_TYPE = Mode
         value.SSS_TYPE.0 = None
         value.SSS_TYPE.1 = Hardcoded only
         value.SSS_TYPE.2 = Hardcoded + LabSSS
         value.SSS_TYPE.3 = LabSSS only
+    option.sss_density_multiplier = SSS Density Multiplier
+    option.sss_absorbance_multiplier = SSS Absorbance Multiplier
 
 
 screen.Ambient_light = Ambient Light
@@ -142,6 +149,7 @@ screen.Ambient_light = Ambient Light
             value.indirect_effect.2 = GTAO
             value.indirect_effect.3 = RTAO
             value.indirect_effect.4 = SSGI
+	option.HANDHELD_LIGHT_RANGE = Handheld Light Range
 
     screen.Ambient_Colors =  Ambient Light Color
         option.AmbientLight_R = Red Amount

@@ -5,7 +5,7 @@ option.SHADER_VERSION_LABEL = Bliss In-Dev Version
 profile.QUALITY=Quality
 profile.PERFORMANCE=Performance
 
-
+option.OLD_LIGHTLEAK_FIX = Lightleak Fix
 option.sunPathRotation = Sun Angle
 option.sun_illuminance = Sun Illuminance
 option.moon_illuminance = Moon Illuminance

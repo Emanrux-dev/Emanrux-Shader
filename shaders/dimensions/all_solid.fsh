@@ -448,7 +448,7 @@ void main() {
 	#ifdef DH_CHUNK_FADING
 		#if defined DISTANT_HORIZONS
 			float viewDist = length(playerpos); 
-			float ditherFade = smoothstep(0.96*far, far, viewDist);
+			float ditherFade = smoothstep(1.00*far, 1.04*far, viewDist);
 
 			vec4 Albedo; 
 			Albedo.rgb = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD).rgb * color.rgb;

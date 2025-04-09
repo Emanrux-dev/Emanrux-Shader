@@ -45,7 +45,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		return shape;
 	}
 	if(LayerIndex == LARGECUMULUS_LAYER){
-		coverage = mix(parameters.largeCumulus.x, 1.15, rainStrength);
+		coverage = mix(parameters.largeCumulus.x, 1.15, rainStrength*Rain_coverage);
 		
 		largeCloud = texture2D(noisetex, (samplePos.zx + cloud_movement*2.0)/10000.0 * CloudLayer1_scale).b;
 		smallCloud = texture2D(noisetex, (samplePos.zx - cloud_movement*2.0)/2500.0 * CloudLayer1_scale).b;
@@ -58,7 +58,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 
 	}
 	if(LayerIndex == SMALLCUMULUS_LAYER){
-		coverage = mix(parameters.smallCumulus.x, 1.25, rainStrength);
+		coverage = mix(parameters.smallCumulus.x, 1.25, rainStrength*Rain_coverage);
 
 		largeCloud = texture2D(noisetex, (samplePos.xz + cloud_movement)/5000.0 * CloudLayer0_scale).b;
 		smallCloud = 1.0-texture2D(noisetex, (samplePos.xz - cloud_movement)/500.0 * CloudLayer0_scale).r;

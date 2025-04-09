@@ -4,6 +4,7 @@
 #include "/lib/blocks.glsl"
 #include "/lib/entities.glsl"
 #include "/lib/items.glsl"
+#include "/lib/bayer_matrix.glsl"
 
 flat varying int NameTags;
 
@@ -442,9 +443,22 @@ void main() {
 	//////////////////////////////// 				////////////////////////////////
 	////////////////////////////////	ALBEDO		////////////////////////////////
 	//////////////////////////////// 				//////////////////////////////// 
+
 	float textureLOD = bias();
-	vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD) * color;
-	
+	#ifdef DH_CHUNK_FADING
+		#if defined DISTANT_HORIZONS
+			float viewDist = length(playerpos); 
+			float ditherFade = smoothstep(0.96*far, far, viewDist);
+
+			vec4 Albedo; 
+			Albedo.rgb = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD).rgb * color.rgb;
+			Albedo.a = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD).a * color.a * step(ditherFade, bayerDither());
+		#else
+			vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD) * color;
+		#endif
+	#else 
+		vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD) * color;
+	#endif
 	
 	#if defined HAND
 		if (Albedo.a < 0.1) discard;

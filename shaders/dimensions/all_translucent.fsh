@@ -1,4 +1,5 @@
 #include "/lib/settings.glsl"
+#include "/lib/bayer_matrix.glsl"
 
 #undef FLASHLIGHT_BOUNCED_INDIRECT
 
@@ -434,6 +435,10 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 /////////////////////////////////// ALBEDO /////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+	// DH FADING //
+	float viewDist = length((mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz)); 
+	float ditherFade = smoothstep(0.96*far, 0.97*far, viewDist);
+
 	gl_FragData[0] = texture2D(texture, lmtexcoord.xy, Texture_MipMap_Bias) * color;
 
 	float UnchangedAlpha = gl_FragData[0].a;
@@ -452,6 +457,11 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			if (isWater){
 				Albedo = vec3(0.0);
 				gl_FragData[0].a = 1.0/255.0;
+
+				if (step(ditherFade, bayerDither()) == 0.0) {
+					discard; 
+				}
+				gl_FragData[0].a = 0.0;
 			}
 		#endif
 	#endif

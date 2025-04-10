@@ -453,19 +453,20 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			if (isWater){
 				Albedo = vec3(0.0);
 				gl_FragData[0].a = 1.0/255.0;
-					#ifdef DH_CHUNK_FADING
-						#if defined DISTANT_HORIZONS
-						
-							float viewDist = length((mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz)); 
-							float ditherFade = smoothstep(1.03*far, 1.06*far, viewDist);
 
-							if (step(ditherFade, bayerDither()) == 0.0) {
-								discard; 
-							}
-						#endif
-					#endif
 				gl_FragData[0].a = 0.0;
 			}
+			#ifdef DH_CHUNK_FADING
+				#if defined DISTANT_HORIZONS
+				
+					float viewDist = length((mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz)); 
+					float ditherFade = smoothstep(1.03*far, 1.06*far, viewDist);
+
+					if (step(ditherFade, bayerDither()) == 0.0) {
+						discard; 
+					}
+				#endif
+			#endif
 		#endif
 	#endif
 

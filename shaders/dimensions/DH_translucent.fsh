@@ -3,6 +3,7 @@
 #include "/lib/res_params.glsl"
 #include "/lib/color_transforms.glsl"
 #include "/lib/projections.glsl"
+#include "/lib/bayer_matrix.glsl"
 
 #ifdef OVERWORLD_SHADER
 	#define WATER_SUN_SPECULAR
@@ -452,4 +453,18 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
    
     gl_FragData[1] = vec4(Albedo, material);
 }
+
+	#ifdef DH_CHUNK_FADING
+		#if defined DISTANT_HORIZONS
+
+			vec3 viewPos = pos.xyz;
+			float viewDist = length(mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz); 
+			float ditherFade = smoothstep(max(far-2,2), far, viewDist);
+
+			if (step(bayerDither(), ditherFade) == 0.0) {
+				discard; 
+			}
+		#endif
+	#endif
+
 }

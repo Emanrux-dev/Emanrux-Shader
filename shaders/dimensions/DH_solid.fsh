@@ -1,4 +1,5 @@
 #include "/lib/settings.glsl"
+#include "/lib/bayer_matrix.glsl"
 
 
 varying vec4 pos;
@@ -224,4 +225,12 @@ void main() {
 		gl_FragData[2].b = SSSAMOUNT;
 	#endif
     
+    #ifdef DH_CHUNK_FADING
+        float viewDist = length(localPos.xyz); 
+        float ditherFade = smoothstep(max(far-6,6), far, viewDist);
+
+        if (step(bayerDither(), ditherFade) == 0.0) {
+            discard; 
+        }
+    #endif
 }

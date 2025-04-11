@@ -454,7 +454,6 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 				Albedo = vec3(0.0);
 				gl_FragData[0].a = 1.0/255.0;
 
-				gl_FragData[0].a = 0.0;
 			}
 			#ifdef DH_CHUNK_FADING
 				#if defined DISTANT_HORIZONS
@@ -780,13 +779,28 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#endif
 	
 	#if defined DISTANT_HORIZONS && defined DH_OVERDRAW_PREVENTION && !defined HAND
-		#if OVERDRAW_MAX_DISTANCE == 0
-			float maxOverdrawDistance = far;
+		#ifdef DH_CHUNK_FADING
+			float maxOverdrawDistance = far * 4;
 		#else
-			float maxOverdrawDistance = OVERDRAW_MAX_DISTANCE;
+			#if OVERDRAW_MAX_DISTANCE == 0
+				float maxOverdrawDistance = far;
+			#else
+				float maxOverdrawDistance = OVERDRAW_MAX_DISTANCE;
+			#endif
 		#endif
 
-		bool WATER = texture2D(colortex7, gl_FragCoord.xy*texelSize).a > 0.0 && length(feetPlayerPos) > clamp(far-16*4, 16, maxOverdrawDistance) && texture2D(depthtex1, gl_FragCoord.xy*texelSize).x >= 1.0;
+		#ifdef DH_CHUNK_FADING 
+
+			
+			float farmod = far * 4 + 16;
+
+		#else
+
+			float farmod = far ;
+
+		#endif	 
+
+		bool WATER = texture2D(colortex7, gl_FragCoord.xy*texelSize).a > 0.0 && length(feetPlayerPos) > clamp(farmod-16*4, 16, maxOverdrawDistance) && texture2D(depthtex1, gl_FragCoord.xy*texelSize).x >= 1.0;
 
 		if(WATER) {
 			gl_FragData[0].a = 0.0;

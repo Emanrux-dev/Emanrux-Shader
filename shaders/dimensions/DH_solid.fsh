@@ -227,7 +227,7 @@ void main() {
     
     #ifdef DH_CHUNK_FADING
         float viewDist = length(localPos.xyz); 
-        float ditherFade = smoothstep(max(far-6,6), far, viewDist);
+        float ditherFade = smoothstep(max(far-7,7), far-1, viewDist);
 
         if (step(bayerDither(), ditherFade) == 0.0) {
             discard; 

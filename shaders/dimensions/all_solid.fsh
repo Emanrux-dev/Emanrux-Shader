@@ -445,19 +445,16 @@ void main() {
 	//////////////////////////////// 				//////////////////////////////// 
 
 	float textureLOD = bias();
-	#ifdef DH_CHUNK_FADING
-		#if defined DISTANT_HORIZONS
-			float viewDist = length(playerpos); 
-			float ditherFade = smoothstep(0.98*far, 1.03*far, viewDist);
 
-			vec4 Albedo; 
-			Albedo.rgb = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD).rgb * color.rgb;
-			Albedo.a = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD).a * color.a * step(ditherFade, bayerDither());
-		#else
-			vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD) * color;
+	vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD) * color;
+
+	#if defined DISTANT_HORIZONS
+		#ifdef DH_CHUNK_FADING
+			float viewDist = length(playerpos); 
+			float ditherFade = smoothstep(0.98 * far, 1.03 * far, viewDist);
+
+			Albedo.a *= step(ditherFade, bayerDither());
 		#endif
-	#else 
-		vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD) * color;
 	#endif
 	
 	#if defined HAND

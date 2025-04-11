@@ -1,4 +1,5 @@
 #include "/lib/settings.glsl"
+#include "/lib/bayer_matrix.glsl"
 
 // #if defined END_SHADER || defined NETHER_SHADER
 // 	#undef IS_LPV_ENABLED
@@ -69,6 +70,8 @@ flat varying float HELD_ITEM_BRIGHTNESS;
 
 uniform mat4 gbufferPreviousModelView;
 uniform vec3 previousCameraPosition;
+
+varying vec4 pos;
 
 #include "/lib/util.glsl"
 #include "/lib/projections.glsl"
@@ -491,6 +494,20 @@ void main() {
 
 		gl_FragData[0].rgb *= 0.1;
 		
+
 	#endif
+
+	#if defined DISTANT_HORIZONS
+		#ifdef DH_CHUNK_FADING
+
+			float viewDist = length(mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz); 
+			float ditherFade = smoothstep(0.98*far, 1.0*far, viewDist);
+
+			if (step(ditherFade, bayerDither()) == 0.0) {
+				discard; 
+			}
+		#endif
+	#endif
+
 #endif
 }

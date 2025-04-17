@@ -3,7 +3,6 @@
 #include "/lib/res_params.glsl"
 #include "/lib/color_transforms.glsl"
 #include "/lib/projections.glsl"
-#include "/lib/bayer_matrix.glsl"
 
 #ifdef OVERWORLD_SHADER
 	#define WATER_SUN_SPECULAR

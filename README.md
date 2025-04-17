@@ -1,4 +1,7 @@
 # Bliss
+
+This fork features extra mod compat, rain cloud and fog tweaks as well as support for Distant Horizons chunk fading.
+
 <img src="https://github.com/X0nk/Bliss-Shader/assets/122314734/873c788c-5a48-46c0-9fb5-eac57b4ffa27" width="100%" height="100%">
 I always loved chocapic's shaders, and how customizeable it was. But i wanted MORE.
 i eventually started tweaking the shader, adding settings, breaking stuff, and after a while wanted to impose my own visual style onto the shader.

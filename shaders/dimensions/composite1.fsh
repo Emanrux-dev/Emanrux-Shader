@@ -1300,14 +1300,34 @@ void main() {
 			#if RESOURCEPACK_SKY == 1 || RESOURCEPACK_SKY == 0 || RESOURCEPACK_SKY == 3
 				// vec3 orbitstar = vec3(feetPlayerPos_normalized.x,abs(feetPlayerPos_normalized.y),feetPlayerPos_normalized.z); orbitstar.x -= WsunVec.x*0.2;
 				vec3 orbitstar = normalize(mat3(gbufferModelViewInverse) * toScreenSpace(vec3(texcoord/RENDER_SCALE,1.0)));
-				// float radiance = 2.39996 - (worldTime + worldDay*24000.0) / 24000.0;
-				float radiance = 2.39996 ;
-				// float radiance = 2.39996 + frameTimeCounter;
-				mat2 rotationMatrix  = mat2(vec2(cos(radiance),  -sin(radiance)),  vec2(sin(radiance),  cos(radiance)));
-				
-				orbitstar.xy *= rotationMatrix;
-				
-  				#if defined OVERWORLD_SHADER && defined TWILIGHT_FOREST_FLAG
+
+				float radiance = worldTime / 24000.0 * 6.28319;
+
+				float sunRotRad = radians(sunPathRotation);
+
+				vec3 rotationAxis = vec3(0.0, sin(sunRotRad), cos(sunRotRad));
+
+				float c = cos(radiance);
+				float s = sin(radiance);
+				float t = 1.0 - c;
+
+				mat3 tiltRotation = mat3(
+					t * rotationAxis.x * rotationAxis.x + c,
+					t * rotationAxis.x * rotationAxis.y - s * rotationAxis.z,
+					t * rotationAxis.x * rotationAxis.z + s * rotationAxis.y,
+					
+					t * rotationAxis.x * rotationAxis.y + s * rotationAxis.z,
+					t * rotationAxis.y * rotationAxis.y + c,
+					t * rotationAxis.y * rotationAxis.z - s * rotationAxis.x,
+					
+					t * rotationAxis.x * rotationAxis.z - s * rotationAxis.y,
+					t * rotationAxis.y * rotationAxis.z + s * rotationAxis.x,
+					t * rotationAxis.z * rotationAxis.z + c
+				);
+
+				orbitstar = tiltRotation * orbitstar;
+
+				#if defined OVERWORLD_SHADER && defined TWILIGHT_FOREST_FLAG
 					Background += stars(orbitstar) * 100.0;
   				#else
 					Background += stars(orbitstar) * 10.0 * clamp(-unsigned_WsunVec.y*2.0,0.0,1.0);

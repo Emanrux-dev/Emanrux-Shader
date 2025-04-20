@@ -125,11 +125,11 @@ void VolumeBounds(inout float Volume, vec3 Origin){
 	Origin2.y *= 0.8;
     float Center1 = length(Origin2);
 
-    float Bounds = max(1.0 - Center1 / 75.0, 0.0) * 5.0;
+    float Bounds = max(1.0 - Center1 / 95.0, 0.0) * 5.0;
 
 
     float radius = 150.0;
-    float thickness = 50.0 * radius;
+    float thickness = 25.0 * radius;
     float Torus =  (thickness - clamp( pow( length( vec2(length(Origin.xz) - radius, Origin2.y) ),2.0) - radius, 0.0, thickness) ) / thickness;
 	
 	Origin2.xz *= 0.5;
@@ -154,10 +154,10 @@ float fogShape(in vec3 pos){
     SwirlAroundOrigin(samplePos, pos);
 	
 	float noise = densityAtPosFog(samplePos * 12.0);
-    float erosion = 1.0-densityAtPosFog((samplePos - frameTimeCounter/20) * (124 + (1-noise)*7));
+    float erosion = 1.0-densityAtPosFog((samplePos - frameTimeCounter/18) * (124 + (1-noise)*7));
     
 
-	float clumpyFog = max(exp(noise * -mix(10,4,vortexBounds))*mix(2,1,vortexBounds) - erosion*0.3, 0.0);
+	float clumpyFog = max(exp(noise * -mix(10,4,vortexBounds))*mix(2,1,vortexBounds) - erosion*0.32, 0.0);
     
 	// apply limts
     VolumeBounds(clumpyFog, pos);
@@ -184,8 +184,8 @@ vec3 LightSourceColors(float vortexBounds, float lightningflash){
     // vec3 vortexColor = vec3(0.7,0.88,1.0); 
     // vec3 lightningColor = vec3(ORB_R,ORB_G,ORB_B);
 
-    vec3 vortexColor = vec3(0.5,0.68,1.0);
-    vec3 lightningColor = vec3(1.0,0.3,0.2) * lightningflash;
+    vec3 vortexColor = vec3(0.3,0.2,1.0);
+    vec3 lightningColor = vec3(0.75,0.5,1.0) * lightningflash;
 
 	#ifdef THE_ORB
 		return vec3(ORB_R, ORB_G, ORB_B) * ORB_ColMult;
@@ -229,18 +229,30 @@ vec4 GetVolumetricFog(
 
 	vec3 wpos = mat3(gbufferModelViewInverse) * viewPosition + gbufferModelViewInverse[3].xyz;
 	vec3 dVWorld = (wpos-gbufferModelViewInverse[3].xyz);
+
+	float verticalFactor = abs(normalize(dVWorld).y);
+	verticalFactor = pow(verticalFactor, 2.0);
+
+	#if defined DISTANT_HORIZONS
+		int SAMPLECOUNT = 17;
+		float expFactor = 35.0;
+		float maxDist = mix(840.0, 370.0, verticalFactor);
+	#else
+		int SAMPLECOUNT = 15;
+		float expFactor = 11.0;
+		float maxDist = mix(380.0, 300.0, verticalFactor);
+	#endif
+
 	vec3 progressW = vec3(0.0);
 
-	float maxLength = min(length(dVWorld),32.0 * 12.0)/length(dVWorld);
+	float maxLength = min(length(dVWorld), maxDist)/length(dVWorld);
 	
 	dVWorld *= maxLength;
 
 	float dL = length(dVWorld);
-	float expFactor = 11.0;
+	
 	
 	/// -------------  COLOR/LIGHTING STUFF ------------- \\\
-
-	int SAMPLECOUNT = 16;
 
 	vec3 color = vec3(0.0);
 	float absorbance = 1.0;
@@ -295,7 +307,7 @@ vec4 GetVolumetricFog(
 		//------ HAZE EFFECT
 			// dont make haze contrube to absorbance.
 			float hazeDensity = 0.001;
-			vec3 hazeLighting = vec3(0.3,0.6,1.0) * skyPhase;
+			vec3 hazeLighting = vec3(0.37,0.32,0.75) * skyPhase;
 			color += (hazeLighting - hazeLighting*exp(-hazeDensity*dd*dL)) * absorbance;
 
 

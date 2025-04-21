@@ -464,13 +464,15 @@ vec4 GetVolumetricClouds(
 
 	float maxSamples = 15.0;
 	float minSamples = 10.0;
-	int samples = int(clamp(maxSamples / sqrt(exp2(NormPlayerPos.y)),0.0, minSamples));
+	int samples = int(clamp(maxSamples / sqrt(exp2(NormPlayerPos.y*2)),minSamples , maxSamples));
 	// int samples = 30;
    
    	///------- setup the ray
 	// vec3 cloudDist = vec3(1.0); cloudDist.xz = mix(vec2(255.0), vec2(5.0), clamp(maxHeight - cameraPosition.y,0.0,1.0));
 	vec3 cloudDist = vec3(1.0);
-	cloudDist.xz = mix(vec2(255.0), vec2(5.0), clamp(cameraPosition.y - minHeight,0.0,clamp((maxHeight-5) - cameraPosition.y ,0.0,1.0)));
+
+	float cloudMix = clamp(smoothstep(minHeight - 400.0, minHeight + 45.0, cameraPosition.y),0.0,clamp(smoothstep(maxHeight + 300.0, maxHeight - 60.0, cameraPosition.y) ,0.0,1.0));
+	cloudDist.xz = mix(vec2(255.0), vec2(6.2), cloudMix);
 
 	// vec3 rayDirection = NormPlayerPos.xyz * (cloudheight/abs(NormPlayerPos.y)/samples);
 	vec3 rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/samples);
@@ -520,7 +522,8 @@ vec4 GetVolumetricClouds(
 			minHeight = CloudLayer1_height;
 			maxHeight = cloudheight + minHeight;
 
-			cloudDist.xz = mix(vec2(255.0), vec2(5.0), clamp(cameraPosition.y - minHeight,0.0,clamp((maxHeight-15) - cameraPosition.y ,0.0,1.0)));
+			cloudMix = clamp(smoothstep(minHeight - 400.0, minHeight + 45.0, cameraPosition.y),0.0,clamp(smoothstep(maxHeight + 300.0, maxHeight - 60.0, cameraPosition.y) ,0.0,1.0));
+			cloudDist.xz = mix(vec2(255.0), vec2(6.2), cloudMix);
 			rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/samples);
 			rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
 

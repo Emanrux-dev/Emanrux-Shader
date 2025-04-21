@@ -6,6 +6,10 @@ profile.QUALITY=Quality
 profile.PERFORMANCE=Performance
 
 option.OLD_LIGHTLEAK_FIX = Lightleak Fix
+option.CAVE_DETECTION = Cave detection
+    value.CAVE_DETECTION.0.0 = ON
+    value.CAVE_DETECTION.1.0 = Y < 62.0
+    value.CAVE_DETECTION.2.0 = OFF
 option.sunPathRotation = Sun Angle
 option.sun_illuminance = Sun Illuminance
 option.moon_illuminance = Moon Illuminance

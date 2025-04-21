@@ -572,8 +572,17 @@ void main() {
 
   	  float skyhole = pow(clamp(1.0-pow(max(playerPos_normalized.y - 0.6,0.0)*5.0,2.0),0.0,1.0),2);
 
-      color.rgb = mix(color.rgb + cavefogCol * caveDetection, cavefogCol, z >= 1.0 ? skyhole * caveDetection : 0.0);
-      
+      #if (CAVE_DETECTION == 0.0) || (CAVE_DETECTION == 1.0)
+        #if (CAVE_DETECTION == 1.0)
+          float caveFactor = 1-smoothstep(64.0, 67.0, cameraPosition.y);
+        #else
+          float caveFactor = 1.0;
+        #endif
+      #else
+        float caveFactor = 0.0;
+      #endif
+
+      color.rgb = mix(color.rgb + cavefogCol * caveDetection, cavefogCol, z >= 1.0 ? skyhole * caveDetection * caveFactor: 0.0);
     }
 #endif
 

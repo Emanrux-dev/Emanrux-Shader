@@ -5,6 +5,7 @@
 #include "/lib/entities.glsl"
 #include "/lib/items.glsl"
 #include "/lib/bayer_matrix.glsl"
+#include "/lib/hsv.glsl"
 
 flat varying int NameTags;
 
@@ -304,6 +305,12 @@ void convertHandDepth(inout float depth) {
     float ndcDepth = depth * 2.0 - 1.0;
     ndcDepth /= MC_HAND_DEPTH;
     depth = ndcDepth * 0.5 + 0.5;
+}
+
+float getEmission(vec3 Albedo) {
+	vec3 hsv = RgbToHsv(Albedo.rgb);
+    float emissive = smoothstep(0.05, 0.35, hsv.y) * pow(hsv.z, 3.5);
+    return emissive * 0.5;
 }
 
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -608,12 +615,12 @@ void main() {
 		#endif
 
 		#if EMISSIVE_TYPE == 1
-			gl_FragData[1].a = EMISSIVE;
+			gl_FragData[1].a = getEmission(Albedo.rgb) * EMISSIVE;
 		#endif
 
 		#if EMISSIVE_TYPE == 2
 			gl_FragData[1].a = SpecularTex.a;
-			if(SpecularTex.a <= 0.0) gl_FragData[1].a = EMISSIVE;
+			if(SpecularTex.a <= 0.0) gl_FragData[1].a =getEmission(Albedo.rgb) * EMISSIVE;
 		#endif
 
 		#if EMISSIVE_TYPE == 3		

@@ -71,7 +71,6 @@ flat varying float HELD_ITEM_BRIGHTNESS;
 uniform mat4 gbufferPreviousModelView;
 uniform vec3 previousCameraPosition;
 
-varying vec4 pos;
 
 #include "/lib/util.glsl"
 #include "/lib/projections.glsl"

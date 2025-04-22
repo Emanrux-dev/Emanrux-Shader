@@ -278,7 +278,17 @@ void main() {
 
 	// normal block lightsources		
 	if(mc_Entity.x >= 100 && mc_Entity.x < 300) EMISSIVE = 0.5;
+
+	if(mc_Entity.x == 266) EMISSIVE = 0.2; // sculk stuff
+
+	if(mc_Entity.x == 195) EMISSIVE = 0.3; // glow lichen
+
+	if(mc_Entity.x == 185) EMISSIVE = 1.5; // crying obsidian
+
+	if(mc_Entity.x == 105) EMISSIVE = 2.0; // brewing stand
 	
+	if(mc_Entity.x == 236) EMISSIVE = 1.0; // respawn anchor
+
 	// special cases light lightning and beacon beams...	
 	#ifdef ENTITIES
 		if(entityId == ENTITY_LIGHTNING){

@@ -532,7 +532,7 @@ void main() {
 		#ifdef CAVE_FOG
 			#if (CAVE_DETECTION == 0.0) || (CAVE_DETECTION == 1.0)
 				#if (CAVE_DETECTION == 1.0)
-					float caveFactor = 1-smoothstep(64.0, 67.0, cameraPosition.y);
+					float caveFactor = 1-smoothstep(60.0, 63.0, cameraPosition.y);
 				#else
 					float caveFactor = 1.0;
 				#endif

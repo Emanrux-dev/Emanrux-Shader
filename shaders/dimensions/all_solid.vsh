@@ -281,7 +281,7 @@ void main() {
 
 	if(mc_Entity.x == 266) EMISSIVE = 0.2; // sculk stuff
 
-	if(mc_Entity.x == 195) EMISSIVE = 0.3; // glow lichen
+	if(mc_Entity.x == 195) EMISSIVE = 2.3; // glow lichen
 
 	if(mc_Entity.x == 185) EMISSIVE = 1.5; // crying obsidian
 

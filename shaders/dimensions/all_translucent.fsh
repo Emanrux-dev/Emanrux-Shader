@@ -555,7 +555,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	TangentNormal = NormalTex.xy;
 	
 	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
-		normal = applyBump(tbnMatrix, NormalTex.xyz, PHYSICS_OCEAN_TRANSITION);
+		normal = 0.5*(applyBump(tbnMatrix, NormalTex.xyz, PHYSICS_OCEAN_TRANSITION) + applyBump(tbnMatrix, NormalTex.xyz, 1.0));
 	#else
 		normal = applyBump(tbnMatrix, NormalTex.xyz, 1.0);
 	#endif

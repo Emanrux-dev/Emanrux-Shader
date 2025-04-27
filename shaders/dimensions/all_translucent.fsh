@@ -469,6 +469,10 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		#endif
 	#endif
 
+	#if defined LIGHTNING
+		Albedo = vec3(1.0,1.5,4.0);
+	#endif
+
 	#ifdef ENTITIES
 		Albedo.rgb = mix(Albedo.rgb, entityColor.rgb, clamp(entityColor.a*1.5,0,1));
 	#endif

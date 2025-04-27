@@ -397,9 +397,13 @@ vec4 raymarchCloud(
 					lighting = lighting * distancefog + atmosphereHaze;
 
 					float horizontalDist = length((rayPosition.xz - cameraPosition.xz) - lightningBoltPosition.xz);
-					if (horizontalDist < 2500.0 && lightningBoltPosition.xyz != vec3(0.0,0.0,0.0)) {
-						float lightningIntensity = exp(-horizontalDist * 0.04) * density * smoothstep(0.0, 0.02, fract(frameTimeCounter)) * lightningFlash;
-						lighting = mix(lighting, vec3(20.0), lightningIntensity);
+					if (horizontalDist < 2500.0 && lightningBoltPosition.xyz != vec3(0.0)) {
+						float noise = fract(sin(dot(rayPosition.xz, vec2(12.9898,78.233))) * 43758.5453);
+						float distortion = 0.5 + noise;
+						float distortedDist = horizontalDist * distortion;
+
+						float lightningIntensity = exp(-distortedDist * 0.04) * density * smoothstep(0.0, 0.02, fract(frameTimeCounter)) * lightningFlash;
+						lighting = mix(lighting, vec3(15.0,15.0,25.0), lightningIntensity);
 					}
 
 					float densityCoeff = exp(-distanceFactor*shapeWithDensityFaded);

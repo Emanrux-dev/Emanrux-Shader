@@ -289,6 +289,10 @@ void main() {
 	
 	if(mc_Entity.x == 236) EMISSIVE = 1.0; // respawn anchor
 
+	if(mc_Entity.x == 101) EMISSIVE = 0.7; // large amethyst bud
+
+	if(mc_Entity.x == 103) EMISSIVE = 1.0; // amethyst cluster
+
 	// special cases light lightning and beacon beams...	
 	#ifdef ENTITIES
 		if(entityId == ENTITY_LIGHTNING){

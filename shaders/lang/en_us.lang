@@ -208,7 +208,8 @@ screen.Clouds = Cloud Settings
     option.CLOUDS_QUALITY = Cloud Resolution Scaling
     option.CLOUDS_SHADOWS = Cloud Shadows
     option.Cloud_Speed = Cloud Speed Multiplier
-    option.Rain_coverage = Coverage When Raining
+    option.Rain_coverage = Extra Rain Coverage
+    option.Thunder_coverage = Extra Thunder Coverage
     option.Daily_Weather = Daily Weather
 
     option.CloudLayer0          = Small Cumulus Clouds
@@ -655,7 +656,9 @@ screen.Clouds.comment = Configure settings related to the raymarched volumetric 
     option.Daily_Weather.comment = Toggle the weather that changes every day. §bWhat is this?§r There are 10 weather profiles that the shader cycles through every day. You cannot change any cloud coverage settings when this is enabled. §aPERFORMANCE COST:§r low
     option.CHOOSE_RANDOM_WEATHER_PROFILE.comment = §bWhat is this?§r Configure the shader to randomly choose the weather from one of the days below. When this is turned off, the shader will choose the day in order.
     option.Cloud_Speed.comment = Configure how fast the clouds move as the day goes by.
-    option.Rain_coverage.comment = Configure how much of the sky the clouds cover during rain.
+    option.Rain_coverage.comment = Add cloud coverage during rain.
+    option.Thunder_coverage.comment = Add cloud coverage during thunder. (Rain coverage gets added too!)
+
 
 screen.World.comment = Configure settings for various things that happen in the world, from waving plants to water related settings.
     screen.Water.comment = Configure settings related to the water.

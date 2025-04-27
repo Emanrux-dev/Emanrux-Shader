@@ -2,9 +2,24 @@
 #define LARGECUMULUS_LAYER 1
 #define SMALLCUMULUS_LAYER 0
 
+uniform float thunderStrength;
+uniform int entityId;
 uniform int worldDay;
 uniform int worldTime;
 float cloud_movement = (worldTime  + mod(worldDay,100)*24000.0) / 24.0 * Cloud_Speed;
+
+float lightningTimer = floor(frameTimeCounter * 10.0);
+float randomSeed = fract(sin(dot(vec2(lightningTimer), vec2(12.9898,78.233))) * 43758.5453);
+float lightningFlash = mix(0.5, 2.5, randomSeed);
+
+float getRainDensity(float currentDensity) {
+	float extraDensity = currentDensity;
+
+	if (currentDensity < 0.4) {
+		extraDensity = rainStrength * 0.2 + thunderStrength * 0.2;
+	}
+	return extraDensity;
+}
 
 float densityAtPos(in vec3 pos){
 	pos /= 18.;
@@ -45,8 +60,10 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		return shape;
 	}
 	if(LayerIndex == LARGECUMULUS_LAYER){
-		coverage = mix(parameters.largeCumulus.x, 1.15, rainStrength*Rain_coverage);
-		
+		coverage = parameters.largeCumulus.x;
+		coverage += Rain_coverage * rainStrength;
+		coverage += Thunder_coverage * thunderStrength;
+
 		largeCloud = texture2D(noisetex, (samplePos.zx + cloud_movement*2.0)/10000.0 * CloudLayer1_scale).b;
 		smallCloud = texture2D(noisetex, (samplePos.zx - cloud_movement*2.0)/2500.0 * CloudLayer1_scale).b;
 		
@@ -58,7 +75,9 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 
 	}
 	if(LayerIndex == SMALLCUMULUS_LAYER){
-		coverage = mix(parameters.smallCumulus.x, 1.25, rainStrength*Rain_coverage);
+		coverage = parameters.smallCumulus.x;
+		coverage += Rain_coverage * rainStrength;
+		coverage += Thunder_coverage * thunderStrength;
 
 		largeCloud = texture2D(noisetex, (samplePos.xz + cloud_movement)/5000.0 * CloudLayer0_scale).b;
 		smallCloud = 1.0-texture2D(noisetex, (samplePos.xz - cloud_movement)/500.0 * CloudLayer0_scale).r;
@@ -139,11 +158,11 @@ float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 
 		#ifdef CloudLayer0
 			startPosition = playerPos + sunVector / abs(sunVector.y) * max((CloudLayer0_height + 20.0) - playerPos.y, 0.0);
-			cloudShadows = getCloudShape(SMALLCUMULUS_LAYER, 0, startPosition, CloudLayer0_height, CloudLayer0_height+90.0)*parameters.smallCumulus.y;
+			cloudShadows = getCloudShape(SMALLCUMULUS_LAYER, 0, startPosition, CloudLayer0_height, CloudLayer0_height+90.0)*(getRainDensity(parameters.smallCumulus.y));
 		#endif
 		#ifdef CloudLayer1
 			startPosition = playerPos + sunVector / abs(sunVector.y) * max((CloudLayer1_height + 20.0) - playerPos.y, 0.0);
-			cloudShadows += getCloudShape(LARGECUMULUS_LAYER, 0, startPosition, CloudLayer1_height, CloudLayer1_height+90.0)*parameters.largeCumulus.y;
+			cloudShadows += getCloudShape(LARGECUMULUS_LAYER, 0, startPosition, CloudLayer1_height, CloudLayer1_height+90.0)*(getRainDensity(parameters.largeCumulus.y));
 		#endif
 		#ifdef CloudLayer2
 			startPosition = playerPos + sunVector / abs(sunVector.y) * max(CloudLayer2_height - playerPos.y, 0.0);
@@ -245,7 +264,6 @@ vec4 raymarchCloud(
 ){
 	vec3 color = vec3(0.0);
 	float totalAbsorbance = 1.0;
-	float GetPos = 0.0;
 
 	float planetShadow = getPlanetShadow(rayPosition, sunVector);
 	sunScattering *= planetShadow;
@@ -309,15 +327,19 @@ vec4 raymarchCloud(
 	if(LayerIndex < ALTOSTRATUS_LAYER){
 
 
-		float density = parameters.smallCumulus.y;
+		float density = getRainDensity(parameters.smallCumulus.y);
 
-		if(LayerIndex == LARGECUMULUS_LAYER) density = parameters.largeCumulus.y;
+		if(LayerIndex == LARGECUMULUS_LAYER) density = getRainDensity(parameters.largeCumulus.y);
+
+		float densitySmall = getRainDensity(parameters.smallCumulus.y);
+
+		float densityLarge = getRainDensity(parameters.largeCumulus.y);
 		
 		float skylightOcclusion = 1.0;
 		#if defined CloudLayer1 && defined CloudLayer0
 			if(LayerIndex == SMALLCUMULUS_LAYER) {
 				float upperLayerOcclusion = getCloudShape(LARGECUMULUS_LAYER, 0, rayPosition + vec3(0.0,1.0,0.0) * max((CloudLayer1_height+20) - rayPosition.y,0.0), CloudLayer1_height, CloudLayer1_height+100.0);
-				skylightOcclusion = mix(mix(0.0,0.2,parameters.largeCumulus.y), 1.0, pow(1.0 - upperLayerOcclusion*parameters.largeCumulus.y,2));
+				skylightOcclusion = mix(mix(0.0,0.2,densityLarge), 1.0, pow(1.0 - upperLayerOcclusion*densityLarge,2));
 			}
 		#endif
 
@@ -355,7 +377,7 @@ vec4 raymarchCloud(
 					#if defined CloudLayer0 && defined CloudLayer1
 						if(LayerIndex == SMALLCUMULUS_LAYER){
 							vec3 shadowStartPos = rayPosition + sunVector / abs(sunVector.y) * max((CloudLayer1_height + 20.0) - rayPosition.y, 0.0);
-							sunShadowMask += 3.0 * getCloudShape(LARGECUMULUS_LAYER, 0, shadowStartPos, CloudLayer1_height, CloudLayer1_height+100.0)*parameters.largeCumulus.y;
+							sunShadowMask += 3.0 * getCloudShape(LARGECUMULUS_LAYER, 0, shadowStartPos, CloudLayer1_height, CloudLayer1_height+100.0)*densityLarge;
 						}
 					#endif
 					// altostratus layer -> all cumulus layers
@@ -373,7 +395,13 @@ vec4 raymarchCloud(
 					float distancefog = exp(-0.00035*length(newPos));
 					vec3 atmosphereHaze = (sampledSkyCol - sampledSkyCol * distancefog);
 					lighting = lighting * distancefog + atmosphereHaze;
-				
+
+					float horizontalDist = length((rayPosition.xz - cameraPosition.xz) - lightningBoltPosition.xz);
+					if (horizontalDist < 2500.0 && lightningBoltPosition.xyz != vec3(0.0,0.0,0.0)) {
+						float lightningIntensity = exp(-horizontalDist * 0.04) * density * smoothstep(0.0, 0.02, fract(frameTimeCounter)) * lightningFlash;
+						lighting = mix(lighting, vec3(20.0), lightningIntensity);
+					}
+
 					float densityCoeff = exp(-distanceFactor*shapeWithDensityFaded);
 					color += (lighting - lighting * densityCoeff) * totalAbsorbance;
 					totalAbsorbance *= densityCoeff;

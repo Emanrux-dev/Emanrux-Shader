@@ -39,7 +39,7 @@ float cloudVol(in vec3 pos, float maxDistance ){
 		float IntenseFogs = pow(1.0 - densityAtPosFog( (samplePos2  - vec3(frameTimeCounter,0,frameTimeCounter)*15.0) * 100.0),2.0) * mix(1.0, high_gradientFog, snowStorm);
 		cloudyFog = mix(cloudyFog, IntenseFogs, sandStorm+snowStorm);
 
-		medium_gradientFog = 1.0;
+		medium_gradientFog = mix(medium_gradientFog, 1.0, sandStorm+snowStorm);
 	}
 
 	FogDensities(medium_gradientFog, cloudyFog, rainyFog, maxDistance, 1.0, 1.0);

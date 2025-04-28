@@ -308,7 +308,7 @@ void convertHandDepth(inout float depth) {
 }
 
 float getEmission(vec3 Albedo) {
-	vec3 hsv = RgbToHsv(Albedo.rgb);
+	vec3 hsv = RgbToHsv(Albedo);
     float emissive = smoothstep(0.05, 0.35, hsv.y) * pow(hsv.z, 3.5);
     return emissive * 0.5;
 }

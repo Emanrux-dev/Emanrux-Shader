@@ -1,6 +1,18 @@
 # Bliss
 
-This fork features extra mod compat, rain cloud and fog tweaks as well as support for Distant Horizons chunk fading.
+Changes/Additions compared to Xonk's unstable-development branch:
+ + Distant Horizons chunk fading
+ + Better mod support
+ + Much better emissives
+ + Star rotation based on moon rotation
+ + End fog/storm adjustments
+ + Rain & thunder cloud coverage and daily weather
+ + Much better lightning strikes with clouds lighting up
+ + Small physics mod ocean adjustments
+ + Cave detection now only active below sea level (can also be turned off completely)
+ + Sand- and Snowstorm fixes
+
+If you have any ideas for something, write an issue.
 
 <img src="https://github.com/X0nk/Bliss-Shader/assets/122314734/873c788c-5a48-46c0-9fb5-eac57b4ffa27" width="100%" height="100%">
 I always loved chocapic's shaders, and how customizeable it was. But i wanted MORE.

@@ -236,7 +236,7 @@ void main() {
 
 		WsunVec = mix(WmoonVec, WsunVec, clamp(lightCol.a,0,1));
 
-		readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.fog);
+		readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.cirrus, parameters.fog);
 
 	#endif
 

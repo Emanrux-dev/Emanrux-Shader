@@ -74,7 +74,7 @@ void main() {
 
 	exposure = texelFetch2D(colortex4,ivec2(10,37),0).r;
 
-	readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.fog);
+	readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.cirrus, parameters.fog);
 	
 	#ifdef TAA
 		TAA_Offset = offsets[framemod8];

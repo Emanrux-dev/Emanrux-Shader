@@ -148,6 +148,7 @@ void applySceneControllerParameters(
 	out float smallCumulusCoverage, out float smallCumulusDensity,
 	out float largeCumulusCoverage, out float largeCumulusDensity,
 	out float altostratusCoverage, out float altostratusDensity,
+    out float cirrusCoverage, out float cirrusDensity,
 	out float fogA, out float fogB
 ){
     // these are the default parameters if no "trigger" or custom uniform is being used.
@@ -158,6 +159,8 @@ void applySceneControllerParameters(
     largeCumulusDensity = CloudLayer1_density;
 	altostratusCoverage = CloudLayer2_coverage;
     altostratusDensity = CloudLayer2_density;
+    cirrusCoverage = CloudLayer3_coverage;
+    cirrusDensity = CloudLayer3_density;
 	fogA = 1.0;
     fogB = 1.0;
 
@@ -191,6 +194,7 @@ flat varying struct sceneController {
   vec2 smallCumulus;
   vec2 largeCumulus;
   vec2 altostratus;
+  vec2 cirrus;
   vec2 fog;
 } parameters;
 
@@ -199,6 +203,7 @@ vec3 writeSceneControllerParameters(
     vec2 smallCumulus,
 	vec2 largeCumulus,
 	vec2 altostratus,
+    vec2 cirrus,
 	vec2 fog
 ){
 
@@ -208,7 +213,7 @@ vec3 writeSceneControllerParameters(
     
     /* (1,3) */ bool topLeft = uv.x > 1 && uv.x < 2 && uv.y > 3 && uv.y < 4;
     /* (2,3) */ bool topMiddle = uv.x > 2 && uv.x < 3 && uv.y > 3 && uv.y < 4;
-    // /* (3,3) */ bool topRight = uv.x > 3 && uv.x < 5 && uv.y > 3 && uv.y < 4;
+    /* (3,3) */ bool topRight = uv.x > 3 && uv.x < 5 && uv.y > 3 && uv.y < 4;
     // /* (1,2) */ bool middleLeft = uv.x > 1 && uv.x < 2 && uv.y > 2 && uv.y < 3;
     // /* (2,2) */ bool middleMiddle = uv.x > 2 && uv.x < 3 && uv.y > 2 && uv.y < 3;
     // /* (3,2) */ bool middleRight = uv.x > 3 && uv.x < 5 && uv.y > 2 && uv.y < 3;
@@ -218,10 +223,11 @@ vec3 writeSceneControllerParameters(
 
     vec3 data = vec3(0.0,0.0,0.0);
 
-    if(topLeft) data = vec3(smallCumulus.xy, largeCumulus.x);
-    if(topMiddle) data = vec3(largeCumulus.y, altostratus.xy);
+    if(topLeft) data    = vec3(smallCumulus.xy, largeCumulus.x);
+    if(topMiddle) data  = vec3(largeCumulus.y, altostratus.xy);
+    if(topRight) data   = vec3(cirrus.xy, 0.0);
 
-    // if(topRight)  	 data = vec4(groundSunColor,fogSunColor.r);
+    // if(topRight)  	data = vec4(groundSunColor,fogSunColor.r);
     // if(middleLeft)   data = vec4(groundAmbientColor,fogSunColor.g);
     // if(middleMiddle) data = vec4(fogAmbientColor,fogSunColor.b);
     // if(middleRight)  data = vec4(cloudSunColor,cloudAmbientColor.r);
@@ -237,6 +243,7 @@ void readSceneControllerParameters(
 	out vec2 smallCumulus,
 	out vec2 largeCumulus,
 	out vec2 altostratus,
+    out vec2 cirrus,
 	out vec2 fog
 ){
     
@@ -244,9 +251,11 @@ void readSceneControllerParameters(
     // 4th compnent/alpha is storing 1/4 res depth so i cant store there lol
 	vec3 data1 = texelFetch2D(colortex,ivec2(1,3),0).rgb/150.0;
 	vec3 data2 = texelFetch2D(colortex,ivec2(2,3),0).rgb/150.0;
+    vec3 data3 = texelFetch2D(colortex,ivec2(3,3),0).rgb/150.0;
 
-	smallCumulus = vec2(data1.x,data1.y);
-	largeCumulus = vec2(data1.z,data2.x);
-	altostratus = vec2(data2.y,data2.z);
-	fog = vec2(0.0);
+	smallCumulus    = vec2(data1.x,data1.y);
+	largeCumulus    = vec2(data1.z,data2.x);
+	altostratus     = vec2(data2.y,data2.z);
+    cirrus          = vec2(data3.x,data3.y);
+	fog             = vec2(0.0);
 }

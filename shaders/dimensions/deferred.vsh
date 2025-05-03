@@ -170,6 +170,7 @@ void main() {
 		parameters.smallCumulus.x, parameters.smallCumulus.y, 
 		parameters.largeCumulus.x, parameters.largeCumulus.y,
 		parameters.altostratus.x, parameters.altostratus.y,
+		parameters.cirrus.x, parameters.cirrus.y,
 		parameters.fog.x, parameters.fog.y
 	);
 
@@ -181,39 +182,40 @@ void main() {
  	#endif
 	
  	//----------- cloud coverage
- 	vec3 weatherProfile_cloudCoverage[10] = vec3[](
- 		vec3(DAY0_l0_coverage, DAY0_l1_coverage, DAY0_l2_coverage),
- 		vec3(DAY1_l0_coverage, DAY1_l1_coverage, DAY1_l2_coverage),
- 		vec3(DAY2_l0_coverage, DAY2_l1_coverage, DAY2_l2_coverage),
- 		vec3(DAY3_l0_coverage, DAY3_l1_coverage, DAY3_l2_coverage),
- 		vec3(DAY4_l0_coverage, DAY4_l1_coverage, DAY4_l2_coverage),
- 		vec3(DAY5_l0_coverage, DAY5_l1_coverage, DAY5_l2_coverage),
- 		vec3(DAY6_l0_coverage, DAY6_l1_coverage, DAY6_l2_coverage),
- 		vec3(DAY7_l0_coverage, DAY7_l1_coverage, DAY7_l2_coverage),
- 		vec3(DAY8_l0_coverage, DAY8_l1_coverage, DAY8_l2_coverage),
- 		vec3(DAY9_l0_coverage, DAY9_l1_coverage, DAY9_l2_coverage)
+ 	vec4 weatherProfile_cloudCoverage[10] = vec4[](
+ 		vec4(DAY0_l0_coverage, DAY0_l1_coverage, DAY0_l2_coverage, DAY0_l3_coverage),
+ 		vec4(DAY1_l0_coverage, DAY1_l1_coverage, DAY1_l2_coverage, DAY1_l3_coverage),
+ 		vec4(DAY2_l0_coverage, DAY2_l1_coverage, DAY2_l2_coverage, DAY2_l3_coverage),
+ 		vec4(DAY3_l0_coverage, DAY3_l1_coverage, DAY3_l2_coverage, DAY3_l3_coverage),
+ 		vec4(DAY4_l0_coverage, DAY4_l1_coverage, DAY4_l2_coverage, DAY4_l3_coverage),
+ 		vec4(DAY5_l0_coverage, DAY5_l1_coverage, DAY5_l2_coverage, DAY5_l3_coverage),
+ 		vec4(DAY6_l0_coverage, DAY6_l1_coverage, DAY6_l2_coverage, DAY6_l3_coverage),
+ 		vec4(DAY7_l0_coverage, DAY7_l1_coverage, DAY7_l2_coverage, DAY7_l3_coverage),
+ 		vec4(DAY8_l0_coverage, DAY8_l1_coverage, DAY8_l2_coverage, DAY8_l3_coverage),
+ 		vec4(DAY9_l0_coverage, DAY9_l1_coverage, DAY9_l2_coverage, DAY9_l3_coverage)
  	);
 
  	//----------- cloud density
- 	vec3 weatherProfile_cloudDensity[10] = vec3[](
- 		vec3(DAY0_l0_density, DAY0_l1_density, DAY0_l2_density),
- 		vec3(DAY1_l0_density, DAY1_l1_density, DAY1_l2_density),
- 		vec3(DAY2_l0_density, DAY2_l1_density, DAY2_l2_density),
- 		vec3(DAY3_l0_density, DAY3_l1_density, DAY3_l2_density),
- 		vec3(DAY4_l0_density, DAY4_l1_density, DAY4_l2_density),
- 		vec3(DAY5_l0_density, DAY5_l1_density, DAY5_l2_density),
- 		vec3(DAY6_l0_density, DAY6_l1_density, DAY6_l2_density),
- 		vec3(DAY7_l0_density, DAY7_l1_density, DAY7_l2_density),
- 		vec3(DAY8_l0_density, DAY8_l1_density, DAY8_l2_density),
- 		vec3(DAY9_l0_density, DAY9_l1_density, DAY9_l2_density)
+ 	vec4 weatherProfile_cloudDensity[10] = vec4[](
+ 		vec4(DAY0_l0_density, DAY0_l1_density, DAY0_l2_density, DAY0_l3_density),
+ 		vec4(DAY1_l0_density, DAY1_l1_density, DAY1_l2_density, DAY1_l3_density),
+ 		vec4(DAY2_l0_density, DAY2_l1_density, DAY2_l2_density, DAY2_l3_density),
+ 		vec4(DAY3_l0_density, DAY3_l1_density, DAY3_l2_density, DAY3_l3_density),
+ 		vec4(DAY4_l0_density, DAY4_l1_density, DAY4_l2_density, DAY4_l3_density),
+ 		vec4(DAY5_l0_density, DAY5_l1_density, DAY5_l2_density, DAY5_l3_density),
+ 		vec4(DAY6_l0_density, DAY6_l1_density, DAY6_l2_density, DAY6_l3_density),
+ 		vec4(DAY7_l0_density, DAY7_l1_density, DAY7_l2_density, DAY7_l3_density),
+ 		vec4(DAY8_l0_density, DAY8_l1_density, DAY8_l2_density, DAY8_l3_density),
+ 		vec4(DAY9_l0_density, DAY9_l1_density, DAY9_l2_density, DAY9_l3_density)
  	);
 
- 	vec3 getWeatherProfile_coverage = weatherProfile_cloudCoverage[dayCounter];
- 	vec3 getWeatherProfile_density = weatherProfile_cloudDensity[dayCounter];
+ 	vec4 getWeatherProfile_coverage = weatherProfile_cloudCoverage[dayCounter];
+ 	vec4 getWeatherProfile_density = weatherProfile_cloudDensity[dayCounter];
 	
- 	parameters.smallCumulus = vec2(getWeatherProfile_coverage.x, getWeatherProfile_density.x);
- 	parameters.largeCumulus = vec2(getWeatherProfile_coverage.y, getWeatherProfile_density.y);
- 	parameters.altostratus =  vec2(getWeatherProfile_coverage.z, getWeatherProfile_density.z);
+ 	parameters.smallCumulus = vec2(getWeatherProfile_coverage.r, getWeatherProfile_density.r);
+ 	parameters.largeCumulus = vec2(getWeatherProfile_coverage.g, getWeatherProfile_density.g);
+ 	parameters.altostratus =  vec2(getWeatherProfile_coverage.b, getWeatherProfile_density.b);
+	parameters.cirrus =  vec2(getWeatherProfile_coverage.a, getWeatherProfile_density.a);
 
  	//----------- fog density
  	vec2 weatherProfile_fogDensity[10] = vec2[](

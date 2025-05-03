@@ -1,6 +1,7 @@
 # Bliss
 
-Changes/Additions compared to Xonk's unstable-development branch:
+Changes/additions compared to Xonk's unstable-development branch:
+ + Additional cirrus cloud layer
  + Distant Horizons chunk fading
  + Better mod support
  + Much better emissives
@@ -8,9 +9,9 @@ Changes/Additions compared to Xonk's unstable-development branch:
  + End fog/storm adjustments
  + Rain & thunder cloud coverage and daily weather
  + Much better lightning strikes with clouds lighting up
- + Small physics mod ocean adjustments
+ + Small Physics Mod ocean adjustments
  + Cave detection now only active below sea level (can also be turned off completely)
- + Sand- and Snowstorm fixes
+ + Sand- and snowstorm fixes
 
 If you have any ideas for something, write an issue.
 

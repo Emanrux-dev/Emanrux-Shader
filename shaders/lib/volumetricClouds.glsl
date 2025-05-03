@@ -1,3 +1,4 @@
+#define CIRRUS_LAYER 3
 #define ALTOSTRATUS_LAYER 2
 #define LARGECUMULUS_LAYER 1
 #define SMALLCUMULUS_LAYER 0
@@ -35,6 +36,48 @@ float densityAtPos(in vec3 pos){
 	return mix(xy.r,xy.g, f.y);
 }
 
+
+// Cirrus code shamelessly "borrowed" from photon shader and edited
+
+vec2 hash2(vec2 p) {
+	vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
+	p3 += dot(p3, p3.yzx+33.33);
+	return fract((p3.xx+p3.yz)*p3.zy);
+}
+
+vec2 normalize_hash(vec2 p) {
+	return normalize(hash2(p) - 0.5);
+}
+
+vec2 perlin_gradient(vec2 coord) {
+	vec2 i = floor(coord);
+	vec2 f = fract(coord);
+
+	vec2 u 	= f * f * (3.0 - 2.0 * f); 					// Photon uses quintic interpolation
+	vec2 du = 30.0 * f * f * (f * (f - 2.0) + 1.0); 	// This ain't mathematically correct but it looks better ¯\_(ツ)_/¯
+
+	vec2 g0 = normalize_hash(i);
+	vec2 g1 = normalize_hash(i + vec2(1.0, 0.0));
+	vec2 g2 = normalize_hash(i + vec2(0.0, 1.0));
+	vec2 g3 = normalize_hash(i + vec2(1.0, 1.0));
+
+	float v0 = dot(g0, f);
+	float v1 = dot(g1, f - vec2(1.0, 0.0));
+	float v2 = dot(g2, f - vec2(0.0, 1.0));
+	float v3 = dot(g3, f - vec2(1.0, 1.0));
+
+	vec2 omu = 1.0 - u;
+	return vec2(
+		((v1 - v0) * omu.y + (v3 - v2) * u.y) * du.x,
+		((v2 - v0) * omu.x + (v3 - v1) * u.x) * du.y
+	);
+}
+
+vec2 curl2D(vec2 coord) {
+	vec2 gradient = perlin_gradient(coord);
+	return vec2(gradient.y, -gradient.x);
+}
+
 float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, float maxHeight){
 
 	vec3 samplePos = position*vec3(1.0, 1.0/48.0, 1.0)/4.0;
@@ -44,14 +87,53 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 	float largeCloud = 0.0;
 	float smallCloud = 0.0;
 
+	if(LayerIndex == CIRRUS_LAYER){
+
+		coverage = parameters.cirrus.x;
+
+		vec2 coord = position.zx + cloud_movement;
+		
+		vec2 curl = curl2D(0.00002 * coord) * 0.5
+				+ curl2D(0.00005 * coord) * 0.25
+				+ curl2D(0.00010 * coord) * 0.125;
+	
+		
+		largeCloud = texture2D(noisetex, (position.xz + cloud_movement*2)/80000. * CloudLayer3_scale).b;
+
+		
+		float smallCloud = texture(noisetex, (0.000005 / CloudLayer3_scale) * (coord)).r;
+
+		vec2 detail_coord = coord;
+	
+		float detail_amplitude = 0.3;
+		float detail_frequency = 0.00002;
+		float curl_strength    = 1.3;
+
+		for (int i = 0; i < 3; ++i) {
+			float detail = texture(noisetex, detail_coord * detail_frequency + curl * curl_strength).r;
+
+			smallCloud -= detail * detail_amplitude;
+
+			detail_amplitude *= 0.5;
+			detail_frequency *= 4.0;
+			curl_strength 	 *= 2.7;
+		}
+		
+		smallCloud = abs(largeCloud* -0.4) + smallCloud;
+
+		float val = coverage;
+		shape = min(max(val - smallCloud,0.0)/sqrt(val),1.0);
+
+		return shape;
+	}
 	if(LayerIndex == ALTOSTRATUS_LAYER){
 		
 		coverage = parameters.altostratus.x;
 
 		largeCloud = texture2D(noisetex, (position.xz + cloud_movement)/100000. * CloudLayer2_scale).b;
-		smallCloud = 1.0 - texture2D(noisetex, ((position.xz - cloud_movement)/7500. - vec2(1.0-largeCloud, -largeCloud)/5.0) * CloudLayer2_scale).b;
+		smallCloud = 1.0 - texture2D(noisetex, ((position.xz - cloud_movement)/7500.) * CloudLayer2_scale).b;
 
-		smallCloud = largeCloud + smallCloud * 0.4 * clamp(1.5-largeCloud,0.0,1.0);
+		smallCloud = largeCloud + smallCloud * 0.4 * clamp(0.9-largeCloud,0.0,1.0);
 		
 		float val = coverage;
 		shape = min(max(val - smallCloud,0.0)/sqrt(val),1.0);
@@ -198,14 +280,14 @@ float getCloudScattering(
 	int samples = 3;
 	int LOD = 0;
 
-	if(LayerIndex == ALTOSTRATUS_LAYER) samples = 2;
+	if((LayerIndex == ALTOSTRATUS_LAYER) || (LayerIndex == CIRRUS_LAYER)) samples = 2;
 
 	float shadow = 0.0;
 	vec3 shadowRayPosition = vec3(0.0);
 
 	for (int i = 0; i < samples; i++){
 
-		if(LayerIndex == ALTOSTRATUS_LAYER){
+		if((LayerIndex == ALTOSTRATUS_LAYER) || (LayerIndex == CIRRUS_LAYER)){
 			shadowRayPosition = rayPosition + sunVector * (1.0 + i * dither) / (pow(abs(sunVector.y*0.5),3.0) * 0.995 + 0.005);
 		}else{
 			shadowRayPosition = rayPosition + sunVector * (1.0 + i + dither)*20.0;
@@ -275,13 +357,19 @@ vec4 raymarchCloud(
 
 	if(LayerIndex == SMALLCUMULUS_LAYER) densityTresholdCheck = 0.06;
 	if(LayerIndex == LARGECUMULUS_LAYER) densityTresholdCheck = 0.02;
-	if(LayerIndex == ALTOSTRATUS_LAYER) densityTresholdCheck = 0.01;
+	if((LayerIndex == ALTOSTRATUS_LAYER) || (LayerIndex == CIRRUS_LAYER)) densityTresholdCheck = 0.01;
 
 	densityTresholdCheck = mix(1e-5, densityTresholdCheck, dither);
 
-	if(LayerIndex == ALTOSTRATUS_LAYER){
-		float density = parameters.altostratus.y;
-		
+	if((LayerIndex == ALTOSTRATUS_LAYER) || (LayerIndex == CIRRUS_LAYER)){
+		float density = 0.0;
+
+		if(LayerIndex == ALTOSTRATUS_LAYER) {
+			density = parameters.altostratus.y;
+		} else {
+			density = parameters.cirrus.y;
+		}
+
 		bool ifAboveOrBelowPlane = max(mix(-1.0, 1.0, clamp(cameraPosition.y - minHeight,0.0,1.0)) * normalize(rayDirection).y,0.0) > 0.0;
 
 		// check if the ray staring position is going farther than the reference distance, if yes, dont begin marching. this is to check for intersections with the world.
@@ -372,17 +460,22 @@ vec4 raymarchCloud(
 					
 					float sunShadowMask = shapeWithDensity + getCloudScattering(LayerIndex, rayPosition, sunVector, dither, minHeight, maxHeight, density);
 					
+					vec3 shadowStartPos = vec3(0.0);
 					// do cloud shadows from one layer to another
 					// large cumulus layer -> small cumulus layer
 					#if defined CloudLayer0 && defined CloudLayer1
 						if(LayerIndex == SMALLCUMULUS_LAYER){
-							vec3 shadowStartPos = rayPosition + sunVector / abs(sunVector.y) * max((CloudLayer1_height + 20.0) - rayPosition.y, 0.0);
+							shadowStartPos = rayPosition + sunVector / abs(sunVector.y) * max((CloudLayer1_height + 20.0) - rayPosition.y, 0.0);
 							sunShadowMask += 3.0 * getCloudShape(LARGECUMULUS_LAYER, 0, shadowStartPos, CloudLayer1_height, CloudLayer1_height+100.0)*densityLarge;
 						}
 					#endif
 					// altostratus layer -> all cumulus layers
+					#if defined CloudLayer3
+						shadowStartPos = rayPosition + sunVector / abs(sunVector.y) * max(CloudLayer3_height - rayPosition.y, 0.0);
+						sunShadowMask += getCloudShape(CIRRUS_LAYER, 0, shadowStartPos, CloudLayer3_height, CloudLayer3_height) * parameters.cirrus.y * (1.0-abs(sunVector.y));
+					#endif
 					#if defined CloudLayer2
-						vec3 shadowStartPos = rayPosition + sunVector / abs(sunVector.y) * max(CloudLayer2_height - rayPosition.y, 0.0);
+						shadowStartPos = rayPosition + sunVector / abs(sunVector.y) * max(CloudLayer2_height - rayPosition.y, 0.0);
 						sunShadowMask += getCloudShape(ALTOSTRATUS_LAYER, 0, shadowStartPos, CloudLayer2_height, CloudLayer2_height) * parameters.altostratus.y * (1.0-abs(sunVector.y));
 					#endif
 					
@@ -575,33 +668,90 @@ vec4 GetVolumetricClouds(
 			if(smallCumulusClouds.a > 1e-5 || largeCumulusClouds.a > 1e-5) altoStratusClouds = raymarchCloud(ALTOSTRATUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unignedSunVec, sunScattering, sunMultiScattering, skyScattering, lViewPosM, sampledSkyCol, cloudLayer2_Distance);
 		#endif
 
+	////------- RENDER CIRRUS CLOUDS
+		vec4 cirrusClouds = cloudColor;
+		
+		#ifdef CloudLayer3
+			cloudheight = 5.0;
+			minHeight = CloudLayer3_height;
+			maxHeight = cloudheight + minHeight;
+			
+			cloudDist.xz = mix(vec2(255.0), vec2(5.0), clamp(cameraPosition.y - minHeight,0.0,clamp((maxHeight-15) - cameraPosition.y ,0.0,1.0)));
+			rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist));
+			rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
+
+			vec2 cloudLayer3_Distance = vec2(startDistance, 1.0);
+			if(smallCumulusClouds.a > 1e-5 || largeCumulusClouds.a > 1e-5) cirrusClouds = raymarchCloud(CIRRUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unignedSunVec, sunScattering, sunMultiScattering, skyScattering, lViewPosM, sampledSkyCol, cloudLayer3_Distance);
+		#endif
+
    	////------- BLEND LAYERS
 
-	#if defined CloudLayer0 && !defined CloudLayer1 && !defined CloudLayer2
+	#ifdef CloudLayer3
+		cloudPlaneDistance = cloudLayer3_Distance.x;
+
+		#ifdef CloudLayer2
+			cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer2_Distance.x, cloudLayer3_Distance.y);
+
+			#ifdef CloudLayer1
+				cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer1_Distance.x, cloudLayer2_Distance.y);
+
+				#ifdef CloudLayer0
+					cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer0_Distance.y);
+				#endif
+			#else
+				#ifdef CloudLayer0
+					cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer2_Distance.y);
+				#endif
+			#endif
+		#else
+			#ifdef CloudLayer1
+				cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer1_Distance.x, cloudLayer3_Distance.y);
+
+				#ifdef CloudLayer0
+					cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer1_Distance.y);
+				#endif
+			#else
+				#ifdef CloudLayer0
+					cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer3_Distance.y);
+				#endif
+			#endif
+		#endif
+	#elif defined CloudLayer2
+		cloudPlaneDistance = cloudLayer2_Distance.x;
+
+		#ifdef CloudLayer1
+			cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer1_Distance.x, cloudLayer2_Distance.y);
+
+			#ifdef CloudLayer0
+				cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer0_Distance.y);
+			#endif
+		#else
+			#ifdef CloudLayer0
+				cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer2_Distance.y);
+			#endif
+		#endif
+	#elif defined CloudLayer1
+		cloudPlaneDistance = cloudLayer1_Distance.x;
+
+		#ifdef CloudLayer0
+			cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer1_Distance.y);
+		#endif
+	#elif defined CloudLayer0
 		cloudPlaneDistance = cloudLayer0_Distance.x;
 	#endif
 
-	#if defined CloudLayer0 && defined CloudLayer1 && !defined CloudLayer2
-		cloudPlaneDistance = mix(cloudLayer0_Distance.x, cloudLayer1_Distance.x, cloudLayer0_Distance.y);
-	#endif
-	
-	#if defined CloudLayer0 && defined CloudLayer1 && defined CloudLayer2
-		cloudPlaneDistance = mix(cloudLayer2_Distance.x, cloudLayer1_Distance.x, cloudLayer2_Distance.y);
+	#if defined CloudLayer0 && defined CloudLayer1 && !defined CloudLayer2 && defined CloudLayer3
+		cloudPlaneDistance = mix(cloudLayer3_Distance.x, cloudLayer1_Distance.x, cloudLayer3_Distance.y);
 		cloudPlaneDistance = mix(cloudLayer0_Distance.x, cloudPlaneDistance, cloudLayer0_Distance.y);
 	#endif
-	
-	#if defined CloudLayer0 && !defined CloudLayer1 && !defined CloudLayer2
-		cloudPlaneDistance = cloudLayer0_Distance.x;
-	#endif
-	#if !defined CloudLayer0 && defined CloudLayer1 && !defined CloudLayer2
-		cloudPlaneDistance = cloudLayer1_Distance.x;
-	#endif
-	#if !defined CloudLayer0 && !defined CloudLayer1 && defined CloudLayer2
-		cloudPlaneDistance = cloudLayer2_Distance.x;
-	#endif
 
+	#ifdef CloudLayer3
+		cloudColor = cirrusClouds;
+	#endif
 	#ifdef CloudLayer2
-		cloudColor = altoStratusClouds;
+		cloudColor.rgb *= altoStratusClouds.a;
+		cloudColor.rgb += altoStratusClouds.rgb;
+		cloudColor.a *= altoStratusClouds.a;
 	#endif
 	#ifdef CloudLayer1
 		cloudColor.rgb *= largeCumulusClouds.a;

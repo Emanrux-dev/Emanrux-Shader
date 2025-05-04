@@ -11,7 +11,7 @@ float cloud_movement = (worldTime  + mod(worldDay,100)*24000.0) / 24.0 * Cloud_S
 
 float lightningTimer = floor(frameTimeCounter * 10.0);
 float randomSeed = fract(sin(dot(vec2(lightningTimer), vec2(12.9898,78.233))) * 43758.5453);
-float lightningFlash = mix(0.5, 2.5, randomSeed);
+float lightningFlash = 4.0 * randomSeed;
 
 float getRainDensity(float currentDensity) {
 	float extraDensity = currentDensity;
@@ -96,21 +96,16 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		vec2 curl = curl2D(0.00002 * coord) * 0.5
 				+ curl2D(0.00005 * coord) * 0.25
 				+ curl2D(0.00010 * coord) * 0.125;
-	
-		
+
 		largeCloud = texture2D(noisetex, (position.xz + cloud_movement*2)/80000. * CloudLayer3_scale).b;
-
-		
-		float smallCloud = texture(noisetex, (0.000005 / CloudLayer3_scale) * (coord)).r;
-
-		vec2 detail_coord = coord;
+		smallCloud = texture(noisetex, (0.000005 / CloudLayer3_scale) * coord).r;
 	
 		float detail_amplitude = 0.3;
 		float detail_frequency = 0.00002;
 		float curl_strength    = 1.3;
 
 		for (int i = 0; i < 3; ++i) {
-			float detail = texture(noisetex, detail_coord * detail_frequency + curl * curl_strength).r;
+			float detail = texture(noisetex, coord * detail_frequency + curl * curl_strength).r;
 
 			smallCloud -= detail * detail_amplitude;
 
@@ -131,7 +126,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		coverage = parameters.altostratus.x;
 
 		largeCloud = texture2D(noisetex, (position.xz + cloud_movement)/100000. * CloudLayer2_scale).b;
-		smallCloud = 1.0 - texture2D(noisetex, ((position.xz - cloud_movement)/7500.) * CloudLayer2_scale).b;
+		smallCloud = 1.0 - texture2D(noisetex, ((position.xz - cloud_movement)/7500. - vec2(1.0-largeCloud, -largeCloud)/7.0) * CloudLayer2_scale).b;
 
 		smallCloud = largeCloud + smallCloud * 0.4 * clamp(0.9-largeCloud,0.0,1.0);
 		
@@ -490,9 +485,9 @@ vec4 raymarchCloud(
 					lighting = lighting * distancefog + atmosphereHaze;
 
 					float horizontalDist = length((rayPosition.xz - cameraPosition.xz) - lightningBoltPosition.xz);
-					if (horizontalDist < 2500.0 && lightningBoltPosition.xyz != vec3(0.0)) {
-						float lightningIntensity = exp(-horizontalDist * 0.04) * density * smoothstep(0.0, 0.02, fract(frameTimeCounter)) * lightningFlash;
-						lighting = mix(lighting, vec3(15.0,15.0,25.0), lightningIntensity);
+					if (horizontalDist < 5500.0 && lightningBoltPosition.xyz != vec3(0.0)) {
+						float lightningIntensity = exp(-horizontalDist * 0.012) * density * smoothstep(0.0, 0.02, fract(frameTimeCounter)) * lightningFlash;
+						lighting = mix(lighting, vec3(10.0,10.0,20.0), lightningIntensity);
 					}
 
 					float densityCoeff = exp(-distanceFactor*shapeWithDensityFaded);
@@ -506,8 +501,6 @@ vec4 raymarchCloud(
 			}
 			
 			rayPosition += rayDirection;
-			
-			
 			
 		}
 		return vec4(color, totalAbsorbance);
@@ -738,11 +731,6 @@ vec4 GetVolumetricClouds(
 		#endif
 	#elif defined CloudLayer0
 		cloudPlaneDistance = cloudLayer0_Distance.x;
-	#endif
-
-	#if defined CloudLayer0 && defined CloudLayer1 && !defined CloudLayer2 && defined CloudLayer3
-		cloudPlaneDistance = mix(cloudLayer3_Distance.x, cloudLayer1_Distance.x, cloudLayer3_Distance.y);
-		cloudPlaneDistance = mix(cloudLayer0_Distance.x, cloudPlaneDistance, cloudLayer0_Distance.y);
 	#endif
 
 	#ifdef CloudLayer3

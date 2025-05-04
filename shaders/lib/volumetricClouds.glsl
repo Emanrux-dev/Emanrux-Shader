@@ -636,13 +636,12 @@ vec4 GetVolumetricClouds(
 			minHeight = CloudLayer1_height;
 			maxHeight = cloudheight + minHeight;
 
-			cloudMix = clamp(smoothstep(minHeight - 400.0, minHeight + 45.0, cameraPosition.y),0.0,clamp(smoothstep(maxHeight + 300.0, maxHeight - 60.0, cameraPosition.y) ,0.0,1.0));
 			cloudDist.xz = mix(vec2(255.0), vec2(6.2), cloudMix);
 			rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/samples);
 			rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
 
 			vec2 cloudLayer1_Distance = vec2(startDistance, 1.0);
-			if(smallCumulusClouds.a > 1e-5) largeCumulusClouds = raymarchCloud(LARGECUMULUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unignedSunVec, sunScattering, sunMultiScattering, skyScattering, lViewPosM, sampledSkyCol, cloudLayer1_Distance);
+			largeCumulusClouds = raymarchCloud(LARGECUMULUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unignedSunVec, sunScattering, sunMultiScattering, skyScattering, lViewPosM, sampledSkyCol, cloudLayer1_Distance);
 		#endif
 
    	////------- RENDER ALTOSTRATUS CLOUDS
@@ -741,17 +740,30 @@ vec4 GetVolumetricClouds(
 		cloudColor.rgb += altoStratusClouds.rgb;
 		cloudColor.a *= altoStratusClouds.a;
 	#endif
-	#ifdef CloudLayer1
-		cloudColor.rgb *= largeCumulusClouds.a;
-		cloudColor.rgb += largeCumulusClouds.rgb;
-		cloudColor.a *= largeCumulusClouds.a;
-	#endif
-	#ifdef CloudLayer0
-		cloudColor.rgb *= smallCumulusClouds.a;
-		cloudColor.rgb += smallCumulusClouds.rgb;
-		cloudColor.a *= smallCumulusClouds.a;
-	#endif
 
+	if(cameraPosition.y < CloudLayer1_height) {
+		#ifdef CloudLayer1
+			cloudColor.rgb *= largeCumulusClouds.a;
+			cloudColor.rgb += largeCumulusClouds.rgb;
+			cloudColor.a *= largeCumulusClouds.a;
+		#endif
+		#ifdef CloudLayer0
+			cloudColor.rgb *= smallCumulusClouds.a;
+			cloudColor.rgb += smallCumulusClouds.rgb;
+			cloudColor.a *= smallCumulusClouds.a;
+		#endif
+	} else {
+		#ifdef CloudLayer0
+			cloudColor.rgb *= smallCumulusClouds.a;
+			cloudColor.rgb += smallCumulusClouds.rgb;
+			cloudColor.a *= smallCumulusClouds.a;
+		#endif	
+		#ifdef CloudLayer1
+			cloudColor.rgb *= largeCumulusClouds.a;
+			cloudColor.rgb += largeCumulusClouds.rgb;
+			cloudColor.a *= largeCumulusClouds.a;
+		#endif
+	}
 	color = cloudColor.rgb;
 	totalAbsorbance = cloudColor.a;
 

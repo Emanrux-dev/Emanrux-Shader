@@ -15,7 +15,7 @@ float lightningFlash = 4.0 * randomSeed;
 
 float getRainDensity(float currentDensity) {
 
-	float extraDensity = min(currentDensity * (1.0 + rainStrength * 0.1 + thunderStrength * 0.1), 1.0);
+	float extraDensity = min(currentDensity + rainStrength * 0.1 + thunderStrength * 0.1, 1.0);
 	
 	return extraDensity;
 }

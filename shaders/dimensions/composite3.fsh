@@ -535,7 +535,7 @@ void main() {
       vec3 borderFogColor = skyFromTex(playerPos_normalized, colortex4)/1200.0 * Sky_Brightness;
     #endif
 
-    color.rgb = mix(color.rgb, borderFogColor, fog);
+    color.rgb = mix(color.rgb, borderFogColor, fog * BorderFogIntensity);
   #else
     float fog = 0.0;
   #endif

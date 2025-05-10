@@ -1,6 +1,7 @@
 # Bliss
 
 Changes/additions compared to Xonk's unstable-development branch:
+ + Cumulonimbus clouds (replace large cumulus clouds)
  + Additional cirrus cloud layer
  + Distant Horizons chunk fading
  + Better mod support

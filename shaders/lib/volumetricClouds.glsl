@@ -1,5 +1,6 @@
-#define CIRRUS_LAYER 3
-#define ALTOSTRATUS_LAYER 2
+#define CIRRUS_LAYER 4
+#define ALTOSTRATUS_LAYER 3
+#define CUMULONIMBUS_LAYER 2
 #define LARGECUMULUS_LAYER 1
 #define SMALLCUMULUS_LAYER 0
 
@@ -12,6 +13,10 @@ float cloud_movement = (worldTime  + mod(worldDay,100)*24000.0) / 24.0 * Cloud_S
 float lightningTimer = floor(frameTimeCounter * 11.0);
 float randomSeed = fract(sin(dot(vec2(lightningTimer), vec2(12.9898,78.233))) * 43758.5453);
 float lightningFlash = mix(0.3, 1.5, randomSeed);
+
+float rand(float x) {
+    return fract(sin(x) * 43758.5453123);
+}
 
 float getRainDensity(float currentDensity) {
 
@@ -88,14 +93,14 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 	if(LayerIndex == CIRRUS_LAYER){
 		coverage = parameters.cirrus.x;
 
-		vec2 coord = position.zx + 4*cloud_movement;
+		vec2 coord = position.zx + 6*cloud_movement;
 		
 		vec2 curl = curl2D(0.00002 * coord) * 0.5
 				+ curl2D(0.00005 * coord) * 0.25
-				+ curl2D(0.00010 * coord) * 0.125;
+				+ curl2D(0.00018 * coord) * 0.125;
 
 		largeCloud = texture2D(noisetex, (position.xz + cloud_movement*2)/80000. * CloudLayer3_scale).b;
-		smallCloud = texture(noisetex, (0.000005 / CloudLayer3_scale) * coord).r;
+		smallCloud = texture2D(noisetex, (0.000005 / CloudLayer3_scale) * coord).r;
 	
 		float detail_amplitude = 0.3;
 		float detail_frequency = 0.00002;
@@ -139,23 +144,15 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		coverage += Rain_coverage * rainStrength;
 		coverage += Thunder_coverage * thunderStrength;
 
-		#ifdef CUMULONIMBUS
-			smallCloud = texture2D(noisetex, (samplePos.zx + cloud_movement*6.0) / 17000.0 * CloudLayer1_scale * 0.2).b;
-			
-			smallCloud = abs(smallCloud* -2.3);
 
-			float val = 1.3 + Rain_coverage * rainStrength;
-			shape = min(max(val - smallCloud,0.0)/sqrt(val),1.0) * mix(smoothstep(5000.0, 10000.0, length(position.xz - cameraPosition.xz)), 1.0, rainStrength);
+		largeCloud = texture2D(noisetex, (samplePos.zx + cloud_movement*2.0)/16000.0 * CloudLayer1_scale).b;
+		smallCloud = texture2D(noisetex, (samplePos.zx - cloud_movement*2.0)/5500.0 * CloudLayer1_scale).b;
+		
+		smallCloud = abs(largeCloud* -0.7) + smallCloud;
 
-		#else
-			largeCloud = texture2D(noisetex, (samplePos.zx + cloud_movement*2.0)/10000.0 * CloudLayer1_scale).b;
-			smallCloud = texture2D(noisetex, (samplePos.zx - cloud_movement*2.0)/2500.0 * CloudLayer1_scale).b;
-			
-			smallCloud = abs(largeCloud* -0.7) + smallCloud;
+		float val = coverage;
+		shape = min(max(val - smallCloud,0.0)/sqrt(val),1.0);
 
-			float val = coverage;
-			shape = min(max(val - smallCloud,0.0)/sqrt(val),1.0);
-		#endif
 	}
 	if(LayerIndex == SMALLCUMULUS_LAYER){
 		coverage = parameters.smallCumulus.x;
@@ -182,20 +179,48 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 
 	float bottomShape = 1.0-pow(1.0-min(max(position.y-minHeight,0.0) / 25.0, 1.0), 5.0);
 
-	#ifdef CUMULONIMBUS
-		if(LayerIndex == LARGECUMULUS_LAYER){
-			topShape = min(exp(-1.0 * (1.0-topShape)), 	1.0-pow(1.0-topShape,5.0));
-			topShape2 = min(max(maxHeight-position.y,0.0) / max(maxHeight-minHeight,1.0),1.0);
-			topShape2 = min(exp(-0.01 * (1.0-topShape2)), 	1.0-pow(1.0-topShape2,5.0));
-			bottomShape = 1.0-pow(1.0-min(max(position.y-minHeight,0.0) / 5.0, 1.0), 5.0);
-		} else {
-			topShape = min(exp(-0.5 * (1.0-topShape)), 	1.0-pow(1.0-topShape,5.0));
-		}
-	#else
-		topShape = min(exp(-0.5 * (1.0-topShape)), 	1.0-pow(1.0-topShape,5.0));
-	#endif
+	topShape = min(exp(-0.5 * (1.0-topShape)), 	1.0-pow(1.0-topShape,5.0));
 
-	shape = max((shape - 1.0) + topShape * bottomShape + (1- topShape2) * bottomShape ,0.0);
+
+	shape = max((shape - 1.0) + topShape * bottomShape + (1- topShape2) * bottomShape, 0.0);
+
+	if(LayerIndex == CUMULONIMBUS_LAYER){
+		float cumulonimbusScale = 1.0;
+		smallCloud = texture2D(noisetex, (samplePos.zx - cloud_movement*6.0) / 17000.0 * cumulonimbusScale * 0.2).b;
+		
+		smallCloud = abs(smallCloud* -2.3);
+
+		float val = 1.3 + Rain_coverage * rainStrength;
+		float shape = min(max(val - smallCloud,0.0)/sqrt(val),1.0) * smoothstep(5000.0, 10000.0, length(position.xz - cameraPosition.xz));
+
+
+		shape = min(min(shape, clamp(maxHeight - position.y,0,1)), 1.0 - clamp(minHeight - position.y,0,1));
+		bottomShape = 1.0-pow(1.0-min(max(position.y-minHeight,0.0) / 5.0, 1.0), 5.0);
+
+		topShape = min(max(maxHeight-position.y,0.0) / max(maxHeight-minHeight,1.0),1.0);
+		topShape = min(exp(-1.0 * (1.0-topShape)), 	1.0-pow(1.0-topShape,5.0));
+
+		topShape2 = min(max(maxHeight-position.y,0.0) / max(maxHeight-minHeight,1.0),1.0);
+		topShape2 = min(exp(-0.1 * (1.0-topShape2)), 	1.0-pow(1.0-topShape2,7.0));
+		
+		shape = max((shape - 1.0) + topShape * bottomShape + (1- topShape2) * bottomShape, 0.0);
+		if(shape > 0.001){
+			if (LOD < 1) return max(shape - 0.27*0.5,0.0);
+
+			samplePos.xz -= cloud_movement/4.0;
+			samplePos.xz += pow( max(position.y - (minHeight+20.0), 0.0) / (max(maxHeight-minHeight,1.0)*0.20), 1.5);
+
+			float erosion = (1.0 - densityAtPos(samplePos * 100.0 * cumulonimbusScale*0.05)) * sqrt(1.0-shape);
+
+			float falloff = 1.0 - clamp((maxHeight - position.y)/200.0,0.0,1.0);
+			erosion += abs(densityAtPos(samplePos * 370.0 * cumulonimbusScale*0.05) - falloff) * 0.65 * (1.0-shape) * (1.0-falloff*0.5);
+
+			erosion = erosion*erosion*erosion*erosion;
+			
+
+			return max(shape - erosion*0.5,0.0);
+		} else return 0.0;
+	}
 
 	/// erosion noise
 	if(shape > 0.001){
@@ -221,16 +246,10 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 			erosion = erosion*erosion*erosion*erosion;
 		}
 		if(LayerIndex == LARGECUMULUS_LAYER){
-			#ifdef CUMULONIMBUS
-				erosion += (1.0 - densityAtPos(samplePos * 100.0 * CloudLayer1_scale*0.05)) * sqrt(1.0-shape);
-				float falloff = 1.0 - clamp((maxHeight - position.y)/200.0,0.0,1.0);
-				erosion += abs(densityAtPos(samplePos * 370.0 * CloudLayer1_scale*0.05) - falloff) * 0.85 * (1.0-shape) * (1.0-falloff*0.5);
+			erosion += (1.0 - densityAtPos(samplePos * 100.0 * CloudLayer1_scale)) * sqrt(1.0-shape);
 
-			#else
-				erosion += (1.0 - densityAtPos(samplePos * 100.0 * CloudLayer1_scale)) * sqrt(1.0-shape);
-				float falloff = 1.0 - clamp((maxHeight - position.y)/200.0,0.0,1.0);
-				erosion += abs(densityAtPos(samplePos * 450.0 * CloudLayer1_scale) - falloff) * 0.75 * (1.0-shape) * (1.0-falloff*0.5);
-			#endif
+			float falloff = 1.0 - clamp((maxHeight - position.y)/200.0,0.0,1.0);
+			erosion += abs(densityAtPos(samplePos * 450.0 * CloudLayer1_scale) - falloff) * 0.75 * (1.0-shape) * (1.0-falloff*0.5);
 
 			erosion = erosion*erosion*erosion*erosion;
 		}
@@ -270,10 +289,16 @@ float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 			startPosition = playerPos + sunVector / abs(sunVector.y) * max(CloudLayer2_height - playerPos.y, 0.0);
 			cloudShadows += getCloudShape(ALTOSTRATUS_LAYER, 0, startPosition, CloudLayer2_height, CloudLayer2_height)*parameters.altostratus.y * (1.0-abs(WsunVec.y));
 		#endif
+		#ifdef CUMULONIMBUS
+			startPosition = playerPos + sunVector / abs(sunVector.y) * max((600 + 20.0) - playerPos.y, 0.0);
+			cloudShadows += getCloudShape(CUMULONIMBUS_LAYER, 0, startPosition, 600, 12000)*(6.8);
+		#endif
 
+
+		
 		cloudShadows *= CLOUD_SHADOW_STRENGTH;
 
-		#if defined CloudLayer0 || defined CloudLayer1 || defined CloudLayer2
+		#if defined CloudLayer0 || defined CloudLayer1 || defined CloudLayer2 || defined CUMULONIMBUS
 			totalShadow *= exp((cloudShadows*cloudShadows) * -200.0);
 		#endif
 	#endif
@@ -333,7 +358,7 @@ vec3 getCloudLighting(
 	vec3 indirectLightCol
 ){
 
-	float powderEffect = 1.0-exp(-10.0*shapeFaded); powderEffect *= powderEffect; powderEffect *= 2.0;
+	float powderEffect = 1.0-exp(-14.0*shapeFaded); powderEffect *= powderEffect; powderEffect *= 2.0;
 	vec3 directScattering = directLightCol_multi * powderEffect * exp(-3.0*sunShadowMask) + directLightCol * exp(-10.0*sunShadowMask);
 	vec3 indirectScattering = indirectLightCol * mix(1.0, exp2(-5.0*shape), indirectShadowMask*indirectShadowMask);
 	
@@ -376,7 +401,7 @@ vec4 raymarchCloud(
 	float densityTresholdCheck = 0.0;
 
 	if(LayerIndex == SMALLCUMULUS_LAYER) densityTresholdCheck = 0.06;
-	if(LayerIndex == LARGECUMULUS_LAYER) densityTresholdCheck = 0.02;
+	if(LayerIndex == LARGECUMULUS_LAYER || LayerIndex == CUMULONIMBUS_LAYER) densityTresholdCheck = 0.02;
 	if((LayerIndex == ALTOSTRATUS_LAYER) || (LayerIndex == CIRRUS_LAYER)) densityTresholdCheck = 0.01;
 
 	densityTresholdCheck = mix(1e-5, densityTresholdCheck, dither);
@@ -437,15 +462,11 @@ vec4 raymarchCloud(
 		float densityLarge = getRainDensity(parameters.largeCumulus.y);
 
 		float density = getRainDensity(parameters.smallCumulus.y);
-		#ifdef CUMULONIMBUS
-			if(LayerIndex == LARGECUMULUS_LAYER) density = 0.8;
-			densityLarge = density;
-		#else
-			if(LayerIndex == LARGECUMULUS_LAYER) density = getRainDensity(parameters.largeCumulus.y);
-		#endif
 
+		if(LayerIndex == CUMULONIMBUS_LAYER) density = 0.8;
 
-		
+		if(LayerIndex == LARGECUMULUS_LAYER) density = getRainDensity(parameters.largeCumulus.y);
+
 		float skylightOcclusion = 1.0;
 		#if defined CloudLayer1 && defined CloudLayer0
 			if(LayerIndex == SMALLCUMULUS_LAYER) {
@@ -454,7 +475,26 @@ vec4 raymarchCloud(
 			}
 		#endif
 
-		
+		vec3 lightningPos = vec3(0.0);
+		if(LayerIndex == CUMULONIMBUS_LAYER){		
+			float interval = 0.7;
+
+			float t = floor(frameTimeCounter / interval);
+
+			float angle = rand(t) * 6.28318530718;
+
+			float rMin = 7000.0;
+			float rMax = 18000.0;
+			float radius = sqrt(mix(rMin * rMin, rMax * rMax, rand(t + 1)));
+
+			lightningPos = vec3(radius * cos(angle), minHeight + 0.5 * (maxHeight - minHeight), radius * sin(angle));
+			
+			float shapeAtLightningPos = getCloudShape(LayerIndex, 1, lightningPos, minHeight, maxHeight);
+			if (shapeAtLightningPos < 0.1) lightningPos = vec3(0.0);
+		}
+
+
+
 		for(int i = 0; i < samples; i++) {
 
 
@@ -514,36 +554,20 @@ vec4 raymarchCloud(
 					}
 
 					// lightning strikes in cumulonimbus clouds
-					#ifdef CUMULONIMBUS
-						if(LayerIndex == LARGECUMULUS_LAYER) {
-							horizontalDist = length(rayPosition.xz - cameraPosition.xz);
-
-							float interval = 3.2;
-							float flashDuration = 0.7;
-
-							float timeInCycle = mod(frameTimeCounter, interval);
-							float flashPhase = step(timeInCycle, flashDuration); 
+					if(LayerIndex == CUMULONIMBUS_LAYER) {
+						horizontalDist = length(rayPosition.xz - cameraPosition.xz);
+						float horizontalDistLightining = length((rayPosition.xz - cameraPosition.xz) - lightningPos.xz);
+						
+						if (horizontalDistLightining < 6000.0 && rainStrength == 0.0 && lightningPos != vec3(0.0)) {
 							
+								lightningIntensity = smoothstep(6000.0, 0.0, horizontalDistLightining) * smoothstep(-0.05, 1.0, shapeWithDensity) * lightningFlash;
+								lightningIntensity *= (1.0 - smoothstep(minHeight, 1.05 * maxHeight, rayPosition.y));
+								lightningIntensity *= smoothstep(17000, 14000, horizontalDist);
 
-							if (flashPhase > 0.5 && rainStrength == 0.0) {
-								if (horizontalDist > 5000 && horizontalDist < 17000) {
-									float cycleCount = floor(frameTimeCounter / interval);
-									float pausedTime = cycleCount * (interval - flashDuration) + max(0.0, timeInCycle - flashDuration);
-
-									vec2 wave = smoothstep(0.0, 0.9, sin(newPos.xz * 0.00075 + pausedTime * 0.4)) * smoothstep(0.0, 0.9, sin(newPos.xz * 0.0004 + pausedTime));
-									float waveMask = wave.x * wave.y;
-
-									lightningIntensity = smoothstep(0.01, 1.0, shapeWithDensity) * lightningFlash * waveMask;
-									lightningIntensity *= (1.0 - smoothstep(minHeight, 0.95 * maxHeight, rayPosition.y));
-									lightningIntensity *= smoothstep(17000, 14000, horizontalDist);
-
-									vec3 lightningStrength = 3.5 * vec3(5.0,5.0,8.0);
-									lighting = mix(lighting, lightningStrength, lightningIntensity);
-								}
-							}
+								vec3 lightningStrength = vec3(5.0,5.3,9.0);
+								lighting = mix(lighting, lightningStrength, lightningIntensity);
 						}
-					#endif
-
+					}
 
 					newPos.y = min(newPos.y,0.0);
 					
@@ -554,12 +578,10 @@ vec4 raymarchCloud(
 					float densityCoeff = exp(-distanceFactor*shapeWithDensityFaded);
 					color += (lighting - lighting * densityCoeff) * totalAbsorbance;
 
-					#ifdef CUMULONIMBUS
-						if(LayerIndex == LARGECUMULUS_LAYER) {
-							color *= mix(smoothstep(minHeight, maxHeight, rayPosition.y/(2.4*shape)) + lightningIntensity, 1.0, smoothstep(12000, 24000, horizontalDist));
-						}
-					#endif
-
+					if(LayerIndex == CUMULONIMBUS_LAYER) {
+						color *= mix(smoothstep(minHeight, maxHeight, rayPosition.y/(2.4*shape)) + lightningIntensity, 1.0, mix((1-shapeWithDensity)*smoothstep(12000, 15000, horizontalDist), 1.0, rainStrength));
+					}
+					
 					totalAbsorbance *= densityCoeff;
 					
 					// check if you can see through the cloud on the pixel before doing the next iteration
@@ -644,7 +666,7 @@ vec4 GetVolumetricClouds(
 		NormPlayerPos.y += 0.03 * heightRelativeToClouds;
 	#endif
 
-	float maxSamples = 28.0;
+	float maxSamples = 25.0;
 	float minSamples = 12.0;
 	int samples = int(clamp(maxSamples / sqrt(exp2(NormPlayerPos.y*2)),minSamples , maxSamples));
 	// int samples = 30;
@@ -654,7 +676,7 @@ vec4 GetVolumetricClouds(
 	vec3 cloudDist = vec3(1.0);
 
 	float cloudMix = clamp(smoothstep(minHeight - 400.0, minHeight + 45.0, cameraPosition.y),0.0,clamp(smoothstep(maxHeight + 300.0, maxHeight - 60.0, cameraPosition.y) ,0.0,1.0));
-	cloudDist.xz = mix(vec2(255.0), vec2(6.2), cloudMix);
+	cloudDist.xz = mix(vec2(255.0), vec2(12.0), cloudMix);
 
 	// vec3 rayDirection = NormPlayerPos.xyz * (cloudheight/abs(NormPlayerPos.y)/samples);
 	vec3 rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/samples);
@@ -700,15 +722,9 @@ vec4 GetVolumetricClouds(
 		vec4 largeCumulusClouds = cloudColor;
 
 		#ifdef CloudLayer1
-			#ifdef CUMULONIMBUS
-				cloudheight = 240*17;
-				minHeight = 600;
-				maxHeight = cloudheight + minHeight;
-			#else
-				cloudheight = CloudLayer1_tallness;
-				minHeight = CloudLayer1_height;
-				maxHeight = cloudheight + minHeight;
-			#endif
+			cloudheight = CloudLayer1_tallness;
+			minHeight = CloudLayer1_height;
+			maxHeight = cloudheight + minHeight;
 
 			cloudMix = clamp(smoothstep(minHeight - 400.0, minHeight + 45.0, cameraPosition.y),0.0,clamp(smoothstep(maxHeight + 300.0, maxHeight - 60.0, cameraPosition.y) ,0.0,1.0));
 			cloudDist.xz = mix(vec2(255.0), vec2(6.2), cloudMix);
@@ -718,6 +734,24 @@ vec4 GetVolumetricClouds(
 			vec2 cloudLayer1_Distance = vec2(startDistance, 1.0);
 			if(smallCumulusClouds.a > 1e-5 || cameraPosition.y > minHeight) largeCumulusClouds = raymarchCloud(LARGECUMULUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unignedSunVec, sunScattering, sunMultiScattering, skyScattering, lViewPosM, sampledSkyCol, cloudLayer1_Distance);
 		#endif
+
+	////------- RENDER CUMULONIMBUS CLOUDS
+		vec4 cumulonimbusClouds = cloudColor;
+
+		#ifdef CUMULONIMBUS
+			cloudheight = 240*17;
+			minHeight = 600;
+			maxHeight = cloudheight + minHeight;
+			
+			cloudDist.xz = vec2(255.0);
+			rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/samples);
+			rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
+
+			vec2 cloudLayer4_Distance = vec2(startDistance, 1.0);
+			cumulonimbusClouds = raymarchCloud(CUMULONIMBUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unignedSunVec, sunScattering, sunMultiScattering, skyScattering, lViewPosM, sampledSkyCol, cloudLayer4_Distance);
+			
+		#endif
+
 
    	////------- RENDER ALTOSTRATUS CLOUDS
 		vec4 altoStratusClouds = cloudColor;
@@ -753,46 +787,45 @@ vec4 GetVolumetricClouds(
 
    	////------- BLEND LAYERS
 
-	#ifdef CloudLayer3
-		cloudPlaneDistance = cloudLayer3_Distance.x;
-
-		#ifdef CloudLayer2
-			cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer2_Distance.x, cloudLayer3_Distance.y);
-
-			#ifdef CloudLayer1
-				cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer1_Distance.x, cloudLayer2_Distance.y);
-
-				#ifdef CloudLayer0
-					cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer0_Distance.y);
-				#endif
-			#else
-				#ifdef CloudLayer0
-					cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer2_Distance.y);
-				#endif
-			#endif
-		#endif
-	#elif defined CloudLayer2
-		cloudPlaneDistance = cloudLayer2_Distance.x;
-
-		#ifdef CloudLayer1
-			cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer1_Distance.x, cloudLayer2_Distance.y);
-
-			#ifdef CloudLayer0
-				cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer0_Distance.y);
-			#endif
-		#else
-			#ifdef CloudLayer0
-				cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer2_Distance.y);
-			#endif
-		#endif
-	#elif defined CloudLayer1
-		cloudPlaneDistance = cloudLayer1_Distance.x;
-
-		#ifdef CloudLayer0
-			cloudPlaneDistance = mix(cloudPlaneDistance, cloudLayer0_Distance.x, cloudLayer1_Distance.y);
-		#endif
-	#elif defined CloudLayer0
+	#if defined CloudLayer0 && !defined CloudLayer1 && !defined CloudLayer2
 		cloudPlaneDistance = cloudLayer0_Distance.x;
+	#endif
+
+	#if defined CloudLayer0 && defined CloudLayer1 && !defined CloudLayer2
+		cloudPlaneDistance = mix(cloudLayer0_Distance.x, cloudLayer1_Distance.x, cloudLayer0_Distance.y);
+	#endif
+	
+	#if defined CloudLayer0 && defined CloudLayer1 && defined CloudLayer2
+		cloudPlaneDistance = mix(cloudLayer2_Distance.x, cloudLayer1_Distance.x, cloudLayer2_Distance.y);
+		cloudPlaneDistance = mix(cloudLayer0_Distance.x, cloudPlaneDistance, cloudLayer0_Distance.y);
+	#endif
+
+	#if defined CloudLayer0 && !defined CloudLayer1 && defined CloudLayer2
+		cloudPlaneDistance = mix(cloudLayer2_Distance.x, cloudLayer0_Distance.x, cloudLayer2_Distance.y);
+		cloudPlaneDistance = mix(cloudLayer0_Distance.x, cloudPlaneDistance, cloudLayer0_Distance.y);
+	#endif
+
+	#if !defined CloudLayer0 && defined CloudLayer1 && defined CloudLayer2
+		cloudPlaneDistance = mix(cloudLayer2_Distance.x, cloudLayer1_Distance.x, cloudLayer2_Distance.y);
+		cloudPlaneDistance = mix(cloudLayer1_Distance.x, cloudPlaneDistance, cloudLayer1_Distance.y);
+	#endif
+	
+	#if defined CloudLayer0 && !defined CloudLayer1 && !defined CloudLayer2
+		cloudPlaneDistance = cloudLayer0_Distance.x;
+	#endif
+	#if !defined CloudLayer0 && defined CloudLayer1 && !defined CloudLayer2
+		cloudPlaneDistance = cloudLayer1_Distance.x;
+	#endif
+	#if !defined CloudLayer0 && !defined CloudLayer1 && defined CloudLayer2
+		cloudPlaneDistance = cloudLayer2_Distance.x;
+	#endif
+
+	#if !defined CloudLayer0 && !defined CloudLayer1 && !defined CloudLayer2 && defined CloudLayer3
+		cloudPlaneDistance = cloudLayer3_Distance.x;
+	#endif
+
+	#if defined CUMULONIMBUS
+		cloudPlaneDistance = cloudLayer4_Distance.x;
 	#endif
 
 	#ifdef CloudLayer3
@@ -802,6 +835,11 @@ vec4 GetVolumetricClouds(
 		cloudColor.rgb *= altoStratusClouds.a;
 		cloudColor.rgb += altoStratusClouds.rgb;
 		cloudColor.a *= altoStratusClouds.a;
+	#endif
+	#ifdef CUMULONIMBUS
+		cloudColor.rgb *= cumulonimbusClouds.a;
+		cloudColor.rgb += cumulonimbusClouds.rgb;
+		cloudColor.a *= cumulonimbusClouds.a;
 	#endif
 
 	if(cameraPosition.y < CloudLayer1_height) {

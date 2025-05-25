@@ -229,7 +229,7 @@ void main() {
         float viewDist = length(localPos.xyz); 
         float ditherFade = smoothstep(max(far-7,7), far-1, viewDist);
 
-        if (step(bayerDither(), ditherFade) == 0.0) {
+        if (step(bayerDither()/ditherFade, ditherFade) == 0.0) {
             discard; 
         }
     #endif

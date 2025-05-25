@@ -136,7 +136,7 @@ void main() {
 	vec2 lmcoord = gl_MultiTexCoord1.xy / 240.0;
 	lmtexcoord.zw = lmcoord;
 
-	#ifdef LARGE_WAVE_DISPLACEMENT
+	#if defined LARGE_WAVE_DISPLACEMENT && !defined PHYSICS_OCEAN
 		if(mc_Entity.x == 8.0) {
 				
 			vec3 playerPos = mat3(gbufferModelViewInverse) * position.xyz;

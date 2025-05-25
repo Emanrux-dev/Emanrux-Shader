@@ -620,7 +620,7 @@ void main() {
 
 		#if EMISSIVE_TYPE == 2
 			gl_FragData[1].a = SpecularTex.a;
-			if(SpecularTex.a <= 0.0) gl_FragData[1].a =getEmission(Albedo.rgb) * EMISSIVE;
+			if(SpecularTex.a <= 0.0) gl_FragData[1].a = getEmission(Albedo.rgb) * EMISSIVE;
 		#endif
 
 		#if EMISSIVE_TYPE == 3		

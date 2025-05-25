@@ -512,7 +512,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec3 worldSpaceNormal = viewToWorld(normal).xyz;
 	vec2 TangentNormal = vec2(0); // for refractions
 	
-	#ifdef LARGE_WAVE_DISPLACEMENT
+	#if defined LARGE_WAVE_DISPLACEMENT && !defined PHYSICS_OCEAN
 		if (isWater){
 			normal = largeWaveDisplacementNormal;
 		}
@@ -555,7 +555,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	TangentNormal = NormalTex.xy;
 	
 	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
-		normal = 0.5*(applyBump(tbnMatrix, NormalTex.xyz, PHYSICS_OCEAN_TRANSITION) + applyBump(tbnMatrix, NormalTex.xyz, 1.0));
+		normal = mix(applyBump(tbnMatrix, NormalTex.xyz, 1.0), applyBump(tbnMatrix, NormalTex.xyz, PHYSICS_OCEAN_TRANSITION), smoothstep(0.0, 0.1, physics_localWaviness));
 	#else
 		normal = applyBump(tbnMatrix, NormalTex.xyz, 1.0);
 	#endif
@@ -563,7 +563,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	worldSpaceNormal = viewToWorld(normal);
 	
 	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
-		if (isWater) TangentNormal = normalize(wave.normal).xz;
+		if (isWater) TangentNormal = mix(NormalTex.xy, normalize(wave.normal).xz, smoothstep(0.0, 0.1, physics_localWaviness));
 	#endif
 
 	float nameTagMask = 0.0;

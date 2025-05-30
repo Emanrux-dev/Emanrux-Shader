@@ -3,6 +3,8 @@
 #define EXCLUDE_WRITE_TO_LUT
 
 flat varying vec4 lightCol;
+flat varying vec3 sunlightCol;
+flat varying vec3 moonlightCol;
 flat varying vec3 averageSkyCol;
 flat varying vec3 averageSkyCol_Clouds;
 
@@ -25,6 +27,8 @@ uniform sampler2D colortex7;
 uniform sampler2D colortex10;
 
 flat varying vec3 WsunVec;
+flat varying vec3 WrealSunVec;
+flat varying vec3 WmoonVec;
 uniform vec3 sunVec;
 uniform float sunElevation;
 
@@ -522,12 +526,14 @@ void main() {
 	vec3 scatterCoef = dirtAmount * vec3(Dirt_Scatter_R, Dirt_Scatter_G, Dirt_Scatter_B) / 3.14;
 
 	vec3 directLightColor = lightCol.rgb / 2400.0;
+	vec3 directSunlightColor = sunlightCol / 2400.0;
+	vec3 directMoonlightColor = moonlightCol / 2400.0;
 	vec3 indirectLightColor = averageSkyCol / 1200.0;
 	vec3 indirectLightColor_dynamic = averageSkyCol_Clouds / 1200.0;
 	float cloudPlaneDistance = 0.0;
 
 	#if defined OVERWORLD_SHADER
-		vec4 VolumetricClouds = GetVolumetricClouds(viewPos0, BN, WsunVec, directLightColor, indirectLightColor, cloudPlaneDistance);
+		vec4 VolumetricClouds = GetVolumetricClouds(viewPos0, BN, WrealSunVec, WmoonVec, directSunlightColor, directMoonlightColor, indirectLightColor, cloudPlaneDistance);
 		
 		#ifdef CAVE_FOG
 			#if (CAVE_DETECTION == 0.0) || (CAVE_DETECTION == 1.0)

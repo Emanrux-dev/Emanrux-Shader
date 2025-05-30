@@ -5,6 +5,8 @@
 	uniform float nightVision;
 
 flat varying vec4 lightCol;
+flat varying vec3 sunlightCol;
+flat varying vec3 moonlightCol;
 flat varying vec3 averageSkyCol;
 flat varying vec3 averageSkyCol_Clouds;
 flat varying float exposure;
@@ -27,6 +29,8 @@ uniform sampler2D colortex11;
 uniform sampler2D colortex14;
 
 flat varying vec3 WsunVec;
+flat varying vec3 WrealSunVec;
+flat varying vec3 WmoonVec;
 uniform vec3 sunVec;
 uniform float sunElevation;
 
@@ -314,6 +318,8 @@ void main() {
 		#endif
 		
 		vec3 directLightColor = lightCol.rgb / 2400.0;
+		vec3 directSunlightColor = sunlightCol / 2400.0;
+		vec3 directMoonlightColor = moonlightCol / 2400.0;
 		vec3 indirectLightColor = averageSkyCol / 1200.0;
 		vec3 indirectLightColor_dynamic = averageSkyCol_Clouds / 1200.0;
 
@@ -349,7 +355,7 @@ void main() {
 		float cloudPlaneDistance = 0.0;
 
 		#ifdef OVERWORLD_SHADER
-			vec4 VolumetricClouds = GetVolumetricClouds(viewPos1, vec2(noise_1, noise_2), WsunVec, directLightColor, indirectLightColor, cloudPlaneDistance);
+			vec4 VolumetricClouds = GetVolumetricClouds(viewPos1, vec2(noise_1, noise_2), WrealSunVec, WmoonVec, directSunlightColor, directMoonlightColor, indirectLightColor, cloudPlaneDistance);
 
 			float atmosphereAlpha = 1.0;
 			vec4 VolumetricFog = GetVolumetricFog(viewPos1, WsunVec,  vec2(noise_1, noise_2), directLightColor, indirectLightColor, indirectLightColor_dynamic, atmosphereAlpha, VolumetricClouds.rgb,cloudPlaneDistance);

@@ -42,6 +42,7 @@ uniform float frameTimeCounter;
 uniform float rainStrength;
 uniform float eyeAltitude;
 uniform vec3 sunVec;
+uniform vec3 moonVec;
 uniform vec2 texelSize;
 uniform mat4 gbufferProjection;
 uniform mat4 gbufferProjectionInverse;
@@ -70,6 +71,7 @@ vec4 lightCol = vec4(lightSourceColor, float(sunElevation > 1e-5)*2-1.);
 #include "/lib/waterBump.glsl"
 
 vec3 WsunVec = mat3(gbufferModelViewInverse)*sunVec;
+vec3 WmoonVec = mat3(gbufferModelViewInverse)*moonVec;
 // vec3 WsunVec = normalize(LightDir);
 
 vec3 toShadowSpaceProjected(vec3 p3){
@@ -317,8 +319,6 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 
 	if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
 
-	WsunVec = mix(WmoonVec, WsunVec, clamp(float(sunElevation > 1e-5)*2.0-1.0 ,0,1));
-
 	vec3 sky = texelFetch2D(colortex4,ivec2(gl_FragCoord.xy)-ivec2(257,0),0).rgb/150.0;	
 	sky = mix(averageSkyCol_Clouds * AmbientLightTint * 0.25, sky,  pow(clamp(viewVector.y+1.0,0.0,1.0),5.0));
 	
@@ -329,9 +329,10 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 	#endif
 	float rejection = 1.0;
 	float cloudPlaneDistance = 0.0;
-	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, suncol*2.5, skyGroundCol/30.0, cloudPlaneDistance);
+	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, WmoonVec, sunColor*2.5, moonColor*2.5, skyGroundCol/30.0, cloudPlaneDistance);
 
 	float atmosphereAlpha = 1.0;
+	WsunVec = mix(WmoonVec, WsunVec, clamp(float(sunElevation > 1e-5)*2.0-1.0 ,0,1));
 	vec4 volumetricFog = GetVolumetricFog(viewPos, WsunVec,   vec2(noise, 1.0-noise), suncol*2.5, skyGroundCol/30.0, averageSkyCol_Clouds*5.0, atmosphereAlpha, volumetricClouds.rgb, cloudPlaneDistance);
 
 	sky = sky * volumetricClouds.a + volumetricClouds.rgb / 5.0;

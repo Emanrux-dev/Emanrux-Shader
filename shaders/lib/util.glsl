@@ -194,3 +194,31 @@ float HaltonSeq2(int index)
         }
         return r;
     }
+
+mat3 customRotation(float rotationAngle, float worldTime) {
+    float radiance = worldTime / 24000.0 * 6.28319;
+
+    float sunRotRad = radians(rotationAngle);
+
+    vec3 rotationAxis = vec3(0.0, sin(sunRotRad), cos(sunRotRad));
+
+    float c = cos(radiance);
+    float s = sin(radiance);
+    float t = 1.0 - c;
+
+    mat3 tiltRotation = mat3(
+        t * rotationAxis.x * rotationAxis.x + c,
+        t * rotationAxis.x * rotationAxis.y - s * rotationAxis.z,
+        t * rotationAxis.x * rotationAxis.z + s * rotationAxis.y,
+        
+        t * rotationAxis.x * rotationAxis.y + s * rotationAxis.z,
+        t * rotationAxis.y * rotationAxis.y + c,
+        t * rotationAxis.y * rotationAxis.z - s * rotationAxis.x,
+        
+        t * rotationAxis.x * rotationAxis.z - s * rotationAxis.y,
+        t * rotationAxis.y * rotationAxis.z + s * rotationAxis.x,
+        t * rotationAxis.z * rotationAxis.z + c
+    );
+
+    return tiltRotation;
+}

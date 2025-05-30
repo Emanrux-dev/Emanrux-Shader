@@ -7,6 +7,24 @@ vec3 drawSun(float cosY, float sunInt,vec3 nsunlight, vec3 inColor){
 	return (inColor+nsunlight/0.0008821203*pow(smoothstep(cos(0.0093084168595*3.2),cos(0.0093084168595*1.8),cosY),3.)*0.62);
 
 }
+const float pi = 3.141592653589793238462643383279502884197169;
+
+vec2 sphereMap(vec2 uv) {
+    vec2 position = 2.0 * uv - 1.0;
+    
+    float radius = dot(position, position);
+    if (radius > 1.0) return vec2(0.0);
+    
+    float z = sqrt(1.0 - radius);
+    
+    float longitude = atan(position.x, z);
+    float latitude = acos(position.y);
+    
+    float u = (longitude + pi) / (2.0 * pi);
+    float v = latitude / pi;
+    
+    return vec2(u, v);
+}
 
 vec3 drawMoon(vec3 PlayerPos, vec3 WorldSunVec, vec3 Color, inout vec3 occludeStars){
 
@@ -39,10 +57,14 @@ vec3 drawMoon(vec3 PlayerPos, vec3 WorldSunVec, vec3 Color, inout vec3 occludeSt
 	return Shape * pow(clamp(dot(sunNormal,LightDir)/5,0.0,1.5),5) * Color * 10.0 + clamp(Shape * 4.0 * pow(shape2/200,2.0),0.0,1.0)*0.004;
 	*/
 }
+vec3 drawRealMoon(vec3 PlayerPos, vec3 WorldSunVec, inout vec3 occludeStars){
 
-const float pi = 3.141592653589793238462643383279502884197169;
+	float Shape = min(max(dot(WorldSunVec,PlayerPos)-0.9992,0.0)/(1.0-0.9992),1.0);//  * clamp(-dot(WorldSunVec,PlayerPos),0,1);
+	
+	occludeStars *= max(1.0-Shape*50,0.0);
 
-
+	return Shape * moonColorBase2/4000 * 3.0;
+}
 
 float w0(float a)
 {

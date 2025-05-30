@@ -80,6 +80,12 @@ uniform sampler2D colortex13;
 uniform sampler2D colortex14;
 uniform sampler2D colortex15; // flat normals(rgb), vanillaAO(alpha)
 
+#ifdef REALMOON
+	uniform sampler2D moon;
+#endif
+
+uniform float sunElevation;
+
 #ifdef IS_LPV_ENABLED
 	uniform usampler1D texBlockData;
 	uniform sampler3D texLpv1;
@@ -727,6 +733,11 @@ void applyPuddles(
 	// albedo = mix(albedo, vec3(1.0), snow);
 }
 
+vec3 projectAndDivide(mat4 projectionMatrix, vec3 position) {
+	vec4 homogeneousPos = projectionMatrix * vec4(position, 1.0);
+	return homogeneousPos.xyz / homogeneousPos.w;
+}
+
 
 void main() {
 
@@ -1299,33 +1310,9 @@ void main() {
 			
 			#if RESOURCEPACK_SKY == 1 || RESOURCEPACK_SKY == 0 || RESOURCEPACK_SKY == 3
 				// vec3 orbitstar = vec3(feetPlayerPos_normalized.x,abs(feetPlayerPos_normalized.y),feetPlayerPos_normalized.z); orbitstar.x -= WsunVec.x*0.2;
-				vec3 orbitstar = normalize(mat3(gbufferModelViewInverse) * toScreenSpace(vec3(texcoord/RENDER_SCALE,1.0)));
+				vec3 worldDir = normalize(mat3(gbufferModelViewInverse) * toScreenSpace(vec3(texcoord/RENDER_SCALE,1.0)));
 
-				float radiance = worldTime / 24000.0 * 6.28319;
-
-				float sunRotRad = radians(sunPathRotation);
-
-				vec3 rotationAxis = vec3(0.0, sin(sunRotRad), cos(sunRotRad));
-
-				float c = cos(radiance);
-				float s = sin(radiance);
-				float t = 1.0 - c;
-
-				mat3 tiltRotation = mat3(
-					t * rotationAxis.x * rotationAxis.x + c,
-					t * rotationAxis.x * rotationAxis.y - s * rotationAxis.z,
-					t * rotationAxis.x * rotationAxis.z + s * rotationAxis.y,
-					
-					t * rotationAxis.x * rotationAxis.y + s * rotationAxis.z,
-					t * rotationAxis.y * rotationAxis.y + c,
-					t * rotationAxis.y * rotationAxis.z - s * rotationAxis.x,
-					
-					t * rotationAxis.x * rotationAxis.z - s * rotationAxis.y,
-					t * rotationAxis.y * rotationAxis.z + s * rotationAxis.x,
-					t * rotationAxis.z * rotationAxis.z + c
-				);
-
-				orbitstar = tiltRotation * orbitstar;
+				vec3 orbitstar = customRotation(sunPathRotation, worldTime) * worldDir;
 
 				#if defined OVERWORLD_SHADER && defined TWILIGHT_FOREST_FLAG
 					Background += stars(orbitstar) * 100.0;
@@ -1337,8 +1324,38 @@ void main() {
 					Background += drawSun(dot(unsigned_WsunVec, feetPlayerPos_normalized), 0, DirectLightColor,vec3(0.0));
 
 					vec3 moonLightCol = moonCol / 2400.0;
+					#ifdef REALMOON
+						vec3 tangent = normalize(cross(WmoonVec, vec3(0.0, 1.0, 0.0)));
+						vec3 binormal = cross(WmoonVec, tangent);
+						vec3 dirDiff = worldDir - WmoonVec;
 
-					Background += drawMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background); 
+						float u = dot(dirDiff, tangent);
+						float v = dot(dirDiff, binormal);
+
+						float moonAngularRadius = acos(0.9992); 
+
+						u = u / (2.0 * moonAngularRadius) + 0.5;
+						v = -v / (2.0 * moonAngularRadius) + 0.5;
+						vec2 moonUV = vec2(u, v);
+
+						float moonVis = smoothstep(0.08, -0.03, -sunElevation);
+						float moonphaseMult = 1.0;
+						#ifdef MOONPHASE_BASED_MOONLIGHT
+							if (moonPhase == 0) moonphaseMult = 1.0;
+							if (moonPhase == 1) moonphaseMult = smoothstep(0.85, 0.65, u + pow(abs(0.8*(v-0.5)), 2.0));
+							if (moonPhase == 2) moonphaseMult = smoothstep(0.6, 0.4, u);
+							if (moonPhase == 3) moonphaseMult = smoothstep(0.35, 0.15, u - pow(abs(0.8*(v-0.5)), 2.0));
+							if (moonPhase == 4) moonphaseMult = 0.0;
+							if (moonPhase == 5) moonphaseMult = smoothstep(0.65, 0.85, u + pow(abs(0.8*(v-0.5)), 2.0));
+							if (moonPhase == 6) moonphaseMult = smoothstep(0.4, 0.6, u);	
+							if (moonPhase == 7) moonphaseMult = smoothstep(0.15, 0.35, u - pow(abs(0.8*(v-0.5)), 2.0));	
+						#endif
+						vec3 moonTex = (1 - moonVis*vec3(0.0, 0.5, 0.7)) * moonphaseMult * texture2D(moon, sphereMap(moonUV)).rgb;
+						
+						Background += pow(moonTex, vec3(3.2)) * 20.0 * drawRealMoon(feetPlayerPos_normalized, WmoonVec, Background);
+					#else
+						Background += drawMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background); 
+					#endif
 					// Background += drawSun(dot(WmoonVec, feetPlayerPos_normalized),0, moonLightCol,vec3(0.0));
 				#endif
 

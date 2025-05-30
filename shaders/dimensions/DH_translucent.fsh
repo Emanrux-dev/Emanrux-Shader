@@ -458,9 +458,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			float viewDist = length(mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz); 
 
 			float ditherFade = smoothstep(max(far-9,9), far-1, viewDist);
-			if (step(bayerDither()/ditherFade, ditherFade) == 0.0) {
-				discard; 
-			}
+			if (step(bayerDither()/ditherFade, ditherFade) == 0.0) discard;
 		}
 	#endif
 }

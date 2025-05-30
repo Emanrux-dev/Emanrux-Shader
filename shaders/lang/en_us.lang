@@ -13,7 +13,8 @@ option.CAVE_DETECTION = Cave detection
 option.sunPathRotation = Sun Angle
 option.sun_illuminance = Sun Illuminance
 option.moon_illuminance = Moon Illuminance
-option.MOONPHASE_BASED_MOONLIGHT = Moonphase brightness levels
+option.MOONPHASE_BASED_MOONLIGHT = Moonphase Brightness Levels
+option.REALMOON = Realistic Moon
 screen.Misc_Settings = §cDebugging§r/Experimental Settings
 screen.Mod_support = Settings For Supported Mods
 

@@ -37,6 +37,7 @@ varying vec4 color;
 
 uniform int renderStage;
 uniform int isEyeInWater;
+uniform vec3 sunPosition;
 
 uniform sampler2D texture;
 uniform sampler2D noisetex;
@@ -240,6 +241,13 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 	{
 		return texture2DGradARB(texture,fract(coord)*vtexcoordam.pq+vtexcoordam.st,dcdx,dcdy);
 	}
+	vec4 texture2D_POMSwitch(
+	sampler2D sampler, 
+	vec2 lightmapCoord,
+	vec4 dcdxdcdy
+	){
+		return texture2DGradARB(sampler, lightmapCoord, dcdxdcdy.xy, dcdxdcdy.zw);
+	}
 #endif
 
 uniform float near;
@@ -248,13 +256,6 @@ float ld(float dist) {
     return (2.0 * near) / (far + near - dist * (far - near));
 }
 
-vec4 texture2D_POMSwitch(
-	sampler2D sampler, 
-	vec2 lightmapCoord,
-	vec4 dcdxdcdy
-){
-	return texture2DGradARB(sampler, lightmapCoord, dcdxdcdy.xy, dcdxdcdy.zw);
-}
 
 float luma(vec3 color) {
 	return dot(color,vec3(0.21, 0.72, 0.07));
@@ -388,6 +389,10 @@ void main() {
 		gl_FragData[1] = vec4(0.0,0.0,0.0,TEXTURE.a); // for bloomy rain and stuff
 	#endif
 
+	#if !defined WEATHER || (defined DISTANT_HORIZONS && defined DH_CHUNK_FADING)
+		float viewDist = length(mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz);
+	#endif
+
 	#ifndef WEATHER
 		#ifndef LINES
 			gl_FragData[0].a = TEXTURE.a;
@@ -477,13 +482,15 @@ void main() {
 
 			if(SELECTION_BOX > 0) gl_FragData[0].rgba = vec4(toLinear(vec3(SELECT_BOX_COL_R, SELECT_BOX_COL_G, SELECT_BOX_COL_B)), 1.0);
 			
-			float LITEMATICA_SCHEMATIC_THING_MASK = 0.0;
-			if (renderStage == MC_RENDER_STAGE_NONE){
-				LITEMATICA_SCHEMATIC_THING_MASK = 0.1;
-				gl_FragData[0] = vec4(toLinear(color.rgb), color.a);
-			}
+			// float LITEMATICA_SCHEMATIC_THING_MASK = 0.0;
+			// if (renderStage == MC_RENDER_STAGE_NONE){
+			// 	LITEMATICA_SCHEMATIC_THING_MASK = 0.1;
+			// 	gl_FragData[0] = vec4(toLinear(color.rgb), color.a);
+			// }
 
-			gl_FragData[2] = vec4(encodeVec2(vec2(0.0)), encodeVec2(vec2(0.0)), encodeVec2(vec2(0.0)), encodeVec2(0.0, LITEMATICA_SCHEMATIC_THING_MASK));
+			// gl_FragData[2] = vec4(encodeVec2(vec2(0.0)), encodeVec2(vec2(0.0)), encodeVec2(vec2(0.0)), encodeVec2(0.0, LITEMATICA_SCHEMATIC_THING_MASK));
+
+			if (length(viewPos-normalize(sunPosition)*viewDist) < 0.03*viewDist && SELECTION_BOX > 0) discard; // dirty fix for sun shining through selection box
 		#else
 			gl_FragData[0].rgb = (Indirect_lighting + Direct_lighting) * Albedo;
 		#endif
@@ -496,16 +503,10 @@ void main() {
 
 	#endif
 
-	#if defined DISTANT_HORIZONS
-		#ifdef DH_CHUNK_FADING
-
-			float viewDist = length(mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz); 
+	#if defined DISTANT_HORIZONS && defined DH_CHUNK_FADING
 			float ditherFade = smoothstep(0.98*far, 1.0*far, viewDist);
 
-			if (step(ditherFade, bayerDither()) == 0.0) {
-				discard; 
-			}
-		#endif
+			if (step(ditherFade, bayerDither()) == 0.0) discard;
 	#endif
 
 #endif

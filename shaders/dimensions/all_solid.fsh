@@ -455,13 +455,11 @@ void main() {
 
 	vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD) * color;
 
-	#if defined DISTANT_HORIZONS
-		#ifdef DH_CHUNK_FADING
+	#if defined DISTANT_HORIZONS && defined DH_CHUNK_FADING
 			float viewDist = length(playerpos); 
 			float ditherFade = smoothstep(0.98 * far, 1.03 * far, viewDist);
 
 			Albedo.a *= step(ditherFade, bayerDither());
-		#endif
 	#endif
 	
 	#if defined HAND

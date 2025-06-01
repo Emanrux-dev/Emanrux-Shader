@@ -31,10 +31,13 @@ uniform float nightVision;
 	flat varying vec3 averageSkyCol_Clouds;
 	flat varying vec4 lightCol;
 
-	uniform sampler2D snowTexA;
-	uniform sampler2D snowTexR;
-	uniform sampler2D snowTexN;
-	uniform int biome_precipitation;
+	#if ShaderSnow > 0
+		uniform sampler2D snowTexA;
+		uniform sampler2D snowTexN;
+	#endif
+	#if ShaderSnow > 0 || defined Puddles
+		uniform sampler2D snowTexR;
+	#endif
 
 	#ifdef REALMOON
 		uniform sampler2D moon;
@@ -698,17 +701,18 @@ uniform float snowAmount;
 uniform float wetness;
 
 void applyPuddles(
-	in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0
+	in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, in int isEyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0
 ){
 	float effectStrength = smoothstep(0.85, 1.0, max(lightmap.y-step(1.0,lightmap.x), 0.0));
 	vec2 snowCoords = worldPos.xz*0.1;
 	float snowR = texture2D(snowTexR, snowCoords).g;
-	float noise = texture2D(noisetex, worldPos.xz * 0.02).b;
 
 	#ifdef Puddles
 		if (wetnessAmount > 0.01) {
 			float halfWet = min(wetnessAmount,1.0);
 			float fullWet = clamp(wetnessAmount - 2.0,0.0,1.0);
+
+			float noise = texture2D(noisetex, worldPos.xz * 0.02).b;
 			
 			float puddles = max(halfWet - noise,0.0);
 			puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
@@ -723,12 +727,12 @@ void applyPuddles(
 		}
 	#endif
 
-	#ifdef ShaderSnow
+	#if ShaderSnow > 0
 		if (snowAmount > 0.01) {
 			float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(flatNormals.y,0.5,1.0),0,1);
 			float snow = clamp(1.0 - 2*upnormal - (1.0-effectStrength),0.0,1.0);
 
-			if(isWater || f0 > 229.5/255.0) snow = 0.0;
+			if(isWater || f0 > 229.5/255.0 || isEyeInWater == 1) snow = 0.0;
 
 			vec3 snowA = pow(texture2D(snowTexA, snowCoords).rgb, vec3(2.0/(ShaderSnowStrength-0.1)));
 			vec3 snowN = texture2D(snowTexN, snowCoords).rgb;
@@ -1289,7 +1293,7 @@ void main() {
 		#endif
 
 		#if defined OVERWORLD_SHADER && defined DEFERRED_SPECULAR && (defined Puddles || ShaderSnow > 0)
-			if(!hand && !entities && (wetnessAmount > 0.01 || snowAmount > 0.01)) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap, isWater, albedo, normal, SpecularTex.r, SpecularTex.g);
+			if(!hand && !entities && (wetnessAmount > 0.01 || snowAmount > 0.01)) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap, isWater, isEyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g);
 		#endif
 
 		vec3 FINAL_COLOR = (Indirect_lighting + Direct_lighting) * albedo;

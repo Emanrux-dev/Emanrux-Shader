@@ -280,10 +280,11 @@ const float entityShadowDistanceMul = 0.25; // [0.01 0.02 0.03 0.04 0.05 0.10 0.
 
 
 // #define Porosity
-#ifdef Specular_Reflections
-	#define Puddles // yes
-#endif
+#define Puddles // yes
 #define Puddle_Size 1.0 // [0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5]
+#define Puddle_Reflection_Strength 0.5 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+#define ShaderSnow 1 // [0 1 2 3]
+#define ShaderSnowStrength 1.0 // [0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5]
 
 // #define MATERIAL_AO
 
@@ -620,6 +621,7 @@ const vec3 HIGHLIGHTS_TARGET = length(vec3(HIGHLIGHTS_GRADE_R, HIGHLIGHTS_GRADE_
 #define AEROCHROME_PINKNESS 0.3 // How pink it is from red [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
 const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631), AEROCHROME_PINKNESS);
 // #define CAMERA_GRIDLINES
+// #define EMISSIVE_ORES
 
 
 
@@ -924,4 +926,6 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #ifdef USE_CUSTOM_FOG_LIGHTING_COLORS
 #endif
 #ifdef USE_CUSTOM_SKY_GROUND_LIGHTING_COLORS
+#endif
+#ifdef EMISSIVE_ORES
 #endif

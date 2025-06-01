@@ -375,8 +375,10 @@ void main() {
 		if(HELD_ITEM_BRIGHTNESS > 0.0){ 
 			
 			float pointLight = clamp(1.0-(length(worldpos-playerCamPos)-1)/HANDHELD_LIGHT_RANGE,0.0,1.0);
-			
-			torchlightmap = mix(torchlightmap, HELD_ITEM_BRIGHTNESS, pointLight);
+
+			if (torchlightmap < 0.99) {
+				torchlightmap = mix(torchlightmap, HELD_ITEM_BRIGHTNESS, pointLight);
+			}
 		}
 
 		#ifdef HAND

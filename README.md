@@ -3,6 +3,8 @@
 Changes/additions compared to Xonk's unstable-development branch:
  + Additional cirrus & cumulonimbus cloud layers
  + Distant Horizons chunk fading
+ + Moon texture with phases
+ + Improved Puddles and Snow overlays
  + Better mod support
  + Much better emissives
  + Star rotation based on moon rotation
@@ -26,6 +28,7 @@ i wanted to emphasize a varying scene, where the lighting isn't always the same 
 + Null, for doing a huge amount of work creating the voxel floodfill colored lighting
 + Emin, and Gri573, for teaching me how to stop alot of light leaking
 + RRe36 and Sixthsurge, for the great ideas to steal
++ Moon Texture from https://www.solarsystemscope.com/textures/
 ### [Want to support me? donate on my patreon](https://www.patreon.com/Xonkmoney)
 
 # IN-DEVELOPMENT VERSIONS AND RELEASE VERSIONS

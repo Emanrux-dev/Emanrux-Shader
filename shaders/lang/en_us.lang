@@ -524,6 +524,13 @@ screen.Porosity = Porosity / Puddles
     option.Porosity = Porosity
     option.Puddles = Puddles
     option.Puddle_Size = Puddle Size Multiplier
+    option.Puddle_Reflection_Strength = Puddle Reflection Strength
+    option.ShaderSnow = Shader Snow Effect
+        value.ShaderSnow.0 = Off
+        value.ShaderSnow.1 = When snowing
+        value.ShaderSnow.2 = When in snowy Biome
+        value.ShaderSnow.3 = Always on
+    option.ShaderSnowStrength = Shader Snow Strength
 
 option.MATERIAL_AO = Material Ambient Occlusion
 
@@ -557,6 +564,8 @@ option.AEROCHROME_WOOL_ENABLED=Aerochrome Wool
 option.AEROCHROME_MODE.comment = Infrared Film. Google "Aerochrome" to get an idea of what it does.
 option.AEROCHROME_PINKNESS.comment = Higher = Pink. Lower = Red
 option.AEROCHROME_WOOL_ENABLED.comment = Technically wool things should be affected but it ruins a lot of builds. Enable to be more technically correct.
+
+option.EMISSIVE_ORES = Emissive Ores
 
 option.USE_CUSTOM_DIFFUSE_LIGHTING_COLORS = Custom Diffuse Colors
 option.DIRECTLIGHT_DIFFUSE_R = Sun R

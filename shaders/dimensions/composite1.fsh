@@ -30,7 +30,17 @@ uniform float nightVision;
 
 	flat varying vec3 averageSkyCol_Clouds;
 	flat varying vec4 lightCol;
-	flat varying vec3 moonCol;
+
+	uniform sampler2D snowTexA;
+	uniform sampler2D snowTexR;
+	uniform sampler2D snowTexN;
+	uniform int biome_precipitation;
+
+	#ifdef REALMOON
+		uniform sampler2D moon;
+	#else
+		flat varying vec3 moonCol;
+	#endif
 
 	#if Sun_specular_Strength != 0
 		#define LIGHTSOURCE_REFLECTION
@@ -80,9 +90,6 @@ uniform sampler2D colortex13;
 uniform sampler2D colortex14;
 uniform sampler2D colortex15; // flat normals(rgb), vanillaAO(alpha)
 
-#ifdef REALMOON
-	uniform sampler2D moon;
-#endif
 
 uniform float sunElevation;
 
@@ -177,7 +184,7 @@ float convertHandDepth_2(in float depth, bool hand) {
 	#include "/lib/lpv_render.glsl"
 #endif
 
-// #define DEFERRED_SPECULAR
+#define DEFERRED_SPECULAR
 #define DEFERRED_ENVIORNMENT_REFLECTION
 #define DEFERRED_BACKGROUND_REFLECTION
 #define DEFERRED_ROUGH_REFLECTION
@@ -687,57 +694,58 @@ vec3 SubsurfaceScattering_sky(vec3 albedo, float Scattering, float Density){
 }
 
 uniform float wetnessAmount;
+uniform float snowAmount;
 uniform float wetness;
 
 void applyPuddles(
-	in vec3 worldPos, in vec3 flatNormals, in float lightmap, in bool isWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0
+	in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0
 ){
-	vec3 unchangedNormals = normals;
-
-
-
-	float halfWet = min(wetnessAmount,1.0);
-	float fullWet = clamp(wetnessAmount - 2.0,0.0,1.0);
-	// halfWet = 1.0;
- 	// fullWet = 0.0;
+	float effectStrength = smoothstep(0.85, 1.0, max(lightmap.y-step(1.0,lightmap.x), 0.0));
+	vec2 snowCoords = worldPos.xz*0.1;
+	float snowR = texture2D(snowTexR, snowCoords).g;
 	float noise = texture2D(noisetex, worldPos.xz * 0.02).b;
 
+	#ifdef Puddles
+		if (wetnessAmount > 0.01) {
+			float halfWet = min(wetnessAmount,1.0);
+			float fullWet = clamp(wetnessAmount - 2.0,0.0,1.0);
+			
+			float puddles = max(halfWet - noise,0.0);
+			puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
 
-	float lightmapMax = min(max(lightmap - 0.9,0.0) * 10.0,1.0) ;
-	float lightmapMin = min(max(lightmap - 0.8,0.0) * 5.0,1.0) ;
-	lightmap = clamp(lightmapMax + noise*lightmapMin*2.0,0.0,1.0);
-	lightmap = pow(1.0-pow(1.0-lightmap,3.0),2.0);
-	
-	float puddles = max(halfWet - noise,0.0);
-	puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles),0.0,1.0);
-	
-	float wetnessStages = mix(puddles, 1.0, fullWet) * lightmap;
-	if(isWater) wetnessStages = 0.0;
+			float wetnessStages = mix(puddles, 1.0, fullWet) * effectStrength;
+			if(isWater) wetnessStages = 0.0;
 
-	normals = mix(normals, flatNormals, puddles * lightmap * clamp(flatNormals.y,0.0,1.0));
-	roughness = mix(roughness, 1.0, wetnessStages);
+			normals = mix(normals, flatNormals, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
+			roughness = mix(roughness, snowR, wetnessStages * Puddle_Reflection_Strength);
 
-	if(f0 < 229.5/255.0 ) albedo = pow(albedo * (1.0 - 0.08*wetnessStages), vec3(1.0 + 0.7*wetnessStages));
+			if(f0 < 229.5/255.0 ) albedo = pow(albedo * (1.0 - 0.08*wetnessStages), vec3(1.0 + 0.7*wetnessStages));
+		}
+	#endif
 
-	//////////////// snow
-	
-	// float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(flatNormals.y,0.5,1.0),0,1);
-	// halfWet = clamp(halfWet - upnormal - (1.0-lightmap),0.0,1.0);
-	// float snow = max(halfWet - noise,0.0);
-	// snow = clamp(halfWet - exp(-20.0 * snow*snow*snow*snow*snow),0.0,1.0);
-	
-	// if(isWater || f0 > 229.5/255.0) snow = 0.0;
+	#ifdef ShaderSnow
+		if (snowAmount > 0.01) {
+			float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(flatNormals.y,0.5,1.0),0,1);
+			float snow = clamp(1.0 - 2*upnormal - (1.0-effectStrength),0.0,1.0);
 
-	// normals = mix(normals, unchangedNormals, snow);
-	// roughness = mix(roughness, 0.5, snow);
-	// albedo = mix(albedo, vec3(1.0), snow);
+			if(isWater || f0 > 229.5/255.0) snow = 0.0;
+
+			vec3 snowA = pow(texture2D(snowTexA, snowCoords).rgb, vec3(2.0/(ShaderSnowStrength-0.1)));
+			vec3 snowN = texture2D(snowTexN, snowCoords).rgb;
+			
+			float omSA = 1-snowAmount;
+
+			float textureMult = smoothstep(0.1+0.5*omSA, 0.5+0.9*omSA, length(snowA)*snow*snowAmount);
+
+			normals = mix(normals, 0.5*snowN, textureMult);
+			roughness = mix(roughness, 0.8*snowR, sqrt(textureMult));
+			albedo = mix(albedo, 2.5*snowA, textureMult);
+
+			// let it melt
+			roughness = mix(roughness, 0.5*snowR, smoothstep(0.15, 0.7, snowAmount)*smoothstep(1.0, 0.8, snowAmount)*effectStrength); 
+		}
+	#endif
 }
-
-vec3 projectAndDivide(mat4 projectionMatrix, vec3 position) {
-	vec4 homogeneousPos = projectionMatrix * vec4(position, 1.0);
-	return homogeneousPos.xyz / homogeneousPos.w;
-}
-
 
 void main() {
 
@@ -1280,8 +1288,8 @@ void main() {
 			#endif
 		#endif
 
-		#if defined OVERWORLD_SHADER && defined DEFERRED_SPECULAR
-			if(!hand && !entities) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap.y, isWater, albedo, normal, SpecularTex.r, SpecularTex.g);
+		#if defined OVERWORLD_SHADER && defined DEFERRED_SPECULAR && (defined Puddles || ShaderSnow > 0)
+			if(!hand && !entities && (wetnessAmount > 0.01 || snowAmount > 0.01)) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap, isWater, albedo, normal, SpecularTex.r, SpecularTex.g);
 		#endif
 
 		vec3 FINAL_COLOR = (Indirect_lighting + Direct_lighting) * albedo;
@@ -1323,7 +1331,6 @@ void main() {
 				#if !defined ambientLight_only && (RESOURCEPACK_SKY == 1 || RESOURCEPACK_SKY == 0)
 					Background += drawSun(dot(unsigned_WsunVec, feetPlayerPos_normalized), 0, DirectLightColor,vec3(0.0));
 
-					vec3 moonLightCol = moonCol / 2400.0;
 					#ifdef REALMOON
 						vec3 tangent = normalize(cross(WmoonVec, vec3(0.0, 1.0, 0.0)));
 						vec3 binormal = cross(WmoonVec, tangent);
@@ -1352,11 +1359,12 @@ void main() {
 						#endif
 						vec3 moonTex = (1 - moonVis*vec3(0.0, 0.5, 0.7)) * moonphaseMult * texture2D(moon, sphereMap(moonUV)).rgb;
 						
-						Background += pow(moonTex, vec3(3.2)) * 20.0 * drawRealMoon(feetPlayerPos_normalized, WmoonVec, Background);
+						vec3 moonLightCol = moonColorBase2;
+						Background += pow(moonTex, vec3(3.2)) * 20.0 * drawRealMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background);
 					#else
+						vec3 moonLightCol = moonCol / 2400.0;
 						Background += drawMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background); 
 					#endif
-					// Background += drawSun(dot(WmoonVec, feetPlayerPos_normalized),0, moonLightCol,vec3(0.0));
 				#endif
 
 				Background *= atmosphereGround;

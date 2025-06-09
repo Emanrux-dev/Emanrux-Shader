@@ -735,13 +735,13 @@ void applyPuddles(
 			if(isWater || f0 > 229.5/255.0 || isEyeInWater == 1) snow = 0.0;
 
 			vec3 snowA = pow(texture2D(snowTexA, snowCoords).rgb, vec3(2.0/(ShaderSnowStrength-0.1)));
-			vec3 snowN = texture2D(snowTexN, snowCoords).rgb;
+			vec3 snowN = 2*texture2D(snowTexN, snowCoords).rgb - 1;
 			
 			float omSA = 1-snowAmount;
 
 			float textureMult = smoothstep(0.1+0.5*omSA, 0.5+0.9*omSA, length(snowA)*snow*snowAmount);
 
-			normals = mix(normals, 0.5*snowN, textureMult);
+			normals = mix(normals, normalize(snowN), textureMult);
 			roughness = mix(roughness, 0.8*snowR, sqrt(textureMult));
 			albedo = mix(albedo, 2.5*snowA, textureMult);
 

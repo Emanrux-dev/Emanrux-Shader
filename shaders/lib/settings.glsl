@@ -326,7 +326,7 @@ uniform int moonPhase;
 	#define moonColorBase vec3(moonColorR,moonColorG,moonColorB) * moon_illuminance
 
 	#ifdef REALMOON
-		#define moonColorBase2 blackbody(Moon_temp) * moon_illuminance
+		#define moonColorBase2 moonColorBase
 	#endif
 #else
 	#define sunColorBase blackbody(Sun_temp) * sun_illuminance

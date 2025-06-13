@@ -461,7 +461,7 @@ void main() {
 			float viewDist = length(playerpos); 
 			float ditherFade = smoothstep(0.98 * far, 1.03 * far, viewDist);
 
-			Albedo.a *= step(ditherFade, bayerDither());
+			if(step(ditherFade, bayerDither()) == 0.0) discard;
 	#endif
 	
 	#if defined HAND

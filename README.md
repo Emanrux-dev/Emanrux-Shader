@@ -13,7 +13,6 @@ Changes/additions compared to Xonk's unstable-development branch:
  + Much better lightning strikes with clouds lighting up
  + Small Physics Mod ocean adjustments
  + Cave detection now only active below sea level (can also be turned off completely)
- + Sand- and snowstorm fixes
 
 If you have any ideas for something, write an issue.
 

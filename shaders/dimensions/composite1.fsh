@@ -705,7 +705,10 @@ void applyPuddles(
 ){
 	float effectStrength = smoothstep(0.85, 1.0, max(lightmap.y-step(1.0,lightmap.x), 0.0));
 	vec2 snowCoords = worldPos.xz*0.1;
-	float snowR = texture2D(snowTexR, snowCoords).g;
+
+	#if ShaderSnow > 0 || defined Puddles
+		float snowR = texture2D(snowTexR, snowCoords).g;
+	#endif
 
 	#ifdef Puddles
 		if (wetnessAmount > 0.01) {
@@ -1352,14 +1355,18 @@ void main() {
 						float moonVis = smoothstep(0.08, -0.03, -sunElevation);
 						float moonphaseMult = 1.0;
 						#ifdef MOONPHASE_BASED_MOONLIGHT
-							if (moonPhase == 0) moonphaseMult = 1.0;
-							if (moonPhase == 1) moonphaseMult = smoothstep(0.85, 0.65, u + pow(abs(0.8*(v-0.5)), 2.0));
-							if (moonPhase == 2) moonphaseMult = smoothstep(0.6, 0.4, u);
-							if (moonPhase == 3) moonphaseMult = smoothstep(0.35, 0.15, u - pow(abs(0.8*(v-0.5)), 2.0));
-							if (moonPhase == 4) moonphaseMult = 0.0;
-							if (moonPhase == 5) moonphaseMult = smoothstep(0.65, 0.85, u + pow(abs(0.8*(v-0.5)), 2.0));
-							if (moonPhase == 6) moonphaseMult = smoothstep(0.4, 0.6, u);	
-							if (moonPhase == 7) moonphaseMult = smoothstep(0.15, 0.35, u - pow(abs(0.8*(v-0.5)), 2.0));	
+							float[8] phase = float[8](
+								1.0,
+								smoothstep(0.85, 0.65, u + pow(abs(0.8*(v-0.5)), 2.0)),
+								smoothstep(0.6, 0.4, u),
+								smoothstep(0.35, 0.15, u - pow(abs(0.8*(v-0.5)), 2.0)),
+								0.0,
+								smoothstep(0.65, 0.85, u + pow(abs(0.8*(v-0.5)), 2.0)),
+								smoothstep(0.4, 0.6, u),
+								smoothstep(0.15, 0.35, u - pow(abs(0.8*(v-0.5)), 2.0))
+							);
+
+							moonphaseMult = phase[moonPhase];
 						#endif
 						vec3 moonTex = (1 - moonVis*vec3(0.0, 0.5, 0.7)) * moonphaseMult * texture2D(moon, sphereMap(moonUV)).rgb;
 						

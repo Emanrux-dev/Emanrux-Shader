@@ -293,6 +293,8 @@ void main() {
 
 	if(mc_Entity.x == 103) EMISSIVE = 1.0; // amethyst cluster
 
+	if(mc_Entity.x == 244) EMISSIVE = 0.7; // soul fire
+
 	// special cases light lightning and beacon beams...	
 	#ifdef ENTITIES
 		if(entityId == ENTITY_LIGHTNING){

@@ -700,59 +700,61 @@ uniform float wetnessAmount;
 uniform float snowAmount;
 uniform float wetness;
 
-void applyPuddles(
-	in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, in int isEyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0
-){
-	float effectStrength = smoothstep(0.85, 1.0, max(lightmap.y-step(1.0,lightmap.x), 0.0));
-	vec2 snowCoords = worldPos.xz*0.1;
+#ifdef OVERWORLD_SHADER
+	void applyPuddles(
+		in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, in int isEyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0
+	){
+		float effectStrength = smoothstep(0.85, 1.0, max(lightmap.y-step(1.0,lightmap.x), 0.0));
+		vec2 snowCoords = worldPos.xz*0.1;
 
-	#if ShaderSnow > 0 || defined Puddles
-		float snowR = texture2D(snowTexR, snowCoords).g;
-	#endif
+		#if ShaderSnow > 0 || defined Puddles
+			float snowR = texture2D(snowTexR, snowCoords).g;
+		#endif
 
-	#ifdef Puddles
-		if (wetnessAmount > 0.01) {
-			float halfWet = min(wetnessAmount,1.0);
-			float fullWet = clamp(wetnessAmount - 2.0,0.0,1.0);
+		#ifdef Puddles
+			if (wetnessAmount > 0.01) {
+				float halfWet = min(wetnessAmount,1.0);
+				float fullWet = clamp(wetnessAmount - 2.0,0.0,1.0);
 
-			float noise = texture2D(noisetex, worldPos.xz * 0.02).b;
-			
-			float puddles = max(halfWet - noise,0.0);
-			puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
+				float noise = texture2D(noisetex, worldPos.xz * 0.02).b;
+				
+				float puddles = max(halfWet - noise,0.0);
+				puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
 
-			float wetnessStages = mix(puddles, 1.0, fullWet) * effectStrength;
-			if(isWater) wetnessStages = 0.0;
+				float wetnessStages = mix(puddles, 1.0, fullWet) * effectStrength;
+				if(isWater) wetnessStages = 0.0;
 
-			normals = mix(normals, flatNormals, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
-			roughness = mix(roughness, snowR, wetnessStages * Puddle_Reflection_Strength);
+				normals = mix(normals, flatNormals, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
+				roughness = mix(roughness, snowR, wetnessStages * Puddle_Reflection_Strength);
 
-			if(f0 < 229.5/255.0 ) albedo = pow(albedo * (1.0 - 0.08*wetnessStages), vec3(1.0 + 0.7*wetnessStages));
-		}
-	#endif
+				if(f0 < 229.5/255.0 ) albedo = pow(albedo * (1.0 - 0.08*wetnessStages), vec3(1.0 + 0.7*wetnessStages));
+			}
+		#endif
 
-	#if ShaderSnow > 0
-		if (snowAmount > 0.01) {
-			float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(flatNormals.y,0.5,1.0),0,1);
-			float snow = clamp(1.0 - 2*upnormal - (1.0-effectStrength),0.0,1.0);
+		#if ShaderSnow > 0
+			if (snowAmount > 0.01) {
+				float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(flatNormals.y,0.5,1.0),0,1);
+				float snow = clamp(1.0 - 2*upnormal - (1.0-effectStrength),0.0,1.0);
 
-			if(isWater || f0 > 229.5/255.0 || isEyeInWater == 1) snow = 0.0;
+				if(isWater || f0 > 229.5/255.0 || isEyeInWater == 1) snow = 0.0;
 
-			vec3 snowA = pow(texture2D(snowTexA, snowCoords).rgb, vec3(2.0/(ShaderSnowStrength-0.1)));
-			vec3 snowN = 2*texture2D(snowTexN, snowCoords).rgb - 1;
-			
-			float omSA = 1-snowAmount;
+				vec3 snowA = pow(texture2D(snowTexA, snowCoords).rgb, vec3(2.0/(ShaderSnowStrength-0.1)));
+				vec3 snowN = 2*texture2D(snowTexN, snowCoords).rgb - 1;
+				
+				float omSA = 1-snowAmount;
 
-			float textureMult = smoothstep(0.1+0.5*omSA, 0.5+0.9*omSA, length(snowA)*snow*snowAmount);
+				float textureMult = smoothstep(0.1+0.5*omSA, 0.5+0.9*omSA, length(snowA)*snow*snowAmount);
 
-			normals = mix(normals, normalize(snowN), textureMult);
-			roughness = mix(roughness, 0.8*snowR, sqrt(textureMult));
-			albedo = mix(albedo, 2.5*snowA, textureMult);
+				normals = mix(normals, normalize(snowN), textureMult);
+				roughness = mix(roughness, 0.8*snowR, sqrt(textureMult));
+				albedo = mix(albedo, 2.5*snowA, textureMult);
 
-			// let it melt
-			roughness = mix(roughness, 0.5*snowR, smoothstep(0.15, 0.7, snowAmount)*smoothstep(1.0, 0.8, snowAmount)*effectStrength); 
-		}
-	#endif
-}
+				// let it melt
+				roughness = mix(roughness, 0.5*snowR, smoothstep(0.15, 0.7, snowAmount)*smoothstep(1.0, 0.8, snowAmount)*effectStrength); 
+			}
+		#endif
+	}
+#endif
 
 void main() {
 

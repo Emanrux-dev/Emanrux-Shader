@@ -353,9 +353,10 @@ void main() {
 
 		vec4 finalVolumetrics = vec4(0.0,0.0,0.0,1.0);
 		float cloudPlaneDistance = 0.0;
+		vec2 cloudDistance = vec2(0.0);
 
 		#ifdef OVERWORLD_SHADER
-			vec4 VolumetricClouds = GetVolumetricClouds(viewPos1, vec2(noise_1, noise_2), WrealSunVec, WmoonVec, directSunlightColor, directMoonlightColor, indirectLightColor, cloudPlaneDistance);
+			vec4 VolumetricClouds = GetVolumetricClouds(viewPos1, vec2(noise_1, noise_2), WrealSunVec, WmoonVec, directSunlightColor, directMoonlightColor, indirectLightColor, cloudPlaneDistance, cloudDistance);
 
 			float atmosphereAlpha = 1.0;
 			vec4 VolumetricFog = GetVolumetricFog(viewPos1, WsunVec,  vec2(noise_1, noise_2), directLightColor, indirectLightColor, indirectLightColor_dynamic, atmosphereAlpha, VolumetricClouds.rgb,cloudPlaneDistance);

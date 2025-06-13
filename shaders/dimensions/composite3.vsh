@@ -3,8 +3,12 @@
 varying vec2 texcoord;
 flat varying vec3 zMults;
 
-#ifdef BorderFog
+#if defined BorderFog || (defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS)
 	uniform sampler2D colortex4;
+	#include "/lib/scene_controller.glsl"
+#endif
+
+#ifdef BorderFog
 	flat varying vec3 skyGroundColor;
 #endif
 
@@ -22,8 +26,6 @@ flat varying vec2 TAA_Offset;
 uniform int framemod8;
 #include "/lib/TAA_jitter.glsl"
 
-
-
 #ifdef OVERWORLD_SHADER
 
 #endif
@@ -40,6 +42,10 @@ void main() {
 			skyGroundColor = texelFetch2D(colortex4,ivec2(1,37),0).rgb / 1200.0 * Sky_Brightness;
 		#endif
 		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+
+		#if defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS
+			readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.cirrus, parameters.fog);
+		#endif
 	#endif
 
 	#ifdef TAA

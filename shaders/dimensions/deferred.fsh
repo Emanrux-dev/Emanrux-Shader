@@ -329,7 +329,9 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 	#endif
 	float rejection = 1.0;
 	float cloudPlaneDistance = 0.0;
-	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, WmoonVec, sunColor*2.5, moonColor*2.5, skyGroundCol/30.0, cloudPlaneDistance);
+	vec2 cloudDistance = vec2(0.0);
+	
+	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, WmoonVec, sunColor*2.5, moonColor*2.5, skyGroundCol/30.0, cloudPlaneDistance, cloudDistance);
 
 	float atmosphereAlpha = 1.0;
 	WsunVec = mix(WmoonVec, WsunVec, clamp(float(sunElevation > 1e-5)*2.0-1.0 ,0,1));

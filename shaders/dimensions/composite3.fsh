@@ -35,7 +35,6 @@ uniform sampler2D colortex14;
 uniform sampler2D colortex15;
 uniform vec2 texelSize;
 
-uniform sampler2D colortex4;
 uniform float viewHeight;
 uniform float viewWidth;
 uniform float nightVision;
@@ -68,6 +67,35 @@ uniform float darknessFactor;
 uniform float darknessLightFactor;
 uniform float caveDetection;
 
+#if defined CUMULONIMBUS_LIGHTNING && defined OVERWORLD_SHADER && defined CUMULONIMBUS
+  uniform float sunElevation;
+  uniform vec4 lightningBoltPosition;
+
+  #include "/lib/scene_controller.glsl"
+
+	uniform sampler2D lightningTex1;
+	uniform sampler2D lightningTex2;
+	uniform sampler2D lightningTex3;
+	uniform sampler2D lightningTex4;
+	uniform sampler2D lightningTex5;
+	uniform sampler2D lightningTex6;
+	uniform sampler2D lightningTex7;
+	uniform sampler2D lightningTex8;
+	uniform sampler2D lightningTex9;
+	uniform sampler2D lightningTex10;
+	uniform sampler2D lightningTex11;
+	uniform sampler2D lightningTex12;
+	uniform sampler2D lightningTex13;
+	uniform sampler2D lightningTex14;
+	uniform sampler2D lightningTex15;
+	uniform sampler2D lightningTex16;
+
+  #define LIGHTNING_ONLY;
+  #include "/lib/volumetricClouds.glsl"
+#else
+  uniform sampler2D colortex4;
+#endif
+
 #include "/lib/waterBump.glsl"
 #include "/lib/res_params.glsl"
 
@@ -84,6 +112,12 @@ uniform float eyeAltitude;
 
 float ld(float depth) {
     return 1.0 / (zMults.y - depth * zMults.z);		// (-depth * (far - near)) = (2.0 * near)/ld - far - near
+}
+
+float convertHandDepth(float depth) {
+    float ndcDepth = depth * 2.0 - 1.0;
+    ndcDepth /= MC_HAND_DEPTH;
+    return ndcDepth * 0.5 + 0.5;
 }
 
 float luma(vec3 color) {
@@ -554,6 +588,145 @@ void main() {
   }
 
 ////// --------------- VARIOUS FOG EFFECTS (behind volumetric fog)
+
+////// --------------- lightning effect
+
+bool isLightning = false;
+
+#if defined OVERWORLD_SHADER && defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS
+
+  vec2 cloudDepth = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_RESOLUTION*RENDER_SCALE)).rg;
+
+  vec3 lightningpos = vec3(getLightningPosition(600, 4680));
+  //lightningpos =  vec3(0,0,1);
+
+  float lightningDist = length(lightningpos);
+
+  if ((lightningDist < cloudDepth.r || cloudDepth.r == 0.0) && rainStrength + thunderStrength > 1.0) {
+    vec2 tc = (gl_FragCoord.xy - 0.5)*texelSize;
+
+    float depth = z;
+    
+    float z0 = depth < 0.56 ? convertHandDepth(depth) : depth;
+
+    #ifdef DISTANT_HORIZONS
+      float DH_z0 = DH_depth0;
+    #else
+      float DH_z0 = 1.0;
+    #endif
+
+    float uvScalar = 3.0 * CUSTOM_LIGHTNING_SCALE;
+
+    vec3 normLightningpos = normalize(lightningpos);
+    
+    vec3 worldDir = normalize(mat3(gbufferModelViewInverse) * toScreenSpace(vec3(texcoord /RENDER_SCALE,1.0)));
+
+    vec3 tangent = normalize(cross(normLightningpos, vec3(0.0, 1.0, 0.0)));
+    vec3 binormal = cross(normLightningpos, tangent);
+    vec3 dirDiff = worldDir - normLightningpos;
+
+    float u = -1.0;
+    float v = -1.0;
+    vec4 lightningTex = vec4(0.0);
+    if (dot(worldDir, normLightningpos) > 0.0) {
+      u = dot(dirDiff, tangent) + 0.5/uvScalar;
+      v = 0.55*dot(dirDiff, binormal) + 0.1/uvScalar;
+
+      vec2 uv = vec2(u, v) * uvScalar;
+
+      float randomTex = 16*rand(lightningTimer*72.82723486);
+
+      #if CUSTOM_LIGHTNING_TEX > 0
+        randomTex = CUSTOM_LIGHTNING_TEX-1;
+      #endif
+
+      if (randomTex < 1.0) {
+        lightningTex = texture2D(lightningTex1, uv);
+      } else if (randomTex < 2.0) {
+        lightningTex = texture2D(lightningTex2, uv);
+      } else if (randomTex < 3.0) {
+        u = 1.3*dot(dirDiff, tangent) + 0.5/uvScalar;
+        uv = vec2(u, v) * uvScalar;
+        lightningTex = texture2D(lightningTex3, uv);
+      } else if (randomTex < 4.0) {
+        lightningTex = texture2D(lightningTex4, uv);
+      } else if (randomTex < 5.0) {
+        lightningTex = texture2D(lightningTex5, uv);
+      } else if (randomTex < 6.0) {
+        u = 1.25*dot(dirDiff, tangent) + 0.5/uvScalar;
+        uv = vec2(u, v) * uvScalar;
+        lightningTex = texture2D(lightningTex6, uv);
+      } else if (randomTex < 7.0) {
+        lightningTex = texture2D(lightningTex7, uv);
+      } else if (randomTex < 8.0) {
+        lightningTex = texture2D(lightningTex8, uv);
+      } else if (randomTex < 9.0) {
+        u = 1.4*dot(dirDiff, tangent) + 0.5/uvScalar;
+        uv = vec2(u, v) * uvScalar;
+        lightningTex = texture2D(lightningTex9, uv);
+      } else if (randomTex < 10.0) {
+        lightningTex = texture2D(lightningTex10, uv);
+      } else if (randomTex < 11.0) {
+        u = 0.5*dot(dirDiff, tangent)+0.5/uvScalar;
+        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+        uv = vec2(u, v) * uvScalar;
+        lightningTex = texture2D(lightningTex11, uv);
+      } else if (randomTex < 12.0) {
+        u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
+        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+        uv = vec2(u, v) * uvScalar;
+        lightningTex = texture2D(lightningTex12, uv);
+      } else if (randomTex < 13.0) {
+        u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
+        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+        uv = vec2(u, v) * uvScalar;
+        lightningTex = texture2D(lightningTex13, uv);
+      } else if (randomTex < 14.0) {
+        u = 0.5*dot(dirDiff, tangent)+0.5/uvScalar;
+        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+        uv = vec2(u, v) * uvScalar;
+        lightningTex = texture2D(lightningTex14, uv);
+      } else if (randomTex < 15.0) {
+        u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
+        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+        uv = vec2(u, v) * uvScalar;
+        lightningTex = texture2D(lightningTex15, uv);
+      } else {
+        u = 0.4*dot(dirDiff, tangent)+0.5/uvScalar;
+        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+        uv = vec2(u, v) * uvScalar;
+        lightningTex = texture2D(lightningTex16, uv);
+      }
+
+      lightningTex.rgb *= vec3(CUSTOM_LIGHTNING_R, CUSTOM_LIGHTNING_G, CUSTOM_LIGHTNING_B) * CUMULONIMBUS_LIGHTNING_BRIGHTNESS * 0.01;
+
+      if(cloudDepth.g > 0.0) lightningTex.rgb *= smoothstep(7550, 0.0, lightningDist - cloudDepth.g);
+
+      #if defined CUSTOM_LIGHTNING_POS && CUSTOM_LIGHTNING_TEX > 0
+        lightningTex.a *= pow(lightningTex.a, 2.0);
+
+        lightningTex.rgb *= 75;
+      #else
+        lightningTex.a *= pow(lightningTex.a, lightningStart); // fade alpha in for cool expansion effect
+
+        lightningTex.rgb += 120 * lightningMid * lightningTex.rgb; // bright flash in the middle
+
+        lightningTex.rgb *= 75 * lightningFade; // fade out
+      #endif
+
+      if (length(lightningTex.rgb) == 0.0) lightningTex.a = 0.0;
+    }
+
+    bool isSky = z0 == 1.0 && DH_z0 == 1.0;
+    bool oneTexOnly = u > 0 && v > 0 && u*uvScalar < 1 && v*uvScalar < 1;
+    
+    if (lightningTex.a > 0.01 &&  oneTexOnly && isSky) {
+      color = lightningTex.rgb * lightningFlash;
+      isLightning = true;
+    }
+  }
+#endif
+
 //////////// blindness, nightvision, liquid fogs and misc fogs
 
 #if defined OVERWORLD_SHADER && defined CAVE_FOG
@@ -618,7 +791,7 @@ void main() {
     // if(z >= 1.0) color = vec3(0,255,0);
     // else color = vec3(0.01);
 
-    color *= min(temporallyFilteredVL.a + (1.0-nametagbackground),1.0);
+    if(!isLightning) color *= min(temporallyFilteredVL.a + (1.0-nametagbackground),1.0);
     color += temporallyFilteredVL.rgb * nametagbackground;
   #else
     color *= temporallyFilteredVL.a ;

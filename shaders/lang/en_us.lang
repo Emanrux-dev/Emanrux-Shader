@@ -229,6 +229,28 @@ screen.Clouds = Cloud Settings
         option.CloudLayer1_tallness = Tallness
         option.CloudLayer1_scale    = Scale
 
+        option.CUMULONIMBUS = Cumulonimbus Clouds
+        option.CUMULONIMBUS_LIGHTNING = Cumulonimbus Lightning
+        option.CUMULONIMBUS_LIGHTNING_BRIGHTNESS = Lightning Brightness
+            suffix.CUMULONIMBUS_LIGHTNING_BRIGHTNESS = %
+        option.CUMULONIMBUS_LIGHTNING_DELAY = Lightning Delay
+            suffix.CUMULONIMBUS_LIGHTNING_DELAY = s
+
+            screen.CUSTOM_LIGHTNING = Custom Lightning
+                option.CUSTOM_LIGHTNING_POS = Custom Position
+                option.CUSTOM_LIGHTNING_POS_X = X
+                option.CUSTOM_LIGHTNING_POS_Y = Y
+                option.CUSTOM_LIGHTNING_POS_Z = Z
+                option.CUSTOM_LIGHTNING_R = R
+                option.CUSTOM_LIGHTNING_G = G
+                option.CUSTOM_LIGHTNING_B = B
+                option.CUSTOM_LIGHTNING_SCALE = Scale
+                option.CUSTOM_LIGHTNING_TEX = Texture
+                    value.CUSTOM_LIGHTNING_TEX.0 = Random
+
+                screen.READ_DESCRIPTION = READ DESCRIPTION
+                    screen.READ_DESCRIPTION.comment = Set custom postion values in shaders/lib/settings.glsl
+
     screen.HighAltitudeClouds   = High Altitude Clouds
         option.CloudLayer2          = Altostratus Clouds
         option.CloudLayer2_coverage = Coverage

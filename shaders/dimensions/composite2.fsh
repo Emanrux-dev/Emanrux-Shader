@@ -531,10 +531,15 @@ void main() {
 	vec3 indirectLightColor = averageSkyCol / 1200.0;
 	vec3 indirectLightColor_dynamic = averageSkyCol_Clouds / 1200.0;
 	float cloudPlaneDistance = 0.0;
+	vec2 cloudDistance = vec2(0.0); // r = cumulus, g = cumulonimbus
 
-	#if defined OVERWORLD_SHADER
-		vec4 VolumetricClouds = GetVolumetricClouds(viewPos0, BN, WrealSunVec, WmoonVec, directSunlightColor, directMoonlightColor, indirectLightColor, cloudPlaneDistance);
+	#ifdef OVERWORLD_SHADER
+		vec4 VolumetricClouds = GetVolumetricClouds(viewPos0, BN, WrealSunVec, WmoonVec, directSunlightColor, directMoonlightColor, indirectLightColor, cloudPlaneDistance, cloudDistance);
 		
+		#if defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS
+			imageStore(cloudDepthTex, ivec2(gl_FragCoord.xy), vec4(cloudDistance.r, cloudDistance.g, 0, 1));
+		#endif
+
 		#ifdef CAVE_FOG
 			#if (CAVE_DETECTION == 0.0) || (CAVE_DETECTION == 1.0)
 				#if (CAVE_DETECTION == 1.0)
@@ -548,27 +553,24 @@ void main() {
 
   	  		float skyhole = pow(clamp(1.0-pow(max(playerPos_normalized.y - 0.6,0.0)*5.0,2.0),0.0,1.0),2)* caveDetection * caveFactor;
 			VolumetricClouds.rgb *= 1.0-skyhole;
-			VolumetricClouds.a = mix(VolumetricClouds.a, 1.0,  skyhole);
+			VolumetricClouds.a = mix(VolumetricClouds.a, 1.0, skyhole);
 		#endif
-	#endif
 
-	#ifdef OVERWORLD_SHADER
 		float atmosphereAlpha = 1.0;
 
 		vec3 sceneColor = texelFetch2D(colortex3,ivec2(tc/texelSize),0).rgb * VolumetricClouds.a + VolumetricClouds.rgb;
 		vec4 VolumetricFog = GetVolumetricFog(viewPos0, WsunVec, BN, directLightColor, indirectLightColor, indirectLightColor_dynamic, atmosphereAlpha, VolumetricClouds.rgb, cloudPlaneDistance);
+
+		VolumetricFog = vec4(VolumetricClouds.rgb * VolumetricFog.a  + VolumetricFog.rgb, VolumetricFog.a*VolumetricClouds.a);
 	#endif
 	
 	#if defined NETHER_SHADER || defined END_SHADER
 		vec4 VolumetricFog = GetVolumetricFog(viewPos0, BN.x, BN.y);
 	#endif
 
-	#if defined OVERWORLD_SHADER
-		VolumetricFog = vec4(VolumetricClouds.rgb * VolumetricFog.a  + VolumetricFog.rgb, VolumetricFog.a*VolumetricClouds.a);
-	#endif
 
 	if (isEyeInWater == 1){
-		vec4 underWaterFog =  waterVolumetrics(vec3(0.0), viewPos0_water, length(viewPos0_water), BN, totEpsilon, scatterCoef, indirectLightColor_dynamic, directLightColor , dot(normalize(viewPos0_water), normalize(sunVec* lightCol.a ) 	));
+		vec4 underWaterFog =  waterVolumetrics(vec3(0.0), viewPos0_water, length(viewPos0_water), BN, totEpsilon, scatterCoef, indirectLightColor_dynamic, directLightColor, dot(normalize(viewPos0_water), normalize(sunVec * lightCol.a)));
 
 		VolumetricFog = vec4(underWaterFog.rgb, 1.0);
 	}
@@ -576,7 +578,6 @@ void main() {
 
 	// VolumetricFog = raymarchTest2(viewPos0, BN.x);
 	// VolumetricFog = raymarchTest(viewPos0, BN);
-
 	gl_FragData[0] = clamp(VolumetricFog, 0.0, 65000.0);
 
 }

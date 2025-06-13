@@ -10,6 +10,14 @@ uniform sampler2D depthtex2;
 uniform sampler2D noisetex;
 uniform sampler2D shadowcolor1;
 
+#if DEBUG_VIEW == debug_CLOUDDEPTHTEX && defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS
+  #extension GL_NV_gpu_shader5 : enable
+  #extension GL_ARB_shader_image_load_store : enable
+  #extension GL_EXT_shader_image_load_store : enable
+
+  layout (rgba32f) uniform image2D cloudDepthTex;
+#endif
+
 varying vec2 texcoord;
 uniform vec2 texelSize;
 uniform float frameTimeCounter;
@@ -166,6 +174,9 @@ void main() {
   #endif
   #if DEBUG_VIEW == debug_DEPTHTEX1
     COLOR = vec3(ld(texture2D(depthtex1, texcoord*RENDER_SCALE).r));
+  #endif
+  #if DEBUG_VIEW == debug_CLOUDDEPTHTEX && defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS
+    COLOR = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_RESOLUTION*RENDER_SCALE)).rgb;
   #endif
 
 

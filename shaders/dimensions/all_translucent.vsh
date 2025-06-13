@@ -164,8 +164,12 @@ void main() {
 	#endif
 
 	position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;
+
+	gl_Position = toClipSpace3(position);
 	
- 	gl_Position = toClipSpace3(position);
+	#if defined ENTITIES
+		gl_Position = ftransform();
+	#endif
 
 	HELD_ITEM_BRIGHTNESS = 0.0;
 	

@@ -602,7 +602,7 @@ bool isLightning = false;
 
   float lightningDist = length(lightningpos);
 
-  if ((lightningDist < cloudDepth.r || cloudDepth.r == 0.0) && rainStrength + thunderStrength > 1.0) {
+  if ((lightningDist < cloudDepth.r || cloudDepth.r == 0.0) && (thunderStrength > 1.0 || rainStrength == 0.0)) {
     vec2 tc = (gl_FragCoord.xy - 0.5)*texelSize;
 
     float depth = z;

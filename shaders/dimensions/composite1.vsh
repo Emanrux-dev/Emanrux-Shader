@@ -12,6 +12,7 @@ flat varying vec3 WmoonVec;
 flat varying vec3 unsigned_WsunVec;
 flat varying vec3 averageSkyCol_Clouds;
 flat varying vec4 lightCol;
+flat varying vec3 sunCol;
 flat varying vec3 moonCol;
 flat varying vec3 albedoSmooth;
 
@@ -53,6 +54,7 @@ void main() {
 	lightCol.rgb = texelFetch2D(colortex4,ivec2(6,37),0).rgb;
 	lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
 
+	sunCol = texelFetch2D(colortex4,ivec2(8,37),0).rgb;
 	moonCol = texelFetch2D(colortex4,ivec2(9,37),0).rgb;
 	
 	#if defined FLASHLIGHT && defined FLASHLIGHT_BOUNCED_INDIRECT

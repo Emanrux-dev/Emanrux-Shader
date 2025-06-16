@@ -45,6 +45,8 @@ uniform float nightVision;
 		flat varying vec3 moonCol;
 	#endif
 
+	flat varying vec3 sunCol;
+
 	#if Sun_specular_Strength != 0
 		#define LIGHTSOURCE_REFLECTION
 	#endif
@@ -1338,7 +1340,7 @@ void main() {
 				#endif
 
 				#if !defined ambientLight_only && (RESOURCEPACK_SKY == 1 || RESOURCEPACK_SKY == 0)
-					Background += drawSun(dot(unsigned_WsunVec, feetPlayerPos_normalized), 0, DirectLightColor,vec3(0.0));
+					Background += drawSun(dot(unsigned_WsunVec, feetPlayerPos_normalized), sunCol / 2400.0);
 
 					#ifdef REALMOON
 						vec3 tangent = normalize(cross(WmoonVec, vec3(0.0, 1.0, 0.0)));
@@ -1354,7 +1356,7 @@ void main() {
 						v = -v / (2.0 * moonAngularRadius) + 0.5;
 						vec2 moonUV = vec2(u, v);
 
-						float moonVis = smoothstep(0.08, -0.03, -sunElevation);
+						float moonVis = smoothstep(0.12, -0.03, -sunElevation);
 						float moonphaseMult = 1.0;
 						#ifdef MOONPHASE_BASED_MOONLIGHT
 							float[8] phase = float[8](
@@ -1370,7 +1372,7 @@ void main() {
 
 							moonphaseMult = phase[moonPhase];
 						#endif
-						vec3 moonTex = (1 - moonVis*vec3(0.0, 0.5, 0.7)) * moonphaseMult * texture2D(moon, sphereMap(moonUV)).rgb;
+						vec3 moonTex = (1 - vec3(0.0, 0.5, 0.7)*clamp((1-0.5*v)*moonVis, 0.0, 1.0)) * moonphaseMult * texture2D(moon, sphereMap(moonUV)).rgb;
 						
 						vec3 moonLightCol = moonColorBase2;
 						Background += pow(moonTex, vec3(3.2)) * 20.0 * drawRealMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background);

@@ -334,3 +334,43 @@ vec3 ToneMap_AgX_minimal( vec3 color ) {
 
 	return color;
 }
+vec3 ToneMap_AgX_minimal_merlin( vec3 color ) {
+	// AgX constants from Benjamin Wrensch ( I HATE THE BRIGHTS GOING TO WHITE )
+    const mat3 AgXInsetMatrix = mat3(
+        0.842479062253094, 0.0423282422610123, 0.0423756549057051,
+        0.0784335999999992,  0.878468636469772,  0.0784336,
+        0.0792237451477643, 0.0791661274605434, 0.879142973793104);
+
+    const mat3 AgXOutsetMatrix = mat3(
+        1.19687900512017, -0.0528968517574562, -0.0529716355144438,
+        -0.0980208811401368, 1.15190312990417, -0.0980434501171241,
+        -0.0990297440797205, -0.0989611768448433, 1.15107367264116);
+
+	// LOG2_MIN      = -10.0
+	// LOG2_MAX      =  +6.5
+	// MIDDLE_GRAY   =  0.18
+	const float AgxMinEv = - 11.47393;  // log2( pow( 2, LOG2_MIN ) * MIDDLE_GRAY )
+	const float AgxMaxEv = 3.226069;    // log2( pow( 2, LOG2_MAX ) * MIDDLE_GRAY )
+
+	color = AgXInsetMatrix * color;
+
+	// Log2 encoding
+    color = clamp(log2(color), AgxMinEv, AgxMaxEv);
+    color = (color - AgxMinEv) / (AgxMaxEv - AgxMinEv);
+
+	// Apply sigmoid
+	color = agxDefaultContrastApprox( color );
+
+	// Apply AgX look
+	color = agxLook(color);
+
+	color = AgXOutsetMatrix * color;
+
+	// Linearize
+    color = pow(color, vec3(2.2));
+
+	// Gamut mapping. Simple clamp for now.
+	color = clamp( color, 0.0, 1.0 );
+
+	return color;
+}

@@ -1,10 +1,8 @@
 #define ffstep(x,y) clamp((y - x) * 1e35,0.0,1.0)
 
-vec3 drawSun(float cosY, float sunInt,vec3 nsunlight, vec3 inColor){
+vec3 drawSun(float cosY, vec3 nsunlight){
 
-	// return nsunlight * min(max(cosY-0.9994,0.0)/(1.0-0.9994),1.0) * 100.0;
-
-	return (inColor+nsunlight/0.0008821203*pow(smoothstep(cos(0.0093084168595*3.2),cos(0.0093084168595*1.8),cosY),3.)*0.62);
+	return (nsunlight/0.0008821203*pow(smoothstep(cos(0.0093084168595*3.2),cos(0.0093084168595*2.2),cosY),3.)*0.62);
 
 }
 const float pi = 3.141592653589793238462643383279502884197169;

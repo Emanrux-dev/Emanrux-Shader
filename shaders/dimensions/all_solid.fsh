@@ -513,7 +513,7 @@ void main() {
 		
 			float volumeCoeff = exp(-density*(i+1));
 			
-			vec3 lighting =  vec3(0.5,0.75,1.0) * 0.1 * exp(-10*density) + vec3(0.2,0.7,1.0) * verticalGradient2 * 2.0;
+			vec3 lighting =  vec3(0.5,0.75,1.0) * 0.1 * exp(-10*density) + vec3(0.8,0.3,1.0) * verticalGradient2 * 1.7;
 			color += (lighting - lighting * volumeCoeff) * absorbance;;
 
 			absorbance *= volumeCoeff;

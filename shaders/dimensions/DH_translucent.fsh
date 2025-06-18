@@ -421,6 +421,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
             BackgroundReflection = skyCloudsFromTex(mat3(gbufferModelViewInverse) * reflectedVector, colortex4).rgb / 1200.0; 
         #endif
         #ifdef WATER_SUN_SPECULAR
+			if(iswater) DirectLightColor *= WATER_SUN_REFLECTION_STRENGTH;
             SunReflection = (DirectLightColor * Shadows) * GGX(normalize(normals), -normalize(viewPos), normalize(WsunVec2), roughness, f0) * (1.0-Reflections.a);
         #endif
 
@@ -455,7 +456,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	#ifdef DH_CHUNK_FADING
 		if (!iswater){
-			float viewDist = length(mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz); 
+			float viewDist = length(playerPos); 
 
 			float ditherFade = smoothstep(max(far-9,9), far-1, viewDist);
 			if (step(bayerDither()/ditherFade, ditherFade) == 0.0) discard;

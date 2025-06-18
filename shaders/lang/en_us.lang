@@ -544,15 +544,6 @@ screen.POM = Parallax Occlusion Mapping / POM
 
 screen.Porosity = Porosity / Puddles
     option.Porosity = Porosity
-    option.Puddles = Puddles
-    option.Puddle_Size = Puddle Size Multiplier
-    option.Puddle_Reflection_Strength = Puddle Reflection Strength
-    option.ShaderSnow = Shader Snow Effect
-        value.ShaderSnow.0 = Off
-        value.ShaderSnow.1 = When snowing
-        value.ShaderSnow.2 = When in snowy Biome
-        value.ShaderSnow.3 = Always on
-    option.ShaderSnowStrength = Shader Snow Strength
 
 option.MATERIAL_AO = Material Ambient Occlusion
 
@@ -588,6 +579,8 @@ option.AEROCHROME_PINKNESS.comment = Higher = Pink. Lower = Red
 option.AEROCHROME_WOOL_ENABLED.comment = Technically wool things should be affected but it ruins a lot of builds. Enable to be more technically correct.
 
 option.EMISSIVE_ORES = Emissive Ores
+option.PLANET_CURVATURE = Planet Curvature
+option.CURVATURE_AMOUNT = Curvature Amount
 
 option.USE_CUSTOM_DIFFUSE_LIGHTING_COLORS = Custom Diffuse Colors
 option.DIRECTLIGHT_DIFFUSE_R = Sun R
@@ -738,6 +731,22 @@ screen.World.comment = Configure settings for various things that happen in the 
         option.Water_Top_Layer.comment = Configure the Y coordinate at which the ocean should be in the world.
         
         screen.Water_fog_color.comment = Configure colors of the water fog. 
+
+        option.WATER_SUN_REFLECTION_STRENGTH = Water sun reflection strength
+
+    screen.World_Effects = World Effects
+        option.Puddles = Puddles
+        option.Puddle_Size = Puddle Size Multiplier
+        option.Puddle_Reflection_Strength = Puddle Reflection Strength
+        option.ShaderSnow = Shader Snow Effect
+            value.ShaderSnow.0 = Off
+            value.ShaderSnow.1 = When snowing
+            value.ShaderSnow.2 = When in snowy Biome
+            value.ShaderSnow.3 = Always on
+        option.ShaderSnowStrength = Shader Snow Strength
+        option.RIPPLE_WATER = Ripples on Water
+        option.RIPPLE_PUDDLES = Ripples on Puddles
+        option.RIPPLE_INTENSITY = Ripple Intensity
 
 screen.Climate.comment = Configure settings related to the climate, like seasonal colors, daily weather, and biome specific fog.
     screen.Seasons.comment = Seasonal colors that cycle through, summer, fall, winter, and spring.

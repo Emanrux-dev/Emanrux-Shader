@@ -17,6 +17,8 @@
 
 const bool colortex5MipmapEnabled = true;
 uniform float nightVision;
+uniform float frameTimeCounter;
+uniform float rainStrength;
 
 #ifdef OVERWORLD_SHADER
 	const bool shadowHardwareFiltering = true;
@@ -38,6 +40,12 @@ uniform float nightVision;
 	#if ShaderSnow > 0 || defined Puddles
 		uniform sampler2D snowTexR;
 	#endif
+
+	#if defined RIPPLE_PUDDLES && defined Puddles
+		#include "/lib/ripples.glsl"
+	#endif
+
+	#include "/lib/stars.glsl"
 
 	#ifdef REALMOON
 		uniform sampler2D moon;
@@ -128,9 +136,7 @@ uniform float eyeAltitude;
 flat varying vec2 TAA_Offset;
 
 uniform int frameCounter;
-uniform float frameTimeCounter;
 
-uniform float rainStrength;
 uniform int isEyeInWater;
 uniform ivec2 eyeBrightnessSmooth;
 
@@ -171,7 +177,6 @@ float convertHandDepth_2(in float depth, bool hand) {
 
 #include "/lib/Shadow_Params.glsl"
 #include "/lib/Shadows.glsl"
-#include "/lib/stars.glsl"
 #include "/lib/sky_gradient.glsl"
 
 #ifdef OVERWORLD_SHADER
@@ -726,8 +731,23 @@ uniform float wetness;
 				float wetnessStages = mix(puddles, 1.0, fullWet) * effectStrength;
 				if(isWater) wetnessStages = 0.0;
 
-				normals = mix(normals, flatNormals, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
-				roughness = mix(roughness, snowR, wetnessStages * Puddle_Reflection_Strength);
+				#ifdef RIPPLE_PUDDLES
+					float viewDist = length(worldPos - cameraPosition);
+					vec3 rippleNormal = flatNormals;
+
+					if(viewDist < 35 && rainStrength > 0.0) {
+						vec3 ripple = ripples(1.2 * worldPos.xz);
+						
+						ripple = ripple.xzy;
+						rippleNormal = mix(flatNormals, ripple, smoothstep(35, 10, viewDist) * rainStrength);
+					}
+
+					normals = mix(normals, rippleNormal, effectStrength * clamp(flatNormals.y,0.0,1.0));
+				#else
+					normals = mix(normals, flatNormals, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
+				#endif
+
+				roughness = mix(roughness, 0.5*(1+snowR), wetnessStages * Puddle_Reflection_Strength);
 
 				if(f0 < 229.5/255.0 ) albedo = pow(albedo * (1.0 - 0.08*wetnessStages), vec3(1.0 + 0.7*wetnessStages));
 			}
@@ -742,6 +762,8 @@ uniform float wetness;
 
 				vec3 snowA = pow(texture2D(snowTexA, snowCoords).rgb, vec3(2.0/(ShaderSnowStrength-0.1)));
 				vec3 snowN = 2*texture2D(snowTexN, snowCoords).rgb - 1;
+
+				snowN = vec3(snowN.x, snowN.z, snowN.y);
 				
 				float omSA = 1-snowAmount;
 

@@ -181,6 +181,7 @@ void main() {
 	// 0.9 = entity mask
 	// 0.8 = reflective entities
 	// 0.7 = reflective blocks
+	// 0.6 = nether portal
 	float mat = 0.0;
 
 	// water mask
@@ -196,6 +197,8 @@ void main() {
 
 	// translucent blocks
 	if (mc_Entity.x >= 301 && mc_Entity.x <= 321) mat = 0.7;
+
+	if (mc_Entity.x == 320) mat = 0.6;
 
 	#if defined ENTITIES && defined IS_IRIS
 		NAMETAG = 0;

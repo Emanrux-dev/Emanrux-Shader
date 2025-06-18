@@ -390,7 +390,7 @@ void main() {
 	#endif
 
 	#if !defined WEATHER || (defined DISTANT_HORIZONS && defined DH_CHUNK_FADING)
-		float viewDist = length(mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz);
+		float viewDist = length(feetPlayerPos + gbufferModelViewInverse[3].xyz);
 	#endif
 
 	#ifndef WEATHER

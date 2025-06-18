@@ -211,10 +211,14 @@ vec3 getParallaxDisplacement(vec3 waterPos, vec3 playerPos) {
 	return parallaxPos;
 }
 
-vec3 applyBump(mat3 tbnMatrix, vec3 bump, float puddle_values){
+vec3 applyBump(mat3 tbnMatrix, vec3 bump, float puddle_values, vec3 rippleBump){
 	float bumpmult = puddle_values;
-	bump = bump * vec3(bumpmult, bumpmult, bumpmult) + vec3(0.0f, 0.0f, 1.0f - bumpmult);
-	// 
+	bump = bump * bumpmult + vec3(0.0f, 0.0f, 1.0f - bumpmult);
+
+	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
+		bump += 4.0 * rippleBump;
+	#endif
+	
 	return normalize(bump*tbnMatrix);
 }
 
@@ -282,8 +286,9 @@ uniform float dhFarPlane;
 
 #include "/lib/DistantHorizons_projections.glsl"
 
-
-
+#ifdef RIPPLE_WATER
+	#include "/lib/ripples.glsl"
+#endif
 
 // #undef BASIC_SHADOW_FILTER
 
@@ -418,6 +423,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	// 0.9 = entity mask
 	// 0.8 = reflective entities
 	// 0.7 = reflective blocks
+	// 0.6 = nether portal
 	// 0.4 = translucent particles
 	// 0.3 = hand mask
 
@@ -430,6 +436,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	bool isReflectiveEntity = abs(MATERIALS - 0.8) < 0.01;
 	bool isReflective = abs(MATERIALS - 0.7) < 0.01 || isWater || isReflectiveEntity;
 	bool isEntity = abs(MATERIALS - 0.9) < 0.01 || isReflectiveEntity;
+	bool isNetherPortal =  abs(MATERIALS - 0.6) < 0.01;
 
 ////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// ALBEDO /////////////////////////////////////
@@ -453,15 +460,19 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			if (isWater){
 				Albedo = vec3(0.0);
 				gl_FragData[0].a = 1.0/255.0;
-
 			}
-			#if defined DISTANT_HORIZONS && defined DH_CHUNK_FADING
-					float viewDist = length((mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz)); 
-					float ditherFade = smoothstep(0.98 * far, 1.03 * far, viewDist);
-
-					if (step(ditherFade, bayerDither()) == 0.0) discard;
-			#endif
 		#endif
+	#endif
+
+	vec3 shadowPlayerPos = feetPlayerPos + gbufferModelViewInverse[3].xyz;
+	#if (defined DISTANT_HORIZONS && defined DH_CHUNK_FADING) || defined RIPPLE_WATER
+		float viewDist = length(shadowPlayerPos); 
+	#endif
+
+	#if defined DISTANT_HORIZONS && defined DH_CHUNK_FADING
+		float ditherFade = smoothstep(0.98 * far, 1.03 * far, viewDist);
+
+		if (step(ditherFade, bayerDither()) == 0.0) discard;
 	#endif
 
 	#if defined LIGHTNING
@@ -523,6 +534,9 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	NormalTex.xy = NormalTex.xy*2.0-1.0;
 	NormalTex.z = clamp(sqrt(1.0 - dot(NormalTex.xy, NormalTex.xy)),0.0,1.0);
 
+	vec3 rippleBump = vec3(0.0);
+
+	vec2 lightmap = lmtexcoord.zw;
 	#if !defined HAND
 		if (isWater){
 			vec3 playerPos = (mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz);
@@ -536,7 +550,16 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			waterPos.xy = newPos;
 		
 			waterPos.xyz = getParallaxDisplacement(waterPos, playerPos);
-			
+
+			#ifdef RIPPLE_WATER
+				float effectStrength = smoothstep(0.85, 1.0, max(lightmap.y-step(1.0,lightmap.x), 0.0));
+
+				if(viewDist < 35 && waterPos.y <= 0.0) {
+					rippleBump = ripples(feetPlayerPos.xz+cameraPosition.xz);
+					waterPos.xyz += 14 * rippleBump * rainStrength * effectStrength * smoothstep(35, 10, viewDist);
+				}
+			#endif
+
 			vec3 bump = normalize(getWaveNormal(waterPos, playerPos, false));
 
 			float bumpmult = WATER_WAVE_STRENGTH;
@@ -550,9 +573,10 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	TangentNormal = NormalTex.xy;
 	
 	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
-		normal = mix(applyBump(tbnMatrix, NormalTex.xyz, 1.0), applyBump(tbnMatrix, NormalTex.xyz, PHYSICS_OCEAN_TRANSITION), smoothstep(0.0, 0.1, physics_localWaviness));
+		rippleBump *= physics_localWaviness;
+		normal = mix(applyBump(tbnMatrix, NormalTex.xyz, 1.0, rippleBump), applyBump(tbnMatrix, NormalTex.xyz, PHYSICS_OCEAN_TRANSITION, rippleBump), smoothstep(0.0, 0.1, physics_localWaviness));
 	#else
-		normal = applyBump(tbnMatrix, NormalTex.xyz, 1.0);
+		normal = applyBump(tbnMatrix, NormalTex.xyz, 1.0, rippleBump);
 	#endif
 
 	worldSpaceNormal = viewToWorld(normal);
@@ -578,8 +602,6 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 ////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// DIFFUSE LIGHTING //////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-
-	vec2 lightmap = lmtexcoord.zw;
 
 	// lightmap.y = 1.0;
 	
@@ -630,8 +652,6 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		float shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / shadowDistance,0.0)*5.0,1.0));
 
 		float LM_shadowMapFallback = min(max(lightmap.y-0.8, 0.0) * 25,1.0);
-
-		vec3 shadowPlayerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
 
 		Shadows = ComputeShadowMap(DirectLightColor, shadowPlayerPos, shadowMapFalloff, blueNoise());
 
@@ -754,7 +774,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 				vec3 DirectLightColor = WsunVec;
 				float Shadows = 0.0;
 			#endif
-			
+			if(isWater) DirectLightColor *= WATER_SUN_REFLECTION_STRENGTH;
 			vec3 specularReflections = specularReflections(viewPos, normalize(feetPlayerPos), WsunVec, vec3(blueNoise(), vec2(interleaved_gradientNoise_temporal())), worldSpaceNormal, roughness, f0, Albedo, FinalColor*gl_FragData[0].a, DirectLightColor * Shadows, lightmap.y, isHand, isWater, reflectance, flashLightSpecularData);
 			
 			gl_FragData[0].a = gl_FragData[0].a + (1.0-gl_FragData[0].a) * reflectance;

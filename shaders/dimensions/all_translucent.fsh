@@ -552,9 +552,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			waterPos.xyz = getParallaxDisplacement(waterPos, playerPos);
 
 			#ifdef RIPPLE_WATER
-				float effectStrength = smoothstep(0.85, 1.0, lightmap.y);
-
-				if(viewDist < 35) {
+				if(viewDist < 35 && rainStrength > 0.0 && abs(worldSpaceNormal.z) < 0.95 && abs(worldSpaceNormal.x) < 0.95) {
+					float effectStrength = smoothstep(0.85, 1.0, lightmap.y);
 					rippleBump = ripples(feetPlayerPos.xz+cameraPosition.xz);
 					waterPos.xyz += RIPPLE_STRENGTH * rippleBump * rainStrength * effectStrength * smoothstep(35, 10, viewDist);
 				}

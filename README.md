@@ -4,7 +4,7 @@ Changes/additions compared to Xonk's unstable-development branch:
  + Additional cirrus & cumulonimbus cloud layers
  + Distant Horizons chunk fading
  + Moon texture with phases
- + Improved Puddles and Snow overlays
+ + Improved Puddles, Snow Overlay and Rain Ripples
  + Better mod support
  + Much better emissives
  + Star rotation based on moon rotation

@@ -711,7 +711,8 @@ uniform float wetness;
 	void applyPuddles(
 		in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, in int isEyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0
 	){
-		float effectStrength = smoothstep(0.85, 1.0, max(lightmap.y-step(1.0,lightmap.x), 0.0));
+		float effectStrength = smoothstep(0.85, 1.0, lightmap.y);
+		//float effectStrength = smoothstep(0.85, 1.0, max(lightmap.y-step(1.0,lightmap.x), 0.0));
 		vec2 snowCoords = worldPos.xz*0.1;
 
 		#if ShaderSnow > 0 || defined Puddles

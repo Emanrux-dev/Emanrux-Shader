@@ -539,7 +539,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec2 lightmap = lmtexcoord.zw;
 	#if !defined HAND
 		if (isWater){
-			vec3 playerPos = (mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz);
+			vec3 playerPos = shadowPlayerPos;
 			vec3 waterPos = playerPos;
 
 			vec3 flowDir = normalize(worldSpaceNormal*10.0) * frameTimeCounter * 2.0 * WATER_WAVE_SPEED;
@@ -552,11 +552,11 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			waterPos.xyz = getParallaxDisplacement(waterPos, playerPos);
 
 			#ifdef RIPPLE_WATER
-				float effectStrength = smoothstep(0.85, 1.0, max(lightmap.y-step(1.0,lightmap.x), 0.0));
+				float effectStrength = smoothstep(0.85, 1.0, lightmap.y);
 
-				if(viewDist < 35 && waterPos.y <= 0.0) {
+				if(viewDist < 35) {
 					rippleBump = ripples(feetPlayerPos.xz+cameraPosition.xz);
-					waterPos.xyz += 14 * rippleBump * rainStrength * effectStrength * smoothstep(35, 10, viewDist);
+					waterPos.xyz += RIPPLE_STRENGTH * rippleBump * rainStrength * effectStrength * smoothstep(35, 10, viewDist);
 				}
 			#endif
 

@@ -734,7 +734,7 @@ screen.World.comment = Configure settings for various things that happen in the 
 
         option.WATER_SUN_REFLECTION_STRENGTH = Water sun reflection strength
 
-    screen.World_Effects = World Effects
+    screen.World_Effects = World Weather Effects
         option.Puddles = Puddles
         option.Puddle_Size = Puddle Size Multiplier
         option.Puddle_Reflection_Strength = Puddle Reflection Strength
@@ -747,6 +747,7 @@ screen.World.comment = Configure settings for various things that happen in the 
         option.RIPPLE_WATER = Ripples on Water
         option.RIPPLE_PUDDLES = Ripples on Puddles
         option.RIPPLE_INTENSITY = Ripple Intensity
+        option.RIPPLE_STRENGTH = Water Ripple Strength
 
 screen.Climate.comment = Configure settings related to the climate, like seasonal colors, daily weather, and biome specific fog.
     screen.Seasons.comment = Seasonal colors that cycle through, summer, fall, winter, and spring.

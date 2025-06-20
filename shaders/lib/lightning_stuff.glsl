@@ -28,7 +28,7 @@ if(lightningBoltPosition.w > 0.0){
 }else return vec3(0.0);
 }
 
-vec3 Iris_Lightningflash_VLcloud(vec3 feetPlayerPos, vec3 lightningBoltPos){
+vec3 Iris_Lightningflash_VLcloud(vec3 feetPlayerPos){
 if(lightningBoltPosition.w > 0.0){
 	vec3 LightningPos = feetPlayerPos - vec3(lightningBoltPosition.x, clamp(feetPlayerPos.y, lightningBoltPosition.y, lightningBoltPosition.y+116.0),lightningBoltPosition.z);
 
@@ -41,7 +41,7 @@ if(lightningBoltPosition.w > 0.0){
 }else return vec3(0.0);
 }
 
-vec3 Iris_Lightningflash_VLfog(vec3 feetPlayerPos, vec3 lightningBoltPos){
+vec3 Iris_Lightningflash_VLfog(vec3 feetPlayerPos){
 if(lightningBoltPosition.w > 0.0){
     if(lightningBoltPosition.w < 1.0) return vec3(0.0);
 

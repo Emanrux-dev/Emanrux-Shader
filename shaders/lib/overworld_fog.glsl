@@ -237,8 +237,8 @@ vec4 GetVolumetricFog(
 				vec3 DirectLight = LightSourcePhased * sh;
 			#endif
 
-			vec3 Lightning = Iris_Lightningflash_VLfog(progressW-cameraPosition, lightningBoltPosition.xyz);
-			vec3 lighting = DirectLight + indirectLight;
+			vec3 Lightning = Iris_Lightningflash_VLfog(progressW-cameraPosition);
+			vec3 lighting = DirectLight + indirectLight + 0.1 * Lightning;
 			
 			color += (lighting - lighting * fogVolumeCoeff) * totalAbsorbance;
 

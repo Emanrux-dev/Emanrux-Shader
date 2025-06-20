@@ -611,8 +611,8 @@ vec4 raymarchCloud(
 					
 					// normal lightning strikes
 					float horizontalDist = length((newPos.xz) - lightningBoltPosition.xz);
-					if (horizontalDist < 2500.0 && lightningBoltPosition.w > 0.0) {
-						lightningIntensity = exp(-horizontalDist * 0.022) * density * smoothstep(0.0, 0.02, fract(frameTimeCounter)) * lightningFlash;
+					if (horizontalDist < 7500.0 && lightningBoltPosition.w > 0.0) {
+						lightningIntensity = exp(-horizontalDist * 0.006) * density * smoothstep(0.0, 0.02, fract(frameTimeCounter)) * lightningFlash;
 						lighting = mix(lighting, vec3(1.3,1.5,3.0), lightningIntensity);
 					}
 

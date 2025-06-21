@@ -245,7 +245,10 @@ void main() {
 	#if defined WORLD && !defined HAND
 		if(blockEntityId == BLOCK_SIGN) SIGN = 1;
 
-		if(blockEntityId == BLOCK_END_PORTAL || blockEntityId == 187) PORTAL = 1;
+		if(blockEntityId == BLOCK_END_PORTAL || blockEntityId == 187) {
+			PORTAL = 1;
+			lmtexcoord.w = 0.0;
+		}
 	#endif
 	
 	NameTags = 0;

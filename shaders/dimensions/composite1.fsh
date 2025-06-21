@@ -70,6 +70,8 @@ uniform float rainStrength;
 
 #ifdef END_SHADER
 	uniform vec3 lightningEffect;
+
+	#include "/lib/stars.glsl"
 	
 	flat varying float Flashing;
 	#undef LIGHTSOURCE_REFLECTION

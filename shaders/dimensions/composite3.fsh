@@ -90,7 +90,7 @@ uniform float caveDetection;
 	uniform sampler2D lightningTex15;
 	uniform sampler2D lightningTex16;
 
-  #define LIGHTNING_ONLY;
+  #define LIGHTNINGONLY;
   #include "/lib/volumetricClouds.glsl"
 #else
   uniform sampler2D colortex4;
@@ -700,19 +700,21 @@ bool isLightning = false;
 
       lightningTex.rgb *= vec3(CUSTOM_LIGHTNING_R, CUSTOM_LIGHTNING_G, CUSTOM_LIGHTNING_B) * CUMULONIMBUS_LIGHTNING_BRIGHTNESS * 0.01;
 
-      if(cloudDepth.g > 0.0) lightningTex.rgb *= smoothstep(7550, 0.0, lightningDist - cloudDepth.g);
+      if(cloudDepth.g > 0.0) lightningTex.rgb *= smoothstep(7000.0, 1500.0, lightningDist - cloudDepth.g);
 
-      #if defined CUSTOM_LIGHTNING_POS && CUSTOM_LIGHTNING_TEX > 0
-        lightningTex.a *= pow(lightningTex.a, 2.0);
+      if(lightningTex.rgb != vec3(0.0)) {
+        #if defined CUSTOM_LIGHTNING_POS && CUSTOM_LIGHTNING_TEX > 0
+          lightningTex.a *= pow(lightningTex.a, 2.0);
 
-        lightningTex.rgb *= 75;
-      #else
-        lightningTex.a *= pow(lightningTex.a, lightningStart); // fade alpha in for cool expansion effect
+          lightningTex.rgb *= 75;
+        #else
+          lightningTex.a *= pow(lightningTex.a, lightningStart); // fade alpha in for cool expansion effect
 
-        lightningTex.rgb += 120 * lightningMid * lightningTex.rgb; // bright flash in the middle
+          lightningTex.rgb += 120 * lightningMid * lightningTex.rgb; // bright flash in the middle
 
-        lightningTex.rgb *= 75 * lightningFade; // fade out
-      #endif
+          lightningTex.rgb *= 75 * lightningFade; // fade out
+        #endif
+      }
 
       if (length(lightningTex.rgb) == 0.0) lightningTex.a = 0.0;
     }

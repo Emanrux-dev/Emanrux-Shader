@@ -53,6 +53,11 @@ float pi2wt = PI48*frameTimeCounter;
 attribute vec4 mc_Entity;
 attribute vec4 mc_midTexCoord;
 
+#if defined WORLD && !defined HAND
+	uniform float wetnessAmount;
+	uniform float snowAmount;
+#endif
+
 uniform int blockEntityId;
 uniform int entityId;
 flat varying float blockID;
@@ -249,6 +254,10 @@ void main() {
 			PORTAL = 1;
 			lmtexcoord.w = 0.0;
 		}
+
+		#if defined Puddles || ShaderSnow > 0
+			if(blockID == 215) lmtexcoord.w = 0.0;
+		#endif
 	#endif
 	
 	NameTags = 0;

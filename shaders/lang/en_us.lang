@@ -238,9 +238,9 @@ screen.Clouds = Cloud Settings
 
             screen.CUSTOM_LIGHTNING = Custom Lightning
                 option.CUSTOM_LIGHTNING_POS = Custom Position
-                option.CUSTOM_LIGHTNING_POS_X = X
-                option.CUSTOM_LIGHTNING_POS_Y = Y
-                option.CUSTOM_LIGHTNING_POS_Z = Z
+                //option.CUSTOM_LIGHTNING_POS_X = X
+                //option.CUSTOM_LIGHTNING_POS_Y = Y
+                //option.CUSTOM_LIGHTNING_POS_Z = Z
                 option.CUSTOM_LIGHTNING_R = R
                 option.CUSTOM_LIGHTNING_G = G
                 option.CUSTOM_LIGHTNING_B = B
@@ -249,7 +249,7 @@ screen.Clouds = Cloud Settings
                     value.CUSTOM_LIGHTNING_TEX.0 = Random
 
                 screen.READ_DESCRIPTION = READ DESCRIPTION
-                    screen.READ_DESCRIPTION.comment = Set custom postion values in shaders/lib/settings.glsl
+                    screen.READ_DESCRIPTION.comment = Set custom postion values in your shader config!
 
     screen.HighAltitudeClouds   = High Altitude Clouds
         option.CloudLayer2          = Altostratus Clouds

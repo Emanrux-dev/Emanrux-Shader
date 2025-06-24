@@ -288,6 +288,8 @@ uniform float dhFarPlane;
 
 #ifdef RIPPLE_WATER
 	#include "/lib/ripples.glsl"
+
+	uniform int biome_precipitation;
 #endif
 
 // #undef BASIC_SHADOW_FILTER
@@ -552,7 +554,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			waterPos.xyz = getParallaxDisplacement(waterPos, playerPos);
 
 			#ifdef RIPPLE_WATER
-				if(viewDist < 35 && rainStrength > 0.0 && abs(worldSpaceNormal.z) < 0.95 && abs(worldSpaceNormal.x) < 0.95) {
+				if(viewDist < 35 && rainStrength > 0.0 && biome_precipitation == 1 && abs(worldSpaceNormal.z) < 0.95 && abs(worldSpaceNormal.x) < 0.95) {
 					float effectStrength = smoothstep(0.85, 1.0, lightmap.y);
 					rippleBump = ripples(feetPlayerPos.xz+cameraPosition.xz);
 					waterPos.xyz += RIPPLE_STRENGTH * rippleBump * rainStrength * effectStrength * smoothstep(35, 10, viewDist);
@@ -691,7 +693,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 		Direct_lighting += lightColors * endPhase * end_NdotL * fogShadow;
 
-		vec3 AmbientLightColor = vec3(0.3,0.6,1.0) ;
+		vec3 AmbientLightColor = vec3(0.3,0.36,1.0) ;
 			
 		Indirect_lighting = AmbientLightColor + 0.7 * AmbientLightColor * dot(worldSpaceNormal, normalize(feetPlayerPos));
 		Indirect_lighting *= 0.1;

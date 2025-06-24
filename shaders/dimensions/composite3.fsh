@@ -22,6 +22,7 @@ uniform sampler2D colortex0;
 uniform sampler2D colortex1;
 uniform sampler2D colortex2;
 uniform sampler2D colortex3;
+uniform sampler2D colortex4;
 uniform sampler2D colortex5;
 uniform sampler2D colortex6;
 uniform sampler2D colortex7;
@@ -92,8 +93,6 @@ uniform float caveDetection;
 
   #define LIGHTNINGONLY;
   #include "/lib/volumetricClouds.glsl"
-#else
-  uniform sampler2D colortex4;
 #endif
 
 #include "/lib/waterBump.glsl"
@@ -593,7 +592,7 @@ void main() {
 
 bool isLightning = false;
 
-#if defined OVERWORLD_SHADER && defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS
+#if defined OVERWORLD_SHADER && defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS && defined VOLUMETRIC_CLOUDS
 
   vec2 cloudDepth = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_RESOLUTION*RENDER_SCALE)).rg;
 

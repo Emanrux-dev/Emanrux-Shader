@@ -43,6 +43,8 @@ uniform float rainStrength;
 
 	#if defined RIPPLE_PUDDLES && defined Puddles
 		#include "/lib/ripples.glsl"
+
+		uniform int biome_precipitation;
 	#endif
 
 	#include "/lib/stars.glsl"
@@ -738,7 +740,7 @@ uniform float wetness;
 					float viewDist = length(worldPos - cameraPosition);
 					vec3 rippleNormal = flatNormals;
 
-					if(viewDist < 35 && rainStrength > 0.0) {
+					if(viewDist < 35 && rainStrength > 0.0 && biome_precipitation == 1) {
 						vec3 ripple = ripples(1.2 * worldPos.xz);
 						
 						ripple = ripple.xzy;

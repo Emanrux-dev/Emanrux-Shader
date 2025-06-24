@@ -1092,46 +1092,43 @@ void main() {
 		#endif
 		
 	////////////////////////////////	SUN SSS		////////////////////////////////
-		#if SSS_TYPE != 0
-
-			float sunSSS_density = LabSSS;
-			float SSS_shadow = ShadowAlpha;
-			
-			#ifdef DISTANT_HORIZONS
-				shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / min(shadowDistance, max(far-32.0,32.0)),0.0)*5.0,1.0));
-			#endif
-
-			#ifndef RENDER_ENTITY_SHADOWS
-				if(entities) sunSSS_density = 0.0;
-			#endif
-			
-			#ifdef SCREENSPACE_CONTACT_SHADOWS
-				vec2 SS_directLight = SSRT_Shadows(toScreenSpace_DH(texcoord/RENDER_SCALE, z, DH_depth1), isDHrange, normalize(WsunVec*mat3(gbufferModelViewInverse)), interleaved_gradientNoise_temporal(), sunSSS_density > 0.0 && shadowMapFalloff2 < 1.0, hand);
-
-				// combine shadowmap with a minumum shadow determined by the screenspace shadows.
-				shadowColor *= SS_directLight.r;
-				ShadowBlockerDepth = max(ShadowBlockerDepth, SS_directLight.g*(1.0-shadowMapFalloff2));
-				
-			#else
-				ShadowBlockerDepth = max(ShadowBlockerDepth, (1.0-shadowMapFalloff2) * 10.0);
-			#endif
-			
-				
-			#ifdef TRANSLUCENT_COLORED_SHADOWS
-				SSSColor = tintedSunlight;
-			#else
-				SSSColor = DirectLightColor;
-			#endif
-			
-			SSSColor *= SubsurfaceScattering_sun(albedo, ShadowBlockerDepth, sunSSS_density, clamp(dot(feetPlayerPos_normalized, WsunVec),0.0,1.0), SSS_shadow, shadowMapFalloff2);
-			
-			if(isEyeInWater != 1) SSSColor *= lightLeakFix;
-			
-			float cloudShadows = GetCloudShadow(feetPlayerPos.xyz + cameraPosition, WsunVec);
-			shadowColor *= cloudShadows;
-			SSSColor *= cloudShadow*cloudShadows;
-
+		float sunSSS_density = LabSSS;
+		float SSS_shadow = ShadowAlpha;
+		
+		#ifdef DISTANT_HORIZONS
+			shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / min(shadowDistance, max(far-32.0,32.0)),0.0)*5.0,1.0));
 		#endif
+
+		#ifndef RENDER_ENTITY_SHADOWS
+			if(entities) sunSSS_density = 0.0;
+		#endif
+		
+		#ifdef SCREENSPACE_CONTACT_SHADOWS
+			vec2 SS_directLight = SSRT_Shadows(toScreenSpace_DH(texcoord/RENDER_SCALE, z, DH_depth1), isDHrange, normalize(WsunVec*mat3(gbufferModelViewInverse)), interleaved_gradientNoise_temporal(), sunSSS_density > 0.0 && shadowMapFalloff2 < 1.0, hand);
+
+			// combine shadowmap with a minumum shadow determined by the screenspace shadows.
+			shadowColor *= SS_directLight.r;
+			ShadowBlockerDepth = max(ShadowBlockerDepth, SS_directLight.g*(1.0-shadowMapFalloff2));
+			
+		#else
+			ShadowBlockerDepth = max(ShadowBlockerDepth, (1.0-shadowMapFalloff2) * 10.0);
+		#endif
+		
+			
+		#ifdef TRANSLUCENT_COLORED_SHADOWS
+			SSSColor = tintedSunlight;
+		#else
+			SSSColor = DirectLightColor;
+		#endif
+		
+		SSSColor *= SubsurfaceScattering_sun(albedo, ShadowBlockerDepth, sunSSS_density, clamp(dot(feetPlayerPos_normalized, WsunVec),0.0,1.0), SSS_shadow, shadowMapFalloff2);
+		
+		if(isEyeInWater != 1) SSSColor *= lightLeakFix;
+		
+		float cloudShadows = GetCloudShadow(feetPlayerPos.xyz + cameraPosition, WsunVec);
+		shadowColor *= cloudShadows;
+		SSSColor *= cloudShadow*cloudShadows;
+
 	#endif
 
 	#ifdef END_SHADER

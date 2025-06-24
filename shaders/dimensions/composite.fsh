@@ -378,29 +378,27 @@ void main() {
 
 	vec3 viewPos = toScreenSpace_DH(texcoord/RENDER_SCALE - TAA_Offset*texelSize*0.5, z, DH_depth1);
 	
+	float depth = z;
+
+	#ifdef DISTANT_HORIZONS
+		float _near = near;
+		float _far = far*4.0;
+		if (depth >= 1.0) {
+			depth = DH_depth1;
+			_near = dhNearPlane;
+			_far = dhFarPlane;
+		}
+
+		depth = linearizeDepthFast(depth, _near, _far);
+		depth = depth / dhFarPlane;
+	#endif
+
+	if(depth < 1.0)
+		gl_FragData[2] = vec4(vec3(0.0), depth * depth * 65000.0);
+	else
+		gl_FragData[2] = vec4(vec3(0.0), 65000.0);
 
 	#if defined DENOISE_SSS_AND_SSAO && indirect_effect == 1
-		float depth = z;
-
-		#ifdef DISTANT_HORIZONS
-		    float _near = near;
-		    float _far = far*4.0;
-		    if (depth >= 1.0) {
-		        depth = DH_depth1;
-		        _near = dhNearPlane;
-		        _far = dhFarPlane;
-		    }
-
-		    depth = linearizeDepthFast(depth, _near, _far);
-		    depth = depth / dhFarPlane;
-		#endif
-
-		if(depth < 1.0)
-    		gl_FragData[2] = vec4(vec3(0.0), depth * depth * 65000.0);
-		else
-			gl_FragData[2] = vec4(vec3(0.0), 65000.0);
-
-
 		vec3 FlatNormals = normalize(texture2D(colortex15,texcoord).rgb * 2.0 - 1.0);
 		if(z >= 1.0) FlatNormals = normal;
 

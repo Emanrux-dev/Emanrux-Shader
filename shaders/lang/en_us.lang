@@ -2,8 +2,13 @@ option.SHADER_VERSION_LABEL = Bliss In-Dev Version
     prefix.SHADER_VERSION_LABEL = COMMIT #
 
 # if you're here to translate, this is a joke, these don't do what they say
-profile.QUALITY=Quality
-profile.PERFORMANCE=Performance
+profile.POTATO=§4Potato 
+profile.VERY_LOW=§cVery Low 
+profile.LOW=§aLow 
+profile.MEDIUM=§2Medium 
+profile.HIGH=§bHigh
+profile.VERY_HIGH=§9Very High
+profile.ULTRA=§dUltra
 
 option.OLD_LIGHTLEAK_FIX = Lightleak Fix
 option.CAVE_DETECTION = Cave detection
@@ -154,6 +159,7 @@ screen.Ambient_light = Ambient Light
             value.indirect_effect.2 = GTAO
             value.indirect_effect.3 = RTAO
             value.indirect_effect.4 = SSGI
+    option.RAY_COUNT = RT Ray Count
 	option.HANDHELD_LIGHT_RANGE = Handheld Light Range
 
     screen.Ambient_Colors =  Ambient Light Color
@@ -172,8 +178,9 @@ screen.Ambient_light = Ambient Light
     
 
 screen.Fog = Fog Settings
-    option.VL_RENDER_RESOLUTION = Fog Resolution Scaling
+    option.VL_RENDER_RESOLUTION = Volumetric Resolution Scaling
     option.VL_SAMPLES = Fog Samples
+    option.FOG_START_HEIGHT = Fog Start Height
     option.BLOOMY_FOG = Bloomy Fog Multiplier
     option.Haze_amount = Atmospheric Haze Density
     option.RainFog_amount = Rain Fog Multiplier
@@ -453,6 +460,7 @@ screen.Climate = Climate Settings
         option.DARKFOREST_B = Blue Amount
 
 screen.World = World
+    screen.Sky_coefficients = Sky Coefficients
     screen.Water = Water Settings
         option.WATER_REFLECTIONS = Specular Reflections for Water
         option.SCREENSPACE_REFLECTIONS = Screen-Space Reflections
@@ -460,12 +468,16 @@ screen.World = World
         option.WATER_SUN_SPECULAR = Sun/Moon Reflections
         option.WATER_BACKGROUND_SPECULAR = Sky/Fog Reflections
         option.FAKE_REFRACTION_EFFECT = Refraction In Water/Glass
+        option.FAKE_DISPERSION_EFFECT = Dispersion In Water
+        option.REFRACTION_SMUDGE = Refraction Smudge
         option.Dirt_Amount = Dirt Amount
         option.Water_Top_Layer = Ocean Y coordinate
         option.WATER_WAVE_STRENGTH = Wave Strength
+        option.WATER_WAVE_SPEED = Wave Speed
         option.SNELLS_WINDOW = Snell's Window
         option.MINIMUM_WATER_ABSORBANCE = Minimum Water Absorbance
             value.MINIMUM_WATER_ABSORBANCE.-1 = AUTO
+        option.WATER_SUN_REFLECTION_STRENGTH = Water Sun Reflection Strength
 
         screen.Water_fog_color = Water Fog Settings
             option.Dirt_Scatter_R = Scatter Red (dirt)
@@ -731,8 +743,6 @@ screen.World.comment = Configure settings for various things that happen in the 
         option.Water_Top_Layer.comment = Configure the Y coordinate at which the ocean should be in the world.
         
         screen.Water_fog_color.comment = Configure colors of the water fog. 
-
-        option.WATER_SUN_REFLECTION_STRENGTH = Water sun reflection strength
 
     screen.World_Effects = World Weather Effects
         option.Puddles = Puddles

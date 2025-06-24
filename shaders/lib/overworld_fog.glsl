@@ -313,6 +313,5 @@ vec4 GetVolumetricFog(
 
 	// atmosphereAlpha = atmosphereAbsorbance;
 	
-	color *= mix(vec3(1.0), vec3(0.15), rainStrength);
 	return vec4(color, totalAbsorbance);
 }

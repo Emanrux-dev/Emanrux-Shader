@@ -228,7 +228,7 @@ float mixhistory = 0.06;
 	/// --- STORE COLOR LUT --- ///
 	///////////////////////////////
 
-	vec3 AmbientLightTint = vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B);
+	vec3 AmbientLightTint = (1.0 - 0.85 * rainStrength) * vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B);
 
 	// --- the color of the atmosphere + the average color of the atmosphere.
 	vec3 skyGroundCol = skyFromTex(vec3(0, -1 ,0), colortex4).rgb;// * clamp(WsunVec.y*2.0,0.2,1.0);

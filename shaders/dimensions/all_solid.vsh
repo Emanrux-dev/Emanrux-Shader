@@ -53,11 +53,6 @@ float pi2wt = PI48*frameTimeCounter;
 attribute vec4 mc_Entity;
 attribute vec4 mc_midTexCoord;
 
-#if defined WORLD && !defined HAND
-	uniform float wetnessAmount;
-	uniform float snowAmount;
-#endif
-
 uniform int blockEntityId;
 uniform int entityId;
 flat varying float blockID;

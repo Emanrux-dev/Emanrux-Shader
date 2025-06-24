@@ -642,10 +642,10 @@ vec3 ComputeShadowMap_COLOR(in vec3 projectedShadowPosition, float distortFactor
 	#ifdef debug_SHADOWMAP
 		shadowDebug = shadow2D(shadow, projectedShadowPosition).x;
 	#endif
-	// #ifdef TRANSLUCENT_COLORED_SHADOWS
+	#ifdef TRANSLUCENT_COLORED_SHADOWS
 		// directLightColor *= mix(vec3(1.0), translucentTint.rgb / samples, maxDistFade);
 		tintedSunlight *= translucentTint.rgb / samples;
-	// #endif
+	#endif
 
 	return shadowColor.rgb / samples;
 	// return mix(directLightColor, shadowColor.rgb / samples, maxDistFade);

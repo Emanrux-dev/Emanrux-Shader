@@ -591,6 +591,7 @@ option.AEROCHROME_PINKNESS.comment = Higher = Pink. Lower = Red
 option.AEROCHROME_WOOL_ENABLED.comment = Technically wool things should be affected but it ruins a lot of builds. Enable to be more technically correct.
 
 option.EMISSIVE_ORES = Emissive Ores
+option.EMISSIVE_ORES_STRENGTH = Emissive Ores Brightness
 option.PLANET_CURVATURE = Planet Curvature
 option.CURVATURE_AMOUNT = Curvature Amount
 

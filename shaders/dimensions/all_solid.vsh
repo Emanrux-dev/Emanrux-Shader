@@ -302,6 +302,10 @@ void main() {
 
 	if(mc_Entity.x == 244) EMISSIVE = 0.7; // soul fire
 
+	#ifdef EMISSIVE_ORES
+		if(mc_Entity.x == 502) EMISSIVE = EMISSIVE_ORES_STRENGTH;
+	#endif
+
 	// special cases light lightning and beacon beams...	
 	#ifdef ENTITIES
 		if(entityId == ENTITY_LIGHTNING){

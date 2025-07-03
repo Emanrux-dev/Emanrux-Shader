@@ -176,6 +176,8 @@ screen.Ambient_light = Ambient Light
         option.TORCH_G = Green Amount
         option.TORCH_B = Blue Amount
     
+    option.RAIN_AMBIENT_LIGHT_MODIFIER = Rain Ambient Light
+    
 
 screen.Fog = Fog Settings
     option.VL_RENDER_RESOLUTION = Volumetric Resolution Scaling
@@ -657,6 +659,8 @@ screen.Ambient_light.comment = Configure settings related to the lighting in sha
 
     screen.Ambient_Colors.comment = Configure the color of light in shaded areas.
     screen.Torch_Colors.comment = Configure the color of light from torches or other placed lightsources.
+
+    option.RAIN_AMBIENT_LIGHT_MODIFIER.comment = Configure the ambient light brightness during rain. (1.0 is no darkening, 0.0 is no ambient light)
 
     option.LPV_SIZE.comment = Configures the size (in blocks) of the volume for colored lighting.
     option.LPV_SATURATION.comment = Configures the intensity of colored lighting.

@@ -220,7 +220,7 @@ vec4 waterVolumetrics( vec3 rayStart, vec3 rayEnd, float estEndDepth, float estS
 				// sh = shadow2D( shadow, pos).x;
 
 				#ifdef TRANSLUCENT_COLORED_SHADOWS
-					sh = vec3(shadow2D(shadowtex0, pos).x);
+					sh *= vec3(shadow2D(shadowtex0, pos).x);
 
 					if(shadow2D(shadowtex1, pos).x > pos.z && sh.x < 1.0){
 						vec4 translucentShadow = texture2D(shadowcolor0, pos.xy);

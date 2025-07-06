@@ -12,7 +12,7 @@ float cloud_movement = (worldTime  + mod(worldDay,100)*24000.0) / 24.0 * Cloud_S
 
 float lightningFlashTimer = floor(frameTimeCounter * 11.0);
 float randomSeed = fract(sin(dot(vec2(lightningFlashTimer), vec2(12.9898,78.233))) * 43758.5453);
-float lightningFlash = mix(0.3, 1.5, randomSeed);
+float lightningFlash = mix(0.1, 2.5, randomSeed);
 
 #ifdef CUMULONIMBUS
 	float lightningDuration = 0.75 + CUMULONIMBUS_LIGHTNING_DELAY;
@@ -837,7 +837,7 @@ vec4 GetVolumetricClouds(
 				minHeight = 600;
 				maxHeight = cloudheight + minHeight;
 				
-				cloudDist.xz = vec2(8.0);
+				cloudDist.xz = vec2(10.0);
 				rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/samples);
 				rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
 

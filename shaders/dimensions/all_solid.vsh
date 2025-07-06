@@ -91,6 +91,21 @@ uniform vec3 cameraPosition;
 uniform vec2 texelSize;
 uniform int framemod8;
 
+#if defined HAND
+uniform mat4 gbufferPreviousModelView;
+uniform vec3 previousCameraPosition;
+
+float detectCameraMovement(){
+	// simply get the difference of modelview matrices and cameraPosition across a frame.
+	vec3 fakePos = vec3(0.5,0.5,0.0);
+	vec3 hand_playerPos = mat3(gbufferModelViewInverse) * fakePos + (cameraPosition - previousCameraPosition);
+	vec3 previousPosition = mat3(gbufferPreviousModelView) * hand_playerPos;
+	float detectMovement = 1.0 - clamp(distance(previousPosition, fakePos)/texelSize.x,0.0,1.0);
+
+	return detectMovement;
+}
+#endif
+
 #include "/lib/TAA_jitter.glsl"
 
 
@@ -193,7 +208,7 @@ void main() {
 
 	#if defined ENTITIES && defined IS_IRIS
 		// force out of frustum
-		if (entityId == 1599) gl_Position.z -= 10000;
+		if (entityId == 1599) gl_Position.z -= 10000.0;
 	#endif
 
 	vec3 position = mat3(gl_ModelViewMatrix) * vec3(gl_Vertex) + gl_ModelViewMatrix[3].xyz;
@@ -427,7 +442,13 @@ void main() {
 		gl_Position.xy = gl_Position.xy * RENDER_SCALE + RENDER_SCALE * gl_Position.w - gl_Position.w;
 	#endif
 	#ifdef TAA
-		gl_Position.xy += offsets[framemod8] * gl_Position.w*texelSize;
+		#ifdef HAND
+			// turn off jitter when camera moves.
+			// this is to hide the jitter when the same happens for TAA blend factor and the jitter becomes visible during camera movement
+			gl_Position.xy += (offsets[framemod8] * gl_Position.w*texelSize) * detectCameraMovement();
+		#else	
+			gl_Position.xy += offsets[framemod8] * gl_Position.w*texelSize;
+		#endif
 	#endif
 
 

@@ -963,4 +963,5 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #undef REALMOON
 #define ShaderSnow 0
 #undef Puddles
+#undef DEFERRED_SPECULAR
 #endif

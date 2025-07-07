@@ -234,7 +234,7 @@ vec2 CleanSample(
 	
 	// for every sample, the sample position must change its distance from the origin.
 	// otherwise, you will just have a circle.
-    float spiralShape = pow(variedSamples / (totalSamples + variance),0.5);
+    float spiralShape = sqrt(variedSamples / (totalSamples + variance));
 
 	float shape = 2.26; // this is very important. 2.26 is very specific
     float theta = variedSamples * (PI * shape);
@@ -295,12 +295,22 @@ uniform float dhFarPlane;
 // #undef BASIC_SHADOW_FILTER
 
 #ifdef OVERWORLD_SHADER
-float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDistFade, float noise){
+
+#include "/lib/Shadows.glsl"
+
+float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDistFade, float noise, in vec3 geoNormals){
 
 	// if(maxDistFade <= 0.0) return 1.0;
 
 	// setup shadow projection
 	vec3 projectedShadowPosition = mat3(shadowModelView) * playerPos + shadowModelView[3].xyz;
+
+	applyShadowBias(projectedShadowPosition, playerPos, geoNormals);
+
+	projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
+
+	mat4 Custom_ViewMatrix = BuildShadowViewMatrix();
+	projectedShadowPosition = mat3(Custom_ViewMatrix) * playerPos  + Custom_ViewMatrix[3].xyz;
 	projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 
 	// un-distort
@@ -311,27 +321,21 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 		float distortFactor = 1.0;
 	#endif
 
+	projectedShadowPosition.z += shadowProjection[3].z * 0.0012;
+
 	// hamburger
 	projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5);
 	
 	float shadowmap = 0.0;
 	vec3 translucentTint = vec3(0.0);
 
-	#ifndef HAND
-		projectedShadowPosition.z -= 0.0001;
-	#endif
-
-	#if defined ENTITIES
-		projectedShadowPosition.z -= 0.0002;
-	#endif
-
 	#ifdef BASIC_SHADOW_FILTER
 		int samples = int(SHADOW_FILTER_SAMPLE_COUNT * 0.5);
-		float rdMul = 14.0*distortFactor*d0*k/shadowMapResolution;
+		float rdMul = (4.0*distortFactor*d0*k/shadowMapResolution) * 0.3;
 
 		for(int i = 0; i < samples; i++){
-			vec2 offsetS = CleanSample(i, samples - 1, noise) * 0.3;
-			projectedShadowPosition.xy += rdMul*offsetS;
+			vec2 offsetS = CleanSample(i, samples - 1, noise) * rdMul;
+			projectedShadowPosition.xy += offsetS;
 	#else
 		int samples = 1;
 	#endif
@@ -449,8 +453,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	float UnchangedAlpha = gl_FragData[0].a;
 
 	#ifdef WhiteWorld
-		gl_FragData[0].rgb = vec3(0.5);
-		gl_FragData[0].a = 1.0;
+		gl_FragData[0].rgb = vec3(1.0);
+		gl_FragData[0].a = 1.0/255.0;
 	#endif
 
 	vec3 Albedo = toLinear(gl_FragData[0].rgb);
@@ -496,6 +500,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 ////////////////////////////////////////////////////////////////////////////////
 
 	vec3 normal = normalMat.xyz; // in viewSpace
+	vec3 geoNormals = viewToWorld(normal).xyz; // for refractions
 
 	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
 		WavePixelData wave = physics_wavePixel(physics_localPosition.xz, physics_localWaviness, physics_iterationsNormal, physics_gameTime);
@@ -654,7 +659,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 		float LM_shadowMapFallback = min(max(lightmap.y-0.8, 0.0) * 25,1.0);
 
-		Shadows = ComputeShadowMap(DirectLightColor, shadowPlayerPos, shadowMapFalloff, blueNoise());
+		Shadows = ComputeShadowMap(DirectLightColor, shadowPlayerPos, shadowMapFalloff, blueNoise(), geoNormals);
 
 		// Shadows = mix(LM_shadowMapFallback, Shadows, shadowMapFalloff2);
 		Shadows *= mix(LM_shadowMapFallback,1.0,shadowMapFalloff2);
@@ -667,7 +672,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		vec3 indirectNormal = worldSpaceNormal / dot(abs(worldSpaceNormal),vec3(1.0));
 		float SkylightDir = clamp(indirectNormal.y*0.7+0.3,0.0,1.0);
 
-		float skylight = mix(0.2 + 2.3*(1.0-lightmap.y), 2.5, SkylightDir);
+		float skylight = mix(0.2 + 2.3*(1.0-lightmap.y), 2.5, SkylightDir)/2.5;
 		AmbientLightColor *= skylight;
 
 		Indirect_lighting = doIndirectLighting(AmbientLightColor, MinimumLightColor, lightmap.y);
@@ -722,7 +727,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	
 	vec4 flashLightSpecularData = vec4(0.0);
 	#ifdef FLASHLIGHT
-		Indirect_lighting += calculateFlashlight(FragCoord.xy*texelSize/RENDER_SCALE, viewPos, vec3(0.0), worldSpaceNormal, flashLightSpecularData, false);
+		Indirect_lighting += calculateFlashlight(FragCoord.xy*texelSize/RENDER_SCALE, viewPos, vec3(0.0), worldSpaceNormal, flashLightSpecularData);
 	#endif
 
 	vec3 FinalColor = (Indirect_lighting + Direct_lighting) * Albedo;
@@ -809,7 +814,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		if(WATER && isWater) {
 			gl_FragData[0].a = 0.0;
 			MATERIALS = 0.0;
-			}
+		}
 	#endif
 
 	gl_FragData[1] = vec4(Albedo, MATERIALS);
@@ -818,7 +823,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		if(gl_FragCoord.x*texelSize.x < 0.47) gl_FragData[0] = vec4(0.0);
 	#endif
 	#if DEBUG_VIEW == debug_NORMALS
-		gl_FragData[0].rgb = vec3(worldSpaceNormal.x,worldSpaceNormal.y*0,worldSpaceNormal.z*0) * 0.1;
+		gl_FragData[0].rgb = worldSpaceNormal.xyz * 0.1;
 		gl_FragData[0].a = 1;
 	#endif
 	#if DEBUG_VIEW == debug_INDIRECT

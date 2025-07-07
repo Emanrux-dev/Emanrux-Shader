@@ -790,7 +790,7 @@ vec4 GetVolumetricClouds(
 	vec3 sunMultiScattering = directLightCol;
 	vec3 moonScattering = directLightCol2 * (phaseCloud(SdotV2, 0.85) + phaseCloud(SdotV2, 0.75)) * 3.14;
 	vec3 moonMultiScattering = directLightCol2;
-	vec3 skyScattering = indirectLightCol * 2.0;
+	vec3 skyScattering = indirectLightCol * (1.0 + pow(1.0-pow(1.0-clamp(sunVector.y,0.0,1.0),5.0),5.0));;
 
 	vec3 sunScattering2 = sunScattering * sunVis;
 	vec3 sunMultiScattering2 = sunMultiScattering * sunVis;

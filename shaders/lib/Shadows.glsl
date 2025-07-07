@@ -23,4 +23,3 @@ void applyShadowBias(inout vec3 projectedShadowPosition, in vec3 playerPos, in v
 
 	projectedShadowPosition += (mat3(shadowModelView) * geoNormals) * biasSize * 0.15 * biasDistanceFactor;
 }
-}

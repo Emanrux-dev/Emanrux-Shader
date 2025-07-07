@@ -309,9 +309,9 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 
 	projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 
-	mat4 Custom_ViewMatrix = BuildShadowViewMatrix();
-	projectedShadowPosition = mat3(Custom_ViewMatrix) * playerPos  + Custom_ViewMatrix[3].xyz;
-	projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
+	//mat4 Custom_ViewMatrix = BuildShadowViewMatrix();
+	//projectedShadowPosition = mat3(Custom_ViewMatrix) * playerPos  + Custom_ViewMatrix[3].xyz;
+	//projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 
 	// un-distort
 	#ifdef DISTORT_SHADOWMAP

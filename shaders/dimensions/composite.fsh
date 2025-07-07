@@ -459,9 +459,9 @@ void main() {
 				vec3 projectedShadowPosition = mat3(shadowModelView) * feetPlayerPos  + shadowModelView[3].xyz;
 				projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 
-				mat4 Custom_ViewMatrix = BuildShadowViewMatrix();
-				projectedShadowPosition = mat3(Custom_ViewMatrix) * feetPlayerPos  + Custom_ViewMatrix[3].xyz;
-				projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
+				// mat4 Custom_ViewMatrix = BuildShadowViewMatrix();
+				// projectedShadowPosition = mat3(Custom_ViewMatrix) * feetPlayerPos  + Custom_ViewMatrix[3].xyz;
+				// projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 				
 				//apply distortion
 				#ifdef DISTORT_SHADOWMAP

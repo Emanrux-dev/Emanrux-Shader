@@ -23,7 +23,7 @@
 
 vec3 doBlockLightLighting(
     vec3 lightColor, float lightmap,
-    vec3 playerPos, vec3 lpvPos, bool isHand
+    vec3 playerPos, vec3 lpvPos
 ){
     lightmap = clamp(lightmap,0.0,1.0);
 
@@ -50,17 +50,7 @@ vec3 doBlockLightLighting(
         voxelRangeFalloff = 1.0 - pow(1.0-pow(voxelRangeFalloff,1.5),3.0);
         
         // outside the voxel volume, lerp to vanilla lighting as a fallback
-        // blockLight = mix(blockLight, lpvSample.rgb, voxelRangeFalloff);
-
-        // to fix optifine/continuity custom emissives, only allow the vanilla lightmap at high torch light levels.
-        float mixAmount = clamp(dot(lpvSample.rgb,vec3(300.0)),0.0,1.0);
-
-        #if defined MAIN_LIGHTING_PASS_HAND_CHECK
-            if(isHand) mixAmount = 0.0;
-        #endif
-
-        vec3 mix_lpvsample = mix(max(lpvSample.rgb, lightColor * 2.5 * min(max(lightmap-0.999,0.0)/(1.0-0.999),1.0)), lpvSample.rgb, mixAmount);
-        blockLight = mix(blockLight, mix_lpvsample, voxelRangeFalloff);
+        blockLight = mix(blockLight, lpvSample.rgb + lightColor * 2.5 * min(max(lightmap-0.999,0.0)/(1.0-0.999),1.0), voxelRangeFalloff);
 
         #ifdef Hand_Held_lights
             // create handheld lightsources

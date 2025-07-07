@@ -52,7 +52,7 @@ float getWaterHeightmap(vec2 posxz, in float largeWaves, in float largeWavesCurv
 	return (heightSum/4.5) * max(largeWavesCurved,0.3);
 }
 
-vec3 getWaveNormal(vec3 waterPos, vec3 playerpos, bool isLOD){
+vec3 getWaveNormal(vec3 waterPos, vec3 playerpos){
 	
 	float largeWaves = texture2D(noisetex, waterPos.xy / 600.0 ).b;
 	float largeWavesCurved = pow(1.0-pow(1.0-largeWaves,2.5),4.5);

@@ -292,7 +292,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
     if(iswater && abs(worldSpaceNormals.y) > 0.1){
 	    vec3 waterPos = (playerPos+cameraPosition).xzy;
 
-		vec3 bump = normalize(getWaveNormal(waterPos, playerPos, true));
+		vec3 bump = normalize(getWaveNormal(waterPos, playerPos));
 
 		float bumpmult = WATER_WAVE_STRENGTH;
 

@@ -213,8 +213,6 @@ float convertHandDepth_2(in float depth, bool hand) {
 #endif
 
 #include "/lib/specular.glsl"
-
-#define MAIN_LIGHTING_PASS_HAND_CHECK
 #include "/lib/diffuse_lighting.glsl"
 
 #include "/lib/end_fog.glsl"
@@ -1214,7 +1212,7 @@ void main() {
 		#else
 			const vec3 lpvPos = vec3(0.0);
 		#endif
-		vec3 blockLightColor = doBlockLightLighting( vec3(TORCH_R,TORCH_G,TORCH_B), lightmap.x, feetPlayerPos, lpvPos, hand);
+		vec3 blockLightColor = doBlockLightLighting( vec3(TORCH_R,TORCH_G,TORCH_B), lightmap.x, feetPlayerPos, lpvPos);
 		Indirect_lighting += blockLightColor;
 
 		vec4 flashLightSpecularData = vec4(0.0);

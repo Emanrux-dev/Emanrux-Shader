@@ -1,5 +1,4 @@
 #include "/lib/settings.glsl"
-#include "/lib/bayer_matrix.glsl"
 
 // #if defined END_SHADER || defined NETHER_SHADER
 // 	#undef IS_LPV_ENABLED
@@ -85,11 +84,13 @@ uniform vec3 previousCameraPosition;
 	#include "/lib/volumetricClouds.glsl"
 #endif
 
+#if defined IS_LPV_ENABLED || (defined DISTANT_HORIZONS && defined DH_CHUNK_FADING)
+	uniform int frameCounter;
+#endif
 
 #ifdef IS_LPV_ENABLED
 	uniform int heldItemId;
 	uniform int heldItemId2;
-	uniform int frameCounter;
 
 	#include "/lib/hsv.glsl"
 	#include "/lib/lpv_common.glsl"
@@ -261,6 +262,20 @@ float luma(vec3 color) {
 	return dot(color,vec3(0.21, 0.72, 0.07));
 }
 uniform vec3 eyePosition;
+
+#if defined DISTANT_HORIZONS && defined DH_CHUNK_FADING
+	float R2_dither(){
+		vec2 coord = gl_FragCoord.xy ;
+
+		#ifdef TAA
+			coord += + (frameCounter%40000) * 2.0;
+		#endif
+		
+		vec2 alpha = vec2(0.75487765, 0.56984026);
+		return fract(alpha.x * coord.x + alpha.y * coord.y ) ;
+	}
+#endif
+
 
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -506,7 +521,7 @@ void main() {
 	#if defined DISTANT_HORIZONS && defined DH_CHUNK_FADING
 			float ditherFade = smoothstep(0.98*far, 1.0*far, viewDist);
 
-			if (step(ditherFade, bayerDither()) == 0.0) discard;
+			if (step(ditherFade, R2_dither()) == 0.0) discard;
 	#endif
 
 #endif

@@ -8,7 +8,12 @@ uniform float thunderStrength;
 uniform int entityId;
 uniform int worldDay;
 uniform int worldTime;
-float cloud_movement = (worldTime  + mod(worldDay,100)*24000.0) / 24.0 * Cloud_Speed;
+
+#if CLOUD_MOVEMENT_TYPE == 0
+	float cloud_movement = (worldTime  + mod(worldDay,100)*24000.0) / 24.0 * Cloud_Speed;
+#else
+	float cloud_movement = frameTimeCounter * Cloud_Speed;
+#endif
 
 float lightningFlashTimer = floor(frameTimeCounter * 11.0);
 float randomSeed = fract(sin(dot(vec2(lightningFlashTimer), vec2(12.9898,78.233))) * 43758.5453);

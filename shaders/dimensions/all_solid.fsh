@@ -4,7 +4,6 @@
 #include "/lib/blocks.glsl"
 #include "/lib/entities.glsl"
 #include "/lib/items.glsl"
-#include "/lib/bayer_matrix.glsl"
 #include "/lib/hsv.glsl"
 
 flat varying int NameTags;
@@ -461,7 +460,7 @@ void main() {
 			float viewDist = length(playerpos); 
 			float ditherFade = smoothstep(0.98 * far, 1.03 * far, viewDist);
 
-			if(step(ditherFade, bayerDither()) == 0.0) discard;
+			if(step(ditherFade, R2_dither()) == 0.0) discard;
 	#endif
 	
 	#if defined HAND

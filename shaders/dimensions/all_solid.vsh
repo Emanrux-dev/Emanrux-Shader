@@ -315,7 +315,11 @@ void main() {
 
 	if(mc_Entity.x == 103) EMISSIVE = 1.0; // amethyst cluster
 
-	if(mc_Entity.x == 244) EMISSIVE = 0.7; // soul fire
+	if(mc_Entity.x == 244) EMISSIVE = 1.5; // soul fire
+
+	#if defined Puddles || ShaderSnow > 0
+		if (mc_Entity.x == 244 || mc_Entity.x == 189) lmtexcoord.w = 0.0;
+	#endif
 
 	#ifdef EMISSIVE_ORES
 		if(mc_Entity.x == 502) EMISSIVE = EMISSIVE_ORES_STRENGTH;

@@ -360,7 +360,7 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
 
   vec4 colorSum = vec4(0.0);
   float edgeSum = 0.0;
-  float threshold = 1.0;
+  float threshold = 0.0000005;
   
   vec2 coord = gl_FragCoord.xy - 1.5;
 
@@ -371,10 +371,10 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
   ivec2 UV_NOISE = ivec2(gl_FragCoord.xy*texelSize + 1);
 
 	ivec2 OFFSET[5] = ivec2[](
-    ivec2(-1,-1),
+    ivec2(-2,-2),
 	 	ivec2( 1, 1),
 		ivec2(-1, 1),
-		ivec2( 1,-1),
+		ivec2( 2,-2),
 		ivec2( 0, 0)
   );
 

@@ -1,5 +1,4 @@
 #include "/lib/settings.glsl"
-#include "/lib/bayer_matrix.glsl"
 
 #undef FLASHLIGHT_BOUNCED_INDIRECT
 
@@ -478,7 +477,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#if defined DISTANT_HORIZONS && defined DH_CHUNK_FADING
 		float ditherFade = smoothstep(0.98 * far, 1.03 * far, viewDist);
 
-		if (step(ditherFade, bayerDither()) == 0.0) discard;
+		if (step(ditherFade, R2_dither()) == 0.0) discard;
 	#endif
 
 	#if defined LIGHTNING

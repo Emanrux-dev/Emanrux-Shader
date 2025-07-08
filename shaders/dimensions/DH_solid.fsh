@@ -1,5 +1,4 @@
 #include "/lib/settings.glsl"
-#include "/lib/bayer_matrix.glsl"
 
 
 varying vec4 pos;
@@ -81,6 +80,7 @@ float interleaved_gradientNoise(){
 }
 float R2_dither(){
 	vec2 coord = gl_FragCoord.xy + (frameCounter%40000) * 2.0;
+    
 	vec2 alpha = vec2(0.75487765, 0.56984026);
 	return fract(alpha.x * coord.x + alpha.y * coord.y ) ;
 }
@@ -229,6 +229,6 @@ void main() {
         float viewDist = length(localPos.xyz); 
         float ditherFade = smoothstep(max(far-7,7), far-1, viewDist);
 
-        if (step(bayerDither()/ditherFade, ditherFade) == 0.0) discard;
+        if (step(R2_dither()/ditherFade, ditherFade) == 0.0) discard;
     #endif
 }

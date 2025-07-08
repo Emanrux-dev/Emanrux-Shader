@@ -800,7 +800,7 @@ uniform float wetness;
 					float viewDist = length(worldPos - cameraPosition);
 					vec3 rippleNormal = flatNormals;
 
-					if(viewDist < 35 && rainStrength > 0.0 && biome_precipitation == 1) {
+					if(viewDist < 35 && rainStrength > 0.0 && biome_precipitation == 1 && snowAmount < 0.01) {
 						vec3 ripple = ripples(1.2 * worldPos.xz);
 						
 						ripple = ripple.xzy;
@@ -828,18 +828,18 @@ uniform float wetness;
 				vec3 snowA = pow(texture2D(snowTexA, snowCoords).rgb, vec3(2.0/(ShaderSnowStrength-0.1)));
 				vec3 snowN = 2*texture2D(snowTexN, snowCoords).rgb - 1;
 
-				snowN = vec3(snowN.x, snowN.z, snowN.y);
+				snowN = snowN.xzy;
 				
 				float omSA = 1-snowAmount;
 
 				float textureMult = smoothstep(0.1+0.5*omSA, 0.5+0.9*omSA, length(snowA)*snow*snowAmount);
 
 				normals = mix(normals, normalize(snowN), textureMult);
-				roughness = mix(roughness, 0.8*snowR, sqrt(textureMult));
+				roughness = mix(roughness, snowR, sqrt(textureMult));
 				albedo = mix(albedo, 2.5*snowA, textureMult);
 
 				// let it melt
-				roughness = mix(roughness, 0.5*snowR, smoothstep(0.15, 0.7, snowAmount)*smoothstep(1.0, 0.8, snowAmount)*effectStrength); 
+				roughness = mix(roughness, 0.75*snowR, smoothstep(0.15, 0.7, snowAmount)*smoothstep(1.0, 0.8, snowAmount)*effectStrength); 
 			}
 		#endif
 	}

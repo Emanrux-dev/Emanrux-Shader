@@ -3,7 +3,6 @@
 #include "/lib/res_params.glsl"
 #include "/lib/color_transforms.glsl"
 #include "/lib/projections.glsl"
-#include "/lib/bayer_matrix.glsl"
 
 #ifdef OVERWORLD_SHADER
 	#define WATER_SUN_SPECULAR
@@ -458,7 +457,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			float viewDist = length(playerPos); 
 
 			float ditherFade = smoothstep(max(far-9,9), far-1, viewDist);
-			if (step(bayerDither()/ditherFade, ditherFade) == 0.0) discard;
+			if (step(R2_dither()/ditherFade, ditherFade) == 0.0) discard;
 		}
 	#endif
 }

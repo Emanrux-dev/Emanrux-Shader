@@ -157,6 +157,16 @@ vec4 applyNoise(in vec4 fragColor, const in vec3 viewPos, const in float viewDis
 
 /* RENDERTARGETS:1,7,8 */
 void main() {
+
+    #if defined DH_OVERDRAW_PREVENTION || defined DH_NOISE_TEXTURE || DH_CHUNK_FADING > 0
+        float viewDist = length(localPos.xyz); 
+    #endif
+
+    #if DH_CHUNK_FADING > 0
+        float ditherFade = smoothstep(max(far-7,7), far-1, viewDist);
+
+        if (step(R2_dither()/ditherFade, ditherFade) == 0.0) discard;
+    #endif
     
     #ifdef DH_OVERDRAW_PREVENTION
     	#if OVERDRAW_MAX_DISTANCE == 0
@@ -165,7 +175,7 @@ void main() {
 			float maxOverdrawDistance = OVERDRAW_MAX_DISTANCE;
 		#endif
 
-        if(clamp(1.0-length(localPos.xyz)/clamp(far - 32.0,32.0,maxOverdrawDistance),0.0,1.0) > 0.0 ){
+        if(clamp(1.0-viewDist/clamp(far - 32.0,32.0,maxOverdrawDistance),0.0,1.0) > 0.0 ){
             discard;
             return;
         }
@@ -182,7 +192,7 @@ void main() {
     
     // alpha is material masks, set it to 0.65 to make a DH LODs mask. 
 	#ifdef DH_NOISE_TEXTURE
-		vec4 Albedo = applyNoise(gcolor, localPos.rgb+cameraPosition, length(localPos.xyz));
+		vec4 Albedo = applyNoise(gcolor, localPos.rgb+cameraPosition, viewDist);
 	#else
 		vec4 Albedo = vec4(gcolor.rgb, 1.0);
 	#endif
@@ -224,11 +234,4 @@ void main() {
 	#else
 		gl_FragData[2].b = SSSAMOUNT;
 	#endif
-    
-    #ifdef DH_CHUNK_FADING
-        float viewDist = length(localPos.xyz); 
-        float ditherFade = smoothstep(max(far-7,7), far-1, viewDist);
-
-        if (step(R2_dither()/ditherFade, ditherFade) == 0.0) discard;
-    #endif
 }

@@ -263,6 +263,18 @@ void main() {
 if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	{
    
     bool iswater = isWater > 0;
+
+	vec3 viewPos = pos.xyz;
+    vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
+	float viewDist = length(playerPos);
+    float transition = exp(-25* pow(clamp(1.0 - viewDist/(far-8),0.0,1.0),2));
+
+	#if DH_CHUNK_FADING > 0
+		if (!iswater){
+			float ditherFade = smoothstep(max(far-9,9), far-1, viewDist);
+			if (step(R2_dither()/ditherFade, ditherFade) == 0.0) discard;
+		}
+	#endif
    
     float material = 0.7;
     if(iswater) material = 1.0;
@@ -272,9 +284,6 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
    vec3 worldSpaceNormals =  mat3(gbufferModelViewInverse) * normals;
 
-    vec3 viewPos = pos.xyz;
-    vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
-    float transition = exp(-25* pow(clamp(1.0 - length(playerPos)/(far-8),0.0,1.0),2));
 
     #ifdef DH_OVERDRAW_PREVENTION
 		#if OVERDRAW_MAX_DISTANCE == 0
@@ -283,7 +292,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			float maxOverdrawDistance = OVERDRAW_MAX_DISTANCE;
 		#endif
 
-        if(length(playerPos) < clamp(far-16*4, 16, maxOverdrawDistance) ){ discard; return;}
+        if(viewDist < clamp(far-16*4, 16, maxOverdrawDistance) ){ discard; return;}
     #endif
 
 	vec3 waterNormals = worldSpaceNormals;
@@ -438,7 +447,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		// gl_FragData[0].rgb = normals*0.1;
     
     #ifdef DH_OVERDRAW_PREVENTION
-        float distancefade = min(max(1.0 - length(playerPos)/clamp(far-16*4, 16, maxOverdrawDistance),0.0)*5,1.0);
+        float distancefade = min(max(1.0 - viewDist/clamp(far-16*4, 16, maxOverdrawDistance),0.0)*5,1.0);
 
         if(texture2D(depthtex0, gl_FragCoord.xy*texelSize).x < 1.0 ||  distancefade > 0.0){
             gl_FragData[0].a = 0.0;
@@ -452,14 +461,6 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
    
     gl_FragData[1] = vec4(Albedo, material);
 
-	#ifdef DH_CHUNK_FADING
-		if (!iswater){
-			float viewDist = length(playerPos); 
-
-			float ditherFade = smoothstep(max(far-9,9), far-1, viewDist);
-			if (step(R2_dither()/ditherFade, ditherFade) == 0.0) discard;
-		}
-	#endif
 }
 
 

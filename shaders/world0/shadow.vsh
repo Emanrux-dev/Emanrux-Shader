@@ -43,6 +43,7 @@ uniform vec3 shadowLightVec;
 uniform float shadowMaxProj;
 attribute vec4 mc_midTexCoord;
 varying vec4 color;
+varying vec3 vertexPos;
 
 attribute vec4 mc_Entity;
 uniform int blockEntityId;
@@ -155,6 +156,7 @@ void main() {
 	// mat4 Custom_ProjectionMatrix = BuildShadowProjectionMatrix();
 
 	// position = gl_Vertex.xyz;
+	vertexPos = position;
 
 	// if((renderStage == 10 || renderStage == 12) && mc_Entity.x != 3000) {
 	// 	position = (shadowModelViewInverse * vec4(gl_Vertex.xyz,1.0)).xyz;

@@ -802,6 +802,7 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #define DENOISE_SSS_AND_SSAO
 
 // #define HYPER_DETAILED_WAVES
+#define WAVE_DETAIL 1.0 // [1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0]
 
 // #define DISABLE_ENCHANT_GLINT
 // #define DISABLE_VANILLA_EMISSIVES
@@ -846,7 +847,7 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #define DH_OVERDRAW_PREVENTION
 #define OVERDRAW_MAX_DISTANCE 128 // [0 32 48 64 80 96 112 128 144 160 176 192 208 224 240 256]
 
-#define DH_CHUNK_FADING
+#define DH_CHUNK_FADING 2 // [0 1 2]
 
 #define DH_AMBIENT_OCCLUSION
 #define DH_SUBSURFACE_SCATTERING

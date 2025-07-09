@@ -470,11 +470,11 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#endif
 
 	vec3 shadowPlayerPos = feetPlayerPos + gbufferModelViewInverse[3].xyz;
-	#if (defined DISTANT_HORIZONS && defined DH_CHUNK_FADING) || defined RIPPLE_WATER
+	#if (defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0) || defined RIPPLE_WATER
 		float viewDist = length(shadowPlayerPos); 
 	#endif
 
-	#if defined DISTANT_HORIZONS && defined DH_CHUNK_FADING
+	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
 		float ditherFade = smoothstep(0.98 * far, 1.03 * far, viewDist);
 
 		if (step(ditherFade, R2_dither()) == 0.0) discard;

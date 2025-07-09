@@ -84,7 +84,7 @@ uniform vec3 previousCameraPosition;
 	#include "/lib/volumetricClouds.glsl"
 #endif
 
-#if defined IS_LPV_ENABLED || (defined DISTANT_HORIZONS && defined DH_CHUNK_FADING)
+#if defined IS_LPV_ENABLED || (defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0)
 	uniform int frameCounter;
 #endif
 
@@ -263,7 +263,7 @@ float luma(vec3 color) {
 }
 uniform vec3 eyePosition;
 
-#if defined DISTANT_HORIZONS && defined DH_CHUNK_FADING
+#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
 	float R2_dither(){
 		vec2 coord = gl_FragCoord.xy ;
 
@@ -404,7 +404,7 @@ void main() {
 		gl_FragData[1] = vec4(0.0,0.0,0.0,TEXTURE.a); // for bloomy rain and stuff
 	#endif
 
-	#if !defined WEATHER || (defined DISTANT_HORIZONS && defined DH_CHUNK_FADING)
+	#if !defined WEATHER || (defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0)
 		float viewDist = length(feetPlayerPos + gbufferModelViewInverse[3].xyz);
 	#endif
 
@@ -518,7 +518,7 @@ void main() {
 
 	#endif
 
-	#if defined DISTANT_HORIZONS && defined DH_CHUNK_FADING
+	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
 			float ditherFade = smoothstep(0.98*far, 1.0*far, viewDist);
 
 			if (step(ditherFade, R2_dither()) == 0.0) discard;

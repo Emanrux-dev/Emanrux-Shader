@@ -1078,7 +1078,6 @@ vec4 GetVolumetricClouds(
 		cloudColor.rgb += altoStratusClouds.rgb;
 		cloudColor.a *= altoStratusClouds.a;
 	#endif
-	#ifdef CUMULONIMBUS
 	#if CUMULONIMBUS > 0
 		cloudColor.rgb *= cumulonimbusClouds.a;
 		cloudColor.rgb += cumulonimbusClouds.rgb;

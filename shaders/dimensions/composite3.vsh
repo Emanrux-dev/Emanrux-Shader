@@ -3,7 +3,7 @@
 varying vec2 texcoord;
 flat varying vec3 zMults;
 
-#if defined BorderFog || (defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS)
+#if defined BorderFog || (defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS) > 0
 	uniform sampler2D colortex4;
 	#include "/lib/scene_controller.glsl"
 #endif
@@ -43,7 +43,7 @@ void main() {
 		#endif
 		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
 
-		#if defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS
+		#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
 			readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.cirrus, parameters.fog);
 		#endif
 	#endif

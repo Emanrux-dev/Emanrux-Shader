@@ -10,7 +10,7 @@ uniform sampler2D depthtex2;
 uniform sampler2D noisetex;
 uniform sampler2D shadowcolor1;
 
-#if DEBUG_VIEW == debug_CLOUDDEPTHTEX && defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS
+#if DEBUG_VIEW == debug_CLOUDDEPTHTEX && defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
   #extension GL_NV_gpu_shader5 : enable
   #extension GL_ARB_shader_image_load_store : enable
   #extension GL_EXT_shader_image_load_store : enable
@@ -34,6 +34,11 @@ uniform vec3 previousCameraPosition;
 uniform mat4 gbufferPreviousModelView;
 // uniform mat4 gbufferModelViewInverse;
 // uniform mat4 gbufferModelView;
+
+#ifdef DROWNING_EFFECT
+  uniform float drowningSmooth;
+  uniform float currentPlayerAir;
+#endif
 
 #include "/lib/color_transforms.glsl"
 #include "/lib/color_dither.glsl"
@@ -151,6 +156,10 @@ void main() {
     // for making the fun, more fun
     applyGameplayEffects(COLOR, texcoord, noise);
   #endif
+
+  #ifdef DROWNING_EFFECT
+    if (currentPlayerAir != -1.0) COLOR *= 0.2 + 0.8*drowningSmooth;
+  #endif
   
   #ifdef VIGNETTE
     COLOR *= doVignette(texcoord, noise);
@@ -175,7 +184,7 @@ void main() {
   #if DEBUG_VIEW == debug_DEPTHTEX1
     COLOR = vec3(ld(texture2D(depthtex1, texcoord*RENDER_SCALE).r));
   #endif
-  #if DEBUG_VIEW == debug_CLOUDDEPTHTEX && defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS
+  #if DEBUG_VIEW == debug_CLOUDDEPTHTEX && defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
     COLOR = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_RESOLUTION*RENDER_SCALE)).rgb;
   #endif
 

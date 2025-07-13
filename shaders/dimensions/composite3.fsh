@@ -68,7 +68,7 @@ uniform float darknessFactor;
 uniform float darknessLightFactor;
 uniform float caveDetection;
 
-#if defined CUMULONIMBUS_LIGHTNING && defined OVERWORLD_SHADER && defined CUMULONIMBUS
+#if defined CUMULONIMBUS_LIGHTNING && defined OVERWORLD_SHADER && CUMULONIMBUS > 0
   uniform float sunElevation;
   uniform vec4 lightningBoltPosition;
 
@@ -603,7 +603,7 @@ void main() {
 
 bool isLightning = false;
 
-#if defined OVERWORLD_SHADER && defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS && defined VOLUMETRIC_CLOUDS
+#if defined OVERWORLD_SHADER && defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0 && defined VOLUMETRIC_CLOUDS
 
   vec2 cloudDepth = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_RESOLUTION*RENDER_SCALE)).rg;
 

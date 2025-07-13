@@ -234,9 +234,9 @@ vec4 GetVolumetricFog(
 	verticalFactor = pow(verticalFactor, 2.0);
 
 	#if defined DISTANT_HORIZONS
-		int SAMPLECOUNT = 17;
-		float expFactor = 35.0;
-		float maxDist = mix(840.0, 370.0, verticalFactor);
+		int SAMPLECOUNT = 19;
+		float expFactor = 33.0;
+		float maxDist = mix(800.0, 300.0, verticalFactor);
 	#else
 		int SAMPLECOUNT = 15;
 		float expFactor = 11.0;
@@ -297,7 +297,7 @@ vec4 GetVolumetricFog(
 			float volumeCoeff = exp(-stormDensity*dd*dL);
 
 			vec3 lightsources = LightSourceLighting(progressW, lightPosition, dither, volumeDensity, lightColors, vortexBounds);
-			vec3 indirect = vec3(0.5,0.75,1.0) * 0.2 * (exp((volumeDensity*volumeDensity) * -50) * 0.9 + 0.1) * 0.1;
+			vec3 indirect = vec3(0.3,0.36,1.0) * 0.2 * (exp((volumeDensity*volumeDensity) * -50) * 0.9 + 0.1) * 0.1;
 			
 			vec3 stormLighting = indirect + lightsources;
 			

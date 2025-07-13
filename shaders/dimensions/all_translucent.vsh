@@ -173,8 +173,6 @@ void main() {
 	#endif
 
 	position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;
-
-	gl_Position = toClipSpace3(position);
 	
 	#if !defined ENTITIES && !defined HAND
  		gl_Position = toClipSpace3(position);

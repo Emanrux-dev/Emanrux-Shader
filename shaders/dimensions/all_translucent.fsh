@@ -104,6 +104,12 @@ uniform vec3 nsunColor;
 
 uniform float waterEnteredAltitude;
 
+#ifdef WATER_INTERACTION
+	uniform vec3 waterEnteredPosition;
+	uniform float waterEnteredTime;
+	uniform vec3 waterEnteredVelocity;
+#endif
+
 #include "/lib/util.glsl"
 #include "/lib/Shadow_Params.glsl"
 #include "/lib/color_transforms.glsl"
@@ -418,6 +424,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#endif
 
 	vec3 feetPlayerPos = mat3(gbufferModelViewInverse) * viewPos;
+	vec3 worldPos = feetPlayerPos + cameraPosition;
 ////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// MATERIAL MASKS ////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -458,6 +465,11 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	vec3 Albedo = toLinear(gl_FragData[0].rgb);
 
+	vec3 shadowPlayerPos = feetPlayerPos + gbufferModelViewInverse[3].xyz;
+	#if (defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0) || defined RIPPLE_WATER
+		float viewDist = length(shadowPlayerPos); 
+	#endif
+
 	#ifndef WhiteWorld
 		#ifdef Vanilla_like_water
 			if (isWater) Albedo *= sqrt(luma(Albedo));
@@ -467,11 +479,6 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 				gl_FragData[0].a = 1.0/255.0;
 			}
 		#endif
-	#endif
-
-	vec3 shadowPlayerPos = feetPlayerPos + gbufferModelViewInverse[3].xyz;
-	#if (defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0) || defined RIPPLE_WATER
-		float viewDist = length(shadowPlayerPos); 
 	#endif
 
 	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
@@ -560,15 +567,36 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			#ifdef RIPPLE_WATER
 				if(viewDist < 35 && rainStrength > 0.0 && biome_precipitation == 1 && abs(worldSpaceNormal.z) < 0.95 && abs(worldSpaceNormal.x) < 0.95) {
 					float effectStrength = smoothstep(0.85, 1.0, lightmap.y);
-					rippleBump = ripples(feetPlayerPos.xz+cameraPosition.xz);
+					rippleBump = ripples(worldPos.xz);
 					waterPos.xyz += RIPPLE_STRENGTH * rippleBump * rainStrength * effectStrength * smoothstep(35, 10, viewDist);
 				}
 			#endif
 
 			vec3 bump = normalize(getWaveNormal(waterPos, playerPos));
 
+			
+
 			float bumpmult = WATER_WAVE_STRENGTH;
 			bump = bump * vec3(bumpmult, bumpmult, bumpmult) + vec3(0.0f, 0.0f, 1.0f - bumpmult);
+
+			// nice little wave effect when leaving water
+			#ifdef WATER_INTERACTION
+				float distFromWaterPos = length(worldPos - waterEnteredPosition);
+				float maxWaveDist = 3.5;
+				if (distFromWaterPos < maxWaveDist) {
+					float newTime = frameTimeCounter - waterEnteredTime;
+					newTime *= 2.15;
+
+					float smoothDistFromWaterPos = smoothstep(maxWaveDist, 0.0, distFromWaterPos);
+					float waveWidth = 0.2;
+					float waveHeight = 0.3 * smoothstep(2.0, 20.0, length(waterEnteredVelocity)) + 0.5;
+
+					float enterWave = waveHeight * smoothstep(newTime - waveWidth, newTime, distFromWaterPos-0.1) * smoothstep(newTime + waveWidth, newTime, distFromWaterPos-0.1) * smoothDistFromWaterPos;
+			
+					bump.y = enterWave + (1.0 - enterWave) * bump.y;
+					bump = normalize(bump);
+				}
+			#endif
 
 			NormalTex.xyz = bump;
 		}
@@ -622,7 +650,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		#endif
 		
 		if(HELD_ITEM_BRIGHTNESS > 0.0){ 
-			float pointLight = clamp(1.0-length((feetPlayerPos+cameraPosition)-playerCamPos)/HANDHELD_LIGHT_RANGE,0.0,1.0);
+			float pointLight = clamp(1.0-length((worldPos)-playerCamPos)/HANDHELD_LIGHT_RANGE,0.0,1.0);
 			lightmap.x  = mix(lightmap.x , HELD_ITEM_BRIGHTNESS, pointLight*pointLight);
 		}
 
@@ -647,7 +675,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			float waterdepth = max(-(feetPlayerPos.y + distanceFromWaterSurface),0.0);
 
 			DirectLightColor *= exp(-vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B) * (waterdepth/abs(WsunVec.y)));
-			DirectLightColor *= pow(waterCaustics(feetPlayerPos + cameraPosition, WsunVec)*WATER_CAUSTICS_BRIGHTNESS, WATER_CAUSTICS_POWER);
+			DirectLightColor *= pow(waterCaustics(worldPos, WsunVec)*WATER_CAUSTICS_BRIGHTNESS, WATER_CAUSTICS_POWER);
 		}
 
 		float NdotL = clamp((-15 + dot(normal, normalize(WsunVec*mat3(gbufferModelViewInverse)))*255.0) / 240.0  ,0.0,1.0);
@@ -663,7 +691,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		// Shadows = mix(LM_shadowMapFallback, Shadows, shadowMapFalloff2);
 		Shadows *= mix(LM_shadowMapFallback,1.0,shadowMapFalloff2);
 
-		Shadows *= GetCloudShadow(feetPlayerPos+cameraPosition, WsunVec);
+		Shadows *= GetCloudShadow(worldPos, WsunVec);
 
 
 		Direct_lighting = DirectLightColor * NdotL * Shadows;
@@ -683,8 +711,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	#ifdef END_SHADER
 
-		float vortexBounds = clamp(vortexBoundRange - length(feetPlayerPos+cameraPosition), 0.0,1.0);
-        vec3 lightPos = LightSourcePosition(feetPlayerPos+cameraPosition, cameraPosition,vortexBounds);
+		float vortexBounds = clamp(vortexBoundRange - length(worldPos), 0.0,1.0);
+        vec3 lightPos = LightSourcePosition(worldPos, cameraPosition,vortexBounds);
 
 		float lightningflash = texelFetch2D(colortex4,ivec2(1,1),0).x/150.0;
 		vec3 lightColors = LightSourceColors(vortexBounds, lightningflash);
@@ -692,7 +720,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		float end_NdotL = clamp(dot(worldSpaceNormal, normalize(-lightPos))*0.5+0.5,0.0,1.0);
 		end_NdotL *= end_NdotL;
 
-		float fogShadow = GetEndFogShadow(feetPlayerPos+cameraPosition, lightPos);
+		float fogShadow = GetEndFogShadow(worldPos, lightPos);
 		float endPhase = endFogPhase(lightPos);
 
 		Direct_lighting += lightColors * endPhase * end_NdotL * fogShadow;

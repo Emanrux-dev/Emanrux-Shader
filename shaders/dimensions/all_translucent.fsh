@@ -108,6 +108,10 @@ uniform float waterEnteredAltitude;
 	uniform vec3 waterEnteredPosition;
 	uniform float waterEnteredTime;
 	uniform vec3 waterEnteredVelocity;
+
+	uniform vec3 waterExitedPosition;
+	uniform float waterExitedTime;
+	uniform vec3 waterExitedVelocity;
 #endif
 
 #include "/lib/util.glsl"
@@ -574,22 +578,29 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 			vec3 bump = normalize(getWaveNormal(waterPos, playerPos));
 
-			
-
 			float bumpmult = WATER_WAVE_STRENGTH;
 			bump = bump * vec3(bumpmult, bumpmult, bumpmult) + vec3(0.0f, 0.0f, 1.0f - bumpmult);
 
 			// nice little wave effect when leaving water
 			#ifdef WATER_INTERACTION
-				float distFromWaterPos = length(worldPos - waterEnteredPosition);
+				vec3 waterPlayerPostion = waterExitedPosition;
+				float waterTime = waterExitedTime;
+				vec3 playerVelocity = waterExitedVelocity;
+				if (isEyeInWater == 1) {
+					waterPlayerPostion = waterEnteredPosition;
+				 	waterTime = waterEnteredTime;
+					playerVelocity = waterEnteredVelocity;
+				}
+
+				float distFromWaterPos = length(worldPos - waterPlayerPostion);
 				float maxWaveDist = 3.5;
 				if (distFromWaterPos < maxWaveDist) {
-					float newTime = frameTimeCounter - waterEnteredTime;
+					float newTime = frameTimeCounter - waterTime;
 					newTime *= 2.15;
 
 					float smoothDistFromWaterPos = smoothstep(maxWaveDist, 0.0, distFromWaterPos);
 					float waveWidth = 0.2;
-					float waveHeight = 0.3 * smoothstep(2.0, 20.0, length(waterEnteredVelocity)) + 0.5;
+					float waveHeight = 0.3 * smoothstep(2.0, 20.0, length(playerVelocity)) + 0.5;
 
 					float enterWave = waveHeight * smoothstep(newTime - waveWidth, newTime, distFromWaterPos-0.1) * smoothstep(newTime + waveWidth, newTime, distFromWaterPos-0.1) * smoothDistFromWaterPos;
 			

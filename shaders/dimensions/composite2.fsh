@@ -536,7 +536,7 @@ void main() {
 	#ifdef OVERWORLD_SHADER
 		vec4 VolumetricClouds = GetVolumetricClouds(viewPos0, BN, WrealSunVec, WmoonVec, directSunlightColor, directMoonlightColor, indirectLightColor, cloudPlaneDistance, cloudDistance);
 		
-		#if defined CUMULONIMBUS_LIGHTNING && defined CUMULONIMBUS
+		#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
 			imageStore(cloudDepthTex, ivec2(gl_FragCoord.xy), vec4(cloudDistance.r, cloudDistance.g, 0, 1));
 		#endif
 

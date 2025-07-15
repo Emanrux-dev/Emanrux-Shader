@@ -642,7 +642,7 @@ vec4 raymarchCloud(
 			}
 		#endif
 
-		vec3 mainLightVec = mix(moonVector, sunVector, smoothstep(-0.06, 0.1, sunElevation));
+		vec3 mainLightVec = mix(moonVector, sunVector, smoothstep(-0.06, 0.06, sunElevation));
 
 		float tallness = maxHeight - minHeight;
 

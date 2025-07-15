@@ -96,7 +96,13 @@ vec3 calculateAtmosphere(vec3 background, vec3 viewVector, vec3 upVector, vec3 s
 	const int jSteps = 4;
 
 	#ifdef SKY_GROUND
-		float planetGround = exp(-100 * pow(max(-viewVector.y*5 + 0.1,0.0),2)); // darken the ground in the sky.
+		#if CUMULONIMBUS > 1
+			float referenceHeight = 6000;
+		#else
+			float referenceHeight = CloudLayer0_height;
+		#endif
+		float heightRelativeToClouds = clamp(1.0 - max(cameraPosition.y - referenceHeight,0.0) / 100.0 ,0.0,1.0);
+		float planetGround = mix(exp(-1.0 * pow(max(-viewVector.y*10 + 0.1,0.0),2)), exp(-100.0 * pow(max(-viewVector.y*5 + 0.1,0.0),2)), heightRelativeToClouds); // darken the ground in the sky.
 	#else
 		float planetGround = pow(clamp(viewVector.y+1.0,0.0,1.0),2); // darken the ground in the sky.
 	#endif

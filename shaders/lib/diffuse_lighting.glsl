@@ -78,7 +78,7 @@ vec3 doIndirectLighting(
     vec3 indirectLight = lightColor * lightmapCurve * ambient_brightness;  
 
     // indirectLight = max(indirectLight, minimumLightColor * (MIN_LIGHT_AMOUNT * 0.02 * 0.2 + nightVision));
-    indirectLight += minimumLightColor * (MIN_LIGHT_AMOUNT * 0.02 * 0.2 + nightVision*0.02);
+    indirectLight += mix(minimumLightColor * (MIN_LIGHT_AMOUNT * 0.004 + nightVision*0.02), minimumLightColor * (MIN_LIGHT_AMOUNT_INSIDE * 0.004 + nightVision*0.02), 1.0-lightmap);
 
     return indirectLight;
 }

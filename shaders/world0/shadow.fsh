@@ -11,18 +11,6 @@ uniform sampler2D noisetex;
 
 #if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 1
 	uniform float far;
-	uniform int frameCounter;
-
-	float R2_dither(){
-		vec2 coord = gl_FragCoord.xy ;
-
-		#ifdef TAA
-			coord += + (frameCounter%40000) * 2.0;
-		#endif
-		
-		vec2 alpha = vec2(0.75487765, 0.56984026);
-		return fract(alpha.x * coord.x + alpha.y * coord.y ) ;
-	}
 #endif
 
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -43,7 +31,7 @@ void main() {
 
 		float ditherFade = smoothstep(0.93 * minDist, minDist, viewDist);
 
-		if (step(ditherFade, R2_dither()) == 0.0) discard;
+		if (step(ditherFade, blueNoise()) == 0.0) discard;
 	#endif
 	
 	vec4 shadowColor = vec4(texture2D(tex,texcoord.xy).rgb * color.rgb,  texture2DLod(tex, texcoord.xy, 0).a);

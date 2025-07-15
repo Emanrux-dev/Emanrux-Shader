@@ -1,5 +1,6 @@
-option.SHADER_VERSION_LABEL = Bliss In-Dev Version
-    prefix.SHADER_VERSION_LABEL = COMMIT #
+option.SHADER_VERSION_LABEL = Merlin1809's Bliss Fork
+    prefix.SHADER_VERSION_LABEL = V
+    value.SHADER_VERSION_LABEL.482 = 0.1.0
 
 # if you're here to translate, this is a joke, these don't do what they say
 profile.POTATO=§4Potato 
@@ -164,21 +165,25 @@ screen.Subsurface_Scattering = Sub-Surface Scattering
 screen.Ambient_light = Ambient Light
     option.AO_Strength = AO Multiplier
     option.GI_Strength = GI Multiplier
-    option.HQ_SSGI = Long Range Marching (SSRT)
-    option.UseQuarterResDepth = sample 1/4 resolution depth (SSRT)
+    option.HQ_SSGI = Long Range Marching
+    option.UseQuarterResDepth = Sample 1/4 resolution depth
     option.Hand_Held_lights = Hand Held Light
-    option.SKY_CONTRIBUTION_IN_SSRT = High Quality Ambient Light (SSRT)
+    option.SKY_CONTRIBUTION_IN_SSRT = High Quality Ambient Light
     option.ambientOcclusionLevel = Vanilla AO Amount
     option.ambient_brightness = Ambient Light Brightness
-    option.MIN_LIGHT_AMOUNT = Minimum Light Brightness
+    option.MIN_LIGHT_AMOUNT = Minimum Light Brightness Outside
+    option.MIN_LIGHT_AMOUNT_INSIDE = Minimum Light Brightness Inside
     option.indirect_effect = Indirect Lighting
         value.indirect_effect.0 = Vanilla AO
             value.indirect_effect.1 = SSAO
             value.indirect_effect.2 = GTAO
-            value.indirect_effect.3 = SSRT (AO only) - §cLOTS OF VISUAL NOISE§r
-            value.indirect_effect.4 = SSRT (AO + GI) - §cLOTS OF VISUAL NOISE§r
-    option.RAY_COUNT = RT Ray Count
+            value.indirect_effect.3 = SSRT (AO only) - §cVISUAL NOISE§r
+            value.indirect_effect.4 = SSRT (AO + GI) - §cVISUAL NOISE§r
+    option.RAY_COUNT = Ray Count
+        option.RAY_COUNT.comment = Helps reduce visual noise of SSRT. §aPERFORMANCE COST:§r High
 	option.HANDHELD_LIGHT_RANGE = Handheld Light Range
+
+    screen.SSRT_SETTINGS = SSRT Settings
 
     screen.Ambient_Colors =  Ambient Light Color
         option.AmbientLight_R = Red Amount
@@ -698,13 +703,14 @@ screen.Ambient_light.comment = Configure settings related to the lighting in sha
 
     option.ambientOcclusionLevel.comment = Configure the strength of the ambient occlusion from vanilla minecraft. §bWhat is this?§r This ambient occlusion is in minecraft even without shaders enabled.
     option.ambient_brightness.comment = Configure the brightnes of lighting in shaded places
-    option.MIN_LIGHT_AMOUNT.comment = Configure the minimum amount of light that can be in shaded places.
+    option.MIN_LIGHT_AMOUNT.comment = Configure the minimum amount of light that can be in shaded places outside.
+    option.MIN_LIGHT_AMOUNT_INSIDE.comment = Configure the minimum amount of light that can be in shaded places inside.
     option.indirect_effect.comment = Toggle different types of effects to make lighting in shaded places higher quality. §aPERFORMANCE COSTS:§r. Vanilla AO: very low. SSAO: low to medium. GTAO: medium to high. SSRT: high to very high - GI is slower
 
     screen.Ambient_Colors.comment = Configure the color of light in shaded areas.
     screen.Torch_Colors.comment = Configure the color of light from torches or other placed lightsources.
 
-    option.RAIN_AMBIENT_LIGHT_MODIFIER.comment = Configure the ambient light brightness during rain. (1.0 is no darkening, 0.0 is no ambient light)
+    option.RAIN_AMBIENT_LIGHT_MODIFIER.comment = Configure the ambient light brightness during rain. (1.0 normal ambient light, 0.0 is no ambient light)
 
     option.LPV_SIZE.comment = Configures the size (in blocks) of the volume for colored lighting.
     option.LPV_SATURATION.comment = Configures the intensity of colored lighting.

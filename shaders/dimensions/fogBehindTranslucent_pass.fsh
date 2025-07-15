@@ -347,7 +347,7 @@ void main() {
 		
 	 	indirectLightColor_dynamic *= ambient_brightness * lightmap.y*lightmap.y;
 
-		indirectLightColor_dynamic += MIN_LIGHT_AMOUNT * 0.02 * 0.2 + nightVision*0.02;
+		indirectLightColor_dynamic += mix(MIN_LIGHT_AMOUNT * 0.004 + nightVision*0.02, MIN_LIGHT_AMOUNT_INSIDE * 0.004 + nightVision*0.02, 1.0 - lightmap.y);
 
 		indirectLightColor_dynamic += vec3(TORCH_R,TORCH_G,TORCH_B)	* pow(1.0-sqrt(1.0-clamp(lightmap.x,0.0,1.0)),2.0)  * TORCH_AMOUNT;
 

@@ -42,6 +42,7 @@ uniform float near;
 // uniform float far;
 uniform float frameTime;
 uniform int frameCounter;
+uniform vec3 cameraPosition;
 
 vec3 sunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
 
@@ -149,8 +150,8 @@ void main() {
 
 	vec2 planetSphere = vec2(0.0);
 
-	float sunVis = clamp(sunElevation,0.0,0.05)/0.05*clamp(sunElevation,0.0,0.05)/0.05;
-	float moonVis = clamp(-sunElevation,0.0,0.05)/0.05*clamp(-sunElevation,0.0,0.05)/0.05;
+	float sunVis = clamp(sunElevation,0.0,0.04)/0.04*clamp(sunElevation,0.0,0.04)/0.04;
+	float moonVis = clamp(-sunElevation,0.0,0.04)/0.04*clamp(-sunElevation,0.0,0.04)/0.04;
 
 	vec3 skyAbsorb = vec3(0.0);
 	sunColor = calculateAtmosphere(vec3(0.0), sunVec, vec3(0.0,1.0,0.0), sunVec, -sunVec, planetSphere, skyAbsorb, 25,0.0);

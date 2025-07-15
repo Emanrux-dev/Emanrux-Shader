@@ -271,7 +271,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	#if DH_CHUNK_FADING > 0
 		if (!iswater){
-			float ditherFade = smoothstep(max(far-9,9), far-1, viewDist);
+			float ditherFade = smoothstep(0.86 * far, 0.9 * far, viewDist);
 			if (step(R2_dither()/ditherFade, ditherFade) == 0.0) discard;
 		}
 	#endif

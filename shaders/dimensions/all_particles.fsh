@@ -290,7 +290,7 @@ uniform vec3 eyePosition;
 #endif
 
 void main() {
-	
+
 #ifdef DAMAGE_BLOCK_EFFECT
 	vec2 adjustedTexCoord = lmtexcoord.xy;
 	#ifdef POM

@@ -163,7 +163,7 @@ void main() {
     #endif
 
     #if DH_CHUNK_FADING > 0
-        float ditherFade = smoothstep(max(far-7,7), far-1, viewDist);
+        float ditherFade = smoothstep(0.86 * far, 0.9 * far, viewDist);
 
         if (step(R2_dither()/ditherFade, ditherFade) == 0.0) discard;
     #endif

@@ -114,6 +114,8 @@ uniform float waterEnteredAltitude;
 	uniform vec3 waterExitedVelocity;
 #endif
 
+uniform float dhFarPlane;
+
 #include "/lib/util.glsl"
 #include "/lib/Shadow_Params.glsl"
 #include "/lib/color_transforms.glsl"
@@ -291,7 +293,6 @@ float ld(float dist) {
     return (2.0 * near) / (far + near - dist * (far - near));
 }
 
-uniform float dhFarPlane;
 
 #include "/lib/DistantHorizons_projections.glsl"
 

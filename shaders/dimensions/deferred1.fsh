@@ -24,6 +24,9 @@ uniform float dhNearPlane;
 float DH_ld(float dist) {
     return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
 }
+float DH_ld_mixed(float dist) {
+    return (2.0 * near) / (dhFarPlane + near - dist * (dhFarPlane - near));
+}
 float DH_invLinZ (float lindepth){
 	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
 }
@@ -58,16 +61,35 @@ void main() {
 
 	if(hand) convertHandDepth(newTex);
 
-	#ifdef DISTANT_HORIZONS
-    	float QuarterResDepth = texelFetch2D(dhDepthTex, ivec2(gl_FragCoord.xy*4), 0).x;
-		if(newTex >= 1.0) newTex = sqrt(QuarterResDepth);
+    #ifdef DISTANT_HORIZONS
+        float QuarterResDepth = texelFetch2D(dhDepthTex, ivec2(gl_FragCoord.xy*4), 0).x;
+        if(newTex == 1.0) {
+            float depth = DH_ld(QuarterResDepth);
+            gl_FragData[0] = vec4(oldTex, depth * depth * 130000.0);
+            gl_FragData[1].a = depth * depth * 65000.0;
+        } else {
+            float depth = DH_ld_mixed(newTex);
+            gl_FragData[0] = vec4(oldTex, depth * depth * 65000.0);
+        }
 
-   		gl_FragData[1].a = (DH_ld(QuarterResDepth)*DH_ld(QuarterResDepth))*65000.0;
-	#endif
-	
- 	if (newTex < 1.0)
-	   gl_FragData[0] = vec4(oldTex, linZ(newTex)*linZ(newTex)*65000.0);
- 	else
-    gl_FragData[0] = vec4(oldTex, 2.0);
-
+        //sky
+        if (newTex == 1.0 && QuarterResDepth == 1.0) { 
+            #ifdef CLOUD_SSR
+                gl_FragData[0] = vec4(oldTex, 65000.0);
+            #else
+                gl_FragData[0] = vec4(oldTex, 650000.0);
+            #endif
+        }
+    #else
+        if(newTex < 1.0) {
+            float depth = linZ(newTex);
+            gl_FragData[0] = vec4(oldTex, depth * depth * 65000.0);
+        } else {
+            #ifdef CLOUD_SSR
+                gl_FragData[0] = vec4(oldTex, 60000.0);
+            #else
+                gl_FragData[0] = vec4(oldTex, 600000.0);
+            #endif
+        }
+    #endif
 }

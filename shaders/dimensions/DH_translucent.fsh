@@ -104,7 +104,7 @@ float ld(float dist) {
 // }
 
 float DH_ld(float dist) {
-    return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
+    return (2.0 * near) / (dhFarPlane + near - dist * (dhFarPlane - near));
 }
 float DH_inv_ld (float lindepth){
 	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
@@ -154,43 +154,45 @@ uniform int framemod8;
 
 #include "/lib/TAA_jitter.glsl"
 
-vec3 rayTrace(vec3 dir, vec3 position,float dither, float fresnel, bool inwater){
+vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
 
-    float quality = mix(5,SSR_STEPS,fresnel);
+	float biasAmount = 0.000075;
+
+    float quality = mix(5, SSR_STEPS, fresnel);
     vec3 clipPosition = DH_toClipSpace3(position);
-	float rayLength = ((position.z + dir.z * dhFarPlane*sqrt(3.)) > -dhNearPlane) ?
+
+    float rayLength = ((position.z + dir.z * dhFarPlane*sqrt(3.)) > -dhNearPlane) ?
        (-dhNearPlane - position.z) / dir.z : dhFarPlane*sqrt(3.);
-    vec3 direction = normalize(DH_toClipSpace3(position+dir*rayLength)-clipPosition);  //convert to clip space
-    direction.xy = normalize(direction.xy);
+    
+    vec3 direction = DH_toClipSpace3(position + dir * rayLength) - clipPosition;  //convert to clip space
 
-    //get at which length the ray intersects with the edge of the screen
-    vec3 maxLengths = (step(0.,direction)-clipPosition) / direction;
-    float mult = min(min(maxLengths.x,maxLengths.y),maxLengths.z);
-
-
-    vec3 stepv = direction * mult / quality * vec3(RENDER_SCALE,1.0);
-
-
-	vec3 spos = clipPosition*vec3(RENDER_SCALE,1.0) + stepv*dither;
-	float minZ = clipPosition.z;
-	float maxZ = spos.z+stepv.z*0.5;
-	
-	spos.xy += offsets[framemod8]*texelSize*0.5/RENDER_SCALE;
-
+	//get at which length the ray intersects with the edge of the screen
+    vec3 maxLengths = (step(0.0, direction) - clipPosition) / direction;
+    float mult = min(min(maxLengths.x, maxLengths.y), maxLengths.z);
+    vec3 stepv = direction * mult / quality;
+    
+    clipPosition.xy *= RENDER_SCALE;
+    stepv.xy *= RENDER_SCALE;
+    
+    vec3 spos = clipPosition + stepv * dither;
+    spos.xy += offsets[framemod8] * texelSize * 0.5 / RENDER_SCALE;
+    
+    float minZ = spos.z - 0.00025 / DH_ld(spos.z);
+    float maxZ = spos.z;
+    
     for (int i = 0; i <= int(quality); i++) {
-
-		// float sp = DH_inv_ld(sqrt(texelFetch2D(colortex12,ivec2(spos.xy/texelSize/4),0).a/65000.0));
-		float sp = DH_inv_ld(sqrt(texelFetch2D(colortex12,ivec2(spos.xy/texelSize/4),0).a/64000.0));
-
-        if(sp < max(minZ,maxZ) && sp > min(minZ,maxZ)) return vec3(spos.xy/RENDER_SCALE,sp);
+        float sampleDepth = sqrt(texelFetch2D(colortex4, ivec2(spos.xy / (texelSize * 4.0)), 0).a / 130000.0);
+		float sp = DH_inv_ld(sampleDepth);
+        
+        if (sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {
+            return vec3(spos.xy / RENDER_SCALE, sp);
+        }
+        
+		minZ = maxZ - biasAmount / DH_ld(spos.z);
+        maxZ += stepv.z;
+        
         spos += stepv;
-
-		//small bias
-		minZ = maxZ-0.00005/DH_ld(spos.z);
-
-		maxZ += stepv.z;
     }
-
     return vec3(1.1);
 }
 
@@ -414,7 +416,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	    	if(isEyeInWater == 1) fresnel = pow(clamp(1.5 + normalDotEye,0.0,1.0), 25.0);
 	    #endif
         #if defined FORWARD_ENVIORNMENT_REFLECTION && defined DH_SCREENSPACE_REFLECTIONS
-            vec3 rtPos = rayTrace(reflectedVector, viewPos, interleaved_gradientNoise_temporal(), fresnel, false);
+            vec3 rtPos = rayTrace(reflectedVector, viewPos, interleaved_gradientNoise_temporal(), fresnel);
             if (rtPos.z < 1.){
             	vec3 previousPosition = mat3(gbufferModelViewInverse) * DH_toScreenSpace(rtPos) + gbufferModelViewInverse[3].xyz + cameraPosition-previousCameraPosition;
             	previousPosition = mat3(gbufferPreviousModelView) * previousPosition + gbufferPreviousModelView[3].xyz;

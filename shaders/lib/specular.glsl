@@ -1,6 +1,13 @@
-float invLinZ (float lindepth){
-	return -((2.0*near/lindepth)-far-near)/(far-near);
-}
+#ifdef DISTANT_HORIZONS
+	float invLinZ (float lindepth){
+		return -((2.0*near/lindepth)-dhFarPlane-near)/(dhFarPlane-near);
+	}
+#else
+	float invLinZ (float lindepth){
+		return -((2.0*near/lindepth)-far-near)/(far-near);
+	}
+#endif
+
 float linZ(float depth) {
     return (2.0 * near) / (far + near - depth * (far - near));
 	// l = (2*n)/(f+n-d(f-n))

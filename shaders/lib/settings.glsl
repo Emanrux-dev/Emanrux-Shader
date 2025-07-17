@@ -34,6 +34,8 @@
 #define USE_QUARTER_RES_DEPTH
 #define SNELLS_WINDOW
 
+// #define CLOUD_SSR
+
 ////////////////////////////////////////
 // ----- PLANT RELATED SETTINGS ----- //
 ////////////////////////////////////////

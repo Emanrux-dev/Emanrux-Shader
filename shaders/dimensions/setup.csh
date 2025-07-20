@@ -123,6 +123,12 @@ void main() {
             mixWeight = 0.8;
         }
 
+        if (blockId == BLOCK_ENCHANTING_TABLE) {
+            lightColor = vec3(0.416, 0.509, 0.979);
+            lightRange = 10.0;
+            mixWeight = 0.1;
+        }
+
         #ifdef LPV_COLORED_CANDLES
             if (blockId >= BLOCK_CANDLES_PLAIN_LIT_1 && blockId <= BLOCK_CANDLES_YELLOW_LIT_4) {
                 switch (blockId) {
@@ -555,7 +561,7 @@ void main() {
         }
 
         if (blockId == BLOCK_LAVA) {
-            lightColor = vec3(0.759, 0.302, 0.106);
+            lightColor = vec3(0.959, 0.302, 0.106);
             lightRange = 15.0;
         }
         else if (blockId == ITEM_LAVA_BUCKET) {

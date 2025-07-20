@@ -114,6 +114,7 @@ uniform float waterEnteredAltitude;
 	uniform vec3 waterExitedVelocity;
 #endif
 
+uniform float dhNearPlane;
 uniform float dhFarPlane;
 
 #include "/lib/util.glsl"

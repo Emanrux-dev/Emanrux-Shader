@@ -31,6 +31,7 @@
 // #define REFRACTION_SMUDGE
 
 #define SSR_STEPS 30 // [10 15 20 25 30 35 40 50 100 200 400]
+#define SSR_STEPS_DH floor(SSR_STEPS * 2/3)
 #define USE_QUARTER_RES_DEPTH
 #define SNELLS_WINDOW
 

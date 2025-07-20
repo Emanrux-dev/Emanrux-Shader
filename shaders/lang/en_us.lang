@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = Merlin1809's Bliss Fork
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 0.1.0
+    value.SHADER_VERSION_LABEL.482 = 0.1.1
 
 # if you're here to translate, this is a joke, these don't do what they say
 profile.POTATO=§4Potato 

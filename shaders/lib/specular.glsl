@@ -9,12 +9,7 @@
 #endif
 
 float linZ(float depth) {
-    return (2.0 * near) / (far + near - depth * (far - near));
-	// l = (2*n)/(f+n-d(f-n))
-	// f+n-d(f-n) = 2n/l
-	// -d(f-n) = ((2n/l)-f-n)
-	// d = -((2n/l)-f-n)/(f-n)
-
+	return (2.0 * near) / (far + near - depth * (far - near));
 }
 
 void frisvad(in vec3 n, out vec3 f, out vec3 r){
@@ -133,23 +128,90 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 
 	float minZ = spos.z - 0.00025 / linZ(spos.z);;
 	float maxZ = spos.z;
+
+	float sp = 0.0;
 	
   	for (int i = 0; i <= int(quality); i++) {
 
-		float sampleDepth = sqrt(texelFetch2D(colortex4,ivec2(spos.xy/texelSize/4.0),0).a/65000.0);
-		float sp = invLinZ(sampleDepth);
+		float sampleDepth = texelFetch2D(colortex4,ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
+		if (sampleDepth < 1.0) {
+			sp = invLinZ(sqrt(sampleDepth));
 		
-		if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) return vec3(spos.xy/RENDER_SCALE,sp);
+			if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) return vec3(spos.xy/RENDER_SCALE,sp);
 
-		minZ = maxZ - biasAmount / linZ(spos.z);
-		maxZ += stepv.z;
+			minZ = maxZ - biasAmount / linZ(spos.z);
+			maxZ += stepv.z;
 
-		spos += stepv;
+			spos += stepv;
 
-		reflectionLength += 1.0 / quality;
+			reflectionLength += 1.0 / quality;
+		} else {
+			break;
+		}
   	}
   return vec3(1.1);
 }
+
+#ifdef DISTANT_HORIZONS
+	uniform vec4 combined_projection_matrix_0;
+	uniform vec4 combined_projection_matrix_1;
+	uniform vec4 combined_projection_matrix_2;
+	uniform vec4 combined_projection_matrix_3;
+	#define combined_projection_matrix mat4(combined_projection_matrix_0, combined_projection_matrix_1, combined_projection_matrix_2, combined_projection_matrix_3)
+
+	vec3 toClipSpace3_DH(vec3 viewSpacePosition) {
+		return projMAD(combined_projection_matrix, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
+	}
+
+	vec3 rayTraceSpeculars_DH(vec3 dir, vec3 position, float dither, float quality, bool hand, inout float reflectionLength, float fresnel){
+
+		float biasAmount = 0.000075;
+
+		vec3 clipPosition = toClipSpace3_DH(position);
+		float rayLength = ((position.z + dir.z * dhFarPlane*sqrt(3.)) > -near) ? (-near -position.z) / dir.z : dhFarPlane*sqrt(3.);
+
+		vec3 direction = toClipSpace3_DH(position + dir*rayLength) - clipPosition;  //convert to clip space
+
+		//get at which length the ray intersects with the edge of the screen
+		vec3 maxLengths = (step(0.0, direction) - clipPosition) / direction;
+		float mult = min(min(maxLengths.x, maxLengths.y), maxLengths.z);
+		vec3 stepv = direction * mult / quality;
+
+		clipPosition.xy *= RENDER_SCALE;
+		stepv.xy *= RENDER_SCALE;
+
+		vec3 spos = clipPosition + stepv*dither;
+		
+		#if defined DEFERRED_SPECULAR && defined TAA
+			spos.xy += TAA_Offset*texelSize*0.5/RENDER_SCALE;
+		#endif
+
+		float minZ = spos.z - 0.00025 / linZ(spos.z);;
+		float maxZ = spos.z;
+
+		float sp = 0.0;
+		
+		for (int i = 0; i <= int(quality); i++) {
+
+			float sampleDepth = texelFetch2D(colortex4,ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
+			if (sampleDepth >= 1.0) {
+				sampleDepth -= 1.0;
+			}
+			sp = invLinZ(sqrt(sampleDepth));
+		
+			if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) return vec3(spos.xy/RENDER_SCALE,sp);
+
+			minZ = maxZ - biasAmount / linZ(spos.z);
+			maxZ += stepv.z;
+
+			spos += stepv;
+
+			reflectionLength += 1.0 / quality;
+			
+		}
+	return vec3(1.1);
+	}
+#endif
 
 vec4 screenSpaceReflections(
 	vec3 reflectedVector,
@@ -164,9 +226,16 @@ vec4 screenSpaceReflections(
 	vec4 reflection = vec4(0.0);
 	
 	float reflectionLength = 0.0;
-	float quality = 30.0f;
+	float quality = SSR_STEPS;
 
 	vec3 raytracePos = rayTraceSpeculars(reflectedVector, viewPos, noise, quality, isHand, reflectionLength, fresnel);
+
+	#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
+		if (raytracePos.z >= 1.0) {
+			vec3 raytracePos_DH = rayTraceSpeculars_DH(reflectedVector, viewPos, noise, SSR_STEPS_DH, isHand, reflectionLength, fresnel);
+			raytracePos = raytracePos_DH;
+		} 
+	#endif
 
 	if (raytracePos.z >= 1.0) return reflection;
 	
@@ -349,6 +418,8 @@ vec3 specularReflections(
 
 	float reflectionVisibilty = getReflectionVisibility(f0, roughness);
 
+	vec4 enviornmentReflection = vec4(0.0);
+
 	#if defined DEFERRED_BACKGROUND_REFLECTION || defined FORWARD_BACKGROUND_REFLECTION || defined DEFERRED_ENVIORNMENT_REFLECTION || defined FORWARD_ENVIORNMENT_REFLECTION
 		if(reflectionVisibilty < 1.0){
 			
@@ -363,7 +434,7 @@ vec3 specularReflections(
 			#endif
 
 			#if defined DEFERRED_ENVIORNMENT_REFLECTION || defined FORWARD_ENVIORNMENT_REFLECTION
-				vec4 enviornmentReflection = screenSpaceReflections(mat3(gbufferModelView) * reflectedVector_L, viewPos, noise.y, isHand, roughness, shlickFresnel);
+				enviornmentReflection = screenSpaceReflections(mat3(gbufferModelView) * reflectedVector_L, viewPos, noise.y, isHand, roughness, shlickFresnel);
 				// darkening for metals.
 				vec3 DarkenedDiffuseLighting = isMetal ? diffuseLighting * (1.0-enviornmentReflection.a) * (1.0-lightmap) : diffuseLighting;
 			#else
@@ -389,7 +460,11 @@ vec3 specularReflections(
 
 	#if defined OVERWORLD_SHADER
 		vec3 lightSourceReflection = Sun_specular_Strength * lightColor * GGX(normal, -playerPos, lightPos, roughness, reflectance, metalAlbedoTint);
-		specularReflections += lightSourceReflection;
+		#if defined DEFERRED_ENVIORNMENT_REFLECTION || defined FORWARD_ENVIORNMENT_REFLECTION
+			specularReflections += mix(lightSourceReflection, vec3(0.0), enviornmentReflection.a);
+		#else
+			specularReflections += lightSourceReflection;
+		#endif
 	#endif
 
 	#if defined FLASHLIGHT_SPECULAR && (defined DEFERRED_SPECULAR || defined FORWARD_SPECULAR)

@@ -156,13 +156,13 @@ uniform int framemod8;
 
 vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
 
-	float biasAmount = 0.000075;
+	float biasAmount = 0.0000075;
 
-    float quality = mix(5, SSR_STEPS, fresnel);
+    float quality = SSR_STEPS_DH;
     vec3 clipPosition = DH_toClipSpace3(position);
 
-    float rayLength = ((position.z + dir.z * dhFarPlane*sqrt(3.)) > -dhNearPlane) ?
-       (-dhNearPlane - position.z) / dir.z : dhFarPlane*sqrt(3.);
+    float rayLength = ((position.z + dir.z * dhFarPlane*sqrt(3.)) > -near) ?
+       (-near - position.z) / dir.z : dhFarPlane*sqrt(3.);
     
     vec3 direction = DH_toClipSpace3(position + dir * rayLength) - clipPosition;  //convert to clip space
 
@@ -181,7 +181,7 @@ vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
     float maxZ = spos.z;
     
     for (int i = 0; i <= int(quality); i++) {
-        float sampleDepth = sqrt(texelFetch2D(colortex4, ivec2(spos.xy / (texelSize * 4.0)), 0).a / 130000.0);
+        float sampleDepth = sqrt(texelFetch2D(colortex4, ivec2(spos.xy / (texelSize * 4.0)), 0).a / 65000.0 - 1.0);
 		float sp = DH_inv_ld(sampleDepth);
         
         if (sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {

@@ -14,13 +14,12 @@ uniform sampler2D dhDepthTex1;
 #endif
 uniform float near;
 uniform float far;
+uniform float dhFarPlane;
+uniform float dhNearPlane;
 
 float linZ(float depth) {
     return (2.0 * near) / (far + near - depth * (far - near));
 }
-
-uniform float dhFarPlane;
-uniform float dhNearPlane;
 float DH_ld(float dist) {
     return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
 }
@@ -65,17 +64,17 @@ void main() {
         float QuarterResDepth = texelFetch2D(dhDepthTex, ivec2(gl_FragCoord.xy*4), 0).x;
         if(newTex == 1.0) {
             float depth = DH_ld(QuarterResDepth);
-            gl_FragData[0] = vec4(oldTex, depth * depth * 130000.0);
+            gl_FragData[0] = vec4(oldTex, depth * depth * 65000.0 + 65000.0);
             gl_FragData[1].a = depth * depth * 65000.0;
         } else {
             float depth = DH_ld_mixed(newTex);
             gl_FragData[0] = vec4(oldTex, depth * depth * 65000.0);
         }
 
-        //sky
+        // sky
         if (newTex == 1.0 && QuarterResDepth == 1.0) { 
             #ifdef CLOUD_SSR
-                gl_FragData[0] = vec4(oldTex, 65000.0);
+                gl_FragData[0] = vec4(oldTex, 130000.0);
             #else
                 gl_FragData[0] = vec4(oldTex, 650000.0);
             #endif
@@ -85,8 +84,9 @@ void main() {
             float depth = linZ(newTex);
             gl_FragData[0] = vec4(oldTex, depth * depth * 65000.0);
         } else {
+            // sky
             #ifdef CLOUD_SSR
-                gl_FragData[0] = vec4(oldTex, 60000.0);
+                gl_FragData[0] = vec4(oldTex, 64000.0);
             #else
                 gl_FragData[0] = vec4(oldTex, 600000.0);
             #endif

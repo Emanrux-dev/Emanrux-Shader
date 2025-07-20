@@ -143,6 +143,9 @@ screen.Direct_Light = Direct Light
         option.LPV_COLORED_CANDLES = Colored Candles
         option.LPV_NOSHADOW_HACK = Iris <= 1.7.0 Fix
         option.LPV_VL_FOG_ILLUMINATION = Fog Light Propagation
+            value.LPV_VL_FOG_ILLUMINATION.0 = Off
+            value.LPV_VL_FOG_ILLUMINATION.1 = Only Indoors
+            value.LPV_VL_FOG_ILLUMINATION.2 = On
         option.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS = Fog Light Propagation Brightness
             suffix.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS=%
 	option.VANILLA_LIGHTMAP_MASK = Vanilla Lightmap Mask
@@ -720,7 +723,7 @@ screen.Ambient_light.comment = Configure settings related to the lighting in sha
     option.LPV_REDSTONE_LIGHTS.comment = Allows redstone blocks to contribute to colored lighting.
     option.LPV_COLORED_CANDLES.comment = Allows colored candles to emit matching colored lighting.
     option.LPV_NOSHADOW_HACK.comment = Fix for Iris 1.7.0 and lower! Allows floodfill to work in Nether & End, but disables entity & dropped item lights.
-    option.LPV_VL_FOG_ILLUMINATION.comment = Allow the colored lighting to light up the air around it.
+    option.LPV_VL_FOG_ILLUMINATION.comment = Allow the colored lighting to light up the air around it. Enabling it for outdoors may look weird with low fog samples.
     option.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS.comment = Configure the brightness of lit up fog.
     
 screen.Resource_Pack_Support.comment = A handfull of effects that use information provided by a resourcepack.

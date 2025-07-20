@@ -8,7 +8,7 @@ flat varying vec3 moonlightCol;
 flat varying vec3 averageSkyCol;
 flat varying vec3 averageSkyCol_Clouds;
 
-#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
+#if LPV_VL_FOG_ILLUMINATION > 0 && defined IS_LPV_ENABLED
 	flat varying float exposure;
 #endif
 
@@ -86,7 +86,7 @@ void main() {
 
 	refractedSunVec = refract(lightCol.a*WsunVec, -vec3(0.0,1.0,0.0), 1.0/1.33333);
 
-	#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
+	#if LPV_VL_FOG_ILLUMINATION > 0 && defined IS_LPV_ENABLED
 		exposure = texelFetch2D(colortex4,ivec2(10,37),0).r;
 	#endif
 

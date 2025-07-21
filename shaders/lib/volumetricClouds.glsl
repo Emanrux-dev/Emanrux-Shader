@@ -235,18 +235,18 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		float omShape = 1.0 - shape;
 
 		if(LayerIndex == SMALLCUMULUS_LAYER){
-			erosion += (1.0-densityAtPos(samplePos * 200.0 * CloudLayer0_scale)) * sqrt(omShape);
+			erosion += (1.0-densityAtPos(samplePos * CloudLayer0_detail * CloudLayer0_scale / 3.0)) * sqrt(omShape);
 
 			float falloff = 1.0 - clamp((posToMax)/100.0,0.0,1.0);
-			erosion += abs(densityAtPos(samplePos * 600.0 * CloudLayer0_scale) - falloff) * 0.75 * (omShape) * (1.0-falloff*0.25);
+			erosion += abs(densityAtPos(samplePos * CloudLayer0_detail * CloudLayer0_scale) - falloff) * 0.75 * (omShape) * (1.0-falloff*0.25);
 
 			erosion = erosion*erosion*erosion*erosion;
 		}
 		if(LayerIndex == LARGECUMULUS_LAYER){
-			erosion += (1.0 - densityAtPos(samplePos * 100.0 * CloudLayer1_scale)) * sqrt(omShape);
+			erosion += (1.0 - densityAtPos(samplePos * CloudLayer1_detail * CloudLayer1_scale / 4.5)) * sqrt(omShape);
 
 			float falloff = 1.0 - clamp((posToMax)/200.0,0.0,1.0);
-			erosion += abs(densityAtPos(samplePos * 450.0 * CloudLayer1_scale) - falloff) * 0.75 * (omShape) * (1.0-falloff*0.5);
+			erosion += abs(densityAtPos(samplePos * CloudLayer1_detail * CloudLayer1_scale) - falloff) * 0.75 * (omShape) * (1.0-falloff*0.5);
 
 			erosion = erosion*erosion*erosion*erosion;
 		}

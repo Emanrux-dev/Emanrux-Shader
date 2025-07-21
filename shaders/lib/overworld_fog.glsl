@@ -308,7 +308,7 @@ vec4 GetVolumetricFog(
 				vec3 lpvIllumination = LPV_FOG_ILLUMINATION(progressW-cameraPosition, dd, dL) * totalAbsorbance;
 
 				#if LPV_VL_FOG_ILLUMINATION == 1
-					lpvIllumination *= 1.0 - inACave;
+					lpvIllumination *= caveDetection;
 				#endif
 
 				color += lpvIllumination;

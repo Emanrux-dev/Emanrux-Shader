@@ -165,7 +165,7 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 
 	vec3 rayTraceSpeculars_DH(vec3 dir, vec3 position, float dither, float quality, bool hand, inout float reflectionLength, float fresnel){
 
-		float biasAmount = 0.000075;
+		float biasAmount = 0.000025;
 
 		vec3 clipPosition = toClipSpace3_DH(position);
 		float rayLength = ((position.z + dir.z * dhFarPlane*sqrt(3.)) > -near) ? (-near -position.z) / dir.z : dhFarPlane*sqrt(3.);

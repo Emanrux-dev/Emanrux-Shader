@@ -736,7 +736,7 @@ bool isLightning = false;
     bool isSky = z0 == 1.0 && DH_z0 == 1.0;
     bool oneTexOnly = u > 0 && v > 0 && u*uvScalar < 1 && v*uvScalar < 1;
     
-    if (lightningTex.a > 0.01 &&  oneTexOnly && isSky) {
+    if (lightningTex.a > 0.01 && oneTexOnly && isSky) {
       color = lightningTex.rgb * lightningFlash;
       isLightning = true;
     }
@@ -784,8 +784,8 @@ bool isLightning = false;
     vec3 totEpsilon = vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B);// dirtEpsilon*dirtAmount + waterEpsilon;
 		vec3 scatterCoef = Dirt_Amount * vec3(Dirt_Scatter_R, Dirt_Scatter_G, Dirt_Scatter_B) / 3.14;
 
-	  float distanceFromWaterSurface = normalize(playerPos).y + 1.0 + (cameraPosition.y - waterEnteredAltitude)/waterEnteredAltitude;
-    distanceFromWaterSurface = clamp(distanceFromWaterSurface, 0.0,1.0);
+	  // float distanceFromWaterSurface = normalize(playerPos).y + 1.0 + (cameraPosition.y - waterEnteredAltitude)/waterEnteredAltitude;
+    // distanceFromWaterSurface = clamp(distanceFromWaterSurface, 0.0,1.0);
 
     vec3 transmittance = exp(-totEpsilon * linearDistance);
     color.rgb *= transmittance;

@@ -156,7 +156,7 @@ uniform int framemod8;
 
 vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
 
-	float biasAmount = 0.0000075;
+	float biasAmount = 0.0000055;
 
     float quality = SSR_STEPS_DH;
     vec3 clipPosition = DH_toClipSpace3(position);

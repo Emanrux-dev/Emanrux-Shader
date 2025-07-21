@@ -134,7 +134,9 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
   	for (int i = 0; i <= int(quality); i++) {
 
 		float sampleDepth = texelFetch2D(colortex4,ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
+		#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
 		if (sampleDepth < 1.0) {
+		#endif
 			sp = invLinZ(sqrt(sampleDepth));
 		
 			if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) return vec3(spos.xy/RENDER_SCALE,sp);
@@ -145,9 +147,11 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 			spos += stepv;
 
 			reflectionLength += 1.0 / quality;
+		#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
 		} else {
 			break;
 		}
+		#endif
   	}
   return vec3(1.1);
 }
@@ -232,7 +236,7 @@ vec4 screenSpaceReflections(
 
 	#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
 		if (raytracePos.z >= 1.0) {
-			vec3 raytracePos_DH = rayTraceSpeculars_DH(reflectedVector, viewPos, noise, SSR_STEPS_DH, isHand, reflectionLength, fresnel);
+			vec3 raytracePos_DH = rayTraceSpeculars_DH(reflectedVector, viewPos, noise, quality, isHand, reflectionLength, fresnel);
 			raytracePos = raytracePos_DH;
 		} 
 	#endif

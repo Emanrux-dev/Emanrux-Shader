@@ -340,6 +340,8 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 
 	float cloudPlaneDistance = 0.0;
 	vec2 cloudDistance = vec2(0.0);
+
+	skyGroundCol *= (1.0 - (1.0 - RAIN_AMBIENT_LIGHT_MODIFIER) * rainStrength);
 	
 	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, WmoonVec, sunColor*2.5, moonColor*2.5, skyGroundCol/30.0, cloudPlaneDistance, cloudDistance);
 

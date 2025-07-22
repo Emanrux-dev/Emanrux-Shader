@@ -767,7 +767,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	
 	vec4 flashLightSpecularData = vec4(0.0);
 	#ifdef FLASHLIGHT
-		Indirect_lighting += calculateFlashlight(FragCoord.xy*texelSize/RENDER_SCALE, viewPos, vec3(0.0), worldSpaceNormal, flashLightSpecularData);
+		Indirect_lighting += calculateFlashlight(FragCoord.xy*texelSize/RENDER_SCALE, viewPos, vec3(0.0), worldSpaceNormal, flashLightSpecularData, false);
 	#endif
 
 	vec3 FinalColor = (Indirect_lighting + Direct_lighting) * Albedo;

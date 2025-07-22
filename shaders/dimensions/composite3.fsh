@@ -366,7 +366,7 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
   float edgeSum = 0.0;
   float threshold = 0.0000005;
   
-  vec2 coord = gl_FragCoord.xy - 2.0;
+  vec2 coord = gl_FragCoord.xy - 1.5;
 
   vec2 UV = coord;
   const ivec2 SCALE = ivec2(1.0/VL_RENDER_RESOLUTION);

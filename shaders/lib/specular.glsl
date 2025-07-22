@@ -134,24 +134,16 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
   	for (int i = 0; i <= int(quality); i++) {
 
 		float sampleDepth = texelFetch2D(colortex4,ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
-		#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
-		if (sampleDepth < 1.0) {
-		#endif
-			sp = invLinZ(sqrt(sampleDepth));
-		
-			if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) return vec3(spos.xy/RENDER_SCALE,sp);
+		sp = invLinZ(sqrt(sampleDepth));
+	
+		if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ) && sampleDepth <= 1.0) return vec3(spos.xy/RENDER_SCALE,sp);
 
-			minZ = maxZ - biasAmount / linZ(spos.z);
-			maxZ += stepv.z;
+		minZ = maxZ - biasAmount / linZ(spos.z);
+		maxZ += stepv.z;
 
-			spos += stepv;
+		spos += stepv;
 
-			reflectionLength += 1.0 / quality;
-		#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
-		} else {
-			break;
-		}
-		#endif
+		reflectionLength += 1.0 / quality;
   	}
   return vec3(1.1);
 }
@@ -194,16 +186,18 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 		float maxZ = spos.z;
 
 		float sp = 0.0;
-		
+
+		float sampleDepth_DH = 0.0;
 		for (int i = 0; i <= int(quality); i++) {
 
 			float sampleDepth = texelFetch2D(colortex4,ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
 			if (sampleDepth >= 1.0) {
+				sampleDepth_DH = sampleDepth;
 				sampleDepth -= 1.0;
 			}
 			sp = invLinZ(sqrt(sampleDepth));
 		
-			if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) return vec3(spos.xy/RENDER_SCALE,sp);
+			if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ) && sampleDepth_DH >= 1.0) return vec3(spos.xy/RENDER_SCALE,sp);
 
 			minZ = maxZ - biasAmount / linZ(spos.z);
 			maxZ += stepv.z;
@@ -236,7 +230,7 @@ vec4 screenSpaceReflections(
 
 	#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
 		if (raytracePos.z >= 1.0) {
-			vec3 raytracePos_DH = rayTraceSpeculars_DH(reflectedVector, viewPos, noise, quality, isHand, reflectionLength, fresnel);
+			vec3 raytracePos_DH = rayTraceSpeculars_DH(reflectedVector, viewPos, noise, SSR_STEPS_DH, isHand, reflectionLength, fresnel);
 			raytracePos = raytracePos_DH;
 		} 
 	#endif

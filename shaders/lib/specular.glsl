@@ -156,7 +156,7 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
   return vec3(1.1);
 }
 
-#ifdef DISTANT_HORIZONS
+#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
 	uniform vec4 combined_projection_matrix_0;
 	uniform vec4 combined_projection_matrix_1;
 	uniform vec4 combined_projection_matrix_2;

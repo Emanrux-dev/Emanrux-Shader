@@ -74,7 +74,7 @@ void main() {
         // sky
         if (newTex == 1.0 && QuarterResDepth == 1.0) { 
             #ifdef CLOUD_SSR
-                gl_FragData[0] = vec4(oldTex, 130000.0);
+                gl_FragData[0] = vec4(oldTex, 120000.0);
             #else
                 gl_FragData[0] = vec4(oldTex, 650000.0);
             #endif

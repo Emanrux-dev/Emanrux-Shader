@@ -480,7 +480,7 @@ void main() {
 		#endif
 
 		#ifdef END_SHADER
-			Indirect_lighting = vec3(0.3,0.36,1.0) * 0.1;
+			Indirect_lighting = vec3(AmbientLightEnd_R,AmbientLightEnd_G,AmbientLightEnd_B) * 0.1;
 		#endif
 
 	///////////////////////// BLOCKLIGHT LIGHTING OR LPV LIGHTING OR FLOODFILL COLORED LIGHTING

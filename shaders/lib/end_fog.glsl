@@ -297,7 +297,7 @@ vec4 GetVolumetricFog(
 			float volumeCoeff = exp(-stormDensity*dd*dL);
 
 			vec3 lightsources = LightSourceLighting(progressW, lightPosition, dither, volumeDensity, lightColors, vortexBounds);
-			vec3 indirect = vec3(0.3,0.36,1.0) * 0.2 * (exp((volumeDensity*volumeDensity) * -50) * 0.9 + 0.1) * 0.1;
+			vec3 indirect = vec3(AmbientLightEnd_R,AmbientLightEnd_G,AmbientLightEnd_B) * 0.2 * (exp((volumeDensity*volumeDensity) * -50) * 0.9 + 0.1) * 0.1;
 			
 			vec3 stormLighting = indirect + lightsources;
 			

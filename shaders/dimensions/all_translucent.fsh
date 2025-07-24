@@ -738,7 +738,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 		Direct_lighting += lightColors * endPhase * end_NdotL * fogShadow;
 
-		vec3 AmbientLightColor = vec3(0.3,0.36,1.0) ;
+		vec3 AmbientLightColor = vec3(AmbientLightEnd_R,AmbientLightEnd_G,AmbientLightEnd_B) ;
 			
 		Indirect_lighting = AmbientLightColor + 0.7 * AmbientLightColor * dot(worldSpaceNormal, normalize(feetPlayerPos));
 		Indirect_lighting *= 0.1;

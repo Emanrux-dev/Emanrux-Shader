@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = Merlin1809's Bliss Fork
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 0.1.4
+    value.SHADER_VERSION_LABEL.482 = 0.1.5
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -41,6 +41,8 @@ option.colortype = coloring mode
         option.Moon_temp = moon temperature
         suffix.Moon_temp = K
 option.REALMOON = Realistic Moon
+option.STARS_AMOUNT = Stars Amount
+option.STARS_BRIGHTNESS = Stars Brightness
 screen.Misc_Settings = §cDebugging§r/Experimental Settings
 screen.Mod_support = Settings For Supported Mods
 
@@ -196,6 +198,9 @@ screen.Ambient_light = Ambient Light
         option.AmbientLightRain_R = Red Amount (Rain)
         option.AmbientLightRain_G = Green Amount (Rain)
         option.AmbientLightRain_B = Blue Amount (Rain)
+        option.AmbientLightEnd_R = Red Amount (End)
+        option.AmbientLightEnd_G = Green Amount (End)
+        option.AmbientLightEnd_B = Blue Amount (End)
         option.ambient_colortype = Coloring Type
             value.ambient_colortype.0 = Temperature
             value.ambient_colortype.1 = RGB

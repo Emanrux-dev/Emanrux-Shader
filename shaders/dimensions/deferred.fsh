@@ -227,11 +227,13 @@ float mixhistory = 0.06;
 	///////////////////////////////
 	/// --- STORE COLOR LUT --- ///
 	///////////////////////////////
-
-	vec3 AmbientLightTint = (1.0 - (1.0 - RAIN_AMBIENT_LIGHT_MODIFIER) * rainStrength) * vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B);
-
+	#ifdef SeparateAmbientColorRain
+		vec3 AmbientLightTint = mix(vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B), vec3(AmbientLightRain_R, AmbientLightRain_G, AmbientLightRain_B), rainStrength);
+	#else
+		vec3 AmbientLightTint = vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B);
+	#endif
 	// --- the color of the atmosphere + the average color of the atmosphere.
-	vec3 skyGroundCol = skyFromTex(vec3(0, -1 ,0), colortex4).rgb;// * clamp(WsunVec.y*2.0,0.2,1.0);
+	vec3 skyGroundCol = skyFromTex(vec3(0, -1 ,0), colortex4).rgb * AmbientLightTint;
 
 
 	/// --- Save light values
@@ -241,7 +243,7 @@ float mixhistory = 0.06;
 	}
 
 	if (gl_FragCoord.x > 1. && gl_FragCoord.x < 2.  && gl_FragCoord.y > 19.+18. && gl_FragCoord.y < 19.+18.+1 ){
-		gl_FragData[0] = vec4((skyGroundCol/150.0) * AmbientLightTint,1.0);
+		gl_FragData[0] = vec4(skyGroundCol/150.0,1.0);
 		if(worldTimeChangeCheck) mixhistory = 1.0;
 	}
 
@@ -340,8 +342,6 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 
 	float cloudPlaneDistance = 0.0;
 	vec2 cloudDistance = vec2(0.0);
-
-	skyGroundCol *= (1.0 - (1.0 - RAIN_AMBIENT_LIGHT_MODIFIER) * rainStrength);
 	
 	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, WmoonVec, sunColor*2.5, moonColor*2.5, skyGroundCol/30.0, cloudPlaneDistance, cloudDistance);
 

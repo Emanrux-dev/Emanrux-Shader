@@ -1123,7 +1123,7 @@ void main() {
 
         if (blockId == ENTITY_END_CRYSTAL) {
             lightColor = vec3(1.000, 0.000, 1.000);
-            lightRange = 8.0;
+            lightRange = 10.0;
         }
 
         if (blockId == ENTITY_FIREBALL_SMALL) {

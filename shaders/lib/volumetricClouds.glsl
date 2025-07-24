@@ -568,10 +568,10 @@ vec4 raymarchCloud(
 
 		if(LayerIndex == ALTOSTRATUS_LAYER) {
 			density = parameters.altostratus.y;
-			density *= smoothstep(175000, 60000, length(newPos));
+			density *= smoothstep(CloudLayer2_distance, CloudLayer2_distance*0.5, length(newPos));
 		} else {
 			density = parameters.cirrus.y;
-			density *= smoothstep(195000, 50000, length(newPos));
+			density *= smoothstep(CloudLayer3_distance, CloudLayer3_distance*0.5, length(newPos));
 		}
 		if (density == 0.0) return vec4(color, totalAbsorbance);
 
@@ -619,13 +619,19 @@ vec4 raymarchCloud(
 
 	if(LayerIndex < ALTOSTRATUS_LAYER){
 
+		vec3 newPos = rayPosition - cameraPosition;
+
 		float densityLarge = getRainDensity(parameters.largeCumulus.y);
 
-		float density = getRainDensity(parameters.smallCumulus.y);
+		float density = 0.0;
+
+		if(LayerIndex == SMALLCUMULUS_LAYER) density = getRainDensity(parameters.smallCumulus.y) * smoothstep(CloudLayer0_distance, CloudLayer0_distance*0.5, length(newPos));
+
+		if(LayerIndex == LARGECUMULUS_LAYER) density = getRainDensity(parameters.largeCumulus.y) * smoothstep(CloudLayer1_distance, CloudLayer1_distance*0.5, length(newPos));
+
+		if (density == 0.0) return vec4(color, totalAbsorbance);
 
 		if(LayerIndex == CUMULONIMBUS_LAYER) density = 0.8;
-
-		if(LayerIndex == LARGECUMULUS_LAYER) density = getRainDensity(parameters.largeCumulus.y);
 
 		float skylightOcclusion = 1.0;
 		#if defined CloudLayer1 && defined CloudLayer0
@@ -647,7 +653,7 @@ vec4 raymarchCloud(
 		float tallness = maxHeight - minHeight;
 
 		for(int i = 0; i < samples; i++) {
-			vec3 newPos = rayPosition - cameraPosition;
+			newPos = rayPosition - cameraPosition;
 
 			// check if the ray staring position is going farther than the reference distance, if yes, dont begin marching. this is to check for intersections with the world.
 			#ifndef VL_CLOUDS_DEFERRED

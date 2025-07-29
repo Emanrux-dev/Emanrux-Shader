@@ -629,9 +629,9 @@ vec4 raymarchCloud(
 
 		if(LayerIndex == LARGECUMULUS_LAYER) density = getRainDensity(parameters.largeCumulus.y) * smoothstep(CloudLayer1_distance, CloudLayer1_distance*0.5, length(newPos));
 
-		if (density == 0.0) return vec4(color, totalAbsorbance);
-
 		if(LayerIndex == CUMULONIMBUS_LAYER) density = 0.8;
+
+		if (density == 0.0) return vec4(color, totalAbsorbance);
 
 		float skylightOcclusion = 1.0;
 		#if defined CloudLayer1 && defined CloudLayer0

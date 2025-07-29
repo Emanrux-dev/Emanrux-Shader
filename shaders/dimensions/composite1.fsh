@@ -812,7 +812,7 @@ uniform float wetness;
 					normals = mix(normals, flatNormals, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
 				#endif
 
-				roughness = mix(roughness, 0.5*(1+snowR), wetnessStages * Puddle_Reflection_Strength);
+				roughness = mix(roughness, 0.5*(1+snowR), wetnessStages * Puddle_Reflection_Sharpness);
 
 				if(f0 < 229.5/255.0 ) albedo = pow(albedo * (1.0 - 0.08*wetnessStages), vec3(1.0 + 0.7*wetnessStages));
 			}

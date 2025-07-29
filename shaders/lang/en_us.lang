@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = Merlin1809's Bliss Fork
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 0.1.5
+    value.SHADER_VERSION_LABEL.482 = 0.1.6
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -726,8 +726,6 @@ screen.Ambient_light.comment = Configure settings related to the lighting in sha
     screen.Ambient_Colors.comment = Configure the color of light in shaded areas.
     screen.Torch_Colors.comment = Configure the color of light from torches or other placed lightsources.
 
-    option.RAIN_AMBIENT_LIGHT_MODIFIER.comment = Configure the ambient light brightness during rain. (1.0 normal ambient light, 0.0 is no ambient light)
-
     option.LPV_SIZE.comment = Configures the size (in blocks) of the volume for colored lighting.
     option.LPV_SATURATION.comment = Configures the intensity of colored lighting.
     option.LPV_TINT_SATURATION.comment = Configures the intensity of tinting by translucent blocks on colored lighting.
@@ -818,7 +816,8 @@ screen.World.comment = Configure settings for various things that happen in the 
     screen.World_Effects = World Weather Effects
         option.Puddles = Puddles
         option.Puddle_Size = Puddle Size Multiplier
-        option.Puddle_Reflection_Strength = Puddle Reflection Strength
+        option.Puddle_Reflection_Sharpness = Puddle Reflection Sharpness
+        option.Puddle_Reflection_Sharpness.comment = Controls the blurriness of puddles. 1.0 means mirror like
         option.ShaderSnow = Shader Snow Effect
             value.ShaderSnow.0 = Off
             value.ShaderSnow.1 = When snowing

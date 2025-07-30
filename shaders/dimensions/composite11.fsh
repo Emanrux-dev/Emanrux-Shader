@@ -47,6 +47,10 @@ vec4 Weather_properties = Moon_Weather_properties;
 // #include "/lib/biome_specifics.glsl"
 #include "/lib/bokeh.glsl"
 
+#if WHITE_BALANCE != 6500
+	#include "/lib/util.glsl"
+#endif
+
 float cdist(vec2 coord) {
 	return max(abs(coord.s-0.5),abs(coord.t-0.5))*2.0;
 }
@@ -273,6 +277,10 @@ void main() {
 
 	col = mix(lum * vec3(Purkinje_R, Purkinje_G, Purkinje_B) * Purkinje_Multiplier, col, rodCurve);
 
+	#if WHITE_BALANCE != 6500
+		col *= blackbody(WHITE_BALANCE);
+	#endif
+
 	#ifndef USE_ACES_COLORSPACE_APPROXIMATION
 		col = LinearTosRGB(TONEMAP(col));
 	#else
@@ -316,6 +324,6 @@ void main() {
 		#endif
 
 		// focus = gl_FragCoord.x * 0.1;
-		if( hideGUI < 1) gl_FragData[0].rgb += laserColor * pow( clamp( 	 1.0-abs(focus-abs(depth))		,0,1),25) ;
+		if (hideGUI < 1) gl_FragData[0].rgb += laserColor * pow( clamp( 	 1.0-abs(focus-abs(depth))		,0,1),25) ;
 	#endif
 }

@@ -88,7 +88,7 @@ void main() {
             #ifdef CLOUD_SSR
                 gl_FragData[0] = vec4(oldTex, 64000.0);
             #else
-                gl_FragData[0] = vec4(oldTex, 600000.0);
+                gl_FragData[0] = vec4(oldTex, 650000.0);
             #endif
         }
     #endif

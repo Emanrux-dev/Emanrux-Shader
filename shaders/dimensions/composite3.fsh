@@ -804,7 +804,9 @@ bool isLightning = false;
 ////// --------------- BLEND FOG INTO SCENE
 //////////// apply VL fog over opaque and translucents
 
-  // bloomyFogMult *= temporallyFilteredVL.a;
+  #if !defined OVERWORLD_SHADER
+    bloomyFogMult *= temporallyFilteredVL.a;
+  #endif
   
 	#if defined IS_IRIS
     // if(z >= 1.0) color = vec3(0,255,0);

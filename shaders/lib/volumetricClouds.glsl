@@ -35,7 +35,7 @@ float lightningFlash = mix(0.1, 2.5, randomSeed);
 	#extension GL_ARB_shader_image_load_store : enable
 	#extension GL_EXT_shader_image_load_store : enable
 
-	layout (rgba32f) uniform image2D cloudDepthTex;
+	layout (rgba16f) uniform image2D cloudDepthTex;
 
 	float lightningStart = mix(20.0, 1.0, smoothstep(0.0, 0.085, timeInLightning));
 	float lightningMid = smoothstep(0.0, 0.05, timeInLightning) * smoothstep(0.15, 0.066, timeInLightning);

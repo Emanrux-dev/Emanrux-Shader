@@ -374,3 +374,7 @@ vec3 ToneMap_AgX_minimal_merlin( vec3 color ) {
 
 	return color;
 }
+
+vec3 no_tonemapper(vec3 color){
+    return color;
+}

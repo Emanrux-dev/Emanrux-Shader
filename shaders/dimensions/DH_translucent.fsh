@@ -156,7 +156,7 @@ uniform int framemod8;
 
 vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
 
-	float biasAmount = 0.0000055;
+	float biasAmount = 0.000002;
 
     float quality = SSR_STEPS_DH;
     vec3 clipPosition = DH_toClipSpace3(position);
@@ -181,7 +181,7 @@ vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
     float maxZ = spos.z;
     
     for (int i = 0; i <= int(quality); i++) {
-        float sampleDepth = sqrt(texelFetch2D(colortex4, ivec2(spos.xy / (texelSize * 4.0)), 0).a / 65000.0 - 1.0);
+        float sampleDepth = sqrt(texelFetch2D(colortex12, ivec2(spos.xy / (texelSize * 4.0)), 0).a / 65000.0);
 		float sp = DH_inv_ld(sampleDepth);
         
         if (sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {
@@ -421,14 +421,14 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
             	vec3 previousPosition = mat3(gbufferModelViewInverse) * DH_toScreenSpace(rtPos) + gbufferModelViewInverse[3].xyz + cameraPosition-previousCameraPosition;
             	previousPosition = mat3(gbufferPreviousModelView) * previousPosition + gbufferPreviousModelView[3].xyz;
             	previousPosition.xy = projMAD(dhPreviousProjection, previousPosition).xy / -previousPosition.z * 0.5 + 0.5;
-            	if (previousPosition.x > 0.0 && previousPosition.y > 0.0 && previousPosition.x < 1.0 && previousPosition.x < 1.0) {
+            	if (previousPosition.x > 0.0 && previousPosition.y > 0.0 && previousPosition.x < 1.0 && previousPosition.y < 1.0) {
             		Reflections.a = 1.0;
             		Reflections.rgb = texture2D(colortex5, previousPosition.xy).rgb;
             	}
             }
         #endif
 		#ifdef FORWARD_BACKGROUND_REFLECTION
-            BackgroundReflection = skyCloudsFromTex(mat3(gbufferModelViewInverse) * reflectedVector, colortex4).rgb / 1200.0; 
+            BackgroundReflection = skyCloudsFromTex(mat3(gbufferModelViewInverse) * reflectedVector, colortex4).rgb / 1200.0;
         #endif
         #ifdef WATER_SUN_SPECULAR
             SunReflection = (DirectLightColor * Shadows) * GGX(normalize(normals), -normalize(viewPos), normalize(WsunVec2), roughness, f0) * (1.0-Reflections.a);

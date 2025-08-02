@@ -204,7 +204,7 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 			
 			float sp = invLinZ_DH(sqrt(sampleDepth));
 		
-			if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ) && sampleDepth <= 1.0) {
+			if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {
 				hitPos = vec3(spos.xy/RENDER_SCALE, sp);
 				break;
 			}

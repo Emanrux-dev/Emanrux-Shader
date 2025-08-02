@@ -70,7 +70,7 @@ void main() {
 
         // sky
         if (newTex == 1.0 && QuarterResDepth == 1.0) { 
-            gl_FragData[0] = vec4(oldTex, 65000.0);
+            gl_FragData[0] = vec4(oldTex, 66000.0);
             gl_FragData[1].a = 650000.0;
         }
     #else

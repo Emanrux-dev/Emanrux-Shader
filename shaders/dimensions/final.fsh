@@ -16,6 +16,7 @@ uniform sampler2D shadowcolor1;
   #extension GL_EXT_shader_image_load_store : enable
 
   layout (rgba16f) uniform image2D cloudDepthTex;
+#endif
 
 varying vec2 texcoord;
 uniform vec2 texelSize;

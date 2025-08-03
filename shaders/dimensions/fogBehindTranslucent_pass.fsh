@@ -333,9 +333,9 @@ void main() {
 		#ifdef OVERWORLD_SHADER
 			vec2 lightmap = decodeVec2(texelFetch2D(colortex14,ivec2(tc/texelSize),0).x);
 			
-			#ifdef DISTANT_HORIZONS
-				if(z >= 1.0) lightmap.y = 0.99;
-			#endif
+			// #ifdef DISTANT_HORIZONS
+			// 	if(z >= 1.0) lightmap.y = 0.99;
+			// #endif
 		#else
 			vec2 lightmap = decodeVec2(texelFetch2D(colortex14,ivec2(tc/texelSize),0).a);
 			lightmap.y = 1.0;
@@ -375,6 +375,8 @@ void main() {
 		vec4 underwaterVlFog = vec4(0,0,0,1);
 		
 		float lightleakfix = clamp(lightmap.y + (1-caveDetection),0.0,1.0);
+
+		directLightColor *= lightleakfix;
 
 		if(iswater && isEyeInWater != 1) {
 			vec4 underWaterFog = waterVolumetrics(viewPos0, viewPos1, estimatedDepth, estimatedSunDepth, Vdiff, noise_1, totEpsilon, scatterCoef, indirectLightColor_dynamic, directLightColor, dot(normalize(viewPos1), normalize(sunVec*lightCol.a)) ,lightleakfix); 

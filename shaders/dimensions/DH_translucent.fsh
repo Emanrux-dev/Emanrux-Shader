@@ -181,6 +181,8 @@ vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
     float maxZ = spos.z;
     
     for (int i = 0; i <= int(quality); i++) {
+		if(spos.x < 0 || spos.x > 1 || spos.y < 0 || spos.y > 1) return vec3(1.1);
+
         float sampleDepth = sqrt(texelFetch2D(colortex12, ivec2(spos.xy / (texelSize * 4.0)), 0).a / 65000.0);
 		float sp = DH_inv_ld(sampleDepth);
         
@@ -260,7 +262,7 @@ vec3 applyBump(mat3 tbnMatrix, vec3 bump, float puddle_values){
 #define FORWARD_BACKGROUND_REFLECTION
 #define FORWARD_ROUGH_REFLECTION
 
-/* RENDERTARGETS:2,7 */
+/* RENDERTARGETS:2,7,14 */
 void main() {
 if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	{
    
@@ -391,8 +393,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#endif
 
     Indirect_lighting = AmbientLightColor;
-
-	vec3 FinalColor = (Indirect_lighting + Direct_lighting) * Albedo;
+	float indoors = min(max(lightmapCoords.y-0.5,0.0)/0.4,1.0);
+	vec3 FinalColor = (Indirect_lighting + Direct_lighting*indoors) * Albedo;
 
     // specular
     #ifdef FORWARD_SPECULAR
@@ -400,6 +402,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		vec4 Reflections = vec4(0.0);
 		vec3 BackgroundReflection = FinalColor; 
 		vec3 SunReflection = vec3(0.0);
+		float SSR_HIT_SKY_MASK = indoors;
 		
         float roughness = 0.0;
 		float f0 = 0.02;
@@ -417,15 +420,17 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	    #endif
         #if defined FORWARD_ENVIORNMENT_REFLECTION && defined DH_SCREENSPACE_REFLECTIONS
             vec3 rtPos = rayTrace(reflectedVector, viewPos, interleaved_gradientNoise_temporal(), fresnel);
-            if (rtPos.z < 1.){
+            if (rtPos.z < 0.99999){
             	vec3 previousPosition = mat3(gbufferModelViewInverse) * DH_toScreenSpace(rtPos) + gbufferModelViewInverse[3].xyz + cameraPosition-previousCameraPosition;
             	previousPosition = mat3(gbufferPreviousModelView) * previousPosition + gbufferPreviousModelView[3].xyz;
             	previousPosition.xy = projMAD(dhPreviousProjection, previousPosition).xy / -previousPosition.z * 0.5 + 0.5;
             	if (previousPosition.x > 0.0 && previousPosition.y > 0.0 && previousPosition.x < 1.0 && previousPosition.y < 1.0) {
-            		Reflections.a = 1.0;
-            		Reflections.rgb = texture2D(colortex5, previousPosition.xy).rgb;
+					Reflections.a = 1.0;
+					Reflections.rgb = texture2D(colortex5, previousPosition.xy).rgb;
             	}
-            }
+            }else{
+				if (rtPos.x > 0.0 && rtPos.y > 0.0 && rtPos.x < 1.0 && rtPos.y < 1.0) SSR_HIT_SKY_MASK = 1.0;
+			}
         #endif
 		#ifdef FORWARD_BACKGROUND_REFLECTION
             BackgroundReflection = skyCloudsFromTex(mat3(gbufferModelViewInverse) * reflectedVector, colortex4).rgb / 1200.0;
@@ -434,8 +439,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
             SunReflection = (DirectLightColor * Shadows) * GGX(normalize(normals), -normalize(viewPos), normalize(WsunVec2), roughness, f0) * (1.0-Reflections.a);
         #endif
 
-		Reflections_Final = mix(FinalColor, mix(BackgroundReflection, Reflections.rgb, Reflections.a), fresnel);
-		Reflections_Final += SunReflection;
+		Reflections_Final = mix(FinalColor, mix(BackgroundReflection*SSR_HIT_SKY_MASK, Reflections.rgb, Reflections.a), fresnel);
+		Reflections_Final += SunReflection*indoors;
 
 		gl_FragData[0].a = gl_FragData[0].a + (1.0-gl_FragData[0].a) * fresnel;
 	
@@ -462,6 +467,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
     #endif
    
     gl_FragData[1] = vec4(Albedo, material);
+
+	gl_FragData[2] = vec4(encodeVec2(lightmapCoords.x, lightmapCoords.y), 1, 1, 1);
 
 }
 

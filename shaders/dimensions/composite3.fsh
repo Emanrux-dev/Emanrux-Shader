@@ -578,6 +578,8 @@ void main() {
 
     fog *= (1.0-caveDetection);
 
+    fog *= BorderFogIntensity;
+
     if(swappedDepth >= 1.0 || isEyeInWater != 0) fog = 0.0;
 
     #ifdef SKY_GROUND
@@ -586,7 +588,7 @@ void main() {
       vec3 borderFogColor = skyFromTex(playerPos_normalized, colortex4)/1200.0 * Sky_Brightness;
     #endif
 
-    color.rgb = mix(color.rgb, borderFogColor, fog * BorderFogIntensity);
+    color.rgb = mix(color.rgb, borderFogColor, fog);
   #else
     float fog = 0.0;
   #endif

@@ -62,7 +62,6 @@ void main() {
         if(newTex == 1.0) {
             float depth = DH_ld(QuarterResDepth);
             gl_FragData[0] = vec4(oldTex, 650000.0);
-            gl_FragData[1].a = depth * depth * 65000.0;
         } else {
             float depth = linZ(newTex);
             gl_FragData[0] = vec4(oldTex, depth * depth * 65000.0);
@@ -70,8 +69,25 @@ void main() {
 
         // sky
         if (newTex == 1.0 && QuarterResDepth == 1.0) { 
-            gl_FragData[0] = vec4(oldTex, 66000.0);
-            gl_FragData[1].a = 650000.0;
+            gl_FragData[0] = vec4(oldTex, 65000.0);
+        }
+        
+        float depth = newTex;
+		float _near = near;
+		float _far = far*4.0;
+		if (depth >= 1.0) {
+			depth = QuarterResDepth;
+			_near = dhNearPlane;
+			_far = dhFarPlane;
+		}
+
+		depth = linearizeDepthFast(depth, _near, _far);
+		depth = depth / dhFarPlane;
+
+        if(depth < 1.0) {
+		    gl_FragData[1].a = depth * depth * 65000.0;
+        } else {
+            gl_FragData[1].a = 66000.0;
         }
     #else
         if(newTex < 1.0) {

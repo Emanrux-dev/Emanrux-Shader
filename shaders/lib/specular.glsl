@@ -102,15 +102,35 @@ float shlickFresnelRoughness(float XdotN, float roughness){
 	
 	return shlickFresnel;
 }
+#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
+	uniform vec4 combined_projection_matrix_0;
+	uniform vec4 combined_projection_matrix_1;
+	uniform vec4 combined_projection_matrix_2;
+	uniform vec4 combined_projection_matrix_3;
+	#define combined_projection_matrix mat4(combined_projection_matrix_0, combined_projection_matrix_1, combined_projection_matrix_2, combined_projection_matrix_3)
+
+	float invertLinearizeDepthFast(const in float z) {
+		return (dhFarPlane * (z - near)) / (z * (dhFarPlane - near));
+	}
+#endif
+
+vec3 toClipSpace3_DH(vec3 viewSpacePosition) {
+	#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS 
+		mat4 matrix = combined_projection_matrix;
+	#else
+		mat4 matrix = gbufferProjection;
+	#endif
+	return projMAD(matrix, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
+}
 
 vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, bool hand, inout float reflectionLength){
 
-	float biasAmount = 0.000075;
+	float biasAmount = 0.00003;
 
-	vec3 clipPosition = toClipSpace3(position);
+	vec3 clipPosition = toClipSpace3_DH(position);
 	float rayLength = ((position.z + dir.z * far*sqrt(3.)) > -near) ? (-near -position.z) / dir.z : far*sqrt(3.);
 
-	vec3 direction = toClipSpace3(position + dir*rayLength) - clipPosition;  //convert to clip space
+	vec3 direction = toClipSpace3_DH(position + dir*rayLength) - clipPosition;  //convert to clip space
 	vec3 reflectedTC = vec3((direction.xy + clipPosition.xy) * RENDER_SCALE, 1.0);
 
 	//get at which length the ray intersects with the edge of the screen
@@ -136,10 +156,21 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
   	for (int i = 0; i <= int(quality); i++) {
 		if(spos.x < 0 || spos.x > 1 || spos.y < 0 || spos.y > 1) return hitPos;
 
+		#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS 
+			#ifdef FULLRESDEPTH
+				float div = 1.0; // buffer is full res after first composite pass
+			#else
+				float div = 4.0;
+			#endif
+			
+			float sampleDepth = texelFetch2D(colortex12, ivec2(spos.xy/texelSize/div),0).a/65000.0;
+			float sp = invertLinearizeDepthFast(sqrt(sampleDepth)*dhFarPlane);
+		#else
 		float sampleDepth = texelFetch2D(colortex4, ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
 		float sp = invLinZ(sqrt(sampleDepth));
+		#endif
 	
-		if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ) && sampleDepth <= 1.0) {
+		if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {
 			hitPos = vec3(spos.xy/RENDER_SCALE, sp);
 			break;
 		}
@@ -155,72 +186,6 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 	if(hand) return reflectedTC;
 	return hitPos;
 }
-
-#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
-	uniform vec4 combined_projection_matrix_0;
-	uniform vec4 combined_projection_matrix_1;
-	uniform vec4 combined_projection_matrix_2;
-	uniform vec4 combined_projection_matrix_3;
-	#define combined_projection_matrix mat4(combined_projection_matrix_0, combined_projection_matrix_1, combined_projection_matrix_2, combined_projection_matrix_3)
-
-	vec3 toClipSpace3_DH(vec3 viewSpacePosition) {
-		return projMAD(combined_projection_matrix, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
-	}
-
-	vec3 rayTraceSpeculars_DH(vec3 dir, vec3 position, float dither, float quality, bool hand, inout float reflectionLength){
-
-		float biasAmount = 0.000015;
-
-		vec3 clipPosition = toClipSpace3_DH(position);
-		float rayLength = ((position.z + dir.z * dhFarPlane*sqrt(3.)) > -near) ? (-near -position.z) / dir.z : dhFarPlane*sqrt(3.);
-
-		vec3 direction = toClipSpace3_DH(position + dir*rayLength) - clipPosition;  //convert to clip space
-		vec3 reflectedTC = vec3((direction.xy + clipPosition.xy) * RENDER_SCALE, 1.0);
-
-		//get at which length the ray intersects with the edge of the screen
-		vec3 maxLengths = (step(0.0, direction) - clipPosition) / direction;
-		float mult = min(min(maxLengths.x, maxLengths.y), maxLengths.z);
-		vec3 stepv = direction * mult / quality;
-
-		clipPosition.xy *= RENDER_SCALE;
-		stepv.xy *= RENDER_SCALE;
-
-		vec3 spos = clipPosition + stepv*dither;
-		spos += stepv*0.5 + vec3(0.5*texelSize,0.0); // small offsets to reduce artifacts from precision differences.
-		
-		#if defined DEFERRED_SPECULAR && defined TAA
-			spos.xy += TAA_Offset*texelSize*0.5/RENDER_SCALE;
-		#endif
-
-		float minZ = spos.z - 0.00025 / linZ(spos.z);;
-		float maxZ = spos.z;
-
-		vec3 hitPos = vec3(1.1);
-
-		for (int i = 0; i <= int(quality); i++) {
-			if(spos.x < 0 || spos.x > 1 || spos.y < 0 || spos.y > 1) return hitPos;
-
-			float sampleDepth = texelFetch2D(colortex12,ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
-			
-			float sp = invLinZ_DH(sqrt(sampleDepth));
-		
-			if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {
-				hitPos = vec3(spos.xy/RENDER_SCALE, sp);
-				break;
-			}
-
-			minZ = maxZ - biasAmount / linZ(spos.z);
-			maxZ += stepv.z;
-
-			spos += stepv;
-
-			reflectionLength += 1.0 / quality;
-			
-		}
-		if(hand) return reflectedTC;
-		return hitPos;
-	}
-#endif
 
 vec4 screenSpaceReflections(
 	vec3 reflectedVector,
@@ -238,13 +203,6 @@ vec4 screenSpaceReflections(
 	float quality = SSR_STEPS;
 
 	vec3 raytracePos = rayTraceSpeculars(reflectedVector, viewPos, noise, quality, isHand, reflectionLength);
-
-	#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
-		if (raytracePos.z > 1.0) {
-			vec3 raytracePos_DH = rayTraceSpeculars_DH(reflectedVector, viewPos, noise, SSR_STEPS_DH, isHand, reflectionLength);
-			raytracePos = raytracePos_DH;
-		} 
-	#endif
 
 	if (raytracePos.z > 1.0) return reflection;
 	

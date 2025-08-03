@@ -121,6 +121,7 @@ uniform float dhFarPlane;
 #include "/lib/Shadow_Params.glsl"
 #include "/lib/color_transforms.glsl"
 #include "/lib/projections.glsl"
+#include "/lib/DistantHorizons_projections.glsl"
 #include "/lib/sky_gradient.glsl"
 #include "/lib/waterBump.glsl"
 
@@ -295,7 +296,6 @@ float ld(float dist) {
 }
 
 
-#include "/lib/DistantHorizons_projections.glsl"
 
 #ifdef RIPPLE_WATER
 	#include "/lib/ripples.glsl"

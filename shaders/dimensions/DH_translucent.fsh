@@ -154,15 +154,19 @@ uniform int framemod8;
 
 #include "/lib/TAA_jitter.glsl"
 
+float invLdFast(float linearDepth) {
+    return (dhFarPlane * (dhNearPlane - linearDepth)) / ((dhNearPlane - dhFarPlane) * linearDepth);
+}
+
 vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
 
-	float biasAmount = 0.000002;
+	float biasAmount = 0.0000015;
 
-    float quality = SSR_STEPS_DH;
+    float quality = float(SSR_STEPS_DH);
     vec3 clipPosition = DH_toClipSpace3(position);
 
-    float rayLength = ((position.z + dir.z * dhFarPlane*sqrt(3.)) > -near) ?
-       (-near - position.z) / dir.z : dhFarPlane*sqrt(3.);
+    float rayLength = ((position.z + dir.z * dhFarPlane*sqrt(3.)) > -dhNearPlane) ?
+       (-dhNearPlane - position.z) / dir.z : dhFarPlane*sqrt(3.);
     
     vec3 direction = DH_toClipSpace3(position + dir * rayLength) - clipPosition;  //convert to clip space
 
@@ -184,7 +188,7 @@ vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
 		if(spos.x < 0 || spos.x > 1 || spos.y < 0 || spos.y > 1) return vec3(1.1);
 
         float sampleDepth = sqrt(texelFetch2D(colortex12, ivec2(spos.xy / (texelSize * 4.0)), 0).a / 65000.0);
-		float sp = DH_inv_ld(sampleDepth);
+		float sp = invLdFast(sampleDepth*dhFarPlane);
         
         if (sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {
             return vec3(spos.xy / RENDER_SCALE, sp);

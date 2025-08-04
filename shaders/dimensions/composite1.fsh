@@ -1388,7 +1388,7 @@ void main() {
     		vec3 specularNormal = normal;
 			if (dot(normal, (feetPlayerPos_normalized)) > 0.0) specularNormal = FlatNormals;
 			
-			FINAL_COLOR = specularReflections(viewPos, feetPlayerPos_normalized, WsunVec, specularNoises, specularNormal, SpecularTex.r, SpecularTex.g, albedo, FINAL_COLOR, DirectLightColor*shadowColor, lightmap.y, hand, flashLightSpecularData);
+			FINAL_COLOR = specularReflections(viewPos, feetPlayerPos_normalized, WsunVec, specularNoises, specularNormal, SpecularTex.r, SpecularTex.g, albedo, FINAL_COLOR, DirectLightColor*shadowColor*shadowColor, lightmap.y, hand, flashLightSpecularData);
 		#endif
 
 		gl_FragData[0].rgb = FINAL_COLOR;

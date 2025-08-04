@@ -820,7 +820,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 				vec3 DirectLightColor = WsunVec;
 				float Shadows = 0.0;
 			#endif
-			vec3 specularReflections = specularReflections(viewPos, normalize(feetPlayerPos), WsunVec, vec3(blueNoise(), vec2(interleaved_gradientNoise_temporal())), worldSpaceNormal, roughness, f0, Albedo, FinalColor*gl_FragData[0].a, DirectLightColor * Shadows, lightmap.y, isHand, isWater, reflectance, flashLightSpecularData);
+			vec3 specularReflections = specularReflections(viewPos, normalize(feetPlayerPos), WsunVec, vec3(blueNoise(), vec2(interleaved_gradientNoise_temporal())), worldSpaceNormal, roughness, f0, Albedo, FinalColor*gl_FragData[0].a, DirectLightColor * Shadows * Shadows, lightmap.y, isHand, isWater, reflectance, flashLightSpecularData);
 			
 			gl_FragData[0].a = gl_FragData[0].a + (1.0-gl_FragData[0].a) * reflectance;
 		

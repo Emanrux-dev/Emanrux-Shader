@@ -21,5 +21,9 @@ void applyShadowBias(inout vec3 projectedShadowPosition, in vec3 playerPos, in v
 
 	biasDistanceFactor = 1.0 + biasDistanceFactor * ((16.0*8.0) / shadowDistance) * 0.1;
 
-	projectedShadowPosition += (mat3(shadowModelView) * geoNormals) * biasSize * 0.15 * biasDistanceFactor;
+	#ifdef CUSTOM_MOON_ROTATION
+		projectedShadowPosition += (mat3(customShadowMatrixSSBO) * geoNormals) * biasSize * 0.15 * biasDistanceFactor;
+	#else
+		projectedShadowPosition += (mat3(shadowModelView) * geoNormals) * biasSize * 0.15 * biasDistanceFactor;
+	#endif
 }

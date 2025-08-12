@@ -41,14 +41,26 @@ vec3 toWorldSpaceCamera(vec3 p3){
 
 vec3 toShadowSpace(vec3 p3){
     p3 = mat3(gbufferModelViewInverse) * p3 + gbufferModelViewInverse[3].xyz;
-    p3 = mat3(shadowModelView) * p3 + shadowModelView[3].xyz;
+    #ifdef CUSTOM_MOON_ROTATION
+        p3 = mat3(customShadowMatrixSSBO) * p3 + customShadowMatrixSSBO[3].xyz;
+    #else
+        p3 = mat3(shadowModelView) * p3 + shadowModelView[3].xyz;
+    #endif
     return p3;
 }
 
 vec3 toShadowSpaceProjected(vec3 p3){
     p3 = mat3(gbufferModelViewInverse) * p3 + gbufferModelViewInverse[3].xyz;
-    p3 = mat3(shadowModelView) * p3 + shadowModelView[3].xyz;
-    p3 = diagonal3(shadowProjection) * p3 + shadowProjection[3].xyz;
+    #if (defined CUSTOM_MOON_ROTATION && defined OVERWORLD_SHADER) || (defined END_ISLAND_LIGHT && defined END_SHADER)
+        p3 = mat3(customShadowMatrixSSBO) * p3 + customShadowMatrixSSBO[3].xyz;
+    #else
+        p3 = mat3(shadowModelView) * p3 + shadowModelView[3].xyz;
+    #endif
+    #if defined END_ISLAND_LIGHT && defined END_SHADER
+        p3 = diagonal3(customShadowPerspectiveSSBO) * p3 + customShadowPerspectiveSSBO[3].xyz;
+    #else
+        p3 = diagonal3(shadowProjection) * p3 + shadowProjection[3].xyz;
+    #endif
 
     return p3;
 }

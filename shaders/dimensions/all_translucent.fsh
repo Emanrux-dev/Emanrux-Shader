@@ -1,5 +1,9 @@
 #include "/lib/settings.glsl"
 
+#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
+	#include "/lib/SSBOs.glsl"
+#endif
+
 #undef FLASHLIGHT_BOUNCED_INDIRECT
 
 // #if defined END_SHADER || defined NETHER_SHADER
@@ -17,7 +21,7 @@ varying vec4 lmtexcoord;
 varying vec4 color;
 uniform vec4 entityColor;
 
-#ifdef OVERWORLD_SHADER
+#if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
 	const bool shadowHardwareFiltering = true;
 	uniform sampler2DShadow shadow;
 	
@@ -74,6 +78,8 @@ varying vec3 flatnormal;
 #ifdef LARGE_WAVE_DISPLACEMENT
 varying vec3 largeWaveDisplacementNormal;
 #endif
+
+varying float LIGHTNING_BOLT;
 
 uniform vec3 sunVec;
 uniform float near;
@@ -305,7 +311,7 @@ float ld(float dist) {
 
 // #undef BASIC_SHADOW_FILTER
 
-#ifdef OVERWORLD_SHADER
+#if defined OVERWORLD_SHADER || (defined END_SHADER && defined END_ISLAND_LIGHT)
 
 #include "/lib/Shadows.glsl"
 
@@ -314,25 +320,38 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 	// if(maxDistFade <= 0.0) return 1.0;
 
 	// setup shadow projection
-	vec3 projectedShadowPosition = mat3(shadowModelView) * playerPos + shadowModelView[3].xyz;
+	#ifdef OVERWORLD_SHADER
+		#ifdef CUSTOM_MOON_ROTATION
+			vec3 projectedShadowPosition = mat3(customShadowMatrixSSBO) * playerPos  + customShadowMatrixSSBO[3].xyz;
+		#else
+			vec3 projectedShadowPosition = mat3(shadowModelView) * playerPos + shadowModelView[3].xyz;
+		#endif
 
-	applyShadowBias(projectedShadowPosition, playerPos, geoNormals);
+		applyShadowBias(projectedShadowPosition, playerPos, geoNormals);
 
-	projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
+		projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 
-	//mat4 Custom_ViewMatrix = BuildShadowViewMatrix();
-	//projectedShadowPosition = mat3(Custom_ViewMatrix) * playerPos  + Custom_ViewMatrix[3].xyz;
-	//projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
+		// un-distort
+		#ifdef DISTORT_SHADOWMAP
+			float distortFactor = calcDistort(projectedShadowPosition.xy);
+			projectedShadowPosition.xy *= distortFactor;
+		#else
+			float distortFactor = 1.0;
+		#endif
 
-	// un-distort
-	#ifdef DISTORT_SHADOWMAP
-		float distortFactor = calcDistort(projectedShadowPosition.xy);
-		projectedShadowPosition.xy *= distortFactor;
+		projectedShadowPosition.z += shadowProjection[3].z * 0.0012;
 	#else
 		float distortFactor = 1.0;
 	#endif
 
-	projectedShadowPosition.z += shadowProjection[3].z * 0.0012;
+	#if defined END_ISLAND_LIGHT && defined END_SHADER
+		vec4 shadowPos = customShadowMatrixSSBO * vec4(playerPos, 1.0);
+		applyShadowBias(shadowPos.xyz, playerPos, geoNormals);
+		shadowPos =  customShadowPerspectiveSSBO * shadowPos;
+		vec3 projectedShadowPosition = shadowPos.xyz / shadowPos.w;
+	#endif
+
+
 
 	// hamburger
 	projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5);
@@ -342,7 +361,11 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 
 	#ifdef BASIC_SHADOW_FILTER
 		int samples = int(SHADOW_FILTER_SAMPLE_COUNT * 0.5);
-		float rdMul = (4.0*distortFactor*d0*k/shadowMapResolution) * 0.3;
+		#ifdef END_SHADER
+			float rdMul = (4.0*distortFactor*d0*k/shadowMapResolution) * 13.0;
+		#else
+			float rdMul = (4.0*distortFactor*d0*k/shadowMapResolution) * 0.6;
+		#endif
 
 		for(int i = 0; i < samples; i++){
 			vec2 offsetS = CleanSample(i, samples - 1, noise) * rdMul;
@@ -387,7 +410,18 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 		directLightColor *= mix(vec3(1.0), translucentTint.rgb / samples, maxDistFade);
 	#endif
 
-	return shadowmap / samples;
+	float shadowResult = shadowmap / samples;
+
+	#ifdef END_SHADER
+	float r = length(projectedShadowPosition.xy - vec2(0.5));
+	if (r < 0.5 && abs(projectedShadowPosition.z) < 1.0) {
+		shadowResult *= smoothstep(0.5, 0.25, r);
+	} else {
+		shadowResult = 0.0;
+	}
+	#endif
+
+	return shadowResult;
 	// return mix(1.0, shadowmap / samples, maxDistFade);
 }
 #endif
@@ -490,11 +524,11 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
 		float ditherFade = smoothstep(0.98 * far, 1.03 * far, viewDist);
 
-		if (step(ditherFade, R2_dither()) == 0.0) discard;
+		if (step(ditherFade, R2_dither()) == 0.0 && LIGHTNING_BOLT == 0.0) discard;
 	#endif
 
-	#if defined LIGHTNING
-		Albedo = vec3(1.0,2.0,6.0);
+	#ifdef LIGHTNING
+		if (LIGHTNING_BOLT > 0.0) Albedo = 2.5 * vec3(1.0,2.2,6.5);
 	#endif
 
 	#ifdef ENTITIES
@@ -574,7 +608,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 				if(viewDist < 35 && rainStrength > 0.0 && biome_precipitation == 1 && abs(worldSpaceNormal.z) < 0.95 && abs(worldSpaceNormal.x) < 0.95) {
 					float effectStrength = smoothstep(0.85, 1.0, lightmap.y);
 					rippleBump = ripples(worldPos.xz);
-					waterPos.xyz += RIPPLE_STRENGTH * rippleBump * rainStrength * effectStrength * smoothstep(35, 10, viewDist);
+					waterPos.xyz += RIPPLE_STRENGTH * rippleBump * rainStrength * effectStrength * smoothstep(35.0, 10.0, viewDist);
 				}
 			#endif
 
@@ -736,7 +770,27 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		float fogShadow = GetEndFogShadow(worldPos, lightPos);
 		float endPhase = endFogPhase(lightPos);
 
-		Direct_lighting += lightColors * endPhase * end_NdotL * fogShadow;
+		Direct_lighting = lightColors * endPhase * end_NdotL * fogShadow;
+
+		#ifdef END_ISLAND_LIGHT
+			vec3 WsunVec = normalize(vec3(END_LIGHT_POS)-(feetPlayerPos+cameraPosition));
+			vec3 DirectLightColor = 0.55*vec3(AmbientLightEnd_R,AmbientLightEnd_G*0.6,AmbientLightEnd_B*0.8);
+
+			float NdotL = clamp((-15 + dot(normal, normalize(WsunVec*mat3(gbufferModelViewInverse)))*255.0) / 240.0  ,0.0,1.0);
+			float Shadows = 1.0;
+
+			float shadowMapFalloff = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / (shadowDistance+16),0.0)*5.0,1.0));
+			float shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / shadowDistance,0.0)*5.0,1.0));
+
+			float LM_shadowMapFallback = min(max(lightmap.y-0.8, 0.0) * 25,1.0);
+
+			Shadows = ComputeShadowMap(DirectLightColor, shadowPlayerPos, shadowMapFalloff, blueNoise(), geoNormals);
+
+			// Shadows = mix(LM_shadowMapFallback, Shadows, shadowMapFalloff2);
+			Shadows *= mix(LM_shadowMapFallback,1.0,shadowMapFalloff2);
+
+			Direct_lighting = DirectLightColor * NdotL * Shadows;
+		#endif
 
 		vec3 AmbientLightColor = vec3(AmbientLightEnd_R,AmbientLightEnd_G,AmbientLightEnd_B) ;
 			
@@ -815,7 +869,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			
 			float reflectance = 0.0;
 
-			#if !defined OVERWORLD_SHADER
+			#if !defined OVERWORLD_SHADER || (!defined END_ISLAND_LIGHT && defined END_SHADER)
 				vec3 WsunVec = vec3(0.0);
 				vec3 DirectLightColor = WsunVec;
 				float Shadows = 0.0;
@@ -849,7 +903,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			float maxOverdrawDistance = OVERDRAW_MAX_DISTANCE;
 		#endif
 	 
-		bool WATER = texture2D(colortex7, gl_FragCoord.xy*texelSize).a > 0.0 && length(feetPlayerPos) > clamp(far-16*4, 16, maxOverdrawDistance) && texture2D(depthtex1, gl_FragCoord.xy*texelSize).x >= 1.0;
+		bool WATER = texture2D(colortex7, gl_FragCoord.xy*texelSize).a > 0.0 && length(feetPlayerPos) > clamp(far-16.0*4.0, 16.0, maxOverdrawDistance) && texture2D(depthtex1, gl_FragCoord.xy*texelSize).x >= 1.0;
 
 		if(WATER && isWater) {
 			gl_FragData[0].a = 0.0;

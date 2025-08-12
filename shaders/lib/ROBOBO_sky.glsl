@@ -102,7 +102,7 @@ vec3 calculateAtmosphere(vec3 background, vec3 viewVector, vec3 upVector, vec3 s
 			float referenceHeight = CloudLayer0_height;
 		#endif
 		float heightRelativeToClouds = clamp(1.0 - max(cameraPosition.y - referenceHeight,0.0) / 100.0 ,0.0,1.0);
-		float planetGround = mix(exp(-1.0 * pow(max(-viewVector.y*10 + 0.1,0.0),2)), exp(-100.0 * pow(max(-viewVector.y*5 + 0.1,0.0),2)), heightRelativeToClouds); // darken the ground in the sky.
+		float planetGround = mix(exp(-1.0 * pow(max(-viewVector.y*10. + 0.1,0.0),2.)), exp(-100.0 * pow(max(-viewVector.y*5. + 0.1,0.0),2.)), heightRelativeToClouds); // darken the ground in the sky.
 	#else
 		float planetGround = pow(clamp(viewVector.y+1.0,0.0,1.0),2); // darken the ground in the sky.
 	#endif
@@ -125,7 +125,12 @@ vec3 calculateAtmosphere(vec3 background, vec3 viewVector, vec3 upVector, vec3 s
 	position += increment * (0.34*noise);
 
 	vec2 phaseSun = sky_phase(dot(viewVector, sunVector), 0.8);
-	vec2 phaseMoon = sky_phase(dot(viewVector, moonVector), 0.8) ;
+	vec2 phaseMoon = sky_phase(dot(viewVector, moonVector), 0.8);
+
+	#ifdef CUSTOM_MOON_ROTATION
+	float eclipseDarkeness = smoothstep(0.005, 0.09, length(sunVector-moonVector));
+		phaseSun *= mix(1.0, eclipseDarkeness, smoothstep(-1.0, 0.175, viewVector.y));
+	#endif
 
 	vec3 scatteringSun     = vec3(0.0);
 	vec3 scatteringMoon    = vec3(0.0);
@@ -133,7 +138,7 @@ vec3 calculateAtmosphere(vec3 background, vec3 viewVector, vec3 upVector, vec3 s
 
 	transmittance = vec3(1.0);
 
-	float high_sun = clamp(pow(sunVector.y+0.6,5),0.0,1.0) * 3.0; // make sunrise less blue, and allow sunset to be bluer
+	float high_sun = clamp(pow(sunVector.y+0.6,5.),0.0,1.0) * 3.0; // make sunrise less blue, and allow sunset to be bluer
 	float low_sun = clamp(((1.0-abs(sunVector.y))*3.) - high_sun,1.0,2.0) ;
 	
 	#if defined OVERWORLD_SHADER && defined TWILIGHT_FOREST_FLAG

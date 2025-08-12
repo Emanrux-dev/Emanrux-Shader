@@ -1,5 +1,9 @@
 #include "/lib/settings.glsl"
 
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
+
 flat varying vec2 TAA_Offset;
 flat varying vec3 WsunVec;
 
@@ -27,8 +31,14 @@ uniform int framemod8;
 void main() {
 	gl_Position = ftransform();
 
-	WsunVec = (float(sunElevation > 1e-5)*2-1.)*normalize(mat3(gbufferModelViewInverse) * sunPosition);
-	
+	#ifdef CUSTOM_MOON_ROTATION
+		vec3 moonVec = customMoonVecSSBO;
+		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		WsunVec = mix(moonVec, WsunVec, float(sunElevation > 1e-5));
+		// WsunVec = moonVec;
+	#else
+		WsunVec = (float(sunElevation > 1e-5)*2-1.)*normalize(mat3(gbufferModelViewInverse) * sunPosition);
+	#endif
 
 	zMults = vec3(1.0/(far * near),far+near,far-near);
 

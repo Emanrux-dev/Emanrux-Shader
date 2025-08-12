@@ -1,6 +1,10 @@
 #include "/lib/settings.glsl"
 #include "/lib/res_params.glsl"
 
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
+
 varying vec4 pos;
 varying vec4 gcolor;
 	
@@ -97,7 +101,6 @@ void main() {
 
 
 	lightCol.rgb = texelFetch2D(colortex4,ivec2(6,37),0).rgb;
-	lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
 
 	averageSkyCol_Clouds = texelFetch2D(colortex4,ivec2(0,37),0).rgb;
 	
@@ -105,10 +108,19 @@ void main() {
 		readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.cirrus, parameters.fog);
 	#endif
 
+	#ifdef CUSTOM_MOON_ROTATION
+		vec3 WmoonVec = customMoonVecSSBO;
 
-	WsunVec = lightCol.a * normalize(mat3(gbufferModelViewInverse) * sunPosition);
-	WsunVec2 = lightCol.a * normalize(sunPosition);
+		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		WsunVec2 = normalize(sunPosition);
 
+		WsunVec = mix(WmoonVec, WsunVec, float(sunElevation > 1e-5));
+		WsunVec2 = mix(normalize(mat3(gbufferModelView)*WmoonVec), WsunVec2, float(sunElevation > 1e-5));
+	#else
+		lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
+		WsunVec = lightCol.a * normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		WsunVec2 = lightCol.a * normalize(sunPosition);
+	#endif
 
 	#ifdef TAA_UPSCALING
 		gl_Position.xy = gl_Position.xy * RENDER_SCALE + RENDER_SCALE * gl_Position.w - gl_Position.w;

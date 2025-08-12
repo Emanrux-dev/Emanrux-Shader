@@ -40,8 +40,8 @@ vec2 quarterResTC = gl_FragCoord.xy*2.0*resScale*texelSize;
 		//0.25
 		gl_FragData[0] += texture2D(colortex5,quarterResTC-2.0*vec2(texelSize.x,0.0))/2.*0.125;
 		gl_FragData[0] += texture2D(colortex5,quarterResTC+2.0*vec2(0.0,texelSize.y))/2.*0.125;
-		gl_FragData[0] += texture2D(colortex5,quarterResTC+2.0*vec2(0,-texelSize.y))/2*0.125;
-		gl_FragData[0] += texture2D(colortex5,quarterResTC+2.0*vec2(-texelSize.x,0.0))/2*0.125;
+		gl_FragData[0] += texture2D(colortex5,quarterResTC+2.0*vec2(0.0,-texelSize.y))/2.*0.125;
+		gl_FragData[0] += texture2D(colortex5,quarterResTC+2.0*vec2(-texelSize.x,0.0))/2.*0.125;
 
 		//0.125
 		gl_FragData[0] += texture2D(colortex5,quarterResTC-2.0*vec2(texelSize.x,texelSize.y))/4.*0.125;

@@ -1,4 +1,10 @@
-#version 120
+#ifdef MC_OS_MAC
+	#version 120
+#else
+	#version 430 compatibility
+	#include "/lib/SSBOs.glsl"
+#endif
+
 #include "/lib/settings.glsl"
 #ifdef IS_LPV_ENABLED
 	#extension GL_ARB_explicit_attrib_location: enable
@@ -70,6 +76,8 @@ uniform int entityId;
 const float PI48 = 150.796447372*WAVY_SPEED;
 float pi2wt = PI48*frameTimeCounter;
 
+out float LIGHTNING;
+
 vec2 calcWave(in vec3 pos) {
 
     float magnitude = abs(sin(dot(vec4(frameTimeCounter, pos),vec4(1.0,0.005,0.005,0.005)))*0.5+0.72)*0.013;
@@ -139,6 +147,8 @@ vec3 viewToWorld(vec3 viewPos) {
     return pos.xyz;
 }
 
+varying vec3 playerpos;
+
 // uniform int renderStage;
 
 // uniform mat4 gbufferModelViewInverse;
@@ -156,7 +166,6 @@ void main() {
 	// mat4 Custom_ProjectionMatrix = BuildShadowProjectionMatrix();
 
 	// position = gl_Vertex.xyz;
-	vertexPos = position;
 
 	// if((renderStage == 10 || renderStage == 12) && mc_Entity.x != 3000) {
 	// 	position = (shadowModelViewInverse * vec4(gl_Vertex.xyz,1.0)).xyz;
@@ -201,7 +210,7 @@ void main() {
 	// #endif
 
 	// #if defined IS_LPV_ENABLED || defined WAVY_PLANTS  || !defined PLANET_CURVATURE
-		vec3 playerpos = mat3(shadowModelViewInverse) * position + shadowModelViewInverse[3].xyz;
+	playerpos = mat3(shadowModelViewInverse) * position + shadowModelViewInverse[3].xyz;
 	// #endif
 
 	#if defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store
@@ -257,12 +266,19 @@ void main() {
 		}
 	#endif
 
+	LIGHTNING = 0.0;
+	if (entityId == ENTITY_LIGHTNING) LIGHTNING = 1.0;
+
 	#ifdef PLANET_CURVATURE
 		float curvature = length(worldpos) / (16*8);
 		worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
 	#endif
 
-	position = mat3(shadowModelView) * worldpos + shadowModelView[3].xyz;
+	#ifdef CUSTOM_MOON_ROTATION
+		position = mat3(customShadowMatrixSSBO) * worldpos + customShadowMatrixSSBO[3].xyz;
+	#else
+		position = mat3(shadowModelView) * worldpos + shadowModelView[3].xyz;
+	#endif
 
 	#ifdef DISTORT_SHADOWMAP
 		if (entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SLIME)

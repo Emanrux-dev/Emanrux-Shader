@@ -1,4 +1,9 @@
 #include "/lib/settings.glsl"
+
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
+
 // #if defined END_SHADER || defined NETHER_SHADER
 	#undef IS_LPV_ENABLED
 // #endif
@@ -208,7 +213,7 @@ vec4 waterVolumetrics( vec3 rayStart, vec3 rayEnd, float estEndDepth, float estS
 			vec3 spPos = start.xyz + dV*d;
 
 			//project into biased shadowmap space
-			#ifdef DISTORT_SHADOWMAP
+			#if defined DISTORT_SHADOWMAP && defined OVERWORLD_SHADER
 				float distortFactor = calcDistort(spPos.xy);
 			#else
 				float distortFactor = 1.0;
@@ -320,6 +325,9 @@ void main() {
 		vec3 directLightColor = lightCol.rgb / 2400.0;
 		vec3 directSunlightColor = sunlightCol / 2400.0;
 		vec3 directMoonlightColor = moonlightCol / 2400.0;
+		#ifdef CUSTOM_MOON_ROTATION
+			directMoonlightColor *= mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
+		#endif
 		vec3 indirectLightColor = averageSkyCol / 1200.0;
 		vec3 indirectLightColor_dynamic = averageSkyCol_Clouds / 1200.0;
 
@@ -359,7 +367,7 @@ void main() {
 			vec4 VolumetricClouds = GetVolumetricClouds(viewPos1, vec2(noise_1, noise_2), WrealSunVec, WmoonVec, directSunlightColor, directMoonlightColor, indirectLightColor, cloudPlaneDistance, cloudDistance);
 
 			float atmosphereAlpha = 1.0;
-			vec4 VolumetricFog = GetVolumetricFog(viewPos1, WsunVec,  vec2(noise_1, noise_2), directLightColor, indirectLightColor, indirectLightColor_dynamic, atmosphereAlpha, VolumetricClouds.rgb,cloudPlaneDistance);
+			vec4 VolumetricFog = GetVolumetricFog(viewPos1, WsunVec, vec2(noise_1, noise_2), directLightColor, indirectLightColor, indirectLightColor_dynamic, atmosphereAlpha, VolumetricClouds.rgb,cloudPlaneDistance);
 			
 			finalVolumetrics.rgb += VolumetricClouds.rgb;
 			finalVolumetrics.a *= VolumetricClouds.a;

@@ -26,30 +26,30 @@ float interleaved_gradientNoise(){
 
 
 void main() {
+	#if RESOURCEPACK_SKY != 0
+		vec2 texcoord = gl_FragCoord.xy * texelSize;
 
-	vec2 texcoord = gl_FragCoord.xy * texelSize;
+		gl_FragData[0] = texelFetch2D(colortex1, ivec2(gl_FragCoord.xy),0);
 
-	gl_FragData[0] = texelFetch2D(colortex1, ivec2(gl_FragCoord.xy),0);
+		if(
+			texelFetch2D(depthtex0, ivec2(gl_FragCoord.xy), 0).x < 1.0 
+			
+			#ifdef DISTANT_HORIZONS
+				|| texelFetch2D(dhDepthTex, ivec2(gl_FragCoord.xy), 0).x < 1.0
+			#endif
 
-	if(
-		texelFetch2D(depthtex0, ivec2(gl_FragCoord.xy), 0).x < 1.0 
-		
-		#ifdef DISTANT_HORIZONS
-			|| texelFetch2D(dhDepthTex, ivec2(gl_FragCoord.xy), 0).x < 1.0
-		#endif
+		) {
+			// doing this for precision reasons, DH does NOT like depth => 1.0
+		}else{
+			
+			vec3 skyColor = texelFetch2D(colortex2, ivec2(gl_FragCoord.xy),0).rgb;
+			skyColor.rgb = max(skyColor.rgb - skyColor.rgb * interleaved_gradientNoise()*0.05, 0.0);
 
-	) {
-		// doing this for precision reasons, DH does NOT like depth => 1.0
-	}else{
-		
-		vec3 skyColor = texelFetch2D(colortex2, ivec2(gl_FragCoord.xy),0).rgb;
-		skyColor.rgb = max(skyColor.rgb - skyColor.rgb * interleaved_gradientNoise()*0.05, 0.0);
+			gl_FragData[0].rgb = skyColor/50.0;
+			gl_FragData[0].a = 0.0;
 
-		gl_FragData[0].rgb = skyColor/50.0;
-		gl_FragData[0].a = 0.0;
+		}
 
-	}
-
-	gl_FragData[1] = vec4(0,0,0,0);
-
+		gl_FragData[1] = vec4(0,0,0,0);
+	#endif
 }

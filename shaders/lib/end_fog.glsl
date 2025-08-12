@@ -184,7 +184,8 @@ vec3 LightSourceColors(float vortexBounds, float lightningflash){
     // vec3 vortexColor = vec3(0.7,0.88,1.0); 
     // vec3 lightningColor = vec3(ORB_R,ORB_G,ORB_B);
 
-    vec3 vortexColor = vec3(0.3,0.2,1.0);
+    //vec3 vortexColor = vec3(0.3,0.2,1.0);
+	vec3 vortexColor = vec3(AmbientLightEnd_R,0.8*AmbientLightEnd_G,0.83*AmbientLightEnd_B);
     vec3 lightningColor = vec3(0.75,0.5,1.0) * lightningflash;
 
 	#ifdef THE_ORB

@@ -1,5 +1,13 @@
 #include "/lib/settings.glsl"
 
+#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
+	#include "/lib/SSBOs.glsl
+
+	#ifdef CUSTOM_MOON_ROTATION
+		uniform sampler2D CoronaTex;
+	#endif
+#endif
+
 // #if defined END_SHADER || defined NETHER_SHADER
 // 	#undef IS_LPV_ENABLED
 // #endifs
@@ -20,7 +28,7 @@ uniform float nightVision;
 uniform float frameTimeCounter;
 uniform float rainStrength;
 
-#ifdef OVERWORLD_SHADER
+#if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
 	const bool shadowHardwareFiltering = true;
 	uniform sampler2DShadow shadow;
 
@@ -71,9 +79,10 @@ uniform float rainStrength;
 #endif
 
 #ifdef END_SHADER
-	uniform vec3 lightningEffect;
-
-	#include "/lib/stars.glsl"
+	#ifndef END_ISLAND_LIGHT
+		uniform vec3 lightningEffect;	
+		#include "/lib/stars.glsl"
+	#endif
 	
 	flat varying float Flashing;
 	#undef LIGHTSOURCE_REFLECTION
@@ -145,7 +154,9 @@ uniform int isEyeInWater;
 uniform ivec2 eyeBrightnessSmooth;
 
 uniform vec3 sunVec;
-flat varying vec3 WsunVec;
+#if !defined END_ISLAND_LIGHT || !defined END_SHADER
+	flat varying vec3 WsunVec;
+#endif
 flat varying vec3 unsigned_WsunVec;
 flat varying vec3 WmoonVec;
 flat varying float exposure;
@@ -636,7 +647,7 @@ vec4 BilateralUpscale_VLFOG(sampler2D tex, sampler2D depth, float referenceDepth
 	return colorSum/edgeSum;
 }
 
-#ifdef OVERWORLD_SHADER
+#if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
 
 vec3 ComputeShadowMap_COLOR(in vec3 projectedShadowPosition, float distortFactor, float noise, float shadowBlockerDepth, float NdotL, float maxDistFade, vec3 directLightColor, inout float FUNNYSHADOW, inout vec3 tintedSunlight, bool isSSS ,inout float shadowDebug){
 
@@ -666,8 +677,8 @@ vec3 ComputeShadowMap_COLOR(in vec3 projectedShadowPosition, float distortFactor
 		translucentShadow.rgb = normalize(translucentShadow.rgb*translucentShadow.rgb + 0.0001) * (1.0-shadowAlpha);
 
 		// translucentTint += mix(translucentShadow.rgb * mix(opaqueShadowT, 1.0, backface), vec3(1.0), max(opaqueShadow, backface * (shadowAlpha < 1.0 ? 0.0 : 1.0)));
-		
-		shadowColor += directLightColor * mix(translucentShadow.rgb * opaqueShadowT, vec3(1.0), opaqueShadow);
+		// shadowColor += directLightColor * mix(translucentShadow.rgb * opaqueShadowT, vec3(1.0), opaqueShadow);
+		shadowColor += mix(translucentShadow.rgb * opaqueShadowT, vec3(1.0), opaqueShadow);
 		
 		translucentTint += mix(translucentShadow.rgb, vec3(1.0), max(opaqueShadow, backface * (shadowAlpha < 1.0 ? 0.0 : 1.0)));
 		FUNNYSHADOW += ((1.0-shadowAlpha) * opaqueShadowT)/samples;
@@ -969,6 +980,11 @@ void main() {
 				slopednormal = normalize(clamp(normal, ApproximatedFlatNormal*2.0 - 1.0, ApproximatedFlatNormal*2.0 + 1.0) );
 			#endif
 		#endif
+
+		#if defined END_SHADER && defined END_ISLAND_LIGHT
+			vec3 WsunVec = normalize(END_LIGHT_POS-(feetPlayerPos+cameraPosition));
+		#endif
+
 	////// --------------- COLORS --------------- //////
 
 		vec3 waterEpsilon = vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B);
@@ -991,7 +1007,11 @@ void main() {
 
 		vec3 shadowColor = vec3(1.0);
 		vec3 SSSColor = vec3(1.0);
-		vec3 filteredShadow = vec3(Min_Shadow_Filter_Radius,1.0,0.0);
+		#if defined END_ISLAND_LIGHT && defined END_SHADER
+			vec3 filteredShadow = vec3(Min_Shadow_Filter_Radius_END,1.0,0.0);
+		#else
+			vec3 filteredShadow = vec3(Min_Shadow_Filter_Radius,1.0,0.0);
+		#endif
 
 		float NdotL = 1.0;
 		float lightLeakFix = clamp(pow(eyeBrightnessSmooth.y/240. + lightmap.y,2.0) ,0.0,1.0);
@@ -999,15 +1019,33 @@ void main() {
 		#ifdef OVERWORLD_SHADER
 			DirectLightColor = lightCol.rgb / 2400.0;
 			AmbientLightColor = averageSkyCol_Clouds / 900.0;
+
+			#if defined CUSTOM_MOON_ROTATION && LIGHTNING_SHADOWS > 0
+				#if LIGHTNING_SHADOWS < 2
+				if (lightningBoltPosition.w > 0.0 && sunElevation < 0.0)
+				#else
+				if (lightningBoltPosition.w > 0.0)
+				#endif
+				{
+					vec3 lightningColor = vec3(2.0, 4.5, 6.6) * lightningFlash;
+					DirectLightColor += lightningColor * smoothstep(500.0, 0.0, length(feetPlayerPos-lightningBoltPosition.xyz));
+				}
+			#endif
 			
 			#ifdef USE_CUSTOM_DIFFUSE_LIGHTING_COLORS
-				DirectLightColor.rgb = luma(DirectLightColor.rgb) * vec3(DIRECTLIGHT_DIFFUSE_R,DIRECTLIGHT_DIFFUSE_G,DIRECTLIGHT_DIFFUSE_B);
+				DirectLightColor = luma(DirectLightColor) * vec3(DIRECTLIGHT_DIFFUSE_R,DIRECTLIGHT_DIFFUSE_G,DIRECTLIGHT_DIFFUSE_B);
 				AmbientLightColor = luma(AmbientLightColor) * vec3(INDIRECTLIGHT_DIFFUSE_R,INDIRECTLIGHT_DIFFUSE_G,INDIRECTLIGHT_DIFFUSE_B);
 			#endif
 			
 			shadowColor = DirectLightColor;
 
-			bool inShadowmapBounds = false;
+			//bool inShadowmapBounds = false;
+		#endif
+
+		#if defined END_SHADER && defined END_ISLAND_LIGHT
+			DirectLightColor = 0.55*vec3(AmbientLightEnd_R,AmbientLightEnd_G*0.6,AmbientLightEnd_B*0.8);
+
+			shadowColor = DirectLightColor;
 		#endif
 
 		MinimumLightColor = MinimumLightColor + 0.7 * MinimumLightColor * dot(slopednormal, feetPlayerPos_normalized);
@@ -1084,12 +1122,12 @@ void main() {
 	/////////////////////////////	MAJOR LIGHTSOURCE STUFF 	////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////
 	
-	#ifdef OVERWORLD_SHADER
+	#if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
 
-		float LM_shadowMapFallback =  clamp(lightmap.y, 0.0,1.0);
+		// float LM_shadowMapFallback =  clamp(lightmap.y, 0.0,1.0);
 
-		float LightningPhase = 0.0;
-		vec3 LightningFlashLighting = Iris_Lightningflash(feetPlayerPos, lightningBoltPosition.xyz, slopednormal, LightningPhase) * pow(lightmap.y,10);
+		//float LightningPhase = 0.0;
+		//vec3 LightningFlashLighting = Iris_Lightningflash(feetPlayerPos, lightningBoltPosition.xyz, slopednormal, LightningPhase) * pow(lightmap.y,10);
 
 		NdotL = clamp((-15 + dot(slopednormal, WsunVec)*255.0) / 240.0  ,0.0,1.0);
 
@@ -1113,27 +1151,55 @@ void main() {
 			if(!hand) GriAndEminShadowFix(shadowPlayerPos, FlatNormals, vanilla_AO, lightmap.y, lightLeakFix);
 		#endif
 
-		vec3 projectedShadowPosition = mat3(shadowModelView) * shadowPlayerPos + shadowModelView[3].xyz;
+		#ifdef OVERWORLD_SHADER
+			#ifdef CUSTOM_MOON_ROTATION
+				vec3 projectedShadowPosition = mat3(customShadowMatrixSSBO) * shadowPlayerPos + customShadowMatrixSSBO[3].xyz;
+			#else
+				vec3 projectedShadowPosition = mat3(shadowModelView) * shadowPlayerPos + shadowModelView[3].xyz;
+			#endif
 
-		applyShadowBias(projectedShadowPosition, shadowPlayerPos, FlatNormals);
+			applyShadowBias(projectedShadowPosition, shadowPlayerPos, FlatNormals);
+			projectedShadowPosition = diagonal3_old(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 
-		projectedShadowPosition = diagonal3_old(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
+			// Calclulate distortion factor before bias application
+			#ifdef DISTORT_SHADOWMAP
+				float distortFactor = calcDistort(projectedShadowPosition.xy);
+				projectedShadowPosition.xy *= distortFactor;
+			#else
+				float distortFactor = 1.0;
+			#endif
 
-		// Calclulate distortion factor before bias application
-		#ifdef DISTORT_SHADOWMAP
-			float distortFactor = calcDistort(projectedShadowPosition.xy);
-			projectedShadowPosition.xy *= distortFactor;
+			projectedShadowPosition.z += shadowProjection[3].z * 0.0012;
 		#else
 			float distortFactor = 1.0;
 		#endif
-		
-		projectedShadowPosition.z += shadowProjection[3].z * 0.0012;
+
+		#if defined END_ISLAND_LIGHT && defined END_SHADER
+			vec4 shadowPos = customShadowMatrixSSBO * (gbufferModelViewInverse * vec4(viewPos, 1.0));
+			applyShadowBias(shadowPos.xyz, shadowPlayerPos, FlatNormals);
+			shadowPos = customShadowPerspectiveSSBO * shadowPos;
+			vec3 projectedShadowPosition = shadowPos.xyz / shadowPos.w;
+		#endif
+
 		projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5,0.5,0.5) ;
 
 		float ShadowAlpha = 0.0; // this is for subsurface scattering later.
 		vec3 tintedSunlight = DirectLightColor; // this is for subsurface scattering later.
 		
-		shadowColor = ComputeShadowMap_COLOR(projectedShadowPosition, distortFactor, noise_2, filteredShadow.x, flatNormNdotL, shadowMapFalloff, DirectLightColor, ShadowAlpha, tintedSunlight, LabSSS > 0.0,Shadows);
+		#if defined END_ISLAND_LIGHT && defined END_SHADER			
+			// make light fade out
+			float r = length(projectedShadowPosition.xy - vec2(0.5));
+
+			if (r < 0.5 && abs(projectedShadowPosition.z) < 1.0) {
+				shadowColor = ComputeShadowMap_COLOR(projectedShadowPosition, distortFactor, noise_2, filteredShadow.x, flatNormNdotL, shadowMapFalloff, DirectLightColor, ShadowAlpha, tintedSunlight, LabSSS > 0.0,Shadows);
+				shadowColor *= smoothstep(0.5, 0.25, r);
+			} else {
+				shadowColor = vec3(0.0);
+			}
+
+		#else
+			shadowColor = ComputeShadowMap_COLOR(projectedShadowPosition, distortFactor, noise_2, filteredShadow.x, flatNormNdotL, shadowMapFalloff, DirectLightColor, ShadowAlpha, tintedSunlight, LabSSS > 0.0,Shadows);
+		#endif
 		
 		// transition to fallback lightmap shadow mask.
 		// shadowColor *= mix(isWater ? lightLeakFix : LM_shadowMapFallback, 1.0, shadowMapFalloff2);
@@ -1154,7 +1220,7 @@ void main() {
 			if(entities) sunSSS_density = 0.0;
 		#endif
 		
-		#ifdef SCREENSPACE_CONTACT_SHADOWS
+		#if defined SCREENSPACE_CONTACT_SHADOWS && !defined END_SHADER
 			vec2 SS_directLight = SSRT_Shadows(toScreenSpace_DH(texcoord/RENDER_SCALE, z, DH_depth1), isDHrange, normalize(WsunVec*mat3(gbufferModelViewInverse)), interleaved_gradientNoise_temporal(), sunSSS_density > 0.0 && shadowMapFalloff2 < 1.0, hand);
 
 			// combine shadowmap with screenspace shadows.
@@ -1172,13 +1238,16 @@ void main() {
 		#endif
 		
 		// TODO CHECK IF *= OR =
-		SSSColor = SubsurfaceScattering_sun(albedo, ShadowBlockerDepth, sunSSS_density, clamp(dot(feetPlayerPos_normalized, WsunVec),0.0,1.0), SS_directLight.g, shadowMapFalloff2, hand);
+		// *= looks better idk
+		SSSColor *= SubsurfaceScattering_sun(albedo, ShadowBlockerDepth, sunSSS_density, clamp(dot(feetPlayerPos_normalized, WsunVec),0.0,1.0), SS_directLight.g, shadowMapFalloff2, hand);
 		
 		if(isEyeInWater != 1) SSSColor *= lightLeakFix;
 		
-		float cloudShadows = GetCloudShadow(feetPlayerPos.xyz + cameraPosition, WsunVec);
-		shadowColor *= cloudShadows;
-		SSSColor *= cloudShadow*cloudShadows;
+		#ifndef END_SHADER
+			float cloudShadows = GetCloudShadow(feetPlayerPos.xyz + cameraPosition, WsunVec);
+			shadowColor *= cloudShadows;
+			SSSColor *= cloudShadow*cloudShadows;
+		#endif
 
 	#endif
 
@@ -1361,7 +1430,7 @@ void main() {
 		#if defined END_SHADER
 			Direct_lighting *= AO;
 		#endif
-		#ifdef OVERWORLD_SHADER
+		#if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
 			
 
 			#ifdef AO_in_sunlight
@@ -1414,6 +1483,29 @@ void main() {
 				#endif
 
 				#if !defined ambientLight_only && (RESOURCEPACK_SKY == 1 || RESOURCEPACK_SKY == 0)
+					#ifdef CUSTOM_MOON_ROTATION
+						float sunMoonDist = length(unsigned_WsunVec - WmoonVec);
+						if (sunMoonDist < 0.004){
+							vec3 tangent2 = normalize(cross(unsigned_WsunVec, vec3(0.0, 1.0, 0.0)));
+							vec3 binormal2 = cross(unsigned_WsunVec, tangent2);
+							vec3 dirDiff2 = worldDir - unsigned_WsunVec;
+
+							float u2 = dot(dirDiff2, tangent2);
+							float v2 = dot(dirDiff2, binormal2);
+
+							float sunAngularRadius = acos(0.9984); 
+
+							u2 = u2 / (2.0 * sunAngularRadius) + 0.5;
+							v2 = -v2 / (1.96 * sunAngularRadius) + 0.505;
+
+							if (u2 > 0.0 && u2 < 1.0 && v2 > 0.0 && v2 < 1.0) {
+								vec2 coronaUV = vec2(u2, v2);
+								vec3 coronaTex = texture2D(CoronaTex, coronaUV).rgb;
+								Background += 0.5 * coronaTex * coronaTex * coronaTex * coronaTex * coronaTex * smoothstep(0.004, 0.0002, sunMoonDist);
+							}
+						}
+					#endif
+
 					Background += drawSun(dot(unsigned_WsunVec, feetPlayerPos_normalized), sunCol / 2400.0);
 
 					#ifdef REALMOON
@@ -1424,32 +1516,50 @@ void main() {
 						float u = dot(dirDiff, tangent);
 						float v = dot(dirDiff, binormal);
 
-						float moonAngularRadius = acos(0.9992); 
+						float moonSize = MOON_SIZE;
+						float moonAngularRadius = acos(moonSize); 
 
 						u = u / (2.0 * moonAngularRadius) + 0.5;
 						v = -v / (2.0 * moonAngularRadius) + 0.5;
 						vec2 moonUV = vec2(u, v);
+						
+						#ifdef CUSTOM_MOON_ROTATION
+							vec3 moonTex = texture2D(moon, sphereMap(moonUV)).rgb;
+							float moonVis = smoothstep(0.08, -0.03, WmoonVec.y);
 
-						float moonVis = smoothstep(0.12, -0.03, -sunElevation);
-						float moonphaseMult = 1.0;
-						#ifdef MOONPHASE_BASED_MOONLIGHT
-							float[8] phase = float[8](
-								1.0,
-								smoothstep(0.85, 0.65, u + pow(abs(0.8*(v-0.5)), 2.0)),
-								smoothstep(0.6, 0.4, u),
-								smoothstep(0.35, 0.15, u - pow(abs(0.8*(v-0.5)), 2.0)),
-								0.0,
-								smoothstep(0.65, 0.85, u + pow(abs(0.8*(v-0.5)), 2.0)),
-								smoothstep(0.4, 0.6, u),
-								smoothstep(0.15, 0.35, u - pow(abs(0.8*(v-0.5)), 2.0))
-							);
+							vec2 pos = 2.0 * moonUV - 1.0;
+							float r2 = dot(pos, pos); // we got 'em r2
 
-							moonphaseMult = phase[moonPhase];
+							vec3 moonDirLocal = normalize(vec3(pos.x, pos.y, sqrt(1.0 - r2)));
+
+							vec3 moonDirWorld = moonDirLocal.x * tangent - moonDirLocal.y * binormal - moonDirLocal.z * WmoonVec;
+
+							float sunLight = dot(normalize(moonDirWorld), unsigned_WsunVec);
+							float mask = smoothstep(-0.2, 0.12, sunLight);
+							
+							moonTex *= (1.0 - vec3(0.0, 0.5, 0.7)*clamp((1.0-0.5*v)*moonVis, 0.0, 1.0)) * mask;
+						#else
+							float moonVis = smoothstep(0.12, -0.03, -moonElevation);
+							float moonphaseMult = 1.0;
+							#ifdef MOONPHASE_BASED_MOONLIGHT
+								float[8] phase = float[8](
+									1.0,
+									smoothstep(0.85, 0.65, u + pow(abs(0.8*(v-0.5)), 2.0)),
+									smoothstep(0.6, 0.4, u),
+									smoothstep(0.35, 0.15, u - pow(abs(0.8*(v-0.5)), 2.0)),
+									0.0,
+									smoothstep(0.65, 0.85, u + pow(abs(0.8*(v-0.5)), 2.0)),
+									smoothstep(0.4, 0.6, u),
+									smoothstep(0.15, 0.35, u - pow(abs(0.8*(v-0.5)), 2.0))
+								);
+
+								moonphaseMult = phase[moonPhase];
+							#endif
+							vec3 moonTex = (1 - vec3(0.0, 0.5, 0.7)*clamp((1-0.5*v)*moonVis, 0.0, 1.0)) * moonphaseMult * texture2D(moon, sphereMap(moonUV)).rgb;
 						#endif
-						vec3 moonTex = (1 - vec3(0.0, 0.5, 0.7)*clamp((1-0.5*v)*moonVis, 0.0, 1.0)) * moonphaseMult * texture2D(moon, sphereMap(moonUV)).rgb;
 						
 						vec3 moonLightCol = moonColorBase2;
-						Background += pow(moonTex, vec3(3.2)) * 20.0 * drawRealMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background);
+						Background += pow(moonTex, vec3(3.2)) * 20.0 * drawRealMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background, moonSize);
 					#else
 						vec3 moonLightCol = moonCol / 2400.0;
 						Background += drawMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background); 
@@ -1504,7 +1614,7 @@ void main() {
 		gl_FragData[0].rgb = vec3(1.0) * (Shadows * NdotL * 0.9 + 0.1);
 		
 		if(dot(feetPlayerPos_normalized, unsigned_WsunVec) > 0.999 ) gl_FragData[0].rgb = vec3(10,10,0);
-		if(dot(feetPlayerPos_normalized, -WmoonVec) > 0.999 ) gl_FragData[0].rgb = vec3(1,1,10);
+		if(dot(feetPlayerPos_normalized, WmoonVec) > 0.999 ) gl_FragData[0].rgb = vec3(1,1,10);
 	#endif
 	#if DEBUG_VIEW == debug_NORMALS
 		if(swappedDepth >= 1.0) Direct_lighting = vec3(1.0);

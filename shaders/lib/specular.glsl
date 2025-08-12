@@ -4,9 +4,9 @@
 	}
 #endif
 
-	float invLinZ (float lindepth){
-		return -((2.0*near/lindepth)-far-near)/(far-near);
-	}
+float invLinZ (float lindepth){
+	return -((2.0*near/lindepth)-far-near)/(far-near);
+}
 
 float linZ(float depth) {
 	return (2.0 * near) / (far + near - depth * (far - near));
@@ -102,6 +102,26 @@ float shlickFresnelRoughness(float XdotN, float roughness){
 	
 	return shlickFresnel;
 }
+
+//vec2 directionToSphericalUV(vec3 direction) {    
+//    vec3 dir = normalize(direction);
+//    
+//    float phi = atan(dir.z, dir.x);
+//    float theta = acos(clamp(dir.y, -1.0, 1.0));
+//    
+//    float u = (phi + 3.1415926535) / (2.0 * 3.1415926535);
+//    float v = theta / 3.1415926535;
+//    v = 1.0 - v;
+//
+//    return vec2(clamp(u, 0.0, 1.0), clamp(v, 0.0, 1.0));
+//}
+//
+//#extension GL_NV_gpu_shader5 : enable
+//#extension GL_ARB_shader_image_load_store : enable
+//#extension GL_EXT_shader_image_load_store : enable
+//
+//layout (rgba32f) uniform image2D reflectionSphere;
+//
 #if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
 	uniform vec4 combined_projection_matrix_0;
 	uniform vec4 combined_projection_matrix_1;
@@ -166,8 +186,8 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 			float sampleDepth = texelFetch2D(colortex12, ivec2(spos.xy/texelSize/div),0).a/65000.0;
 			float sp = invertLinearizeDepthFast(sqrt(sampleDepth)*dhFarPlane);
 		#else
-		float sampleDepth = texelFetch2D(colortex4, ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
-		float sp = invLinZ(sqrt(sampleDepth));
+			float sampleDepth = texelFetch2D(colortex4, ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
+			float sp = invLinZ(sqrt(sampleDepth));
 		#endif
 	
 		if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {
@@ -222,7 +242,7 @@ vec4 screenSpaceReflections(
 		#if defined OVERWORLD_SHADER 
 			reflection.a = raytracePos.z > 0.9999999 ? (isHand || isEyeInWater == 1 ? 1.0 : 0.0) : 1.0;
 		#else
-		reflection.a = 1.0;
+			reflection.a = 1.0;
 		#endif
 		
 		#ifdef FORWARD_RENDERED_SPECULAR
@@ -393,7 +413,9 @@ vec3 specularReflections(
 				#if !defined OVERWORLD_SHADER && !defined FORWARD_SPECULAR
 					vec3 backgroundReflection = volumetricsFromTex(reflectedVector_L, colortex4, roughness).rgb / 1200.0;
 				#else
+					//vec2 p = sphereToCarte(reflectedVector_L);
 					vec3 backgroundReflection = skyCloudsFromTex(reflectedVector_L, colortex4).rgb / 1200.0;
+					//vec3 backgroundReflection = imageLoad(reflectionSphere, ivec2(p)).rgb;
 					
 					if(isEyeInWater == 1) backgroundReflection *= exp(-vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B) * 15.0)*2;
 				#endif

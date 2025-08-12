@@ -1,4 +1,8 @@
-#version 120
+#ifndef MC_OS_MAC
+	#version 430 compatibility
+#else
+	#version 120
+#endif
 #include "/lib/settings.glsl"
 #ifdef IS_LPV_ENABLED
 	#extension GL_ARB_explicit_attrib_location: enable

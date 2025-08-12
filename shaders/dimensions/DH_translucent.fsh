@@ -121,6 +121,10 @@ uniform int isEyeInWater;
 uniform float rainStrength;
 
 #ifdef OVERWORLD_SHADER
+	#if defined CUSTOM_MOON_ROTATION && LIGHTNING_SHADOWS > 0
+		uniform vec4 lightningBoltPosition;
+		uniform float sunElevation;
+	#endif
 
 	#include "/lib/scene_controller.glsl"
 	#define CLOUDSHADOWSONLY

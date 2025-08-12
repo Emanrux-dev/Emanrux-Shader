@@ -39,6 +39,8 @@ uniform vec2 texelSize;
 uniform float viewHeight;
 uniform float viewWidth;
 uniform float nightVision;
+uniform float fogEnd;
+uniform vec3 fogColor;
 uniform vec3 sunVec;
 uniform float frameTimeCounter;
 uniform int frameCounter;
@@ -297,30 +299,6 @@ vec3 toClipSpace3Prev(vec3 viewSpacePosition) {
     return projMAD(gbufferPreviousProjection, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
 }
 
-vec3 closestToCamera5taps(vec2 texcoord, sampler2D depth)
-{
-	vec2 du = vec2(texelSize.x*2., 0.0);
-	vec2 dv = vec2(0.0, texelSize.y*2.);
-
-	vec3 dtl = vec3(texcoord,0.) + vec3(-texelSize, 				texture2D(depth, texcoord - dv - du).x);
-	vec3 dtr = vec3(texcoord,0.) + vec3( texelSize.x, -texelSize.y, texture2D(depth, texcoord - dv + du).x);
-	vec3 dmc = vec3(texcoord,0.) + vec3( 0.0, 0.0, 					texture2D(depth, texcoord).x);
-	vec3 dbl = vec3(texcoord,0.) + vec3(-texelSize.x, texelSize.y, 	texture2D(depth, texcoord + dv - du).x);
-	vec3 dbr = vec3(texcoord,0.) + vec3( texelSize.x, texelSize.y, 	texture2D(depth, texcoord + dv + du).x);
-
-	vec3 dmin = dmc;
-	dmin = dmin.z > dtr.z ? dtr : dmin;
-	dmin = dmin.z > dtl.z ? dtl : dmin;
-	dmin = dmin.z > dbl.z ? dbl : dmin;
-	dmin = dmin.z > dbr.z ? dbr : dmin;
-	
-	#ifdef TAA_UPSCALING
-		dmin.xy = dmin.xy/RENDER_SCALE;
-	#endif
-
-	return dmin;
-}
-
 vec3 toClipSpace3Prev_DH( vec3 viewSpacePosition, bool depthCheck ) {
 
 	#ifdef DISTANT_HORIZONS
@@ -329,35 +307,6 @@ vec3 toClipSpace3Prev_DH( vec3 viewSpacePosition, bool depthCheck ) {
 	#else
     	return projMAD(gbufferPreviousProjection, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
 	#endif
-}
-
-vec3 toScreenSpace_DH_special(vec3 POS, bool depthCheck ) {
-
-	vec4 viewPos = vec4(0.0);
-	vec3 feetPlayerPos = vec3(0.0);
-	vec4 iProjDiag = vec4(0.0);
-
-	#ifdef DISTANT_HORIZONS
-    	if (depthCheck) {
-			iProjDiag = vec4(dhProjectionInverse[0].x, dhProjectionInverse[1].y, dhProjectionInverse[2].zw);
-
-    		feetPlayerPos = POS * 2.0 - 1.0;
-    		viewPos = iProjDiag * feetPlayerPos.xyzz + dhProjectionInverse[3];
-			viewPos.xyz /= viewPos.w;
-
-		} else {
-	#endif
-			iProjDiag = vec4(gbufferProjectionInverse[0].x, gbufferProjectionInverse[1].y, gbufferProjectionInverse[2].zw);
-
-    		feetPlayerPos = POS * 2.0 - 1.0;
-    		viewPos = iProjDiag * feetPlayerPos.xyzz + gbufferProjectionInverse[3];
-			viewPos.xyz /= viewPos.w;
-			
-	#ifdef DISTANT_HORIZONS
-		}
-	#endif
-
-    return viewPos.xyz;
 }
 
 vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler2D depth, bool hand){
@@ -458,12 +407,99 @@ vec4 VLTemporalFiltering(vec3 viewPos, in float referenceDepth, sampler2D depth,
 
 uniform float waterEnteredAltitude;
 
+#define CAVE_FOG_DARKEN_SKY
+
+void blendAllFogTypes( inout vec3 color, inout float bloomyFogMult, vec4 volumetrics, float linearDistance, vec3 playerPos, vec3 cameraPosition, bool isSky, bool isLightning){
+
+  // blend cave fog
+  #if defined OVERWORLD_SHADER && defined CAVE_FOG
+    if (isEyeInWater == 0 && eyeAltitude < 1500){
+      vec3 cavefogCol = vec3(CaveFogColor_R, CaveFogColor_G, CaveFogColor_B) * 0.3;
+      cavefogCol *= 1.0-pow(1.0-pow(1.0 - max(1.0 - linearDistance/far,0),2),CaveFogFallOff);
+      cavefogCol *= exp(-7.0*clamp(playerPos.y*0.5+0.5,0,1)) * 0.999 + 0.001;
+
+      float skyhole = pow(clamp(1.0-pow(max(playerPos.y - 0.6,0.0)*5.0,2.0),0.0,1.0),2);
+
+      #if (CAVE_DETECTION == 0.0) || (CAVE_DETECTION == 1.0)
+        #if (CAVE_DETECTION == 1.0)
+          float caveFactor = 1-smoothstep(60.0, 63.0, cameraPosition.y);
+        #else
+          float caveFactor = 1.0;
+        #endif
+      #else
+        float caveFactor = 0.0;
+      #endif
+
+      color.rgb = mix(color.rgb + cavefogCol * caveDetection, cavefogCol, isSky ? skyhole * caveDetection * caveFactor: 0.0);
+    }
+  #endif
+
+  /// water absorption; it is completed when volumetrics are blended.
+  if(isEyeInWater == 1){
+    vec3 totEpsilon = vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B);
+		vec3 scatterCoef = Dirt_Amount * vec3(Dirt_Scatter_R, Dirt_Scatter_G, Dirt_Scatter_B) / 3.14;
+
+	  float distanceFromWaterSurface = playerPos.y + 1.0 + (cameraPosition.y - waterEnteredAltitude)/waterEnteredAltitude;
+    distanceFromWaterSurface = clamp(distanceFromWaterSurface,0,1);
+
+    vec3 transmittance = exp(-totEpsilon * linearDistance);
+    color.rgb *= transmittance;
+
+    vec3 transmittance2 = exp(-totEpsilon * 50.0);
+    float fogfade = 1.0 - max((1.0 - linearDistance / min(far, 16.0*7.0) ),0);
+    color.rgb += (transmittance2 * scatterCoef) * fogfade;
+    
+    bloomyFogMult *= 0.5;
+  }
+
+  /// blend volumetrics
+  if(!isLightning) color = color * volumetrics.a;
+  color += volumetrics.rgb;
+  
+  // make bloomy fog only work outside of the overworld (unless underwater)
+  #if !defined OVERWORLD_SHADER
+    bloomyFogMult *= volumetrics.a;
+  #endif
+
+  // blend vanilla fogs (blindness, darkness, lava, powdered snow)
+  if(isEyeInWater > 1 || blindness > 0 || darknessFactor > 0){
+    float enviornmentFogDensity = 1.0 - clamp(linearDistance/fogEnd,0,1);
+    enviornmentFogDensity = 1.0 - enviornmentFogDensity*enviornmentFogDensity;
+    enviornmentFogDensity *= enviornmentFogDensity;
+    enviornmentFogDensity =  mix(enviornmentFogDensity, 1.0, min(darknessLightFactor*2.0,1));
+
+    color = mix(color, toLinear(fogColor), enviornmentFogDensity);
+  }
+}
+
+void blendForwardRendering( inout vec3 color, vec4 translucentShader ){
+  // REMEMBER that forward rendered color is written as color.rgb/10.0, invert it.
+  if(translucentShader.a > 0) {
+    color = color * (1.0 - translucentShader.a) + translucentShader.rgb * 10.0;
+  }
+}
+
+float getBorderFogDensity(float linearDistance, vec3 playerPos, bool sky){
+
+  if(sky) return 0.0;
+
+  #ifdef DISTANT_HORIZONS
+  	float borderFogDensity = smoothstep(1.0, 0.0, min(max(1.0 - linearDistance / dhRenderDistance,0.0)*3.0,1.0)   );
+  #else
+  	float borderFogDensity = smoothstep(1.0, 0.0, min(max(1.0 - linearDistance / far,0.0)*3.0,1.0)   );
+  #endif
+  
+  borderFogDensity *= exp(-10.0 * pow(clamp(playerPos.y,0.0,1.0)*4.0,2.0));
+  borderFogDensity *= (1.0-caveDetection);
+
+  return borderFogDensity;
+}
+
 void main() {
   /* RENDERTARGETS:7,3,10 */
 
 	////// --------------- SETUP STUFF --------------- //////
   vec2 texcoord = gl_FragCoord.xy*texelSize;
-
   float depth = texelFetch2D(depthtex0, ivec2(gl_FragCoord.xy),0).x;
   bool hand = depth < 0.56;
   float z = depth;
@@ -491,16 +527,18 @@ void main() {
 		float DH_depth0 = 0.0;
 	#endif
 
+  bool isSky = swappedDepth >= 1.0;
+
 	vec3 viewPos = toScreenSpace_DH(texcoord/RENDER_SCALE, z, DH_depth0);
 	vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
 
-	vec3 playerPos_normalized = normVec(playerPos);
+  float linearDistance = length(playerPos);
+  float linearDistance_cylinder = length(playerPos.xz);
+	vec3 playerPos_normalized = normalize(playerPos);
 
 	vec3 viewPos_alt = toScreenSpace(vec3(texcoord/RENDER_SCALE, z2));
 	vec3 playerPos_alt = mat3(gbufferModelViewInverse) * viewPos_alt + gbufferModelViewInverse[3].xyz;
-
-  float linearDistance = length(playerPos);
-  float linearDistance_cylinder = length(playerPos.xz);
+  float linearDistance_cylinder_alt = length(playerPos_alt.xz);
 
 	float lightleakfix = clamp(pow(eyeBrightnessSmooth.y/240.,2) ,0.0,1.0);
 	float lightleakfixfast = clamp(eyeBrightness.y/240.,0.0,1.0);
@@ -537,317 +575,206 @@ void main() {
   ////// --------------- get volumetrics
   #ifdef DISTANT_HORIZONS
 	  float DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy),0).a/65000.0);
-    vec4 temporallyFilteredVL = VLTemporalFiltering(viewPos, DH_mixedLinearZ, colortex12, hand);
+    vec4 temporallyFilteredVL = VLTemporalFiltering(viewPos, DH_mixedLinearZ, colortex12,hand);
   #else
     vec4 temporallyFilteredVL = VLTemporalFiltering(viewPos, frDepth, depthtex0, hand);
   #endif
 
   gl_FragData[2] = temporallyFilteredVL;
-  
-
   float bloomyFogMult = 1.0;
 
+  ////// --------------- MAIN COLOR BUFFER
   ////// --------------- distort texcoords as a refraction effect
   vec2 refractedCoord = texcoord;
-
-  ////// --------------- MAIN COLOR BUFFER
   #ifdef FAKE_REFRACTION_EFFECT
-    // ApplyDistortion(refractedCoord, tangentNormals, linearDistance, isEntity);
-    // vec3 color = texture2D(colortex3, refractedCoord).rgb;
     vec3 color = doRefractionEffect(refractedCoord, tangentNormals.xy, linearDistance, isReflectiveEntity, isWater && isEyeInWater == 1);
   #else
-    // vec3 color = texture2D(colortex3, refractedCoord).rgb;
-    vec3 color = texelFetch2D(colortex3, ivec2(refractedCoord/texelSize),0).rgb;
+    vec3 color = texture2D(colortex3, refractedCoord).rgb;
   #endif
+
+  ////// --------------- lightning effect
+
+  bool isLightning = false;
+
+  #if defined OVERWORLD_SHADER && defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0 && defined VOLUMETRIC_CLOUDS
+
+    vec2 cloudDepth = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_RESOLUTION*RENDER_SCALE)).rg;
+
+    vec3 lightningpos = vec3(getLightningPosition(600, 4680));
+    //lightningpos =  vec3(0,0,1);
+
+    float lightningDist = length(lightningpos);
+
+    if ((lightningDist < cloudDepth.r || cloudDepth.r == 0.0) && (thunderStrength > 0.0 || rainStrength == 0.0)) {
+      vec2 tc = (gl_FragCoord.xy - 0.5)*texelSize;
+
+      float depth = z;
+      
+      float z0 = depth < 0.56 ? convertHandDepth(depth) : depth;
+
+      #ifdef DISTANT_HORIZONS
+        float DH_z0 = DH_depth0;
+      #else
+        float DH_z0 = 1.0;
+      #endif
+
+      float uvScalar = 3.0 * CUSTOM_LIGHTNING_SCALE;
+
+      vec3 normLightningpos = normalize(lightningpos);
+      
+      vec3 worldDir = normalize(mat3(gbufferModelViewInverse) * toScreenSpace(vec3(texcoord /RENDER_SCALE,1.0)));
+
+      vec3 tangent = normalize(cross(normLightningpos, vec3(0.0, 1.0, 0.0)));
+      vec3 binormal = cross(normLightningpos, tangent);
+      vec3 dirDiff = worldDir - normLightningpos;
+
+      float u = -1.0;
+      float v = -1.0;
+      vec4 lightningTex = vec4(0.0);
+      if (dot(worldDir, normLightningpos) > 0.0) {
+        u = dot(dirDiff, tangent) + 0.5/uvScalar;
+        v = 0.55*dot(dirDiff, binormal) + 0.1/uvScalar;
+
+        vec2 uv = vec2(u, v) * uvScalar;
+
+        float randomTex = 16.0*rand(lightningTimer*72.82723486);
+
+        #if CUSTOM_LIGHTNING_TEX > 0
+          randomTex = CUSTOM_LIGHTNING_TEX - 1.0;
+        #endif
+
+        // TODO: There has to be a better way to do this.............
+        if (randomTex < 1.0) {
+          lightningTex = texture2D(lightningTex1, uv);
+        } else if (randomTex < 2.0) {
+          lightningTex = texture2D(lightningTex2, uv);
+        } else if (randomTex < 3.0) {
+          u = 1.3*dot(dirDiff, tangent) + 0.5/uvScalar;
+          uv = vec2(u, v) * uvScalar;
+          lightningTex = texture2D(lightningTex3, uv);
+        } else if (randomTex < 4.0) {
+          lightningTex = texture2D(lightningTex4, uv);
+        } else if (randomTex < 5.0) {
+          lightningTex = texture2D(lightningTex5, uv);
+        } else if (randomTex < 6.0) {
+          u = 1.25*dot(dirDiff, tangent) + 0.5/uvScalar;
+          uv = vec2(u, v) * uvScalar;
+          lightningTex = texture2D(lightningTex6, uv);
+        } else if (randomTex < 7.0) {
+          lightningTex = texture2D(lightningTex7, uv);
+        } else if (randomTex < 8.0) {
+          lightningTex = texture2D(lightningTex8, uv);
+        } else if (randomTex < 9.0) {
+          u = 1.4*dot(dirDiff, tangent) + 0.5/uvScalar;
+          uv = vec2(u, v) * uvScalar;
+          lightningTex = texture2D(lightningTex9, uv);
+        } else if (randomTex < 10.0) {
+          lightningTex = texture2D(lightningTex10, uv);
+        } else if (randomTex < 11.0) {
+          u = 0.5*dot(dirDiff, tangent)+0.5/uvScalar;
+          v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+          uv = vec2(u, v) * uvScalar;
+          lightningTex = texture2D(lightningTex11, uv);
+        } else if (randomTex < 12.0) {
+          u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
+          v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+          uv = vec2(u, v) * uvScalar;
+          lightningTex = texture2D(lightningTex12, uv);
+        } else if (randomTex < 13.0) {
+          u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
+          v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+          uv = vec2(u, v) * uvScalar;
+          lightningTex = texture2D(lightningTex13, uv);
+        } else if (randomTex < 14.0) {
+          u = 0.5*dot(dirDiff, tangent)+0.5/uvScalar;
+          v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+          uv = vec2(u, v) * uvScalar;
+          lightningTex = texture2D(lightningTex14, uv);
+        } else if (randomTex < 15.0) {
+          u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
+          v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+          uv = vec2(u, v) * uvScalar;
+          lightningTex = texture2D(lightningTex15, uv);
+        } else {
+          u = 0.4*dot(dirDiff, tangent)+0.5/uvScalar;
+          v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
+          uv = vec2(u, v) * uvScalar;
+          lightningTex = texture2D(lightningTex16, uv);
+        }
+
+        lightningTex.rgb *= vec3(CUSTOM_LIGHTNING_R, CUSTOM_LIGHTNING_G, CUSTOM_LIGHTNING_B) * CUMULONIMBUS_LIGHTNING_BRIGHTNESS * 0.01;
+
+        if(cloudDepth.g > 0.0) lightningTex.rgb *= smoothstep(7000.0, 1500.0, lightningDist - cloudDepth.g);
+
+        if(lightningTex.rgb != vec3(0.0)) {
+          #if defined CUSTOM_LIGHTNING_POS && CUSTOM_LIGHTNING_TEX > 0
+            lightningTex.a *= pow(lightningTex.a, 2.0);
+
+            lightningTex.rgb *= 75;
+          #else
+            lightningTex.a *= pow(lightningTex.a, lightningStart); // fade alpha in for cool expansion effect
+
+            lightningTex.rgb += 120 * lightningMid * lightningTex.rgb; // bright flash in the middle
+
+            lightningTex.rgb *= 75 * lightningFade; // fade out
+          #endif
+        }
+
+        if (length(lightningTex.rgb) == 0.0) lightningTex.a = 0.0;
+      }
+
+      bool isSky = z0 == 1.0 && DH_z0 == 1.0;
+      bool oneTexOnly = u > 0 && v > 0 && u*uvScalar < 1 && v*uvScalar < 1;
+      
+      if (lightningTex.a > 0.01 && oneTexOnly && isSky) {
+        color = lightningTex.rgb * lightningFlash;
+        isLightning = true;
+      }
+    }
+  #endif
+
+  ////// --------------- START BLENDING FOGS AND FORWARD RENDERED COLOR
   vec4 TranslucentShader = texture2D(colortex2, texcoord);
-  // color = vec3(texcoord-0.5,0.0) * mat3(gbufferModelViewInverse);
+
+  // blend border fog. be sure to blend before and after forward rendered color blends.
+  #if defined BorderFog && defined OVERWORLD_SHADER
+    vec4 borderFog = vec4(skyGroundColor, getBorderFogDensity(linearDistance_cylinder, playerPos_normalized, swappedDepth >= 1.0));
+
+    #if !defined SKY_GROUND
+      borderFog.rgb = skyFromTex(playerPos, colortex4)/1200.0 * Sky_Brightness;
+    #endif
+    borderFog *= BorderFogIntensity;
+    #if !defined DISTANT_HORIZONS
+      color = mix(color, borderFog.rgb, getBorderFogDensity(linearDistance_cylinder_alt, normalize(playerPos_alt), z2 >= 1.0 || TranslucentShader.a <= 0));
+    #endif
+  #else
+    vec4 borderFog = vec4(0.0);
+  #endif
+
   // apply block breaking effect.
   if(albedo.a > 0.01 && !isWater && TranslucentShader.a <= 0.0 && !isEntity) color = mix(color*6.0, color, luma(albedo.rgb)) * albedo.rgb;
-
-  ////// --------------- BLEND TRANSLUCENT GBUFFERS 
-  //////////// and do border fog on opaque and translucents
   
-  #if defined BorderFog
-    #ifdef DISTANT_HORIZONS
-    	float fog = smoothstep(1.0, 0.0, min(max(1.0 - linearDistance_cylinder / dhRenderDistance,0.0)*3.0,1.0)   );
-    #else
-    	float fog = smoothstep(1.0, 0.0, min(max(1.0 - linearDistance_cylinder / far,0.0)*3.0,1.0)   );
-    #endif
-
-    fog *= exp(-10.0 * pow(clamp(playerPos_normalized.y,0.0,1.0)*4.0,2.0));
-
-    fog *= (1.0-caveDetection);
-
-    fog *= BorderFogIntensity;
-
-    if(swappedDepth >= 1.0 || isEyeInWater != 0) fog = 0.0;
-
-    #ifdef SKY_GROUND
-      vec3 borderFogColor = skyGroundColor;
-    #else
-      vec3 borderFogColor = skyFromTex(playerPos_normalized, colortex4)/1200.0 * Sky_Brightness;
-    #endif
-
-    color.rgb = mix(color.rgb, borderFogColor, fog);
-  #else
-    float fog = 0.0;
+  // apply multiplicative color blend for glass n stuff
+  #ifdef Glass_Tint
+    if(!isWater) color *= mix(normalize(albedo.rgb+1e-7), vec3(1.0), max(borderFog.a, min(max(0.1-albedo.a,0.0) * 10.0,1.0))) ;
   #endif
 
-  if (TranslucentShader.a > 0.0){
-    #ifdef Glass_Tint
-      if(!isWater) color *= mix(normalize(albedo.rgb+1e-7), vec3(1.0), max(fog, min(max(0.1-albedo.a,0.0) * 10.0,1.0))) ;
-    #endif
+  // blend forward rendered programs onto the color.
+  blendForwardRendering(color, TranslucentShader);
 
-    #ifdef BorderFog
-      TranslucentShader = mix(TranslucentShader, vec4(0.0), fog);
-    #endif
-
-    color *= (1.0-TranslucentShader.a);
-    color += TranslucentShader.rgb*10.0 ; 
-  }
-
-////// --------------- VARIOUS FOG EFFECTS (behind volumetric fog)
-
-////// --------------- lightning effect
-
-bool isLightning = false;
-
-#if defined OVERWORLD_SHADER && defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0 && defined VOLUMETRIC_CLOUDS
-
-  vec2 cloudDepth = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_RESOLUTION*RENDER_SCALE)).rg;
-
-  vec3 lightningpos = vec3(getLightningPosition(600, 4680));
-  //lightningpos =  vec3(0,0,1);
-
-  float lightningDist = length(lightningpos);
-
-  if ((lightningDist < cloudDepth.r || cloudDepth.r == 0.0) && (thunderStrength > 0.0 || rainStrength == 0.0)) {
-    vec2 tc = (gl_FragCoord.xy - 0.5)*texelSize;
-
-    float depth = z;
-    
-    float z0 = depth < 0.56 ? convertHandDepth(depth) : depth;
-
-    #ifdef DISTANT_HORIZONS
-      float DH_z0 = DH_depth0;
-    #else
-      float DH_z0 = 1.0;
-    #endif
-
-    float uvScalar = 3.0 * CUSTOM_LIGHTNING_SCALE;
-
-    vec3 normLightningpos = normalize(lightningpos);
-    
-    vec3 worldDir = normalize(mat3(gbufferModelViewInverse) * toScreenSpace(vec3(texcoord /RENDER_SCALE,1.0)));
-
-    vec3 tangent = normalize(cross(normLightningpos, vec3(0.0, 1.0, 0.0)));
-    vec3 binormal = cross(normLightningpos, tangent);
-    vec3 dirDiff = worldDir - normLightningpos;
-
-    float u = -1.0;
-    float v = -1.0;
-    vec4 lightningTex = vec4(0.0);
-    if (dot(worldDir, normLightningpos) > 0.0) {
-      u = dot(dirDiff, tangent) + 0.5/uvScalar;
-      v = 0.55*dot(dirDiff, binormal) + 0.1/uvScalar;
-
-      vec2 uv = vec2(u, v) * uvScalar;
-
-      float randomTex = 16*rand(lightningTimer*72.82723486);
-
-      #if CUSTOM_LIGHTNING_TEX > 0
-        randomTex = CUSTOM_LIGHTNING_TEX-1;
-      #endif
-
-      if (randomTex < 1.0) {
-        lightningTex = texture2D(lightningTex1, uv);
-      } else if (randomTex < 2.0) {
-        lightningTex = texture2D(lightningTex2, uv);
-      } else if (randomTex < 3.0) {
-        u = 1.3*dot(dirDiff, tangent) + 0.5/uvScalar;
-        uv = vec2(u, v) * uvScalar;
-        lightningTex = texture2D(lightningTex3, uv);
-      } else if (randomTex < 4.0) {
-        lightningTex = texture2D(lightningTex4, uv);
-      } else if (randomTex < 5.0) {
-        lightningTex = texture2D(lightningTex5, uv);
-      } else if (randomTex < 6.0) {
-        u = 1.25*dot(dirDiff, tangent) + 0.5/uvScalar;
-        uv = vec2(u, v) * uvScalar;
-        lightningTex = texture2D(lightningTex6, uv);
-      } else if (randomTex < 7.0) {
-        lightningTex = texture2D(lightningTex7, uv);
-      } else if (randomTex < 8.0) {
-        lightningTex = texture2D(lightningTex8, uv);
-      } else if (randomTex < 9.0) {
-        u = 1.4*dot(dirDiff, tangent) + 0.5/uvScalar;
-        uv = vec2(u, v) * uvScalar;
-        lightningTex = texture2D(lightningTex9, uv);
-      } else if (randomTex < 10.0) {
-        lightningTex = texture2D(lightningTex10, uv);
-      } else if (randomTex < 11.0) {
-        u = 0.5*dot(dirDiff, tangent)+0.5/uvScalar;
-        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
-        uv = vec2(u, v) * uvScalar;
-        lightningTex = texture2D(lightningTex11, uv);
-      } else if (randomTex < 12.0) {
-        u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
-        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
-        uv = vec2(u, v) * uvScalar;
-        lightningTex = texture2D(lightningTex12, uv);
-      } else if (randomTex < 13.0) {
-        u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
-        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
-        uv = vec2(u, v) * uvScalar;
-        lightningTex = texture2D(lightningTex13, uv);
-      } else if (randomTex < 14.0) {
-        u = 0.5*dot(dirDiff, tangent)+0.5/uvScalar;
-        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
-        uv = vec2(u, v) * uvScalar;
-        lightningTex = texture2D(lightningTex14, uv);
-      } else if (randomTex < 15.0) {
-        u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
-        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
-        uv = vec2(u, v) * uvScalar;
-        lightningTex = texture2D(lightningTex15, uv);
-      } else {
-        u = 0.4*dot(dirDiff, tangent)+0.5/uvScalar;
-        v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
-        uv = vec2(u, v) * uvScalar;
-        lightningTex = texture2D(lightningTex16, uv);
-      }
-
-      lightningTex.rgb *= vec3(CUSTOM_LIGHTNING_R, CUSTOM_LIGHTNING_G, CUSTOM_LIGHTNING_B) * CUMULONIMBUS_LIGHTNING_BRIGHTNESS * 0.01;
-
-      if(cloudDepth.g > 0.0) lightningTex.rgb *= smoothstep(7000.0, 1500.0, lightningDist - cloudDepth.g);
-
-      if(lightningTex.rgb != vec3(0.0)) {
-        #if defined CUSTOM_LIGHTNING_POS && CUSTOM_LIGHTNING_TEX > 0
-          lightningTex.a *= pow(lightningTex.a, 2.0);
-
-          lightningTex.rgb *= 75;
-        #else
-          lightningTex.a *= pow(lightningTex.a, lightningStart); // fade alpha in for cool expansion effect
-
-          lightningTex.rgb += 120 * lightningMid * lightningTex.rgb; // bright flash in the middle
-
-          lightningTex.rgb *= 75 * lightningFade; // fade out
-        #endif
-      }
-
-      if (length(lightningTex.rgb) == 0.0) lightningTex.a = 0.0;
-    }
-
-    bool isSky = z0 == 1.0 && DH_z0 == 1.0;
-    bool oneTexOnly = u > 0 && v > 0 && u*uvScalar < 1 && v*uvScalar < 1;
-    
-    if (lightningTex.a > 0.01 && oneTexOnly && isSky) {
-      color = lightningTex.rgb * lightningFlash;
-      isLightning = true;
-    }
-  }
-#endif
-
-//////////// blindness, nightvision, liquid fogs and misc fogs
-
-#if defined OVERWORLD_SHADER && defined CAVE_FOG
-    if (isEyeInWater == 0 && eyeAltitude < 1500){
-
-      vec3 cavefogCol = vec3(CaveFogColor_R, CaveFogColor_G, CaveFogColor_B);
-
-      // #ifdef PER_BIOME_ENVIRONMENT
-      //   BiomeFogColor(cavefogCol);
-      // #endif
-
-      cavefogCol *= 1.0-pow(1.0-pow(1.0 - max(1.0 - linearDistance/far,0.0),2.0),CaveFogFallOff);
-      cavefogCol *= exp(-7.0*clamp(normalize(playerPos_normalized).y*0.5+0.5,0.0,1.0)) * 0.999 + 0.001;
-
-      cavefogCol *= 0.3;
-
-  	  float skyhole = pow(clamp(1.0-pow(max(playerPos_normalized.y - 0.6,0.0)*5.0,2.0),0.0,1.0),2);
-
-      #if (CAVE_DETECTION == 0.0) || (CAVE_DETECTION == 1.0)
-        #if (CAVE_DETECTION == 1.0)
-          float caveFactor = 1-smoothstep(60.0, 63.0, cameraPosition.y);
-        #else
-          float caveFactor = 1.0;
-        #endif
-      #else
-        float caveFactor = 0.0;
-      #endif
-
-      color.rgb = mix(color.rgb + cavefogCol * caveDetection, cavefogCol, z >= 1.0 ? skyhole * caveDetection * caveFactor: 0.0);
-    }
-#endif
-
-
-////// --------------- underwater fog
-  if (isEyeInWater == 1){
-    // float dirtAmount = Dirt_Amount;
-    // vec3 waterEpsilon = vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B);
-    // vec3 dirtEpsilon = vec3(Dirt_Absorb_R, Dirt_Absorb_G, Dirt_Absorb_B);
-    vec3 totEpsilon = vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B);// dirtEpsilon*dirtAmount + waterEpsilon;
-		vec3 scatterCoef = Dirt_Amount * vec3(Dirt_Scatter_R, Dirt_Scatter_G, Dirt_Scatter_B) / 3.14;
-
-	  // float distanceFromWaterSurface = normalize(playerPos).y + 1.0 + (cameraPosition.y - waterEnteredAltitude)/waterEnteredAltitude;
-    // distanceFromWaterSurface = clamp(distanceFromWaterSurface, 0.0,1.0);
-
-    vec3 transmittance = exp(-totEpsilon * linearDistance);
-    color.rgb *= transmittance;
-
-    vec3 transmittance2 = exp(-totEpsilon * 50.0);
-    float fogfade = 1.0 - max((1.0 - linearDistance / min(far, 16.0*7.0) ),0);
-    color.rgb += (transmittance2 * scatterCoef) * fogfade;
-
-    
-    bloomyFogMult *= 0.5;
-  }
-
-////// --------------- BLEND FOG INTO SCENE
-//////////// apply VL fog over opaque and translucents
-
-  #if !defined OVERWORLD_SHADER
-    bloomyFogMult *= temporallyFilteredVL.a;
+  #if defined BorderFog && defined OVERWORLD_SHADER
+    color = mix(color, borderFog.rgb, getBorderFogDensity(linearDistance_cylinder, playerPos_normalized, swappedDepth >= 1.0));
   #endif
   
+  // tweaks to VL for nametag rendering
 	#if defined IS_IRIS
-    // if(z >= 1.0) color = vec3(0,255,0);
-    // else color = vec3(0.01);
-
-    if(!isLightning) color *= min(temporallyFilteredVL.a + (1.0-nametagbackground),1.0);
-    color += temporallyFilteredVL.rgb * nametagbackground;
-  #else
-    color *= temporallyFilteredVL.a ;
-    color += temporallyFilteredVL.rgb ;
+    temporallyFilteredVL.a = min(temporallyFilteredVL.a + (1.0-nametagbackground),1.0);
+    temporallyFilteredVL.rgb *= nametagbackground;
   #endif
-  
-////// --------------- VARIOUS FOG EFFECTS (in front of volumetric fog)
-//////////// blindness, nightvision, liquid fogs and misc fogs
 
-////// --------------- bloomy rain effect
-  #ifdef OVERWORLD_SHADER
-    float rainDrops =  clamp(texture2D(colortex9,texcoord).a,  0.0,1.0); 
-    if(rainDrops > 0.0) bloomyFogMult *= clamp(1.0 - pow(rainDrops*5.0,2),0.0,1.0);
-  #endif
-  
-////// --------------- lava.
-  if (isEyeInWater == 2){
-    color.rgb = mix(color.rgb, vec3(0.1,0.0,0.0), 1.0-exp(-10.0*clamp(linearDistance*0.5,0.,1.))*0.5  );
-    bloomyFogMult = 0.0;
-  }
+  // blend all fog types. volumetric fog, volumetric clouds, distance based fogs for lava, powdered snow, blindness, and darkness.
+  blendAllFogTypes(color, bloomyFogMult, temporallyFilteredVL, linearDistance, playerPos_normalized, cameraPosition, isSky, isLightning);
 
-///////// --------------- powdered snow
-  if (isEyeInWater == 3){
-    color.rgb = mix(color.rgb,vec3(0.5,0.75,1.0),clamp(linearDistance*0.5,0.,1.));
-    bloomyFogMult = 0.0;
-  }
-
-////// --------------- blidnesss
-  color.rgb *= mix(1.0,clamp( exp(pow(linearDistance*(blindness*0.2),2) * -5),0.,1.)   ,    blindness);
-
-//////// --------------- darkness effect
-  color.rgb *= mix(1.0, (1.0-darknessLightFactor*2.0) * clamp(1.0-pow(length(viewPos)*(darknessFactor*0.07),2.0),0.0,1.0), darknessFactor);
-  
 ////// --------------- FINALIZE
   #ifdef display_LUT
       float zoomLevel = 1.0;
@@ -859,7 +786,7 @@ bool isLightning = false;
       }
 
     #if defined OVERWORLD_SHADER
-      if( hideGUI == 1) color.rgb = skyFromTex(playerPos_normalized, colortex4).rgb/1200.0;
+      if( hideGUI == 1) color.rgb = skyCloudsFromTex(playerPos_normalized, colortex4).rgb/1200.0;
     #else
       if( hideGUI == 1) color.rgb = volumetricsFromTex(playerPos_normalized, colortex4, 0.0).rgb/1200.0;
     #endif

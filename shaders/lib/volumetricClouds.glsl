@@ -8,6 +8,7 @@ uniform float thunderStrength;
 uniform int entityId;
 uniform int worldDay;
 uniform int worldTime;
+uniform float moonElevation;
 
 #if CLOUD_MOVEMENT_TYPE == 0
 	float cloud_movement = (worldTime  + mod(worldDay,100)*24000.0) / 24.0 * Cloud_Speed;
@@ -42,7 +43,7 @@ float lightningFlash = mix(0.1, 2.5, randomSeed);
 #endif
 
 float rand(float co){
-	vec2 co2 = vec2(co, co*2);
+	vec2 co2 = vec2(co, co*2.0);
 
     return fract(sin(dot(co2 ,vec2(12.9898,78.233))) * 43758.5453);
 }
@@ -120,13 +121,13 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 	if(LayerIndex == CIRRUS_LAYER){
 		coverage = parameters.cirrus.x;
 
-		vec2 coord = position.zx + 6*cloud_movement;
+		vec2 coord = position.zx + 6.0*cloud_movement;
 		
 		vec2 curl = curl2D(0.00002 * coord) * 0.5
 				+ curl2D(0.00005 * coord) * 0.25
 				+ curl2D(0.00018 * coord) * 0.125;
 
-		largeCloud = texture2D(noisetex, (position.xz + cloud_movement*2)/80000. * CloudLayer3_scale).b;
+		largeCloud = texture2D(noisetex, (position.xz + cloud_movement*2.0)/80000. * CloudLayer3_scale).b;
 		smallCloud = texture2D(noisetex, (0.000005 / CloudLayer3_scale) * coord).r;
 	
 		float detail_amplitude = 0.3;
@@ -383,6 +384,18 @@ float getPlanetShadow(vec3 playerPos, vec3 WsunVec){
 
 float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 
+	#if defined CUSTOM_MOON_ROTATION && LIGHTNING_SHADOWS > 0
+			#if LIGHTNING_SHADOWS < 2
+			if (lightningBoltPosition.w > 0.0 && sunElevation < 0.0)
+			#else
+			if (lightningBoltPosition.w > 0.0)
+			#endif
+			{
+				return 1.0;
+			}
+	#endif
+
+
 	float totalShadow = getPlanetShadow(playerPos, sunVector);
 	
 	vec3 startPosition = playerPos;
@@ -421,9 +434,15 @@ float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 
 #ifndef CLOUDSHADOWSONLY
 
+// Henyey-Greenstein
+// float phaseCloud(float x, float g){
+//     float gg = g * g;
+//     return (gg * -0.25 + 0.25) * pow(-2.0 * (g * x) + (gg + 1.0), -1.5);
+// }
+
+// Cornette-Shanks
 float phaseCloud(float x, float g){
-    float gg = g * g;
-    return (gg * -0.25 + 0.25) * pow(-2.0 * (g * x) + (gg + 1.0), -1.5) / 3.14;
+    return (3.0 * (1.0 - g * g) * (1.0 + x * x)) / (4.0 * 3.14159265359 * 2.0 * (2.0 + g * g) * pow(1.0 + g * g - 2.0 * g * x, 3.0/2.0));
 }
 
 float getCloudScattering(
@@ -448,7 +467,11 @@ float getCloudScattering(
 
 	float sunVis = smoothstep(-0.06, 0.01, sunElevation);
 	sunVis = sunVis * sunVis;
-	float moonVis = smoothstep(-0.04, 0.015, -sunElevation);
+	#if defined CAELUM_SUPPORT || !defined CUSTOM_MOON_ROTATION
+		float moonVis = smoothstep(-0.04, 0.015, -moonElevation);
+	#else
+		float  moonVis = smoothstep(0.08, -0.03, -moonVector.y);
+	#endif
 	moonVis = moonVis * moonVis;
 
 	float isLarge = 80;
@@ -631,7 +654,7 @@ vec4 raymarchCloud(
 
 		if(LayerIndex == CUMULONIMBUS_LAYER) density = 0.8;
 
-		if (density == 0.0) return vec4(color, totalAbsorbance);
+		if (density < 0.01) return vec4(color, totalAbsorbance);
 
 		float skylightOcclusion = 1.0;
 		#if defined CloudLayer1 && defined CloudLayer0
@@ -851,7 +874,7 @@ vec4 GetVolumetricClouds(
 		NormPlayerPos.y += 0.03 * heightRelativeToClouds;
 	#endif
 
-	float maxSamples = 25.0;
+	float maxSamples = 20.0;
 	float minSamples = 12.0;
 	int samples = int(clamp(maxSamples / exp2(abs(NormPlayerPos.y)), minSamples, maxSamples));
 	// int samples = 30;
@@ -861,7 +884,7 @@ vec4 GetVolumetricClouds(
 	vec3 cloudDist = vec3(1.0);
 
 	float cloudMix = clamp(smoothstep(minHeight - 400.0, minHeight + 45.0, cameraPosition.y),0.0,clamp(smoothstep(maxHeight + 300.0, maxHeight - 60.0, cameraPosition.y) ,0.0,1.0));
-	cloudDist.xz = mix(vec2(255.0), vec2(12.0), cloudMix);
+	cloudDist.xz = mix(vec2(255.0), vec2(5.5), cloudMix);
 
 	// vec3 rayDirection = NormPlayerPos.xyz * (cloudheight/abs(NormPlayerPos.y)/samples);
 	vec3 rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/samples);
@@ -889,7 +912,11 @@ vec4 GetVolumetricClouds(
 
 	float sunVis = smoothstep(-0.06, 0.1, sunElevation);
 	sunVis = sunVis * sunVis;
-	float moonVis = smoothstep(-0.04, 0.015, -sunElevation);
+	#if defined CAELUM_SUPPORT || !defined CUSTOM_MOON_ROTATION
+		float moonVis = smoothstep(-0.04, 0.015, -moonElevation);
+	#else
+		float moonVis = smoothstep(0.08, -0.03, -moonVector.y);
+	#endif
 
 	#if defined EXCLUDE_WRITE_TO_LUT && defined USE_CUSTOM_CLOUD_LIGHTING_COLORS
 		directLightCol = dot(directLightCol,vec3(0.21, 0.72, 0.07)) * vec3(DIRECTLIGHT_CLOUDS_R,DIRECTLIGHT_CLOUDS_G,DIRECTLIGHT_CLOUDS_B);
@@ -898,9 +925,9 @@ vec4 GetVolumetricClouds(
 	#endif
 
 	///------- do color stuff outside of the raymarcher loop
-	vec3 sunScattering = directLightCol * (phaseCloud(SdotV, 0.85) + phaseCloud(SdotV, 0.75)) * 3.14;
+	vec3 sunScattering = directLightCol * (phaseCloud(SdotV, 0.85) + phaseCloud(SdotV, 0.75));
 	vec3 sunMultiScattering = directLightCol;
-	vec3 moonScattering = directLightCol2 * (phaseCloud(SdotV2, 0.85) + phaseCloud(SdotV2, 0.75)) * 3.14;
+	vec3 moonScattering = directLightCol2 * (phaseCloud(SdotV2, 0.85) + phaseCloud(SdotV2, 0.75));
 	vec3 moonMultiScattering = directLightCol2;
 	vec3 skyScattering = indirectLightCol * (1.0 + sunVis);
 
@@ -933,7 +960,7 @@ vec4 GetVolumetricClouds(
 				maxHeight = cloudheight + minHeight;
 
 				cloudMix = clamp(smoothstep(minHeight - 400.0, minHeight + 45.0, cameraPosition.y),0.0,clamp(smoothstep(maxHeight + 300.0, maxHeight - 60.0, cameraPosition.y) ,0.0,1.0));
-				cloudDist.xz = mix(vec2(255.0), vec2(6.2), cloudMix);
+				cloudDist.xz = mix(vec2(255.0), vec2(5.0), cloudMix);
 				rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/samples);
 				rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
 
@@ -951,17 +978,23 @@ vec4 GetVolumetricClouds(
 				cloudheight = 4000;
 				minHeight = 600;
 				maxHeight = cloudheight + minHeight;
+				int cumulonimbusSamples = int(1.5*samples);
 				
 				cloudDist.xz = vec2(8.0);
-				rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/samples);
+				rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/cumulonimbusSamples);
 				rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
 
-				cumulonimbusClouds = raymarchCloud(CUMULONIMBUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unsignedSunVec, unsignedMoonVec, sunScattering2, sunMultiScattering2, moonScattering2, moonMultiScattering2, skyScattering, lViewPosM, sampledSkyCol, cloudLayer4_Distance);
+				cumulonimbusClouds = raymarchCloud(CUMULONIMBUS_LAYER, cumulonimbusSamples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unsignedSunVec, unsignedMoonVec, sunScattering2, sunMultiScattering2, moonScattering2, moonMultiScattering2, skyScattering, lViewPosM, sampledSkyCol, cloudLayer4_Distance);
 			}
 			float cumulonimbusDistance = length(rayPosition - cameraPosition);
 		#endif
 
-	moonVis = smoothstep(-0.04, 0.015, -sunElevation);
+	#if defined CAELUM_SUPPORT || !defined CUSTOM_MOON_ROTATION
+		moonVis = smoothstep(-0.04, 0.015, -moonElevation);
+	#else
+		moonVis = smoothstep(0.08, -0.03, -moonVector.y);
+	#endif
+
 	moonScattering2 = moonScattering * moonVis;
 	moonMultiScattering2 = moonMultiScattering * moonVis;
 	

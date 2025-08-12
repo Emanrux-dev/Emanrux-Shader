@@ -1,4 +1,8 @@
-#version 120
+#ifndef MC_OS_MAC
+	#version 430 compatibility
+#else
+	#version 120
+#endif
 //#extension GL_ARB_shader_texture_lod : disable
 
 #include "/lib/settings.glsl"

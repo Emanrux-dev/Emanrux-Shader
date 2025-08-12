@@ -282,7 +282,17 @@ void main() {
 	// if( dot(gl_Color.rgb, vec3(1.0/3.0)) < 1.0) NameTags = 1;
 	// if(gl_Color.a < 1.0) NameTags = 1;
 	// if(gl_Color.a >= 0.24 && gl_Color.a <= 0.25 ) gl_Position = vec4(10,10,10,1);
-	if(entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468) normalMat.a = 0.45;
+	#ifdef INCLUDE_UNLISTED_ENTITIES
+		if(entityId == 65535) {
+			bool unlistedEntity = true;
+		} else {
+			bool unlistedEntity = false;
+		}
+	#else
+		bool unlistedEntity = false;
+	#endif
+
+	if(entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468 || unlistedEntity) normalMat.a = 0.45;
 	
 #endif
 

@@ -44,5 +44,5 @@ float StableStarField( in vec3 vSamplePos, float fThreshhold )
 float stars(vec3 viewPos){
 
     float stars = max(1.0 - StableStarField(viewPos*300.0 , 0.99),0.0);
-    return STARS_BRIGHTNESS * exp( stars  * -20.0 * (1/STARS_AMOUNT));
+    return STARS_BRIGHTNESS * exp( stars  * -20.0 * (1.0/STARS_AMOUNT));
 }

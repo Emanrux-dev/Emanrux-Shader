@@ -110,10 +110,10 @@ vec3 toClipSpace3Prev(vec3 viewSpacePosition) {
     return projMAD(gbufferPreviousProjection, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
 }
 vec3 tonemap(vec3 col){
-	return col/(1+luma(col));
+	return col/(1.+luma(col));
 }
 vec3 invTonemap(vec3 col){
-	return col/(1-luma(col));
+	return col/(1.-luma(col));
 }
 void convertHandDepth(inout float depth) {
     float ndcDepth = depth * 2.0 - 1.0;

@@ -52,7 +52,7 @@ float phaseRayleigh(float cosTheta) {
 	return cosTheta * mul_add.x + mul_add.y; // optimized version from [Elek09], divided by 4 pi for energy conservation
 }
 float fogPhase(float lightPoint){
-	float linear = clamp(-lightPoint*0.5+0.5,0.0,1.0);
+	float linear = clamp(-lightPoint*0.5+0.5,0.001,1.0);
 	float linear2 = 1.0 - clamp(lightPoint,0.0,1.0);
 
 	float exponential = exp2(pow(linear,0.3) * -15.0 ) * 1.5;
@@ -89,7 +89,11 @@ vec4 GetVolumetricFog(
 
 	//project pixel position into projected shadowmap space
 	vec3 wpos = mat3(gbufferModelViewInverse) * viewPosition + gbufferModelViewInverse[3].xyz;
-	vec3 fragposition = mat3(shadowModelView) * wpos + shadowModelView[3].xyz;
+	#ifdef CUSTOM_MOON_ROTATION
+		vec3 fragposition = mat3(customShadowMatrixSSBO) * wpos  + customShadowMatrixSSBO[3].xyz;
+	#else
+		vec3 fragposition = mat3(shadowModelView) * wpos + shadowModelView[3].xyz;
+	#endif
 	fragposition = diagonal3(shadowProjection) * fragposition + shadowProjection[3].xyz;
 
 	//project view origin into projected shadowmap space
@@ -173,6 +177,7 @@ vec4 GetVolumetricFog(
 
 
 	for (int i = 0; i < SAMPLECOUNT; i++) {
+		if(totalAbsorbance.r < 0.01 && totalAbsorbance.g < 0.01 && totalAbsorbance.b < 0.01) break;
 		float d = (pow(expFactor, float(i+dither.x)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);
 		float dd = pow(expFactor, float(i+dither.y)/float(SAMPLECOUNT)) * log(expFactor) / float(SAMPLECOUNT)/(expFactor-1.0);
 
@@ -187,7 +192,7 @@ vec4 GetVolumetricFog(
 		//------------------------------------
 		//------ SAMPLE SHADOWS FOR FOG EFFECTS
 		//------------------------------------
-			#ifdef DISTORT_SHADOWMAP
+			#if defined DISTORT_SHADOWMAP && defined OVERWORLD_SHADER
 				float distortFactor = calcDistort(progress.xy);
 			#else
 				float distortFactor = 1.0;
@@ -282,10 +287,10 @@ vec4 GetVolumetricFog(
 		//------------------------------------
 
 			// maximum range for atmosphere haze, basically.
-			float planetVolume = 1.0 - exp(clamp(1.0 - length(progressW-cameraPosition) / (16*150), 0.0,1.0) * -10);
+			float planetVolume = 1.0 - exp(clamp(1.0 - length(progressW-cameraPosition) / (16.0*150.0), 0.0,1.0) * -10.0);
 
 			// just air
-			vec2 airCoef = (exp2(-max(progressW.y-SEA_LEVEL,0.0)/vec2(8.0e3, 1.2e3)*vec2(6.,7.0)) * 192.0 * Haze_amount) * planetVolume;
+			vec2 airCoef = (exp2(-max(progressW.y-SEA_LEVEL,0.0)/vec2(8.0e3, 1.2e3)*vec2(6.0,7.0)) * 192.0 * Haze_amount) * planetVolume;
 
 			// Pbr for air, yolo mix between mie and rayleigh for water droplets
 			vec3 rL = rC*airCoef.x;

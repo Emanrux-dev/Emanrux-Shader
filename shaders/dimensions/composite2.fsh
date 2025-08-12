@@ -1,5 +1,9 @@
 #include "/lib/settings.glsl"
 
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
+
 #define EXCLUDE_WRITE_TO_LUT
 
 flat varying vec4 lightCol;
@@ -304,7 +308,7 @@ vec4 waterVolumetrics(vec3 rayStart, vec3 rayEnd, float rayLength, vec2 dither, 
 			vec3 spPos = start.xyz + dV*d;
 
 			//project into biased shadowmap space
-			#ifdef DISTORT_SHADOWMAP
+			#ifdef DISTORT_SHADOWMAP && defined OVERWORLD_SHADER
 				float distortFactor = calcDistort(spPos.xy);
 			#else
 				float distortFactor = 1.0;
@@ -528,6 +532,11 @@ void main() {
 	vec3 directLightColor = lightCol.rgb / 2400.0;
 	vec3 directSunlightColor = sunlightCol / 2400.0;
 	vec3 directMoonlightColor = moonlightCol / 2400.0;
+
+	#ifdef CUSTOM_MOON_ROTATION
+		directMoonlightColor *= mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
+	#endif
+
 	vec3 indirectLightColor = averageSkyCol / 1200.0;
 	vec3 indirectLightColor_dynamic = averageSkyCol_Clouds / 1200.0;
 	float cloudPlaneDistance = 0.0;

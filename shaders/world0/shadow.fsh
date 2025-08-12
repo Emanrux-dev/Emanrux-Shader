@@ -1,17 +1,25 @@
-#version 120
+#ifndef MC_OS_MAC
+	#version 430 compatibility
+#else
+	#version 120
+#endif
 
 #include "/lib/settings.glsl"
 
 varying vec4 color;
 
 varying vec2 texcoord;
-varying vec3 vertexPos;
+varying vec3 playerpos;
 uniform sampler2D tex;
+uniform sampler2D texture;
 uniform sampler2D noisetex;
 
 #if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 1
 	uniform float far;
 #endif
+
+in float LIGHTNING;
+uniform float frameTimeCounter;
 
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -25,8 +33,10 @@ float blueNoise(){
 
 
 void main() {
+	if (LIGHTNING > 0.0) discard;
+
 	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 1
-		float viewDist = length(vertexPos);
+		float viewDist = length(playerpos);
 		float minDist = min(shadowDistance, far);
 
 		float ditherFade = smoothstep(0.93 * minDist, minDist, viewDist);

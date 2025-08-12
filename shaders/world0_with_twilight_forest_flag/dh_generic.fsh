@@ -1,4 +1,8 @@
-#version 330 compatibility
+#ifndef MC_OS_MAC
+	#version 430 compatibility
+#else
+	#version 330 compatibility
+#endif
 
 #define OVERWORLD_SHADER
 #define TWILIGHT_FOREST_FLAG

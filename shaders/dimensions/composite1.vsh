@@ -1,6 +1,10 @@
 #include "/lib/settings.glsl"
 #include "/lib/res_params.glsl"
 
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
+
 #ifdef END_SHADER
 	flat varying float Flashing;
 #endif
@@ -64,15 +68,21 @@ void main() {
 	averageSkyCol_Clouds = texelFetch2D(colortex4,ivec2(0,37),0).rgb;
 
 	unsigned_WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+	#ifdef CUSTOM_MOON_ROTATION
+		vec3 moonVec = customMoonVecSSBO;
+		//sunCol *= smoothstep(0.005, 0.09, length(moonVec - unsigned_WsunVec));
+	#else
+		vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+		if(dot(-moonVec, unsigned_WsunVec) < 0.9999) moonVec = -moonVec;
+	#endif
 	
-	vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
-
 	WmoonVec = moonVec;
-	
-	if(dot(-moonVec, unsigned_WsunVec) < 0.9999) WmoonVec = -moonVec;
 
 	WsunVec = mix(WmoonVec, unsigned_WsunVec, clamp(lightCol.a,0,1));
-	
+
+	#if defined CUSTOM_MOON_ROTATION && LIGHTNING_SHADOWS > 0
+		WmoonVec = customMoonVec2SSBO;
+	#endif
 
 	exposure = texelFetch2D(colortex4,ivec2(10,37),0).r;
 

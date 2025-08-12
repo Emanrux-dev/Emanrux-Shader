@@ -79,6 +79,11 @@ uniform vec3 previousCameraPosition;
 	
 	#include "/lib/scene_controller.glsl"
 
+	#if defined CUSTOM_MOON_ROTATION && LIGHTNING_SHADOWS > 0
+		uniform vec4 lightningBoltPosition;
+		uniform float sunElevation;
+	#endif
+
 	#define CLOUDSHADOWSONLY
 	
 	#include "/lib/volumetricClouds.glsl"
@@ -134,18 +139,23 @@ float encodeVec2(float x,float y){
     return encodeVec2(vec2(x,y));
 }
 
-
+#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
+	#include "/lib/SSBOs.glsl"
+#endif
 
 // #undef BASIC_SHADOW_FILTER
-#ifdef OVERWORLD_SHADER
+#if defined OVERWORLD_SHADER
 float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDistFade){
 
 	// if(maxDistFade <= 0.0) return 1.0;
 
 	// setup shadow projection
-	vec3 projectedShadowPosition = mat3(shadowModelView) * playerPos + shadowModelView[3].xyz;
+	#ifdef CUSTOM_MOON_ROTATION
+		vec3 projectedShadowPosition = mat3(customShadowMatrixSSBO) * playerPos  + customShadowMatrixSSBO[3].xyz;
+	#else
+		vec3 projectedShadowPosition = mat3(shadowModelView) * playerPos + shadowModelView[3].xyz;
+	#endif
 	projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
-
 	// un-distort
 	#ifdef DISTORT_SHADOWMAP
 		float distortFactor = calcDistort(projectedShadowPosition.xy);
@@ -153,6 +163,9 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 	#else
 		float distortFactor = 1.0;
 	#endif
+
+	//vec4 shadowPos = customShadowPerspectiveSSBO * (customShadowMatrixSSBO * vec4(playerPos, 1.0));
+	//projectedShadowPosition = shadowPos.xyz / shadowPos.w;
 
 	// hamburger
 	projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5);
@@ -434,10 +447,10 @@ void main() {
 			directLightColor =  lightCol.rgb/2400.0;
 			AmbientLightColor = averageSkyCol_Clouds / 900.0;
 		
-		#ifdef USE_CUSTOM_DIFFUSE_LIGHTING_COLORS
-			directLightColor = luma(directLightColor) * vec3(DIRECTLIGHT_DIFFUSE_R,DIRECTLIGHT_DIFFUSE_G,DIRECTLIGHT_DIFFUSE_B);
-			AmbientLightColor = luma(AmbientLightColor) * vec3(INDIRECTLIGHT_DIFFUSE_R,INDIRECTLIGHT_DIFFUSE_G,INDIRECTLIGHT_DIFFUSE_B);
-		#endif
+			#ifdef USE_CUSTOM_DIFFUSE_LIGHTING_COLORS
+				directLightColor = luma(directLightColor) * vec3(DIRECTLIGHT_DIFFUSE_R,DIRECTLIGHT_DIFFUSE_G,DIRECTLIGHT_DIFFUSE_B);
+				AmbientLightColor = luma(AmbientLightColor) * vec3(INDIRECTLIGHT_DIFFUSE_R,INDIRECTLIGHT_DIFFUSE_G,INDIRECTLIGHT_DIFFUSE_B);
+			#endif
 			
 			
 			float Shadows = 1.0;

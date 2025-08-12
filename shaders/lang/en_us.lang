@@ -1,13 +1,13 @@
-option.SHADER_VERSION_LABEL = Merlin1809's Bliss Fork
+option.SHADER_VERSION_LABEL = §dECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 0.1.8
+    value.SHADER_VERSION_LABEL.482 = 1.0.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
 profile.VERY_LOW=§cVery Low 
 profile.LOW=§aLow 
-profile.MEDIUM=§2Medium 
-profile.HIGH=§bHigh
+profile.MEDIUM=§2Medium (Recommended)
+profile.HIGH=§bHigh (Recommended)
 profile.VERY_HIGH=§9Very High
 profile.ULTRA=§dUltra
 
@@ -21,10 +21,10 @@ suffix.sunPathRotation = °
 option.sun_illuminance = Sun Brightness
 option.moon_illuminance = Moon Brightness
 option.MOONPHASE_BASED_MOONLIGHT = Moonphase based brightness levels
-option.LIGHTLEAKFIX_MODE = "lightleak fix" mode
-    value.LIGHTLEAKFIX_MODE.0 = none. §csunlight will leak through walls§r
-    value.LIGHTLEAKFIX_MODE.1 = gap fill/zoom. §cmakes shadows blocky§r
-    value.LIGHTLEAKFIX_MODE.2 = use sky lightmap levels. §cno sunlight will shine in low lightmap levels§r
+option.LIGHTLEAKFIX_MODE = "Lightleak Fix" Mode
+    value.LIGHTLEAKFIX_MODE.0 = None. §cSunlight will leak through walls§r
+    value.LIGHTLEAKFIX_MODE.1 = Gap fill/zoom. §cMakes shadows blocky§r
+    value.LIGHTLEAKFIX_MODE.2 = Use sky lightmap levels. §cNo sunlight in low lightmap levels§r
 
 option.colortype = coloring mode
     value.colortype.1 = RGB color (above)
@@ -36,17 +36,53 @@ option.colortype = coloring mode
         option.moonColorB = Moon Color: Blue
 
     value.colortype.2 = Kelvin temperature (below)
-        option.Sun_temp = Sun temperature
+        option.Sun_temp = Sun Temperature
         suffix.Sun_temp = K
-        option.Moon_temp = moon temperature
+        option.Moon_temp = Moon Temperature
         suffix.Moon_temp = K
-option.REALMOON = Realistic Moon
+screen.MoonOptions = Moon Settings
+screen.SunOptions = Sun Settings
+screen.CUSTOM_MOON_SETTINGS = Custom Moon Settings
+    option.REALMOON = Realistic Moon Texture
+    option.CUSTOM_MOON_ROTATION = Custom Moon Rotation
+    option.CAELUM_SUPPORT = Caelum (ArdaCraft) Support
+        option.CAELUM_SUPPORT.comment = §cREQUIRES CUSTOM MOON ROTATION.§r Changes the light casted by the sun/moon to the correct position specified by Caelum.
+    option.MOON_SIZE_SETTING = Moon Size
+    option.MOON_LATITUDE = Latitude
+        suffix.MOON_LATITUDE = °
+    option.MONTH_LENGTH = Month Length
+        value.MONTH_LENGTH.6 = 6 Days
+        value.MONTH_LENGTH.7 = 7 Days
+        value.MONTH_LENGTH.8 = 8 Days
+        value.MONTH_LENGTH.9 = 9 Days
+        value.MONTH_LENGTH.10 = 10 Days
+        value.MONTH_LENGTH.11 = 11 Days
+        value.MONTH_LENGTH.12 = 12 Days
+        value.MONTH_LENGTH.13 = 13 Days
+        value.MONTH_LENGTH.14 = 14 Days
+        value.MONTH_LENGTH.15 = 15 Days
+        value.MONTH_LENGTH.16 = 16 Days
+    option.EARTH_ROTATION_TILT = Earth Rotation Tilt
+        suffix.EARTH_ROTATION_TILT = °
+    screen.CUSTOM_MOON_ROTATION_DISCLAIMER = §cChanging the values below might prevent eclipses!§r
+    screen.CUSTOM_MOON_ROTATION_DISCLAIMER2 = §cChanging sun angle might prevent eclipses!§r
+    screen.CUSTOM_MOON_ROTATION_DISCLAIMER3 = §cOne eclipse per ingame year guaranteed at -35° and -45°!§r
+    option.MOON_TIME_OFFSET = Moon Time Offset (Ticks)
+    option.CUSTOM_SHADOWS_QUALITY = Custom Shadows Culling
+        value.CUSTOM_SHADOWS_QUALITY.0 = Fancy
+        value.CUSTOM_SHADOWS_QUALITY.1 = Fast
+        option.CUSTOM_SHADOWS_QUALITY.comment = Specify culling of custom light positions (Moon, Lightning, End). Can cause some shadows to be culled that shouldn't be culled
+screen.EndLighting = End Lighting
+    option.END_ISLAND_LIGHT = Main End Island Light
+    option.Max_Filter_Depth_END = Light Size Factor
+    option.Min_Shadow_Filter_Radius_END = Minimum Shadow Filter Radius
+
 option.STARS_AMOUNT = Stars Amount
 option.STARS_BRIGHTNESS = Stars Brightness
 screen.Misc_Settings = §cDebugging§r/Experimental Settings
 screen.Mod_support = Settings For Supported Mods
 
-option.RESOURCEPACK_SKY = Resource Pack Sky
+option.RESOURCEPACK_SKY = Resource Pack Sky §c(slightly bugged)
     value.RESOURCEPACK_SKY.0 = Do not use
     value.RESOURCEPACK_SKY.1 = Sky + Shader sun/moon
     value.RESOURCEPACK_SKY.2 = Full sky
@@ -114,6 +150,13 @@ screen.Direct_Light = Direct Light
             value.entityShadowDistanceMul.0.75 = 75% of Shadow Distance
             value.entityShadowDistanceMul.1.00 = 100% of Shadow Distance
 
+        option.LIGHTNING_SHADOWS = Lightning Shadows
+            value.LIGHTNING_SHADOWS.0 = Off
+            value.LIGHTNING_SHADOWS.1 = Only at night
+            value.LIGHTNING_SHADOWS.2 = On
+        
+        option.LIGHTNING_SHADOWS.comment = Makes lightning cast shadows. Replaces moon and/or sun shadows while lightning is active. §cREQUIRES CUSTOM MOON ROTATION§r
+
     screen.Sun_and_Moon_Colors = Sun/Moon Colors
 	option.Sun_temp = Sun Temperature
 	option.Moon_temp = Moon Temperature
@@ -121,7 +164,7 @@ screen.Direct_Light = Direct Light
     screen.Filtering = Shadow Filtering Settings
 	option.BASIC_SHADOW_FILTER = Basic Shadow Filter
         option.SHADOW_FILTER_SAMPLE_COUNT = Basic Shadow Filter Samples
-        option.Min_Shadow_Filter_Radius = Minimum Shadow filter Radius
+        option.Min_Shadow_Filter_Radius = Minimum Shadow Filter Radius
         option.Variable_Penumbra_Shadows = Variable Penumbra Shadows
         option.VPS_Search_Samples = VPS Filter Samples
         option.Max_Shadow_Filter_Radius = Maximum Shadow Filter Radius

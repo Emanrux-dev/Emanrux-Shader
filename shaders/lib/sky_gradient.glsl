@@ -28,7 +28,7 @@ vec3 drawMoon(vec3 PlayerPos, vec3 WorldSunVec, vec3 Color, inout vec3 occludeSt
 
 	float Shape = min(max(dot(WorldSunVec,PlayerPos)-0.9994,0.0)/(1.0-0.9994),1.0);//  * clamp(-dot(WorldSunVec,PlayerPos),0,1);
 	
-	occludeStars *= max(1.0-Shape*5,0.0);
+	occludeStars *= max(1.0-Shape*5.0, 0.0);
 
 	return Shape * Color * 40.0;
 	/*
@@ -55,11 +55,11 @@ vec3 drawMoon(vec3 PlayerPos, vec3 WorldSunVec, vec3 Color, inout vec3 occludeSt
 	return Shape * pow(clamp(dot(sunNormal,LightDir)/5,0.0,1.5),5) * Color * 10.0 + clamp(Shape * 4.0 * pow(shape2/200,2.0),0.0,1.0)*0.004;
 	*/
 }
-vec3 drawRealMoon(vec3 PlayerPos, vec3 WorldSunVec, vec3 Color, inout vec3 occludeStars){
+vec3 drawRealMoon(vec3 PlayerPos, vec3 WorldSunVec, vec3 Color, inout vec3 occludeStars, float size){
 
-	float Shape = min(max(dot(WorldSunVec,PlayerPos)-0.9992,0.0)/(1.0-0.9992),1.0);//  * clamp(-dot(WorldSunVec,PlayerPos),0,1);
+	float Shape = min(max(dot(WorldSunVec,PlayerPos)-size,0.0)/(1.0-size),1.0);
 	
-	occludeStars *= max(1.0-Shape*50,0.0);
+	occludeStars *= max(1.0-Shape*50.0, 0.0);
 
 	return Shape * Color/4000 * 3.0;
 }

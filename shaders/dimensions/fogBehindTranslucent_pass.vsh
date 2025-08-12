@@ -27,7 +27,9 @@ uniform vec3 moonPosition;
 uniform mat4 gbufferModelViewInverse;
 uniform int frameCounter;
 
-
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
 
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -70,17 +72,23 @@ void main() {
 	#endif
 
 	#ifdef END_SHADER
-		lightCol.rgb = vec3(0.0);
-		averageSkyCol = vec3(0.0);
-		averageSkyCol_Clouds = vec3(15);
+		lightCol.rgb = 500.0 * vec3(AmbientLightEnd_R, AmbientLightEnd_G, AmbientLightEnd_B);
+		averageSkyCol = 500.0 * vec3(AmbientLightEnd_R, AmbientLightEnd_G, AmbientLightEnd_B);
+		averageSkyCol_Clouds = 500.0 * vec3(AmbientLightEnd_R, AmbientLightEnd_G, AmbientLightEnd_B);
 	#endif
 
 	lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
 	WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
 
-	vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+	#ifdef CUSTOM_MOON_ROTATION
+		vec3 moonVec = customMoonVecSSBO;
+		sunlightCol *= smoothstep(0.005, 0.09, length(moonVec - WsunVec));
+	#else
+		vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+		if(dot(-moonVec, WsunVec) < 0.9999) moonVec = -moonVec;
+	#endif
+
 	WmoonVec = moonVec;
-	if(dot(-moonVec, WsunVec) < 0.9999) WmoonVec = -moonVec;
 
 	WrealSunVec = WsunVec;
 	WsunVec = mix(WmoonVec, WsunVec, clamp(lightCol.a,0,1));

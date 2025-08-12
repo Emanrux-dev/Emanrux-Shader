@@ -3,6 +3,12 @@
 #include "/lib/bokeh.glsl"
 #include "/lib/items.glsl"
 
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
+
+#include "/lib/entities.glsl"
+
 uniform float frameTimeCounter;
 #include "/lib/Shadow_Params.glsl"
 
@@ -55,6 +61,7 @@ attribute vec4 mc_Entity;
 	uniform int entityId;
 #endif
 
+varying float LIGHTNING_BOLT;
 
 uniform vec3 sunPosition;
 uniform vec3 moonPosition;
@@ -244,14 +251,27 @@ void main() {
 		// WsunVec = lightCol.a * normalize(mat3(gbufferModelViewInverse) * sunPosition);
 		
 		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
-		vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+		#ifdef CUSTOM_MOON_ROTATION
+			vec3 moonVec = customMoonVecSSBO;
+		#else
+			vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+			if(dot(-moonVec, WsunVec) < 0.9999) moonVec = -moonVec;
+		#endif
+		
 		vec3 WmoonVec = moonVec;
-		if(dot(-moonVec, WsunVec) < 0.9999) WmoonVec = -moonVec;
 
 		WsunVec = mix(WmoonVec, WsunVec, clamp(lightCol.a,0,1));
 
 		readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.cirrus, parameters.fog);
 
+	#endif
+
+	LIGHTNING_BOLT = 0.0;
+	#ifdef ENTITIES
+		if(entityId == ENTITY_LIGHTNING){
+			LIGHTNING_BOLT = 1.0;
+			normalMat.a = 0.50;
+		}
 	#endif
 
 	#ifdef TAA_UPSCALING

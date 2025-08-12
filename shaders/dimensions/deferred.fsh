@@ -2,7 +2,9 @@
 
 #define ReflectedFog
 
-
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
 
 flat varying vec3 averageSkyCol_Clouds;
 flat varying vec3 averageSkyCol;
@@ -62,7 +64,7 @@ uniform ivec2 eyeBrightnessSmooth;
 uniform float caveDetection;
 uniform int isEyeInWater;
 
-vec4 lightCol = vec4(lightSourceColor, float(sunElevation > 1e-5)*2-1.);
+// vec4 lightCol = vec4(lightSourceColor, float(sunElevation > 1e-5)*2-1.);
 
 #include "/lib/util.glsl"
 #include "/lib/ROBOBO_sky.glsl"
@@ -71,7 +73,11 @@ vec4 lightCol = vec4(lightSourceColor, float(sunElevation > 1e-5)*2-1.);
 #include "/lib/waterBump.glsl"
 
 vec3 WsunVec = mat3(gbufferModelViewInverse)*sunVec;
-vec3 WmoonVec = mat3(gbufferModelViewInverse)*moonVec;
+#ifdef CUSTOM_MOON_ROTATION
+	vec3 WmoonVec = customMoonVecSSBO;
+#else
+	vec3 WmoonVec = mat3(gbufferModelViewInverse)*moonVec;
+#endif
 // vec3 WsunVec = normalize(LightDir);
 
 vec3 toShadowSpaceProjected(vec3 p3){
@@ -302,8 +308,19 @@ if (gl_FragCoord.x > 18. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257){
 	vec3 skyAbsorb = vec3(0.0);
 	
 	vec3 mC = vec3(fog_coefficientMieR*1e-6, fog_coefficientMieG*1e-6, fog_coefficientMieB*1e-6);
+
+	#ifdef CUSTOM_MOON_ROTATION
+		#if LIGHTNING_SHADOWS > 0
+			vec3 WmoonVec = customMoonVec2SSBO;
+		#else
+			vec3 WmoonVec = customMoonVecSSBO;
+		#endif
+	#else
+		vec3 WmoonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition + gbufferModelViewInverse[3].xyz);
+		if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
+	#endif
 	
-	sky = calculateAtmosphere((averageSkyCol*4000./2.0), viewVector, vec3(0.0,1.0,0.0), WsunVec, -WsunVec, planetSphere, skyAbsorb, 10, blueNoise());
+	sky = calculateAtmosphere((averageSkyCol*4000./2.0), viewVector, vec3(0.0,1.0,0.0), WsunVec, WmoonVec, planetSphere, skyAbsorb, 10, blueNoise());
 
 	// fade atmosphere conditions for rain away when you pass above the cloud plane.
 	// float heightRelativeToClouds = clamp(1.0 - max(eyeAltitude - CloudLayer0_height,0.0) / 200.0 ,0.0,1.0);
@@ -327,9 +344,20 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 	float noise = interleaved_gradientNoise_temporal();
 
 	WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition + gbufferModelViewInverse[3].xyz);// * ( float(sunElevation > 1e-5)*2.0-1.0 );
-	vec3 WmoonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition + gbufferModelViewInverse[3].xyz);// * ( );
 
-	if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
+	#ifdef CUSTOM_MOON_ROTATION
+		#if LIGHTNING_SHADOWS > 0
+			WmoonVec = customMoonVec2SSBO;
+		#else
+			WmoonVec = customMoonVecSSBO;
+		#endif
+		vec3 moonColor2 = moonColor * mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
+		//suncol *= mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
+	#else
+		WmoonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition + gbufferModelViewInverse[3].xyz);
+		if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
+		vec3 moonColor2 = moonColor;
+	#endif
 
 	vec3 sky = texelFetch2D(colortex4,ivec2(gl_FragCoord.xy)-ivec2(257,0),0).rgb/150.0;	
 	sky = mix(averageSkyCol_Clouds * AmbientLightTint * 0.25, sky,  pow(clamp(viewVector.y+1.0,0.0,1.0),5.0));
@@ -342,8 +370,14 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 
 	float cloudPlaneDistance = 0.0;
 	vec2 cloudDistance = vec2(0.0);
+
+	#ifdef CUSTOM_MOON_ROTATION
+		vec3 sunColor2 = sunColor * smoothstep(0.005, 0.09, length(WmoonVec - WsunVec));
+	#else
+		vec3 sunColor2 = sunColor;
+	#endif
 	
-	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, WmoonVec, sunColor*2.5, moonColor*2.5, skyGroundCol/30.0, cloudPlaneDistance, cloudDistance);
+	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, WmoonVec, sunColor2*2.5, moonColor2*2.5, skyGroundCol/30.0, cloudPlaneDistance, cloudDistance);
 
 	float atmosphereAlpha = 1.0;
 	WsunVec = mix(WmoonVec, WsunVec, clamp(float(sunElevation > 1e-5)*2.0-1.0 ,0,1));

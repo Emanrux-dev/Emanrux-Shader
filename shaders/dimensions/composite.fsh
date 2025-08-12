@@ -4,8 +4,13 @@
 	#undef DISTANT_HORIZONS
 #endif
 
+#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
+	#include "/lib/SSBOs.glsl"
+#endif
 
-flat varying vec3 WsunVec;
+#ifndef END_SHADER
+	flat varying vec3 WsunVec;
+#endif
 flat varying vec2 TAA_Offset;
 
 #include "/lib/res_params.glsl"
@@ -253,7 +258,7 @@ float convertHandDepth_2(in float depth, bool hand) {
 vec2 SSAO(
 	vec3 viewPos, vec3 normal, vec3 flatnormal, bool hand, bool leaves, float noise
 ){
-	int samples = 7;
+	int samples = 4;
 	float occlusion = 0.0; 
 	float sss = 0.0;
 
@@ -263,6 +268,8 @@ vec2 SSAO(
 	float linearViewDistance = length(viewPos);
 	float distanceScale = hand ? 30.0 : mix(40.0, 10.0, pow(clamp(1.0 - linearViewDistance/50.0,0.0,1.0),2.0));
 	float depthCancelation = (linearViewDistance*linearViewDistance) / distanceScale ;
+
+	if (linearViewDistance < 15.0 || hand) samples = 7;
 
 	// distanceScale *= 10;
   	vec2 screenEdges = 2.0/vec2(viewWidth, viewHeight);
@@ -287,19 +294,20 @@ vec2 SSAO(
 
 			vec3 viewPosDiff = offsetViewPos - viewPos;
 			float viewPosDiffSquared = dot(viewPosDiff, viewPosDiff);
-			
-			float threshHold = max(1.0 - viewPosDiffSquared/depthCancelation, 0.0);
 
 			if (viewPosDiffSquared > 1e-5){
+				vec3 normViewPosDiff = normalize(viewPosDiff);
+				float threshHold = max(1.0 - viewPosDiffSquared/depthCancelation, 0.0);
+
 				n += 1.0;
-				float preAo = 1.0 - clamp(dot(normalize(viewPosDiff), flatnormal)*25.0,0.0,1.0);
-				occlusion += max(0.0, dot(normalize(viewPosDiff), normal) - preAo) * threshHold;
+				float preAo = 1.0 - clamp(dot(normViewPosDiff, flatnormal)*25.0,0.0,1.0);
+				occlusion += max(0.0, dot(normViewPosDiff, normal) - preAo) * threshHold;
 				
 				#ifdef Ambient_SSS
 					#ifdef OLD_INDIRECT_SSS
-						sss += clamp(-dot(normalize(viewPosDiff), flatnormal),0.0,1.0) * exp(-10*occlusion);
+						sss += clamp(-dot(normViewPosDiff, flatnormal),0.0,1.0) * exp(-10*occlusion);
 					#else
-						sss += clamp(-dot(normalize(viewPosDiff), flatnormal) - occlusion/n,0.0,1.0) * 0.25 + (normalize(mat3(gbufferModelViewInverse) * -viewPosDiff).y - occlusion/n) * threshHold;
+						sss += clamp(-dot(normViewPosDiff, flatnormal) - occlusion/n,0.0,1.0) * 0.25 + (normalize(mat3(gbufferModelViewInverse) * -viewPosDiff).y - occlusion/n) * threshHold;
 					#endif
 				#endif
 
@@ -333,6 +341,11 @@ float encodeVec2(float x,float y){
 
 float ld(float dist) {
     return (2.0 * near) / (far + near - dist * (far - near));
+}
+
+float LinearizeDepth(float depth, float near, float far) {
+	float z = depth * 2.0 - 1.0;
+    return (2.0 * near) / (far + near - z * (far - near));
 }
 
 
@@ -428,14 +441,23 @@ void main() {
 
 
 
-#ifdef OVERWORLD_SHADER
+#if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
+	vec3 feetPlayerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
+	#ifdef END_SHADER
+		vec3 WsunVec = normalize(END_LIGHT_POS-(feetPlayerPos+cameraPosition));
+	#endif
+
 	float SpecularTex = texture2D(colortex8,texcoord).z;
 	float LabSSS = clamp((-64.0 + SpecularTex * 255.0) / 191.0 ,0.0,1.0);
 
 	float NdotL = clamp(dot(normal,WsunVec),0.0,1.0);
 	float vanillAO = clamp(texture2D(colortex15,texcoord).a,0.0,1.0)  ;
 
-	float minshadowfilt = Min_Shadow_Filter_Radius;
+	#ifdef END_SHADER
+		float minshadowfilt = Min_Shadow_Filter_Radius_END;
+	#else
+		float minshadowfilt = Min_Shadow_Filter_Radius;
+	#endif
 	float maxshadowfilt = Max_Shadow_Filter_Radius;
 
 	if(lightmap.y < 0.1) maxshadowfilt = min(maxshadowfilt, minshadowfilt);
@@ -453,37 +475,53 @@ void main() {
 
 		#ifdef Variable_Penumbra_Shadows
 			// if (LabSSS > -1) {
-				
-				vec3 feetPlayerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
-				vec3 projectedShadowPosition = mat3(shadowModelView) * feetPlayerPos  + shadowModelView[3].xyz;
-				projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
-
-				// mat4 Custom_ViewMatrix = BuildShadowViewMatrix();
-				// projectedShadowPosition = mat3(Custom_ViewMatrix) * feetPlayerPos  + Custom_ViewMatrix[3].xyz;
-				// projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
-				
-				//apply distortion
-				#ifdef DISTORT_SHADOWMAP
-					float distortFactor = calcDistort(projectedShadowPosition.xy);
-					projectedShadowPosition.xy *= distortFactor;
+				#ifdef OVERWORLD_SHADER
+					#ifdef CUSTOM_MOON_ROTATION
+						vec3 projectedShadowPosition = mat3(customShadowMatrixSSBO) * feetPlayerPos  + customShadowMatrixSSBO[3].xyz;
+					#else
+						vec3 projectedShadowPosition = mat3(shadowModelView) * feetPlayerPos + shadowModelView[3].xyz;
+					#endif
+					projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
+					
+					//apply distortion
+					#ifdef DISTORT_SHADOWMAP
+						float distortFactor = calcDistort(projectedShadowPosition.xy);
+						projectedShadowPosition.xy *= distortFactor;
+					#else
+						float distortFactor = 1.0;
+					#endif
 				#else
 					float distortFactor = 1.0;
 				#endif
 
+				#ifdef END_SHADER
+					vec4 shadowPos = customShadowMatrixSSBO * (gbufferModelViewInverse * vec4(viewPos, 1.0));
+					shadowPos = customShadowPerspectiveSSBO * shadowPos;
+					vec3 projectedShadowPosition = shadowPos.xyz / shadowPos.w;
+				#endif
 
 				//do shadows only if on shadow map
 				if (abs(projectedShadowPosition.x) < 1.0-1.5/shadowMapResolution && abs(projectedShadowPosition.y) < 1.0-1.5/shadowMapResolution && abs(projectedShadowPosition.z) < 6.0 ){
+					
+					#ifdef OVERWORLD_SHADER
+						projectedShadowPosition.z += shadowProjection[3].z * 0.0013;
+					#endif
 
-					projectedShadowPosition.z += shadowProjection[3].z * 0.0013;
 					
 					const float threshMul = max(2048.0/shadowMapResolution*shadowDistance/128.0,0.95);
 					float distortThresh = (sqrt(1.0-NdotL*NdotL)/NdotL+0.7)/distortFactor;
 					float diffthresh = distortThresh/6000.0*threshMul;
+					
 					projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5,0.5,0.5);
+					//projectedShadowPosition.z = LinearizeDepth(projectedShadowPosition.z, 0.5, 256.0); // it should be linearized but I can't see a difference...					
 
 					float mult = maxshadowfilt;
 					float avgBlockerDepth = 0.0;
-					vec2 scales = vec2(0.0, Max_Filter_Depth);
+					#ifndef END_SHADER
+						vec2 scales = vec2(0.0, Max_Filter_Depth);
+					#else
+						vec2 scales = vec2(0.0, Max_Filter_Depth_END);
+					#endif
 					float blockerCount = 0.0;
 					float rdMul = distortFactor*(1.0+mult)*d0*k/shadowMapResolution;
 					float diffthreshM = diffthresh*mult*d0*k/20.;
@@ -497,6 +535,7 @@ void main() {
 						float weight = 3.0 + (i+noise) *rdMul/SHADOW_FILTER_SAMPLE_COUNT*shadowMapResolution*distortFactor/2.7;
 						
 						float d = texelFetch2D(shadow, ivec2((projectedShadowPosition.xy+offsetS*rdMul)*shadowMapResolution),0).x;
+						//d = LinearizeDepth(d, 0.5, 256.0); // it should be linearized but I can't see a difference...	
 						float b = smoothstep(weight*diffthresh/2.0, weight*diffthresh, projectedShadowPosition.z - d);
 
 						blockerCount += b;

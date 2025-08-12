@@ -35,6 +35,7 @@ uniform mat4 gbufferModelViewInverse;
 uniform vec3 sunPosition;
 uniform vec2 texelSize;
 uniform float sunElevation;
+uniform float moonElevation;
 uniform float eyeAltitude;
 uniform float rainStrength;
 uniform float nightVision;
@@ -43,6 +44,7 @@ uniform float near;
 uniform float frameTime;
 uniform int frameCounter;
 uniform vec3 cameraPosition;
+uniform vec4 lightningBoltPosition;
 
 vec3 sunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
 
@@ -81,6 +83,17 @@ float hash11(float p)
 
 #define USE_SCENE_CONTROLLER_SETTINGS
 #include "/lib/scene_controller.glsl"
+
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+
+	#if LIGHTNING_SHADOWS > 0
+		float lightningFlashTimer = floor(frameTimeCounter * 11.0);
+		float randomSeed = fract(sin(dot(vec2(lightningFlashTimer), vec2(12.9898,78.233))) * 43758.5453);
+		float lightningFlash = mix(0.1, 2.5, randomSeed);
+	#endif
+#endif
+
 
 void main() {
 
@@ -151,16 +164,31 @@ void main() {
 	vec2 planetSphere = vec2(0.0);
 
 	float sunVis = clamp(sunElevation,0.0,0.04)/0.04*clamp(sunElevation,0.0,0.04)/0.04;
-	float moonVis = clamp(-sunElevation,0.0,0.04)/0.04*clamp(-sunElevation,0.0,0.04)/0.04;
+	float moonVis = clamp(-moonElevation,0.0,0.04)/0.04*clamp(-moonElevation,0.0,0.04)/0.04;
 
 	vec3 skyAbsorb = vec3(0.0);
 	sunColor = calculateAtmosphere(vec3(0.0), sunVec, vec3(0.0,1.0,0.0), sunVec, -sunVec, planetSphere, skyAbsorb, 25,0.0);
 	sunColor = sunColorBase/4000.0 * skyAbsorb;
 	moonColor = moonColorBase/4000.0;
 
+	#ifdef CUSTOM_MOON_ROTATION
+		#if LIGHTNING_SHADOWS > 0
+			vec3 WmoonVec = customMoonVec2SSBO;
+		#else
+			vec3 WmoonVec = customMoonVecSSBO;
+		#endif
+
+		float moonPhase = 1.0 - 0.5 * (dot(sunVec, WmoonVec) + 1.0);
+		moonVis = smoothstep(0.08, -0.03, -WmoonVec.y);
+		moonColor *= sqrt(moonPhase);
+		
+	#endif
+
 	// lightSourceColor = sunVis >= 1e-5 ? sunColor * sunVis : moonColor * moonVis;
 	lightSourceColor = sunColor * sunVis + moonColor * moonVis;
-
+	#ifdef CUSTOM_MOON_ROTATION
+		lightSourceColor *= smoothstep(0.005, 0.09, length(WmoonVec - sunVec));
+	#endif
 #endif
 
 #if defined OVERWORLD_SHADER && defined TWILIGHT_FOREST_FLAG

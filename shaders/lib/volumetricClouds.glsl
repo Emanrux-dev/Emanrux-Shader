@@ -532,7 +532,7 @@ vec3 getCloudLighting(
 	#ifdef ALTERNATE_POWDER_EFFECT
 		float powderEffect = 1.0-exp(-10.0*shapeFaded); powderEffect *= powderEffect; powderEffect *= 2.0;
 	#else
-		float powderEffect = 1.0 - exp(-3.0*shapeFaded);
+		float powderEffect = 1.0 - exp(-8.0*shapeFaded);
 	#endif
 	vec3 directScattering = directLightCol_multi * powderEffect * exp(-3.0*sunShadowMask) + directLightCol * exp(-10.0*sunShadowMask);
 	directScattering += directLightCol_multi2 * powderEffect * exp(-3.0*sunShadowMask) + directLightCol2 * exp(-10.0*sunShadowMask);
@@ -634,7 +634,7 @@ vec4 raymarchCloud(
 			newPos.xz /= max(newPos.y,0.0)*0.0025 + 1.0;
 			newPos.y = min(newPos.y,0.0);
 
-			float distancefog = exp(-0.00015*length(newPos));
+			float distancefog = exp(-0.00025*length(newPos));
 			vec3 atmosphereHaze = (sampledSkyCol - sampledSkyCol * distancefog);
 			lighting = lighting * distancefog + atmosphereHaze;
 
@@ -781,7 +781,7 @@ vec4 raymarchCloud(
 					newPos.xz /= max(newPos.y,0.0)*0.0025 + 1.0;
 					newPos.y = min(newPos.y,0.0);
 
-					float distancefog = exp2(-0.0002*length(newPos));	
+					float distancefog = exp2(-0.0006*length(newPos));	
 
 					vec3 atmosphereHaze = (sampledSkyCol - sampledSkyCol * distancefog);
 					lighting = lighting * distancefog + atmosphereHaze;

@@ -1239,7 +1239,8 @@ void main() {
 		
 		// TODO CHECK IF *= OR =
 		// *= looks better idk
-		SSSColor *= SubsurfaceScattering_sun(albedo, ShadowBlockerDepth, sunSSS_density, clamp(dot(feetPlayerPos_normalized, WsunVec),0.0,1.0), SS_directLight.g, shadowMapFalloff2, hand);
+		// = is nice too though ???
+		SSSColor = SubsurfaceScattering_sun(albedo, ShadowBlockerDepth, sunSSS_density, clamp(dot(feetPlayerPos_normalized, WsunVec),0.0,1.0), SS_directLight.g, shadowMapFalloff2, hand);
 		
 		if(isEyeInWater != 1) SSSColor *= lightLeakFix;
 		

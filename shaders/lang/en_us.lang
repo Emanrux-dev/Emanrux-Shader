@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §dECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 1.0.2
+    value.SHADER_VERSION_LABEL.482 = 1.0.3
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -69,8 +69,9 @@ screen.CUSTOM_MOON_SETTINGS = Custom Moon Settings
     screen.CUSTOM_MOON_ROTATION_DISCLAIMER3 = §cOne eclipse per ingame year guaranteed at -35° and -45°!§r
     option.MOON_TIME_OFFSET = Moon Time Offset (Ticks)
     option.CUSTOM_SHADOWS_QUALITY = Custom Shadows Culling
-        value.CUSTOM_SHADOWS_QUALITY.0 = Fancy
+        value.CUSTOM_SHADOWS_QUALITY.0 = Off
         value.CUSTOM_SHADOWS_QUALITY.1 = Fast
+        value.CUSTOM_SHADOWS_QUALITY.2 = Fancy
         option.CUSTOM_SHADOWS_QUALITY.comment = Specify culling of custom light positions (Moon, Lightning, End). Can cause some shadows to be culled that shouldn't be culled
 screen.EndLighting = End Lighting
     option.END_ISLAND_LIGHT = Main End Island Light
@@ -301,6 +302,8 @@ screen.Clouds = Cloud Settings
     option.Rain_coverage = Extra Rain Coverage
     option.Thunder_coverage = Extra Thunder Coverage
     option.Daily_Weather = Daily Weather
+    value.CLOUD_PHASE.0 = Henyey-Greenstein
+    value.CLOUD_PHASE.1 = Cornette-Shanks
 
     screen.CumulusClouds        = Cumulus Clouds
         option.CloudLayer0          = Small Cumulus Clouds

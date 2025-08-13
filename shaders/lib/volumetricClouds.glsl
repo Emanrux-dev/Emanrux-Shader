@@ -434,16 +434,18 @@ float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 
 #ifndef CLOUDSHADOWSONLY
 
-// Henyey-Greenstein
-//float phaseCloud(float x, float g){
-//    float gg = g * g;
-//    return (gg * -0.25 + 0.25) * pow(-2.0 * (g * x) + (gg + 1.0), -1.5);
-//}
-
-// Cornette-Shanks
-float phaseCloud(float x, float g){
-    return (3.0 * (1.0 - g * g) * (1.0 + x * x)) / (4.0 * 3.14159265359 * 2.0 * (2.0 + g * g) * pow(1.0 + g * g - 2.0 * g * x, 3.0/2.0));
-}
+#if CLOUD_PHASE == 0
+	// Henyey-Greenstein
+	float phaseCloud(float x, float g){
+		float gg = g * g;
+		return (gg * -0.25 + 0.25) * pow(-2.0 * (g * x) + (gg + 1.0), -1.5);
+	}
+#else
+	// Cornette-Shanks
+	float phaseCloud(float x, float g){
+		return (3.0 * (1.0 - g * g) * (1.0 + x * x)) / (4.0 * 3.14159265359 * 2.0 * (2.0 + g * g) * pow(1.0 + g * g - 2.0 * g * x, 3.0/2.0));
+	}
+#endif
 
 float getCloudScattering(
 	int LayerIndex,

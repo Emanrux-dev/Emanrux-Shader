@@ -29,7 +29,7 @@ Note: With default settings there is at least one guaranteed eclipse per ingame 
 
 ## Shader snow effect
 
-<img width="2560" height="1440" alt="2025-08-12_01 51 31" src="https://github.com/user-attachments/assets/3df509c1-1e27-462d-95cc-a0d8d96f1fe5" />
+<img width="1920" height="1080" alt="2025-08-13_13 38 18" src="https://github.com/user-attachments/assets/31e5102e-d872-4aec-a606-39ae88385d45" />
 
 ## Puddles with rain ripples
 

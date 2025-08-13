@@ -772,6 +772,12 @@ void main() {
     temporallyFilteredVL.rgb *= nametagbackground;
   #endif
 
+  // bloomy rain effect
+  #ifdef OVERWORLD_SHADER
+    float rainDrops =  clamp(texture2D(colortex9,texcoord).a,  0.0,1.0); 
+    if(rainDrops > 0.0) bloomyFogMult *= clamp(1.0 - pow(rainDrops*5.0,2),0.0,1.0);
+  #endif
+
   // blend all fog types. volumetric fog, volumetric clouds, distance based fogs for lava, powdered snow, blindness, and darkness.
   blendAllFogTypes(color, bloomyFogMult, temporallyFilteredVL, linearDistance, playerPos_normalized, cameraPosition, isSky, isLightning);
 

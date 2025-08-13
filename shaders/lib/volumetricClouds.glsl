@@ -182,8 +182,8 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		coverage += Thunder_coverage * thunderStrength;
 
 
-		largeCloud = texture2D(noisetex, (samplePos.zx + cloud_movement*2.0)/12000.0 * CloudLayer1_scale).b;
-		smallCloud = texture2D(noisetex, (samplePos.zx - cloud_movement*2.0)/3500.0 * CloudLayer1_scale).b;
+		largeCloud = texture2D(noisetex, (samplePos.zx + cloud_movement*2.0)/10000.0 * CloudLayer1_scale).b;
+		smallCloud = texture2D(noisetex, (samplePos.zx - cloud_movement*2.0)/2500.0 * CloudLayer1_scale).b;
 		
 		smallCloud = abs(largeCloud* -0.7) + smallCloud;
 
@@ -196,8 +196,8 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		coverage += Rain_coverage * rainStrength;
 		coverage += Thunder_coverage * thunderStrength;
 
-		largeCloud = texture2D(noisetex, (samplePos.xz + cloud_movement)/7000.0 * CloudLayer0_scale).b;
-		smallCloud = 1.0-texture2D(noisetex, (samplePos.xz - cloud_movement)/900.0 * CloudLayer0_scale).r;
+		largeCloud = texture2D(noisetex, (samplePos.xz + cloud_movement)/5000.0 * CloudLayer0_scale).b;
+		smallCloud = 1.0-texture2D(noisetex, (samplePos.xz - cloud_movement)/500.0 * CloudLayer0_scale).r;
 
 		smallCloud = abs(largeCloud-0.6) + smallCloud*smallCloud;
 
@@ -435,10 +435,10 @@ float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 #ifndef CLOUDSHADOWSONLY
 
 // Henyey-Greenstein
-// float phaseCloud(float x, float g){
-//     float gg = g * g;
-//     return (gg * -0.25 + 0.25) * pow(-2.0 * (g * x) + (gg + 1.0), -1.5);
-// }
+//float phaseCloud(float x, float g){
+//    float gg = g * g;
+//    return (gg * -0.25 + 0.25) * pow(-2.0 * (g * x) + (gg + 1.0), -1.5);
+//}
 
 // Cornette-Shanks
 float phaseCloud(float x, float g){
@@ -475,7 +475,7 @@ float getCloudScattering(
 	moonVis = moonVis * moonVis;
 
 	float isLarge = 80;
-	vec3 lightVec = sunVis * sunVector + moonVis * moonVector;
+	vec3 lightVec = normalize(mix(moonVector, sunVector, smoothstep(-0.06, 0.06, sunElevation)));
 
 	for (int i = 0; i < samples; i++){
 		if((LayerIndex == ALTOSTRATUS_LAYER) || (LayerIndex == CIRRUS_LAYER)){
@@ -527,7 +527,11 @@ vec3 getCloudLighting(
 	directLightCol2 = pow(directLightCol2, heightScal);
 	directLightCol_multi2 = pow(directLightCol_multi2, heightScal);
 
-	float powderEffect = 1.0-exp(-14.0*shapeFaded); powderEffect *= powderEffect; powderEffect *= 2.0;
+	#ifdef ALTERNATE_POWDER_EFFECT
+		float powderEffect = 1.0-exp(-10.0*shapeFaded); powderEffect *= powderEffect; powderEffect *= 2.0;
+	#else
+		float powderEffect = 1.0 - exp(-3.0*shapeFaded);
+	#endif
 	vec3 directScattering = directLightCol_multi * powderEffect * exp(-3.0*sunShadowMask) + directLightCol * exp(-10.0*sunShadowMask);
 	directScattering += directLightCol_multi2 * powderEffect * exp(-3.0*sunShadowMask) + directLightCol2 * exp(-10.0*sunShadowMask);
 	vec3 indirectScattering = indirectLightCol * mix(1.0, exp2(-5.0*shape), indirectShadowMask*indirectShadowMask);
@@ -671,7 +675,7 @@ vec4 raymarchCloud(
 			}
 		#endif
 
-		vec3 mainLightVec = mix(moonVector, sunVector, smoothstep(-0.06, 0.06, sunElevation));
+		vec3 mainLightVec = normalize(mix(moonVector, sunVector, smoothstep(-0.06, 0.06, sunElevation)));
 
 		float tallness = maxHeight - minHeight;
 
@@ -722,7 +726,7 @@ vec4 raymarchCloud(
 					// large cumulus layer -> small cumulus layer
 					#if defined CloudLayer0 && defined CloudLayer1
 						if(LayerIndex == SMALLCUMULUS_LAYER){
-							shadowStartPos = rayPosition + mainLightVec / abs(mainLightVec.y) * max((CloudLayer1_height + 20.0) - rayPosition.y, 5.0);
+							shadowStartPos = rayPosition + mainLightVec / abs(mainLightVec.y) * max((CloudLayer1_height + 20.0) - rayPosition.y, 0.0);
 							sunShadowMask += 3.0 * getCloudShape(LARGECUMULUS_LAYER, 0, shadowStartPos, CloudLayer1_height, CloudLayer1_height+CloudLayer1_tallness)*densityLarge;
 						}
 					#endif

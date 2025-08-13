@@ -343,11 +343,6 @@ float ld(float dist) {
     return (2.0 * near) / (far + near - dist * (far - near));
 }
 
-float LinearizeDepth(float depth, float near, float far) {
-	float z = depth * 2.0 - 1.0;
-    return (2.0 * near) / (far + near - z * (far - near));
-}
-
 
 #include "/lib/sky_gradient.glsl"
 
@@ -513,7 +508,6 @@ void main() {
 					float diffthresh = distortThresh/6000.0*threshMul;
 					
 					projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5,0.5,0.5);
-					//projectedShadowPosition.z = LinearizeDepth(projectedShadowPosition.z, 0.5, 256.0); // it should be linearized but I can't see a difference...					
 
 					float mult = maxshadowfilt;
 					float avgBlockerDepth = 0.0;
@@ -535,7 +529,6 @@ void main() {
 						float weight = 3.0 + (i+noise) *rdMul/SHADOW_FILTER_SAMPLE_COUNT*shadowMapResolution*distortFactor/2.7;
 						
 						float d = texelFetch2D(shadow, ivec2((projectedShadowPosition.xy+offsetS*rdMul)*shadowMapResolution),0).x;
-						//d = LinearizeDepth(d, 0.5, 256.0); // it should be linearized but I can't see a difference...	
 						float b = smoothstep(weight*diffthresh/2.0, weight*diffthresh, projectedShadowPosition.z - d);
 
 						blockerCount += b;

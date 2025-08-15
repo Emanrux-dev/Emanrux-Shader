@@ -472,7 +472,7 @@ float getCloudScattering(
 	#if defined CAELUM_SUPPORT || !defined CUSTOM_MOON_ROTATION
 		float moonVis = smoothstep(-0.04, 0.015, -moonElevation);
 	#else
-		float  moonVis = smoothstep(0.08, -0.03, -moonVector.y);
+		float  moonVis = smoothstep(0.0, 0.2, moonVector.y);
 	#endif
 	moonVis = moonVis * moonVis;
 
@@ -921,7 +921,7 @@ vec4 GetVolumetricClouds(
 	#if defined CAELUM_SUPPORT || !defined CUSTOM_MOON_ROTATION
 		float moonVis = smoothstep(-0.04, 0.015, -moonElevation);
 	#else
-		float moonVis = smoothstep(0.08, -0.03, -moonVector.y);
+		float moonVis = smoothstep(0.0, 0.2, moonVector.y);
 	#endif
 
 	#if defined EXCLUDE_WRITE_TO_LUT && defined USE_CUSTOM_CLOUD_LIGHTING_COLORS
@@ -998,7 +998,7 @@ vec4 GetVolumetricClouds(
 	#if defined CAELUM_SUPPORT || !defined CUSTOM_MOON_ROTATION
 		moonVis = smoothstep(-0.04, 0.015, -moonElevation);
 	#else
-		moonVis = smoothstep(0.08, -0.03, -moonVector.y);
+		moonVis = smoothstep(0.0, 0.2, moonVector.y);
 	#endif
 
 	moonScattering2 = moonScattering * moonVis;

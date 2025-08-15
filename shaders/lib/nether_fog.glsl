@@ -69,18 +69,29 @@ vec4 GetVolumetricFog(
 	#endif
 
 	for (int i = 0; i < SAMPLECOUNT; i++) {
-		float d = (pow(expFactor, float(i+dither2)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);
+		float d = (pow(expFactor, float(i+dither2)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1.0-1.0/expFactor);
 		float dd = pow(expFactor, float(i+dither)/float(SAMPLECOUNT)) * log(expFactor) / float(SAMPLECOUNT)/(expFactor-1.0);
 		
-		progressW = gbufferModelViewInverse[3].xyz + cameraPosition + d*dVWorld;
+		progressW = gbufferModelViewInverse[3].xyz + d*dVWorld;
+
+		vec3 dist3 = progressW;
+		float dist = length(dist3);
+
+		progressW += cameraPosition;
 
 		float densityVol = cloudVol(progressW);
+		float clearArea = 1.0 - min(max(1.0 - dist / 24.0,0.0),1.0);
 
 		//------ PLUME EFFECT
-			float plumeDensity = min(densityVol * pow(min(max(100.0-progressW.y,0.0)/30.0,1.0),4.0), pow(clamp(1.0 - length(progressW-cameraPosition)/far,0.0,1.0),5.0) * NETHER_PLUME_DENSITY);
+			float plumeDensity = min(densityVol * pow(min(max(100.0-progressW.y,0.0)/30.0,1.0),4.0), pow(clamp(1.0 - dist/far,0.0,1.0),5.0));
+
+			// #ifndef ReflectedFog
+				plumeDensity *= NETHER_PLUME_DENSITY;
+			// #endif
+
 			float plumeVolumeCoeff = exp(-plumeDensity*dd*dL);
 
-			vec3 lighting = vec3(1.0,0.4,0.2)*0.25 * exp(-15.0*densityVol);
+			vec3 lighting = vec3(1.0,0.4,0.2)*0.25 * exp(-15.0*densityVol) * (clearArea*clearArea*0.9+0.1);
 
 			color += (lighting - lighting * plumeVolumeCoeff) * absorbance;
 			absorbance *= plumeVolumeCoeff;
@@ -88,6 +99,11 @@ vec4 GetVolumetricFog(
 		//------ HAZE EFFECT
 			// dont make haze contrube to absorbance.
 			float hazeDensity = 0.001;
+
+			#ifndef ReflectedFog
+				hazeDensity *= NETHER_HAZE_DENSITY;
+			#endif
+
 			float hazeVolumeCoeff = exp(-hazeDensity*dd*dL);
 			
 			vec3 hazeLighting = hazeColor;
@@ -96,6 +112,11 @@ vec4 GetVolumetricFog(
 
 		//------ CEILING SMOKE EFFECT
 			float ceilingSmokeDensity = 0.001 * pow(min(max(progressW.y-40.0,0.0)/50.0,1.0),3.0);
+
+			// #ifndef ReflectedFog
+				ceilingSmokeDensity *= NETHER_CEILING_SMOKE_DENSITY;
+			// #endif
+
 			float ceilingSmokeVolumeCoeff = exp(-ceilingSmokeDensity*dd*dL);
 			
 			vec3 ceilingSmoke = vec3(0.1);
@@ -104,7 +125,7 @@ vec4 GetVolumetricFog(
 			absorbance *= ceilingSmokeVolumeCoeff;
 
 			#if defined FLASHLIGHT && defined FLASHLIGHT_FOG_ILLUMINATION
-				vec3 shiftedViewPos = mat3(gbufferModelView)*(progressW-cameraPosition) + vec3(-0.25, 0.2, 0.0);
+				vec3 shiftedViewPos = mat3(gbufferModelView)*(dist3) + vec3(-0.25, 0.2, 0.0);
 				vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos;
 				vec2 scaledViewPos = shiftedViewPos.xy / max(-shiftedViewPos.z - 0.5, 1e-7);
 				float linearDistance = length(shiftedPlayerPos);
@@ -121,7 +142,7 @@ vec4 GetVolumetricFog(
 
 		//------ LPV FOG EFFECT
 			#if LPV_VL_FOG_ILLUMINATION > 0 && defined EXCLUDE_WRITE_TO_LUT
-				color += LPV_FOG_ILLUMINATION(progressW-cameraPosition, dd, dL) * TorchBrightness_autoAdjust * absorbance;
+				color += LPV_FOG_ILLUMINATION(dist3, dd, dL) * TorchBrightness_autoAdjust * absorbance;
 			#endif
 
 	}

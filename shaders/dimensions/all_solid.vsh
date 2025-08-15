@@ -283,11 +283,7 @@ void main() {
 	// if(gl_Color.a < 1.0) NameTags = 1;
 	// if(gl_Color.a >= 0.24 && gl_Color.a <= 0.25 ) gl_Position = vec4(10,10,10,1);
 	#ifdef INCLUDE_UNLISTED_ENTITIES
-		if(entityId == 65535) {
-			bool unlistedEntity = true;
-		} else {
-			bool unlistedEntity = false;
-		}
+		bool unlistedEntity = true;
 	#else
 		bool unlistedEntity = false;
 	#endif

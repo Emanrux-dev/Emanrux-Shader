@@ -1043,7 +1043,7 @@ void main() {
 		#endif
 
 		#if defined END_SHADER && defined END_ISLAND_LIGHT
-			DirectLightColor = 0.55*vec3(AmbientLightEnd_R,AmbientLightEnd_G*0.6,AmbientLightEnd_B*0.8);
+			DirectLightColor = vec3(VORTEX_LIGHT_COL_R,VORTEX_LIGHT_COL_G,VORTEX_LIGHT_COL_B);
 
 			shadowColor = DirectLightColor;
 		#endif

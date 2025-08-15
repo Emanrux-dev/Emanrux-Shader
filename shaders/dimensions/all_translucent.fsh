@@ -774,7 +774,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 		#ifdef END_ISLAND_LIGHT
 			vec3 WsunVec = normalize(vec3(END_LIGHT_POS)-(feetPlayerPos+cameraPosition));
-			vec3 DirectLightColor = 0.55*vec3(AmbientLightEnd_R,AmbientLightEnd_G*0.6,AmbientLightEnd_B*0.8);
+			vec3 DirectLightColor = vec3(VORTEX_LIGHT_COL_R,VORTEX_LIGHT_COL_G,VORTEX_LIGHT_COL_B);
 
 			float NdotL = clamp((-15 + dot(normal, normalize(WsunVec*mat3(gbufferModelViewInverse)))*255.0) / 240.0  ,0.0,1.0);
 			float Shadows = 1.0;

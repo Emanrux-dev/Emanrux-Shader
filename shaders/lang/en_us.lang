@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §dECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 1.0.4
+    value.SHADER_VERSION_LABEL.482 = 1.0.5
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -288,7 +288,19 @@ screen.Fog = Fog Settings
 
     screen.END_AND_NETHER_FOG = Nether/End Fog
         option.END_STORM_DENSTIY = End Storm Density
+        option.END_LIGHTNING = End Lightning in Fog
+        option.END_HAZE_DENSTIY = End Haze Density
         option.NETHER_PLUME_DENSITY = Nether Smoke Density
+        option.NETHER_CEILING_SMOKE_DENSITY = Nether Ceiling Smoke Density
+        option.NETHER_HAZE_DENSITY = Nether Haze Density
+        
+        screen.FOG_LIGHTING_COLORS = Fog Colors
+            option.VORTEX_LIGHT_COL_R = Main End Island Fog/Light Red
+            option.VORTEX_LIGHT_COL_G = Main End Island Fog/Light Green
+            option.VORTEX_LIGHT_COL_B = Main End Island Fog/Light Blue
+            option.END_LIGHTNING_COL_R = End Lightning Red
+            option.END_LIGHTNING_COL_G = End Lightning Green
+            option.END_LIGHTNING_COL_B = End Lightning Blue
 
 screen.Clouds = Cloud Settings
     option.VOLUMETRIC_CLOUDS = Volumetric Clouds

@@ -14,6 +14,7 @@ Notable changes/additions compared to Bliss unstable:
  + Lightsource with shadows on the main end island
  + Rain & thunder cloud coverage and daily weather
  + Much better lightning strikes with clouds lighting up and shadows
+ + Rainbows
  + Caelum (Arda Craft) support
  + Emissive Ores
 
@@ -41,7 +42,12 @@ Note: With default settings there is at least one guaranteed eclipse per ingame 
 
 ## Moon Texture with physically correct lighting
 
-<img width="2560" height="1440" alt="2025-08-12_03 24 42" src="https://github.com/user-attachments/assets/29e4a8e3-2cfd-452b-b4dd-d346c187bd51" />
+<img width="1920" height="1080" alt="2025-08-16_23 14 00" src="https://github.com/user-attachments/assets/1e92cf5f-9a28-47a0-8737-36853034ff68" />
+
+## Rainbows
+
+<img width="1920" height="1080" alt="2025-08-16_21 34 11" src="https://github.com/user-attachments/assets/618bf00e-d4f6-4336-87d9-79fb65e18775" />
+
 
 ### SPECIAL THANKS:
 + Chocapic13, for the base shader

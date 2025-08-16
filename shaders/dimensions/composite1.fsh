@@ -59,6 +59,9 @@ uniform float rainStrength;
 
 	#ifdef REALMOON
 		uniform sampler2D moon;
+		#ifdef MOON_NORMALS
+			uniform sampler2D moonN;
+		#endif
 	#else
 		flat varying vec3 moonCol;
 	#endif
@@ -1523,9 +1526,10 @@ void main() {
 						u = u / (2.0 * moonAngularRadius) + 0.5;
 						v = -v / (2.0 * moonAngularRadius) + 0.5;
 						vec2 moonUV = vec2(u, v);
+						vec2 moonSphericalUV = sphereMap(moonUV);
 						
 						#ifdef CUSTOM_MOON_ROTATION
-							vec3 moonTex = texture2D(moon, sphereMap(moonUV)).rgb;
+							vec3 moonTex = texture2D(moon, moonSphericalUV).rgb;
 							float moonVis = smoothstep(0.08, -0.03, WmoonVec.y);
 
 							vec2 pos = 2.0 * moonUV - 1.0;
@@ -1536,7 +1540,23 @@ void main() {
 							vec3 moonDirWorld = moonDirLocal.x * tangent - moonDirLocal.y * binormal - moonDirLocal.z * WmoonVec;
 
 							float sunLight = dot(normalize(moonDirWorld), unsigned_WsunVec);
-							float mask = smoothstep(-0.2, 0.12, sunLight);
+
+							#ifdef MOON_NORMALS
+								float mask = smoothstep(-0.25, 0.12, sunLight);
+
+								vec3 normalTex = texture2D(moonN, moonSphericalUV).xyz;
+								normalTex = normalTex * 2.0 - 1.0;
+
+								mat3 TBN = mat3(tangent, binormal, normalize(moonDirWorld));
+								vec3 worldNormal = normalize(TBN * normalTex);
+
+								float normalSunLight = dot(worldNormal, unsigned_WsunVec);
+								
+								// smoothstep to boost contrast
+								mask *= smoothstep(-1.0, 1.0, normalSunLight);
+							#else
+								float mask = smoothstep(-0.2, 0.12, sunLight);
+							#endif
 							
 							moonTex *= (1.0 - vec3(0.0, 0.5, 0.7)*clamp((1.0-0.5*v)*moonVis, 0.0, 1.0)) * mask;
 						#else
@@ -1556,7 +1576,7 @@ void main() {
 
 								moonphaseMult = phase[moonPhase];
 							#endif
-							vec3 moonTex = (1 - vec3(0.0, 0.5, 0.7)*clamp((1-0.5*v)*moonVis, 0.0, 1.0)) * moonphaseMult * texture2D(moon, sphereMap(moonUV)).rgb;
+							vec3 moonTex = (1 - vec3(0.0, 0.5, 0.7)*clamp((1-0.5*v)*moonVis, 0.0, 1.0)) * moonphaseMult * texture2D(moon, moonSphericalUV).rgb;
 						#endif
 						
 						vec3 moonLightCol = moonColorBase2;

@@ -117,7 +117,7 @@ void main() {
             customMoonVecSSBO = -normalize(mat3(gbufferModelViewInverse) * moonPosition); //idk why it's negative
         #else
             // ensure the world time gets reset at a multiple of the month length
-            float absWorldTime = worldTime  + mod(worldDay, 100 - mod(100, MONTH_LENGTH))*24000.0 - 48000.0; // offset by two days to align to vanilla mogn phases by default
+            float absWorldTime = worldTime  + mod(worldDay, 100 - mod(100, MONTH_LENGTH))*24000.0 - 48000.0; // offset by two days to align to vanilla moon phases by default
 
             float yearLengthTicks = float(MONTH_LENGTH) * 12.0 * 24000.0;
             float timeInYear = mod(absWorldTime, yearLengthTicks)/(yearLengthTicks);

@@ -69,9 +69,9 @@ uniform float blindness;
 uniform float darknessFactor;
 uniform float darknessLightFactor;
 uniform float caveDetection;
+uniform float sunElevation;
 
 #if defined CUMULONIMBUS_LIGHTNING && defined OVERWORLD_SHADER && CUMULONIMBUS > 0
-  uniform float sunElevation;
   uniform vec4 lightningBoltPosition;
 
   #include "/lib/scene_controller.glsl"
@@ -93,7 +93,7 @@ uniform float caveDetection;
 	uniform sampler2D lightningTex15;
 	uniform sampler2D lightningTex16;
 
-  #define LIGHTNINGONLY;
+  #define LIGHTNINGONLY
   #include "/lib/volumetricClouds.glsl"
 #endif
 
@@ -105,6 +105,11 @@ uniform float caveDetection;
 #endif
 
 #include "/lib/sky_gradient.glsl"
+
+#if RAINBOW > 0 && defined OVERWORLD_SHADER
+  uniform float rainbowAmount;
+  #include "/lib/hsv.glsl"
+#endif
 
 uniform float eyeAltitude;
 
@@ -780,6 +785,44 @@ void main() {
 
   // blend all fog types. volumetric fog, volumetric clouds, distance based fogs for lava, powdered snow, blindness, and darkness.
   blendAllFogTypes(color, bloomyFogMult, temporallyFilteredVL, linearDistance, playerPos_normalized, cameraPosition, isSky, isLightning);
+
+////// --------------- RAINBOWS
+
+  #if RAINBOW > 0  && defined OVERWORLD_SHADER
+    #if RAINBOW > 1 
+      float rainbowAmount = 1.0;
+    #endif
+
+    float cosAngle = dot(-WsunVec, playerPos_normalized);
+    if (isEyeInWater == 0 && rainbowAmount > 0.0 && cosAngle < 0.7431448 && cosAngle > 0.7071068) {
+      #ifdef DISTANT_HORIZONS
+        float clippingDistance = dhFarPlane;
+      #else
+        float clippingDistance = 4.0 * far;
+      #endif
+      #if RAINBOW_DISTANCE > 0.99999*clippingDistance
+        if (linearDistance > 0.99999*clippingDistance) linearDistance = 1.1 * RAINBOW_DISTANCE; // allow rainbow distances greater than clipping distance
+      #endif
+
+      float angleFromSun = degrees(acos(cosAngle));
+      float rainbowHue = 1.0 - smoothstep(41.4, 44.0, angleFromSun); // remove the red at the bottom
+      vec3 rainbowColor = HsvToRgb(vec3(rainbowHue, 1.0, RAINBOW_BRIGHTNESS)) * smoothstep(42.0, 43.0, angleFromSun) * smoothstep(44.0, 43.0, angleFromSun);
+
+      rainbowColor *= smoothstep(RAINBOW_DISTANCE*0.9, RAINBOW_DISTANCE*1.1, linearDistance) * smoothstep(0.025, 0.1, sunElevation);
+
+      #if RAINBOW < 2
+        rainbowColor *= rainbowAmount * (1.0 - rainStrength); 
+      #endif
+
+      #ifndef RAINBOW_ONLY_BELOW_CLOUDS
+        rainbowColor *= smoothstep(CloudLayer0_height+CloudLayer0_tallness, CloudLayer0_height, playerPos_normalized.y*RAINBOW_DISTANCE+cameraPosition.y);
+      #else
+        rainbowColor = mix(rainbowColor*temporallyFilteredVL.a, rainbowColor, smoothstep(CloudLayer0_height+CloudLayer0_tallness, CloudLayer0_height, playerPos_normalized.y*RAINBOW_DISTANCE+cameraPosition.y));
+      #endif
+
+      color += rainbowColor * (1.0 - caveDetection);
+    } 
+  #endif
 
 ////// --------------- FINALIZE
   #ifdef display_LUT

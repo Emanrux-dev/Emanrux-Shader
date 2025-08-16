@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §dECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 1.0.5
+    value.SHADER_VERSION_LABEL.482 = 1.1.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -44,6 +44,7 @@ screen.MoonOptions = Moon Settings
 screen.SunOptions = Sun Settings
 screen.CUSTOM_MOON_SETTINGS = Custom Moon Settings
     option.REALMOON = Realistic Moon Texture
+    option.MOON_NORMALS = Realistic Moon Normals §c(requires Custom Moon Rotation!)§r
     option.CUSTOM_MOON_ROTATION = Custom Moon Rotation
     option.CAELUM_SUPPORT = Caelum (ArdaCraft) Support
         option.CAELUM_SUPPORT.comment = §cREQUIRES CUSTOM MOON ROTATION.§r Changes the light casted by the sun/moon to the correct position specified by Caelum.
@@ -682,6 +683,16 @@ screen.POM = Parallax Occlusion Mapping / POM
 
 screen.Porosity = Porosity / Puddles
     option.Porosity = Porosity
+
+screen.Rainbow_Settings = Rainbow Settings
+    option.RAINBOW = Rainbow
+        value.RAINBOW.0 = Off
+        value.RAINBOW.1 = After Rain
+        value.RAINBOW.2 = Always on
+    option.RAINBOW_BRIGHTNESS = Rainbow Brightness
+    option.RAINBOW_DISTANCE = Rainbow Distance
+    option.RAINBOW_TIME = Rainbow Fade Time (seconds)
+    option.RAINBOW_ONLY_BELOW_CLOUDS = Rainbow above Clouds
 
 option.MATERIAL_AO = Material Ambient Occlusion
 

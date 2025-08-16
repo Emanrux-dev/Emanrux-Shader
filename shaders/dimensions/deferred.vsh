@@ -180,7 +180,7 @@ void main() {
 
 		float moonPhase = 1.0 - 0.5 * (dot(sunVec, WmoonVec) + 1.0);
 		moonVis = smoothstep(0.08, -0.03, -WmoonVec.y);
-		moonColor *= sqrt(moonPhase);
+		moonColor *= moonPhase;
 		
 	#endif
 

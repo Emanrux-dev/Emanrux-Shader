@@ -43,5 +43,5 @@ Temporal credits entry to people who added more mod support to Bliss:
 
 
 Image credits:
-	Moon Texture from https://www.solarsystemscope.com/textures/
+	Moon Texture from NASA's Scientific Visualization Studio: https://svs.gsfc.nasa.gov/4720/
 	Sun Corona Texture by Luc Viatour / https://Lucnix.be

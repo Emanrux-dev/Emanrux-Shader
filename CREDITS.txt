@@ -1,5 +1,6 @@
-Credit to the creator of the entire shader that Bliss is an edit of:
+Credit to the creators of the entire shader that Eclipse is an edit of:
 
+	Xonk / https://github.com/X0nk/Bliss-Shader
 	Chocapic13 / https://www.curseforge.com/minecraft/customization/chocapic13-shaders
 
 

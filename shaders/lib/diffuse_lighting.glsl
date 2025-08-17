@@ -41,7 +41,7 @@ vec3 doBlockLightLighting(
         #ifdef VANILLA_LIGHTMAP_MASK
             lpvSample.rgb *= lightmapCurve;
         #endif
-        vec3 lpvBlockLight = GetLpvBlockLight(lpvSample);
+        // vec3 lpvBlockLight = GetLpvBlockLight(lpvSample);
 
         // create a smooth falloff at the edges of the voxel volume.
         float fadeLength = 10.0; // in meters

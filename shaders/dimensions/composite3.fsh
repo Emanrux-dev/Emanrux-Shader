@@ -496,6 +496,7 @@ float getBorderFogDensity(float linearDistance, vec3 playerPos, bool sky){
   
   borderFogDensity *= exp(-10.0 * pow(clamp(playerPos.y,0.0,1.0)*4.0,2.0));
   borderFogDensity *= (1.0-caveDetection);
+  borderFogDensity *= BorderFogIntensity;
 
   return borderFogDensity;
 }

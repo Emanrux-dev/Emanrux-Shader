@@ -50,7 +50,6 @@ varying float LIGHTNING;
 varying vec4 color;
 
 varying vec2 texcoord;
-varying vec3 vertexPos;
 
 
 //#include "/lib/Shadow_Params.glsl"
@@ -59,19 +58,10 @@ varying vec3 vertexPos;
 
 
 void main() {
-	texcoord.xy = gl_MultiTexCoord0.xy;
-	color = gl_Color;
-	vertexPos = gl_Vertex.xyz;
-
-	LIGHTNING = 0.0;
-	if (entityId == ENTITY_LIGHTNING) LIGHTNING = 1.0;
-
-	//entity = 0.0;
-	//if (renderStage == MC_RENDER_STAGE_ENTITIES) entity = 1.0;
-
 	#if defined END_ISLAND_LIGHT || (defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store)
 		vec3 shadowViewPos = mat3(gl_ModelViewMatrix) * vec3(gl_Vertex) + gl_ModelViewMatrix[3].xyz;
 		vec3 feetPlayerPos = mat3(shadowModelViewInverse) * shadowViewPos + shadowModelViewInverse[3].xyz;
+	#endif
 
 	#if defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store
 		#ifdef LPV_NOSHADOW_HACK
@@ -84,6 +74,14 @@ void main() {
 	#endif
 
 	#ifdef END_ISLAND_LIGHT
+		texcoord.xy = gl_MultiTexCoord0.xy;
+		color = gl_Color;
+
+		// hide lightning and dragon death beams
+		vec3 normal = normalize(gl_NormalMatrix * gl_Normal);
+		LIGHTNING = 0.0;
+		if (renderStage == MC_RENDER_STAGE_ENTITIES && (entityId == ENTITY_LIGHTNING || (entityId == 0 && gl_Color.a < 0.2 && abs(normal.y) < 0.2))) LIGHTNING = 1.0;
+
 		gl_Position = customShadowPerspectiveSSBO * customShadowMatrixSSBO * vec4(feetPlayerPos, 1.0);
 	
   		gl_Position.z /= 6.0;

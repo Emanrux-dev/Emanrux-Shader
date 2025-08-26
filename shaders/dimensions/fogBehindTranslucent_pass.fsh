@@ -229,7 +229,7 @@ vec4 waterVolumetrics( vec3 rayStart, vec3 rayEnd, float estEndDepth, float estS
 
 					if(shadow2D(shadowtex1, pos).x > pos.z && sh.x < 1.0){
 						vec4 translucentShadow = texture2D(shadowcolor0, pos.xy);
-						if(translucentShadow.a < 0.9) sh = normalize(translucentShadow.rgb+0.0001);
+						if(translucentShadow.a < 0.9) sh *= normalize(translucentShadow.rgb+0.0001);
 					}
 				#else
 					sh *= vec3(shadow2D(shadow, pos).x);
@@ -278,11 +278,12 @@ void main() {
 
 
 	bool iswater = alpha > 0.99;
+	bool isLightning = alpha < 0.51 || alpha > 0.49;
 	//////////////////////////////////////////////////////////
 	///////////////// BEHIND OF TRANSLUCENTS /////////////////
 	//////////////////////////////////////////////////////////
 
-	if(blendedAlpha > 0.0 || iswater){
+	if(blendedAlpha > 0.0 || iswater || isLightning){
 		
 		float noise_1 = R2_dither();
 		float noise_2 = blueNoise();

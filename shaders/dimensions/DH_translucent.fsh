@@ -1,4 +1,9 @@
 #include "/lib/settings.glsl"
+
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
+
 #include "/lib/util.glsl"
 #include "/lib/res_params.glsl"
 #include "/lib/color_transforms.glsl"
@@ -162,11 +167,13 @@ float invLdFast(float linearDepth) {
     return (dhFarPlane * (dhNearPlane - linearDepth)) / ((dhNearPlane - dhFarPlane) * linearDepth);
 }
 
+#define FORWARD_SSR_QUALITY 30 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 200 300 400 500]
+
 vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
 
 	float biasAmount = 0.0000015;
 
-    float quality = float(SSR_STEPS_DH);
+    float quality = float(FORWARD_SSR_QUALITY);
     vec3 clipPosition = DH_toClipSpace3(position);
 
     float rayLength = ((position.z + dir.z * dhFarPlane*sqrt(3.)) > -dhNearPlane) ?
@@ -189,7 +196,9 @@ vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
     float maxZ = spos.z;
     
     for (int i = 0; i <= int(quality); i++) {
-		if(spos.x < 0 || spos.x > 1 || spos.y < 0 || spos.y > 1) return vec3(1.1);
+		#if DEFERRED_SSR_QUALITY != 1
+			if(spos.x < 0 || spos.x > 1 || spos.y < 0 || spos.y > 1) return vec3(1.1);
+		#endif
 
         float sampleDepth = sqrt(texelFetch2D(colortex12, ivec2(spos.xy / (texelSize * 4.0)), 0).a / 65000.0);
 		float sp = invLdFast(sampleDepth*dhFarPlane);
@@ -266,9 +275,11 @@ vec3 applyBump(mat3 tbnMatrix, vec3 bump, float puddle_values){
 }
 
 #define FORWARD_SPECULAR
-#define FORWARD_ENVIORNMENT_REFLECTION
 #define FORWARD_BACKGROUND_REFLECTION
-#define FORWARD_ROUGH_REFLECTION
+// #define FORWARD_ROUGH_REFLECTION
+
+#ifdef FORWARD_ROUGH_REFLECTION
+#endif
 
 /* RENDERTARGETS:2,7,14 */
 void main() {
@@ -426,7 +437,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
         #ifdef SNELLS_WINDOW
 	    	if(isEyeInWater == 1) fresnel = pow(clamp(1.5 + normalDotEye,0.0,1.0), 25.0);
 	    #endif
-        #if defined FORWARD_ENVIORNMENT_REFLECTION && defined DH_SCREENSPACE_REFLECTIONS
+        #if FORWARD_SSR_QUALITY > 0 && defined DH_SCREENSPACE_REFLECTIONS
             vec3 rtPos = rayTrace(reflectedVector, viewPos, interleaved_gradientNoise_temporal(), fresnel);
             if (rtPos.z < 0.99999){
             	vec3 previousPosition = mat3(gbufferModelViewInverse) * DH_toScreenSpace(rtPos) + gbufferModelViewInverse[3].xyz + cameraPosition-previousCameraPosition;

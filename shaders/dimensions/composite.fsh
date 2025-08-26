@@ -49,6 +49,7 @@ uniform vec2 texelSize;
 uniform float frameTimeCounter;
 uniform float rainStrength;
 uniform int frameCounter;
+uniform ivec2 eyeBrightnessSmooth;
 
 
 uniform mat4 gbufferModelViewInverse;
@@ -73,6 +74,8 @@ uniform float viewHeight;
 uniform float near;
 uniform float dhFarPlane;
 uniform float dhNearPlane;
+
+#include "/lib/Shadows.glsl"
 
 #define ffstep(x,y) clamp((y - x) * 1e35,0.0,1.0)
 #define diagonal3(m) vec3((m)[0].x, (m)[1].y, m[2].z)
@@ -256,7 +259,7 @@ float convertHandDepth_2(in float depth, bool hand) {
 }
 
 vec2 SSAO(
-	vec3 viewPos, vec3 normal, vec3 flatnormal, bool hand, bool leaves, float noise
+	vec3 viewPos, vec3 normal, vec3 flatnormal, bool hand, float noise
 ){
 	int samples = 4;
 	float occlusion = 0.0; 
@@ -360,6 +363,8 @@ void main() {
 	vec2 lightmap = dataUnpacked1.yz;
 
 
+	float lightLeakFix = clamp(pow(eyeBrightnessSmooth.y/240. + lightmap.y,2.0) ,0.0,1.0);
+
 	gl_FragData[1] = vec4(0.0,0.0,0.0, texelFetch2D(colortex14,ivec2((floor(gl_FragCoord.xy)/VL_RENDER_RESOLUTION*texelSize+0.5*texelSize)/texelSize),0).a);
 
 
@@ -410,7 +415,7 @@ void main() {
 		if(z >= 1.0) FlatNormals = normal;
 
 
-		vec2 SSAO_SSS = SSAO(viewPos, worldToView(normal),worldToView(FlatNormals), hand, isLeaf, noise);
+		vec2 SSAO_SSS = SSAO(viewPos, worldToView(normal),worldToView(FlatNormals), hand, noise);
 		#ifndef OLD_INDIRECT_SSS
 			SSAO_SSS.y = clamp(SSAO_SSS.y + 0.5 * lightmap.y*lightmap.y,0.0,1.0);
 		#endif
@@ -455,8 +460,6 @@ void main() {
 	#endif
 	float maxshadowfilt = Max_Shadow_Filter_Radius;
 
-	if(lightmap.y < 0.1) maxshadowfilt = min(maxshadowfilt, minshadowfilt);
-
 	#ifdef BASIC_SHADOW_FILTER
 		if (LabSSS > 0.0 && NdotL < 0.001){  
 			minshadowfilt = 50;
@@ -470,6 +473,11 @@ void main() {
 
 		#ifdef Variable_Penumbra_Shadows
 			// if (LabSSS > -1) {
+
+				#if LIGHTLEAKFIX_MODE == 1
+					if(!hand) GriAndEminShadowFix(feetPlayerPos, FlatNormals, lightLeakFix);
+				#endif
+
 				#ifdef OVERWORLD_SHADER
 					#ifdef CUSTOM_MOON_ROTATION
 						vec3 projectedShadowPosition = mat3(customShadowMatrixSSBO) * feetPlayerPos  + customShadowMatrixSSBO[3].xyz;
@@ -526,7 +534,7 @@ void main() {
 						// vec2 offsetS = SpiralSample(i, 7, 8, noise) * 0.5;
 						vec2 offsetS = CleanSample(i, VPS_Search_Samples - 1, noise) * 0.5;
 					
-						float weight = 3.0 + (i+noise) *rdMul/SHADOW_FILTER_SAMPLE_COUNT*shadowMapResolution*distortFactor/2.7;
+						float weight = 3.0 + (i+noise) * rdMul/SHADOW_FILTER_SAMPLE_COUNT*shadowMapResolution*distortFactor/2.7;
 						
 						float d = texelFetch2D(shadow, ivec2((projectedShadowPosition.xy+offsetS*rdMul)*shadowMapResolution),0).x;
 						float b = smoothstep(weight*diffthresh/2.0, weight*diffthresh, projectedShadowPosition.z - d);

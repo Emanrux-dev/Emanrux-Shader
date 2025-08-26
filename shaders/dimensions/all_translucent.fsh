@@ -156,19 +156,23 @@ uniform float dhFarPlane;
 #endif
 
 #define FORWARD_SPECULAR
-#define FORWARD_ENVIORNMENT_REFLECTION
+#define FORWARD_SSR_QUALITY 30 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 200 300 400 500]
 #define FORWARD_BACKGROUND_REFLECTION
-#define FORWARD_ROUGH_REFLECTION
+// #define FORWARD_ROUGH_REFLECTION
 
 
 #ifdef FORWARD_SPECULAR
 #endif
-#ifdef FORWARD_ENVIORNMENT_REFLECTION
+#if FORWARD_SSR_QUALITY > -1
 #endif
 #ifdef FORWARD_BACKGROUND_REFLECTION
 #endif
 #ifdef FORWARD_ROUGH_REFLECTION
 #endif
+
+#include "/lib/blocks.glsl"
+#include "/lib/lpv_blocks.glsl"
+#include "/lib/lpv_buffer.glsl"
 
 #include "/lib/specular.glsl"
 #include "/lib/diffuse_lighting.glsl"
@@ -230,8 +234,8 @@ vec3 getParallaxDisplacement(vec3 waterPos, vec3 playerPos) {
 	return parallaxPos;
 }
 
-vec3 applyBump(mat3 tbnMatrix, vec3 bump, float puddle_values, vec3 rippleBump){
-	float bumpmult = puddle_values;
+vec3 applyBump(mat3 tbnMatrix, vec3 bump, float mult, vec3 rippleBump){
+	float bumpmult = mult;
 	bump = bump * bumpmult + vec3(0.0f, 0.0f, 1.0f - bumpmult);
 
 	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
@@ -521,14 +525,19 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		#endif
 	#endif
 
-	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
+	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0 && !defined LIGHTNING
 		float ditherFade = smoothstep(0.98 * far, 1.03 * far, viewDist);
 
-		if (step(ditherFade, R2_dither()) == 0.0 && LIGHTNING_BOLT == 0.0) discard;
+		if (step(ditherFade, R2_dither()) == 0.0) discard;
 	#endif
 
 	#ifdef LIGHTNING
-		if (LIGHTNING_BOLT > 0.0) Albedo = 2.5 * vec3(1.0,2.2,6.5);
+		if (LIGHTNING_BOLT > 0.0){
+			Albedo = 2.5 * vec3(1.0,2.2,6.5);
+		} else {
+			Albedo *= color.a;
+			gl_FragData[0].a = color.a;
+		}
 	#endif
 
 	#ifdef ENTITIES
@@ -654,9 +663,11 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	
 	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
 		rippleBump *= physics_localWaviness;
-		normal = mix(applyBump(tbnMatrix, NormalTex.xyz, 1.0, rippleBump), applyBump(tbnMatrix, NormalTex.xyz, PHYSICS_OCEAN_TRANSITION, rippleBump), smoothstep(0.0, 0.1, physics_localWaviness));
+		float bumpmult = mix(isWater ? 1.0 : NORMAL_MAP_MULT, isWater ? PHYSICS_OCEAN_TRANSITION : NORMAL_MAP_MULT, smoothstep(0.0, 0.1, physics_localWaviness));
+
+		normal = applyBump(tbnMatrix, NormalTex.xyz, bumpmult, rippleBump);
 	#else
-		normal = applyBump(tbnMatrix, NormalTex.xyz, 1.0, rippleBump);
+		normal = applyBump(tbnMatrix, NormalTex.xyz, isWater ? 1.0 : NORMAL_MAP_MULT, rippleBump);
 	#endif
 
 	worldSpaceNormal = viewToWorld(normal);
@@ -758,7 +769,12 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	#ifdef END_SHADER
 
-		float vortexBounds = clamp(vortexBoundRange - length(worldPos), 0.0,1.0);
+		#ifdef END_LIGHTNING
+			float vortexBounds = clamp(vortexBoundRange - length(feetPlayerPos+cameraPosition), 0.0,1.0);
+		#else
+			float vortexBounds = 1.0;
+		#endif
+
         vec3 lightPos = LightSourcePosition(worldPos, cameraPosition,vortexBounds);
 
 		float lightningflash = texelFetch2D(colortex4,ivec2(1,1),0).x/150.0;
@@ -817,7 +833,13 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		const vec3 lpvPos = vec3(0.0);
 	#endif
 
-	Indirect_lighting += doBlockLightLighting( vec3(TORCH_R,TORCH_G,TORCH_B), lightmap.x, feetPlayerPos, lpvPos);
+	#ifdef LIGHTNING
+		vec3 lightColor = vec3(1.0);
+	#else
+		vec3 lightColor = vec3(TORCH_R,TORCH_G,TORCH_B);
+	#endif
+
+	Indirect_lighting += doBlockLightLighting(lightColor, lightmap.x, feetPlayerPos, lpvPos);
 	
 	vec4 flashLightSpecularData = vec4(0.0);
 	#ifdef FLASHLIGHT

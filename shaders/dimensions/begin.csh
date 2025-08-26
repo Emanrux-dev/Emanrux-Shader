@@ -76,8 +76,6 @@ const ivec3 workGroups = ivec3(1, 1, 1);
                 #else
                     if (sunElevation > 0.0) return shadowModelView;
                 #endif
-            #else
-                localLightDir = normalize(END_LIGHT_POS);
             #endif
         #endif
 
@@ -144,7 +142,7 @@ void main() {
     #endif
 
     #if defined END_ISLAND_LIGHT && defined END_SHADER
-        customShadowMatrixSSBO = BuildShadowViewMatrix(vec3(0.0, 1.0, 0.0));
+        customShadowMatrixSSBO = BuildShadowViewMatrix(normalize(END_LIGHT_POS));
         customShadowPerspectiveSSBO = createPerspectiveMatrix();
     #endif
 }

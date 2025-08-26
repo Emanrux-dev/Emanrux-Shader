@@ -1,5 +1,9 @@
 #include "/lib/settings.glsl"
 
+#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
+	#include "/lib/SSBOs.glsl"
+#endif
+
 // #if defined END_SHADER || defined NETHER_SHADER
 // 	#undef IS_LPV_ENABLED
 // #endif
@@ -138,10 +142,6 @@ float encodeVec2(vec2 a){
 float encodeVec2(float x,float y){
     return encodeVec2(vec2(x,y));
 }
-
-#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
-	#include "/lib/SSBOs.glsl"
-#endif
 
 // #undef BASIC_SHADOW_FILTER
 #if defined OVERWORLD_SHADER

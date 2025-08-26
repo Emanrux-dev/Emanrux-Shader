@@ -240,7 +240,7 @@ void main() {
 
 	viewVector = normalize(tbnMatrix * viewVector);
 
-	color = vec4(gl_Color.rgb, 1.0);
+	color = gl_Color;
 
 	#ifdef OVERWORLD_SHADER
 		lightCol.rgb = texelFetch2D(colortex4,ivec2(6,37),0).rgb;
@@ -267,10 +267,10 @@ void main() {
 	#endif
 
 	LIGHTNING_BOLT = 0.0;
-	#ifdef ENTITIES
+	#ifdef LIGHTNING
+		normalMat.a = 0.5;
 		if(entityId == ENTITY_LIGHTNING){
 			LIGHTNING_BOLT = 1.0;
-			normalMat.a = 0.50;
 		}
 	#endif
 

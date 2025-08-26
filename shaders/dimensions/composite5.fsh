@@ -1,6 +1,10 @@
 #include "/lib/settings.glsl"
 #include "/lib/res_params.glsl"
 
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
+
 /*
 const int colortex0Format = RGBA16F;				// low res clouds (deferred->composite2) + low res VL (composite5->composite15)
 const int colortex1Format = RGBA16;					// terrain gbuffer (gbuffer->composite2)

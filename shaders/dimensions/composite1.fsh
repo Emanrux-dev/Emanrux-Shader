@@ -68,7 +68,7 @@ uniform float rainStrength;
 
 	flat varying vec3 sunCol;
 
-	#if Sun_specular_Strength != 0
+	#if SUN_SPECULAR_MULT != 0
 		#define LIGHTSOURCE_REFLECTION
 	#endif
 	
@@ -210,13 +210,13 @@ float convertHandDepth_2(in float depth, bool hand) {
 #endif
 
 #define DEFERRED_SPECULAR
-#define DEFERRED_ENVIORNMENT_REFLECTION
+#define DEFERRED_SSR_QUALITY 30 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 200 300 400 500]
 #define DEFERRED_BACKGROUND_REFLECTION
 #define DEFERRED_ROUGH_REFLECTION
 
 #ifdef DEFERRED_SPECULAR
 #endif
-#ifdef DEFERRED_ENVIORNMENT_REFLECTION
+#if DEFERRED_SSR_QUALITY > -1
 #endif
 #ifdef DEFERRED_BACKGROUND_REFLECTION
 #endif
@@ -1151,7 +1151,7 @@ void main() {
 		vec3 shadowPlayerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
 
 		#if LIGHTLEAKFIX_MODE == 1
-			if(!hand) GriAndEminShadowFix(shadowPlayerPos, FlatNormals, vanilla_AO, lightmap.y, lightLeakFix);
+			if(!hand) GriAndEminShadowFix(shadowPlayerPos, FlatNormals, lightLeakFix);
 		#endif
 
 		#ifdef OVERWORLD_SHADER
@@ -1256,7 +1256,12 @@ void main() {
 	#endif
 
 	#ifdef END_SHADER
-		float vortexBounds = clamp(vortexBoundRange - length(feetPlayerPos+cameraPosition), 0.0,1.0);
+		#ifdef END_LIGHTNING
+			float vortexBounds = clamp(vortexBoundRange - length(feetPlayerPos+cameraPosition), 0.0,1.0);
+		#else
+			float vortexBounds = 1.0;
+		#endif
+
         vec3 lightPos = LightSourcePosition(feetPlayerPos+cameraPosition, cameraPosition,vortexBounds);
 
 		float lightningflash = texelFetch2D(colortex4,ivec2(1,1),0).x/150.0;

@@ -1,5 +1,9 @@
 #include "/lib/settings.glsl"
 
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
+
 uniform sampler2D colortex7;
 uniform sampler2D colortex5;
 uniform sampler2D colortex6;

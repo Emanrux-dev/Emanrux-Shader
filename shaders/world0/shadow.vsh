@@ -6,7 +6,7 @@
 #endif
 
 #include "/lib/settings.glsl"
-#ifdef IS_LPV_ENABLED
+#if defined IS_LPV_ENABLED || WATER_INTERACTION == 2
 	#extension GL_ARB_explicit_attrib_location: enable
 	#extension GL_ARB_shader_image_load_store: enable
 #endif
@@ -34,6 +34,7 @@ uniform mat4 gbufferProjection;
 uniform mat4 gbufferProjectionInverse;
 uniform int hideGUI;
 uniform vec3 cameraPosition;
+uniform vec3 relativeEyePosition;
 uniform float frameTimeCounter;
 uniform int frameCounter;
 uniform float screenBrightness;
@@ -60,7 +61,7 @@ uniform int entityId;
 #include "/lib/blocks.glsl"
 #include "/lib/entities.glsl"
 
-#ifdef IS_LPV_ENABLED
+#if defined IS_LPV_ENABLED || WATER_INTERACTION == 2
 	#ifdef IRIS_FEATURE_BLOCK_EMISSION_ATTRIBUTE
 		attribute vec4 at_midBlock;
 	#else
@@ -213,7 +214,7 @@ void main() {
 	playerpos = mat3(shadowModelViewInverse) * position + shadowModelViewInverse[3].xyz;
 	// #endif
 
-	#if defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store
+	#if defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store || WATER_INTERACTION == 2
 		PopulateShadowVoxel(playerpos);
 	#endif
 

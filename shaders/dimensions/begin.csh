@@ -7,6 +7,7 @@ const ivec3 workGroups = ivec3(1, 1, 1);
     uniform float sunElevation;
     uniform mat4 shadowModelView;
     uniform int worldTime;
+    uniform float worldTimeSmooth;
     uniform int worldDay;
     // uniform float frameTimeCounter;
     uniform vec4 lightningBoltPosition;
@@ -60,6 +61,9 @@ const ivec3 workGroups = ivec3(1, 1, 1);
         }
     #endif
 
+    // these matrices are from old experiments with custom light directions from Xonk
+    // thanks to Null for providing these to him
+
     mat4 BuildTranslationMatrix(vec3 delta) {
         return mat4(
             vec4(1.0, 0.0, 0.0, 0.0),
@@ -69,7 +73,7 @@ const ivec3 workGroups = ivec3(1, 1, 1);
     }
 
     mat4 BuildShadowViewMatrix(vec3 localLightDir) {
-        #ifndef CAELUM_SUPPORT
+        #if !defined CAELUM_SUPPORT && (!defined SMOOTH_SUN_ROTATION || (daySpeed >= 1.0 && nightSpeed >= 1.0 && defined SMOOTH_SUN_ROTATION))
             #ifdef OVERWORLD_SHADER
                 #if LIGHTNING_SHADOWS > 1
                     if (sunElevation > 0.0 && lightningBoltPosition.w == 0.0) return shadowModelView;
@@ -115,7 +119,13 @@ void main() {
             customMoonVecSSBO = -normalize(mat3(gbufferModelViewInverse) * moonPosition); //idk why it's negative
         #else
             // ensure the world time gets reset at a multiple of the month length
-            float absWorldTime = worldTime  + mod(worldDay, 100 - mod(100, MONTH_LENGTH))*24000.0 - 48000.0; // offset by two days to align to vanilla moon phases by default
+            #ifdef SMOOTH_MOON_ROTATION
+                float time = worldTimeSmooth;
+            #else
+                float time = worldTime;
+            #endif
+            
+            float absWorldTime = worldTimeSmooth  + mod(worldDay, 100 - mod(100, MONTH_LENGTH))*24000.0 - 48000.0; // offset by two days to align to vanilla moon phases by default
 
             float yearLengthTicks = float(MONTH_LENGTH) * 12.0 * 24000.0;
             float timeInYear = mod(absWorldTime, yearLengthTicks)/(yearLengthTicks);
@@ -135,9 +145,25 @@ void main() {
             }
         #endif
 
-        customShadowMatrixSSBO = BuildShadowViewMatrix(customMoonVecSSBO);
-        #ifdef CAELUM_SUPPORT
-            if (sunElevation > 0.0) customShadowMatrixSSBO = BuildShadowViewMatrix(normalize(mat3(gbufferModelViewInverse) * sunPosition)); //replace only the matrix
+        #if defined SMOOTH_SUN_ROTATION && (daySpeed < 1.0 || nightSpeed < 1.0)
+            vec3 WsunVec = WsunVecSmooth;
+        #else
+            vec3 WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+        #endif
+
+        #if defined CAELUM_SUPPORT || (defined SMOOTH_SUN_ROTATION && (daySpeed < 1.0 || nightSpeed < 1.0))
+            #if LIGHTNING_SHADOWS > 1
+            if (sunElevation > 0.0 && lightningBoltPosition.w == 0.0) 
+            #else
+            if (sunElevation > 0.0)
+            #endif
+            {
+                customShadowMatrixSSBO = BuildShadowViewMatrix(WsunVec); //replace only the matrix
+            } else {
+                customShadowMatrixSSBO = BuildShadowViewMatrix(customMoonVecSSBO);
+            }
+        #else
+            customShadowMatrixSSBO = BuildShadowViewMatrix(customMoonVecSSBO);
         #endif
     #endif
 

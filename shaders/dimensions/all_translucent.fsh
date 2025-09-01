@@ -1,6 +1,6 @@
 #include "/lib/settings.glsl"
 
-#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
+#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT || WATER_INTERACTION == 2
 	#include "/lib/SSBOs.glsl"
 #endif
 
@@ -110,7 +110,7 @@ uniform vec3 nsunColor;
 
 uniform float waterEnteredAltitude;
 
-#ifdef WATER_INTERACTION
+#if WATER_INTERACTION == 1
 	uniform vec3 waterEnteredPosition;
 	uniform float waterEnteredTime;
 	uniform vec3 waterEnteredVelocity;
@@ -118,6 +118,14 @@ uniform float waterEnteredAltitude;
 	uniform vec3 waterExitedPosition;
 	uniform float waterExitedTime;
 	uniform vec3 waterExitedVelocity;
+#endif
+
+#if WATER_INTERACTION == 2
+	#ifdef PIXELATED_WAVES
+		layout (rgba16f) uniform image2D waveSim2;
+	#else
+		uniform sampler2D waveSim2Sampler;
+	#endif
 #endif
 
 uniform float dhNearPlane;
@@ -445,6 +453,7 @@ void Emission(
 }
 
 uniform vec3 eyePosition;
+uniform vec3 relativeEyePosition;
 
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -626,8 +635,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			float bumpmult = WATER_WAVE_STRENGTH;
 			bump = bump * vec3(bumpmult, bumpmult, bumpmult) + vec3(0.0f, 0.0f, 1.0f - bumpmult);
 
-			// nice little wave effect when leaving water
-			#ifdef WATER_INTERACTION
+			#if WATER_INTERACTION == 1
+				// nice little wave effect when leaving water
 				vec3 waterPlayerPostion = waterExitedPosition;
 				float waterTime = waterExitedTime;
 				vec3 playerVelocity = waterExitedVelocity;
@@ -650,8 +659,44 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 					float enterWave = waveHeight * smoothstep(newTime - waveWidth, newTime, distFromWaterPos-0.1) * smoothstep(newTime + waveWidth, newTime, distFromWaterPos-0.1) * smoothDistFromWaterPos;
 			
 					bump.y = enterWave + (1.0 - enterWave) * bump.y;
-					bump = normalize(bump);
 				}
+			
+			#elif WATER_INTERACTION == 2
+
+				#ifdef PIXELATED_WAVES
+					#if WATER_SIM_SCALE == 0
+						float NORMAL_SCALE = 40.0;
+					#elif WATER_SIM_SCALE == 1
+						float NORMAL_SCALE = 80.0;
+					#else
+						float NORMAL_SCALE = 160.0;
+					#endif
+
+					ivec2 normalSize = imageSize(waveSim2);
+					vec2 centeredUV = (worldPos.xz - previousCameraPositionWave2.xz) * NORMAL_SCALE;
+					centeredUV += normalSize * 0.5;
+
+					if(centeredUV.x < normalSize.x && centeredUV.x > 0.0 && centeredUV.y < normalSize.y && centeredUV.y > 0.0 && abs(worldSpaceNormal.y) > 0.5 && !noSimOngoing) {
+						vec4 waves = imageLoad(waveSim2, ivec2(centeredUV));
+				#else
+					#if WATER_SIM_DISTANCE == 1
+						float NORMAL_SCALE = 0.08;
+					#elif WATER_SIM_DISTANCE == 2
+						float NORMAL_SCALE = 0.04;
+					#elif WATER_SIM_DISTANCE == 3
+						float NORMAL_SCALE = 0.03;
+					#else
+						float NORMAL_SCALE = 0.02;
+					#endif
+
+					vec2 waveUV = (worldPos.xz - previousCameraPositionWave2.xz)*NORMAL_SCALE+0.5;
+					if(length(waveUV) < 1.5 && abs(worldSpaceNormal.y) > 0.5 && !noSimOngoing) {
+						vec4 waves = texture2D(waveSim2Sampler, waveUV);
+				#endif
+						vec3 waveNormals = normalize(vec3(waves.z, waves.w, 0.5));
+						bump = mix(bump, waveNormals, WATER_SIM_STRENGTH*sqrt(sqrt(abs(waves.x))));
+						bump = normalize(bump);
+					}
 			#endif
 
 			NormalTex.xyz = bump;
@@ -702,7 +747,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	
 	#if defined Hand_Held_lights && !defined LPV_ENABLED
 		#ifdef IS_IRIS
-			vec3 playerCamPos = eyePosition;
+			vec3 playerCamPos = cameraPosition - relativeEyePosition;
 		#else
 			vec3 playerCamPos = cameraPosition;
 		#endif

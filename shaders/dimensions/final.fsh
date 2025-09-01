@@ -30,6 +30,7 @@ uniform float frameTime;
 uniform float viewHeight;
 uniform float viewWidth;
 uniform float aspectRatio;
+uniform vec3 relativeEyePosition;
 
 uniform int hideGUI;
 
@@ -142,6 +143,10 @@ float doVignette( in vec2 texcoord, in float noise){
   return mix(1.0, vignette, VIGNETTE_STRENGTH);
 }
 
+#if DEBUG_VIEW == debug_WATERSIM && WATER_INTERACTION == 2
+  layout (rgba16f) uniform image2D waveSim2;
+#endif
+
 void main() {
   
   float noise = blueNoise();
@@ -192,6 +197,16 @@ void main() {
     COLOR = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_RESOLUTION*RENDER_SCALE)).rgb;
   #endif
 
+  #if DEBUG_VIEW == debug_WATERSIM && WATER_INTERACTION == 2
+    if (hideGUI == 1) {
+    gl_FragColor.rgb = vec3(imageLoad(waveSim2, ivec2(gl_FragCoord.xy)*16).x);
 
-  gl_FragColor.rgb = COLOR;
+    vec2 offsetCoords = vec2(gl_FragCoord.x-840.0, gl_FragCoord.y);
+    vec2 waveGradients = vec2(imageLoad(waveSim2, ivec2(offsetCoords)*16).zw);
+    vec3 waveNormals = normalize(vec3(waveGradients.x, waveGradients.y, 0.2));
+    if (length(waveNormals.xy) > 0.0) gl_FragColor.rgb += waveNormals;
+    }
+  #endif
+
+  gl_FragColor.rgb += COLOR;
 }

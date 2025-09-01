@@ -323,7 +323,7 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
 
   vec4 colorSum = vec4(0.0);
   float edgeSum = 0.0;
-  float threshold = 0.0000005;
+  float threshold = 0.005;
   
   vec2 coord = gl_FragCoord.xy - 1.5;
 
@@ -754,7 +754,7 @@ void main() {
     vec4 borderFog = vec4(skyGroundColor, getBorderFogDensity(linearDistance_cylinder, playerPos_normalized, swappedDepth >= 1.0));
 
     #if !defined SKY_GROUND
-      borderFog.rgb = skyFromTex(playerPos, colortex4)/1200.0 * Sky_Brightness;
+      borderFog.rgb = skyFromTex(playerPos_normalized, colortex4)/1200.0 * Sky_Brightness;
     #endif
     borderFog *= BorderFogIntensity;
     #if !defined DISTANT_HORIZONS

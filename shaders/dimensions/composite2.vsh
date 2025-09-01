@@ -79,8 +79,12 @@ void main() {
 	#endif
 
 	lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
-	WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
-
+	#ifdef SMOOTH_SUN_ROTATION
+		WsunVec = WsunVecSmooth;
+	#else
+		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+	#endif
+	
 	#ifdef CUSTOM_MOON_ROTATION
 		#if LIGHTNING_SHADOWS > 0
 			vec3 moonVec = customMoonVec2SSBO;
@@ -89,7 +93,11 @@ void main() {
 		#endif
 		sunlightCol *= smoothstep(0.005, 0.09, length(moonVec - WsunVec));
 	#else
-		vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+		#ifdef SMOOTH_MOON_ROTATION
+			vec3 moonVec = WmoonVecSmooth;
+		#else
+			vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+		#endif
 		if(dot(-moonVec, WsunVec) < 0.9999) moonVec = -moonVec;
 	#endif
 

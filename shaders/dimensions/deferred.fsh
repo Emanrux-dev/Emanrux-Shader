@@ -72,11 +72,19 @@ uniform int isEyeInWater;
 #include "/lib/Shadow_Params.glsl"
 #include "/lib/waterBump.glsl"
 
-vec3 WsunVec = mat3(gbufferModelViewInverse)*sunVec;
+#ifdef SMOOTH_SUN_ROTATION
+	vec3 WsunVec = WsunVecSmooth;
+#else
+	vec3 WsunVec = mat3(gbufferModelViewInverse)*sunVec;
+#endif
 #ifdef CUSTOM_MOON_ROTATION
 	vec3 WmoonVec = customMoonVecSSBO;
 #else
-	vec3 WmoonVec = mat3(gbufferModelViewInverse)*moonVec;
+	#ifdef SMOOTH_MOON_ROTATION
+		vec3 WmoonVec = WmoonVecSmooth;
+	#else
+		vec3 WmoonVec = mat3(gbufferModelViewInverse)*moonVec;
+	#endif
 #endif
 // vec3 WsunVec = normalize(LightDir);
 
@@ -316,7 +324,11 @@ if (gl_FragCoord.x > 18. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257){
 			vec3 WmoonVec = customMoonVecSSBO;
 		#endif
 	#else
-		vec3 WmoonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition + gbufferModelViewInverse[3].xyz);
+		#ifdef SMOOTH_MOON_ROTATION
+			vec3 WmoonVec = WmoonVecSmooth;
+		#else
+			vec3 WmoonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition + gbufferModelViewInverse[3].xyz);
+		#endif
 		if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
 	#endif
 	
@@ -343,7 +355,11 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 	vec3 viewPos = mat3(gbufferModelView)*viewVector*1024.0;
 	float noise = interleaved_gradientNoise_temporal();
 
-	WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition + gbufferModelViewInverse[3].xyz);// * ( float(sunElevation > 1e-5)*2.0-1.0 );
+	#ifdef SMOOTH_SUN_ROTATION
+		WsunVec = WsunVecSmooth;
+	#else
+		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition + gbufferModelViewInverse[3].xyz);// * ( float(sunElevation > 1e-5)*2.0-1.0 );
+	#endif
 
 	#ifdef CUSTOM_MOON_ROTATION
 		#if LIGHTNING_SHADOWS > 0
@@ -354,7 +370,11 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 		vec3 moonColor2 = moonColor * mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
 		//suncol *= mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
 	#else
-		WmoonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition + gbufferModelViewInverse[3].xyz);
+		#ifdef SMOOTH_MOON_ROTATION
+			WmoonVec = WmoonVecSmooth;
+		#else
+			WmoonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition + gbufferModelViewInverse[3].xyz);
+		#endif
 		if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
 		vec3 moonColor2 = moonColor;
 	#endif

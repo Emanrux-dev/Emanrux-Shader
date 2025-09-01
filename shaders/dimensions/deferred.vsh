@@ -46,7 +46,11 @@ uniform int frameCounter;
 uniform vec3 cameraPosition;
 uniform vec4 lightningBoltPosition;
 
-vec3 sunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+#ifdef SMOOTH_SUN_ROTATION
+	vec3 sunVec = WsunVecSmooth;
+#else
+	vec3 sunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+#endif
 
 #include "/lib/sky_gradient.glsl"
 #include "/lib/util.glsl"

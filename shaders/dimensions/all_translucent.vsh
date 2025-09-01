@@ -250,11 +250,19 @@ void main() {
 	
 		// WsunVec = lightCol.a * normalize(mat3(gbufferModelViewInverse) * sunPosition);
 		
-		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#ifdef SMOOTH_SUN_ROTATION
+			WsunVec = WsunVecSmooth;
+		#else
+			WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#endif
 		#ifdef CUSTOM_MOON_ROTATION
 			vec3 moonVec = customMoonVecSSBO;
 		#else
-			vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+			#ifdef SMOOTH_MOON_ROTATION
+				vec3 moonVec = WmoonVecSmooth;
+			#else
+				vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+			#endif
 			if(dot(-moonVec, WsunVec) < 0.9999) moonVec = -moonVec;
 		#endif
 		

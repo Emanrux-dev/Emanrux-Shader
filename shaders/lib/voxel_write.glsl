@@ -1,5 +1,9 @@
 ivec3 GetVoxelIndex(const in vec3 playerPos) {
-	vec3 cameraOffset = fract(cameraPosition);
+	#if !defined IS_LPV_ENABLED
+		vec3 cameraOffset = fract(cameraPosition-relativeEyePosition);
+	#else
+		vec3 cameraOffset = fract(cameraPosition);
+	#endif
 	return ivec3(floor(playerPos + cameraOffset) + VoxelSize3/2u);
 }
 
@@ -57,6 +61,25 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 		}
 	#endif
 
-	if (voxelId > 0u)
-		SetVoxelBlock(originPos, voxelId);
+	#if WATER_INTERACTION == 2
+		if (
+			((renderStage == MC_RENDER_STAGE_ENTITIES && (currentRenderedItemId > 0 || entityId > 0)) || renderStage == MC_RENDER_STAGE_BLOCK_ENTITIES)
+		) {
+			switch (entityId) {
+				case ENTITY_BOAT:
+				case ENTITY_SMALLSHIPS:
+					voxelId = uint(entityId);
+					break;
+			}
+		}
+	#endif
+
+	if (voxelId > 0u){
+		#if !defined IS_LPV_ENABLED
+			SetVoxelBlock(originPos+relativeEyePosition, voxelId);
+		#else
+			SetVoxelBlock(originPos, voxelId);
+		#endif
+	}
+		
 }

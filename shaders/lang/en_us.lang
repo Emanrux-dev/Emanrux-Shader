@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §dECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 1.1.1
+    value.SHADER_VERSION_LABEL.482 = 2.0.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -41,7 +41,12 @@ option.colortype = coloring mode
         option.Moon_temp = Moon Temperature
         suffix.Moon_temp = K
 screen.MoonOptions = Moon Settings
+    option.SMOOTH_MOON_ROTATION = Smooth Moon Movement
 screen.SunOptions = Sun Settings
+    option.SMOOTH_SUN_ROTATION = Smooth Sun Movement
+screen.Smoothing_Settings = Smoothing Settings
+screen.SMOOTHING_DISCLAIMER = §c IF USING A DAYTIME CHANGE MOD: SET THESE TO THE SAME VALUES OF THE MOD
+screen.SMOOTHING_DISCLAIMER2 = §c OTHERWISE DON'T CHANGE THEM 
 screen.CUSTOM_MOON_SETTINGS = Custom Moon Settings
     option.REALMOON = Realistic Moon Texture
     option.MOON_NORMALS = Realistic Moon Normals §c(requires Custom Moon Rotation!)§r
@@ -580,8 +585,31 @@ screen.World = World
         option.Water_Top_Layer = Ocean Y coordinate
         option.WATER_WAVE_STRENGTH = Wave Strength
         option.WATER_WAVE_SPEED = Wave Speed
-        option.WATER_INTERACTION = Water Interaction
-            option.WATER_INTERACTION.comment = Small wave when the player enters/leaves water §aPERFORMANCE COST:§r very low
+        option.WATER_INTERACTION = Player Water Interaction
+            option.WATER_INTERACTION.comment = Specify how the player should interact with water. §aSimple§r: Small wave effect when camera enters/leaves water. §aWave Simulation§r: Movement of the player (also if in boat) make waves on water.
+            value.WATER_INTERACTION.0 = Off
+            value.WATER_INTERACTION.1 = Simple
+            value.WATER_INTERACTION.2 = Wave Simulation
+        option.WATER_SIM_SCALE = Wave Simulation Resolution
+            option.WATER_SIM_SCALE.comment = The overall resolution of the wave simulation. §aPERFORMANCE COST:§r medium to high
+            value.WATER_SIM_SCALE.0 = 50%
+            value.WATER_SIM_SCALE.1 = 100%
+            value.WATER_SIM_SCALE.2 = 200%
+        option.WATER_SIM_DISTANCE = Wave Simulation Distance
+            option.WATER_SIM_DISTANCE.comment = The distance from the player where waves are simulated. §aPERFORMANCE COST:§r low to high
+            value.WATER_SIM_DISTANCE.1 = 50%
+            value.WATER_SIM_DISTANCE.2 = 100%
+            value.WATER_SIM_DISTANCE.3 = 150%
+            value.WATER_SIM_DISTANCE.4 = 200%
+        option.WATER_SIM_FRAMERATE = Wave Simulation Framerate
+            option.WATER_SIM_FRAMERATE.comment = The framerate at which the simulation is calculated. At 30 FPS the accuracy gets lowered. §cIF YOUR INGAME FRAMERATE CAN'T KEEP UP, THE SIMULATION WILL SLOW DOWN. §cPLEASE SET IT TO A FRAMERATE YOUR GAME WILL ALWAYS REACH. §aPERFORMANCE COST:§r low to medium
+            value.WATER_SIM_FRAMERATE.30 = 30 FPS
+            value.WATER_SIM_FRAMERATE.60 = 60 FPS
+        option.PIXELATED_WAVES = Pixelated Wave Simulation
+            option.PIXELATED_WAVES.comment = Whether or not the waves should be smooth or not §aPERFORMANCE COST:§r none
+        screen.WATER_SIM_DISCLAIMER = §c Please read descriptions of these settings if using water simulation
+        option.WATER_SIM_STRENGTH = Wave Simulation Strength
+
         option.WAVE_DETAIL = Wave Detail
         option.SNELLS_WINDOW = Snell's Window
         option.MINIMUM_WATER_ABSORBANCE = Minimum Water Absorbance
@@ -642,10 +670,13 @@ screen.Post_Processing = Post Processing
     screen.TAA_OPTIONS = Anti-Aliasing Settings
         option.SCREENSHOT_MODE = Screenshot Mode
         option.TAA = TAA
-        option.RESPONSIVE_TAA = Responsive TAA §a(SET BLEND FACTOR TO 0.25 WHEN THIS IS ENABLED)
+        option.RESPONSIVE_TAA = Responsive TAA §a(TURN THIS OFF WITH TEMPORAL UPSCALING)
         option.BLEND_FACTOR = Blend Factor
+        option.BLEND_FACTOR_DURING_MOVEMENT = Blend Factor During Camera Movment
         option.TAA_UPSCALING = Temporal Upscaling
         option.SCALE_FACTOR = Scale Factor
+            prefix.SCALE_FACTOR = §fUpscale from 
+            suffix.SCALE_FACTOR = x §fof the window resolution
 	screen.COLOR_GRADING = Color Grading
 		option.LUMINANCE_CURVE = Tone Curve
 		option.LOWER_CURVE = Lower Curve
@@ -896,7 +927,7 @@ option.FAKE_DISPERSION_AMOUNT.comment = Configure the amount of dispersion withi
 option.REFRACTION_SMUDGE_AMOUNT.comment = Configure the amount of smudge within the refraction. §bWhat is this?§r when refraction happens, the parts that get really distorted will get smudged. §cWill cause visaul noise within refraction. §aPERFORMANCE COST:§r very low
 
 screen.Fog.comment = Configure settings related to the raymarched volumetric fog, or distance based fog.
-    option.VL_RENDER_RESOLUTION.comment = Configure the resolution of the volumetric fog. §aPERFORMANCE COST:§r high
+    option.VL_RENDER_RESOLUTION.comment = Configure the resolution of volumetric fog and clouds. §aPERFORMANCE COST:§r high
     option.VL_SAMPLES.comment = Configure the quality of the volumetric fog. §aPERFORMANCE COST:§r high
     option.BLOOMY_FOG.comment = Configure the strength of bloom that is applied to fog. §bWhat is this?§r This effect makes the fog look soft, it helps hide a little noise too. can cause some visible flickering on detailed edges. §aPERFORMANCE COST:§r very low
     option.Haze_amount.comment = Configure how dense the atmosphere around you is. §bWhat is this?§r This is the blue haze you see in the distance.
@@ -983,7 +1014,7 @@ screen.Post_Processing.comment = Configure settings for all post processing effe
         option.TAA.comment = Toggle temporal anti-aliasing. This removes all jagged edges on things, softens the image, and helps remove noise for many effects. This will cause ghosting or trailing because it uses past frames for extra information on the world. §aPERFORMANCE COST:§r low
         option.BLEND_FACTOR.comment = Configure how much of frame history is used. high numbers means it relies less on frame history, so it may look flickery and noisy. low numbers rely more on frame history, so it may look less moisy, but more smudged with more trailing.
         option.TAA_UPSCALING.comment = Toggle temporal upscaling. This retains a good amount of quality from a lower resolution image when it upscales. so you can still have a high looking resolution compared to typical upsampling and still have better performance.
-        option.SCALE_FACTOR.comment = Configure from what fraction of your resolution to upscale from - §abelow 0.50x is not recommend, it is only allowed for fun!§r
+        option.SCALE_FACTOR.comment = Configure from what fraction of your resolution to upscale from - §abelow 0.50x is not recommended, it is only allowed for fun!§r
 
         
 	screen.COLOR_GRADING.comment = Advanced color grading options
@@ -991,7 +1022,7 @@ screen.Post_Processing.comment = Configure settings for all post processing effe
 		option.COLOR_GRADING_ENABLED.comment = Enable color grading. The RGB sliders will not affect the brightness. This is applied after the tone curve
 
 option.RESOURCEPACK_SKY.comment = Toggle resourcepack sky support. Configure settings to use the whole resourcepack sky, or keep the shader's sun and moon. §aPERFORMANCE COST:§r very low
-option.SKY_GROUND = Atmosphere ground
+option.SKY_GROUND = Atmosphere Ground
 
 option.MATERIAL_AO.comment = Toggle the use of ambient occlusion based on what the resourcepack provides. §aPERFORMANCE COST:§r very low
 option.WATER_WAVE_STRENGTH.comment = configure how strong the waves appear.

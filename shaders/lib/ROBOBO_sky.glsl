@@ -97,7 +97,7 @@ vec3 calculateAtmosphere(vec3 background, vec3 viewVector, vec3 upVector, vec3 s
 
 	#ifdef SKY_GROUND
 		#if CUMULONIMBUS > 1
-			float referenceHeight = 6000;
+			float referenceHeight = 6000.0;
 		#else
 			float referenceHeight = CloudLayer0_height;
 		#endif
@@ -119,7 +119,7 @@ vec3 calculateAtmosphere(vec3 background, vec3 viewVector, vec3 upVector, vec3 s
 
 	vec2 sd = vec2((planetIntersected && pid.x < 0.0) ? pid.y : max(aid.x, 0.0), (planetIntersected && pid.x > 0.0) ? pid.x : aid.y);
 
-	float stepSize  = (sd.y - sd.x) * (1.0 / iSteps);
+	float stepSize  = (sd.y - sd.x) * (1.0 / float(iSteps));
 	vec3  increment = viewVector * stepSize;
 	vec3  position  = viewVector * sd.x + viewPos;
 	position += increment * (0.34*noise);
@@ -128,7 +128,7 @@ vec3 calculateAtmosphere(vec3 background, vec3 viewVector, vec3 upVector, vec3 s
 	vec2 phaseMoon = sky_phase(dot(viewVector, moonVector), 0.8);
 
 	#ifdef CUSTOM_MOON_ROTATION
-	float eclipseDarkeness = smoothstep(0.005, 0.09, length(sunVector-moonVector));
+		float eclipseDarkeness = smoothstep(0.005, 0.09, length(sunVector-moonVector));
 		phaseSun *= mix(1.0, eclipseDarkeness, smoothstep(-1.0, 0.175, viewVector.y));
 	#endif
 
@@ -156,9 +156,9 @@ vec3 calculateAtmosphere(vec3 background, vec3 viewVector, vec3 upVector, vec3 s
 		vec3 stepScatteringVisible   = transmittance * stepTransmittedFraction * GroundDarkening ;
 		
 		#ifdef ORIGINAL_CHOCAPIC_SKY
-			scatteringSun  += sky_coefficientsScattering  * (stepAirmass.xy * phaseSun) * stepScatteringVisible * sky_transmittance(position, sunVector,  jSteps) * planetGround;
+			scatteringSun  += sky_coefficientsScattering  * (stepAirmass.xy * phaseSun) * stepScatteringVisible * sky_transmittance(position, sunVector, jSteps) * planetGround;
 		#else
-			scatteringSun  += sky_coefficientsScattering  * (stepAirmass.xy * phaseSun) * stepScatteringVisible * sky_transmittance(position, sunVector,  jSteps) * planetGround;
+			scatteringSun  += sky_coefficientsScattering  * (stepAirmass.xy * phaseSun) * stepScatteringVisible * sky_transmittance(position, sunVector, jSteps) * planetGround;
 		#endif
 
 		scatteringMoon += sky_coefficientsScattering * (stepAirmass.xy * phaseMoon) * stepScatteringVisible * sky_transmittance(position, moonVector, jSteps) * planetGround;

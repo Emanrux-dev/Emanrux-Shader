@@ -43,6 +43,7 @@ uniform float dhNearPlane;
 
 uniform mat4 gbufferPreviousModelView;
 uniform vec3 previousCameraPosition;
+uniform vec3 relativeEyePosition;
 
 #if defined VIVECRAFT
 	uniform bool vivecraftIsVR;

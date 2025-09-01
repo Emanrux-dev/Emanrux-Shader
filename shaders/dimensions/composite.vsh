@@ -33,7 +33,11 @@ void main() {
 
 	#ifdef CUSTOM_MOON_ROTATION
 		vec3 moonVec = customMoonVecSSBO;
-		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#ifdef SMOOTH_SUN_ROTATION
+			WsunVec = WsunVecSmooth;
+		#else
+			WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#endif
 		WsunVec = mix(moonVec, WsunVec, float(sunElevation > 1e-5));
 		// WsunVec = moonVec;
 	#else

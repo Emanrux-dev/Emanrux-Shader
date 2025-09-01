@@ -130,7 +130,12 @@ void main() {
 		lightCol.rgb = texelFetch2D(colortex4,ivec2(6,37),0).rgb;
 		lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
 		averageSkyCol_Clouds = texelFetch2D(colortex4,ivec2(0,37),0).rgb;
-		WsunVec = lightCol.a * normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		
+		#ifdef SMOOTH_SUN_ROTATION
+			WsunVec = WsunVecSmooth;
+		#else
+			WsunVec = lightCol.a * normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#endif
 
 		readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.cirrus, parameters.fog);
 	#endif

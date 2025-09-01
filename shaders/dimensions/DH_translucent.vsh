@@ -111,14 +111,22 @@ void main() {
 	#ifdef CUSTOM_MOON_ROTATION
 		vec3 WmoonVec = customMoonVecSSBO;
 
-		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#ifdef SMOOTH_SUN_ROTATION
+			WsunVec = WsunVecSmooth;
+		#else
+			WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#endif
 		WsunVec2 = normalize(sunPosition);
 
 		WsunVec = mix(WmoonVec, WsunVec, float(sunElevation > 1e-5));
 		WsunVec2 = mix(normalize(mat3(gbufferModelView)*WmoonVec), WsunVec2, float(sunElevation > 1e-5));
 	#else
 		lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
-		WsunVec = lightCol.a * normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#ifdef SMOOTH_SUN_ROTATION
+			WsunVec = lightCol.a * WsunVecSmooth;
+		#else
+			WsunVec = lightCol.a * normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#endif
 		WsunVec2 = lightCol.a * normalize(sunPosition);
 	#endif
 

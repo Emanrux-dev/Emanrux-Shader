@@ -15,17 +15,17 @@ float densityAtPosFog(in vec3 pos){
 float cloudVol(in vec3 pos){
 	vec3 samplePos = pos*vec3(1.0,1./48.,1.0);
 
-    float Wind = pow(max(pos.y-30,0.0) / 15.0,2.1);
+    float Wind = pow(max(pos.y-30.,0.0) / 15.0,2.1);
 
 	float Plumes = texture2D(noisetex, (samplePos.xz + Wind)/256.0).b;
 	float floorPlumes = clamp(0.3 - exp(Plumes * -6),0,1);
 	Plumes *= Plumes;
 
-	float Erosion = densityAtPosFog(samplePos * 400	- frameTimeCounter*10 - Wind*10) *0.7+0.3 ;
+	float Erosion = densityAtPosFog(samplePos * 400. - frameTimeCounter*10. - Wind*10.) *0.7+0.3 ;
 
-    float RoofToFloorDensityFalloff = exp(max(100-pos.y,0.0) / -15);
-	float FloorDensityFalloff = pow(exp(max(pos.y-31,0.0) / -3.0),2);
-	float RoofDensityFalloff = exp(max(120-pos.y,0.0) / -10);
+    float RoofToFloorDensityFalloff = exp(max(100.-pos.y,0.0) / -15.);
+	float FloorDensityFalloff = pow(exp(max(pos.y-31.,0.0) / -3.0),2.);
+	float RoofDensityFalloff = exp(max(120.-pos.y,0.0) / -10.);
 
 	float Output = max((RoofToFloorDensityFalloff - Plumes * (1.0-Erosion)) * 2.0,	clamp((FloorDensityFalloff - floorPlumes*0.5) * Erosion ,0.0,1.0) );
     

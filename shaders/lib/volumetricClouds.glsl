@@ -9,9 +9,11 @@ uniform int entityId;
 uniform int worldDay;
 uniform int worldTime;
 uniform float moonElevation;
+uniform float worldTimeSmooth;
+
 
 #if CLOUD_MOVEMENT_TYPE == 0
-	float cloud_movement = (worldTime  + mod(worldDay,100)*24000.0) / 24.0 * Cloud_Speed;
+	float cloud_movement = (worldTimeSmooth  + mod(worldDay,100)*24000.0) / 24.0 * Cloud_Speed;
 #else
 	float cloud_movement = frameTimeCounter * Cloud_Speed;
 #endif

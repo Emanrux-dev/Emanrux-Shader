@@ -103,6 +103,7 @@ flat varying int SIGN;
 flat varying float HELD_ITEM_BRIGHTNESS;
 uniform float noPuddleAreas;
 uniform float nightVision;
+uniform vec3 relativeEyePosition;
 
 // float interleaved_gradientNoise(){
 // 	return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y)+frameTimeCounter*51.9521);
@@ -359,7 +360,7 @@ void main() {
 
 	#if defined Hand_Held_lights && !defined LPV_ENABLED
 		#ifdef IS_IRIS
-			vec3 playerCamPos = eyePosition;
+			vec3 playerCamPos = cameraPosition - relativeEyePosition;
 		#else
 			vec3 playerCamPos = cameraPosition;
 		#endif
@@ -373,7 +374,7 @@ void main() {
 		// if(HELD_ITEM_BRIGHTNESS > 0.0) torchlightmap = max(torchlightmap, HELD_ITEM_BRIGHTNESS * clamp( pow(max(1.0-length(worldpos-playerCamPos)/HANDHELD_LIGHT_RANGE,0.0),1.5),0.0,1.0));
 		if(HELD_ITEM_BRIGHTNESS > 0.0){ 
 			
-			float pointLight = clamp(1.0-(length(worldpos-playerCamPos)-1)/HANDHELD_LIGHT_RANGE,0.0,1.0);
+			float pointLight = clamp(1.0-(length(worldpos-playerCamPos)-1.)/HANDHELD_LIGHT_RANGE,0.0,1.0);
 
 			if (torchlightmap < 0.99) {
 				torchlightmap = mix(torchlightmap, HELD_ITEM_BRIGHTNESS, pointLight);

@@ -67,12 +67,20 @@ void main() {
 
 	averageSkyCol_Clouds = texelFetch2D(colortex4,ivec2(0,37),0).rgb;
 
-	unsigned_WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+	#ifdef SMOOTH_SUN_ROTATION
+		unsigned_WsunVec = WsunVecSmooth;
+	#else
+		unsigned_WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+	#endif
 	#ifdef CUSTOM_MOON_ROTATION
 		vec3 moonVec = customMoonVecSSBO;
 		//sunCol *= smoothstep(0.005, 0.09, length(moonVec - unsigned_WsunVec));
 	#else
-		vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+		#ifdef SMOOTH_MOON_ROTATION
+			vec3 moonVec = WmoonVecSmooth;
+		#else
+			vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+		#endif
 		if(dot(-moonVec, unsigned_WsunVec) < 0.9999) moonVec = -moonVec;
 	#endif
 	

@@ -41,7 +41,11 @@ void main() {
 		#ifdef BorderFog
 			skyGroundColor = texelFetch2D(colortex4,ivec2(1,37),0).rgb / 1200.0 * Sky_Brightness;
 		#endif
-		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#ifdef SMOOTH_SUN_ROTATION
+			WsunVec = WsunVecSmooth;
+		#else
+			WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#endif
 
 		#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
 			readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.cirrus, parameters.fog);

@@ -288,7 +288,7 @@ void main() {
 		bool unlistedEntity = false;
 	#endif
 
-	if(entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468 || unlistedEntity) normalMat.a = 0.45;
+	if(entityId == ENTITY_BOAT || entityId == ENTITY_SMALLSHIPS || entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468 || unlistedEntity) normalMat.a = 0.45;
 	
 #endif
 

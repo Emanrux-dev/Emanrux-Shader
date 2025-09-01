@@ -275,6 +275,7 @@ float luma(vec3 color) {
 	return dot(color,vec3(0.21, 0.72, 0.07));
 }
 uniform vec3 eyePosition;
+uniform vec3 relativeEyePosition;
 
 #if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
 	float R2_dither(){
@@ -401,7 +402,7 @@ void main() {
 
 	#if defined Hand_Held_lights && !defined LPV_ENABLED
 		#ifdef IS_IRIS
-			vec3 playerCamPos = eyePosition;
+			vec3 playerCamPos = cameraPosition - relativeEyePosition;
 		#else
 			vec3 playerCamPos = cameraPosition;
 		#endif

@@ -82,6 +82,7 @@ uniform float rainStrength;
 #endif
 
 #ifdef END_SHADER
+	uniform float worldTimeSmooth;
 	#ifndef END_ISLAND_LIGHT
 		uniform vec3 lightningEffect;	
 		#include "/lib/stars.glsl"
@@ -786,7 +787,12 @@ uniform float wetness;
 				float halfWet = min(wetnessAmount,1.0);
 				float fullWet = clamp(wetnessAmount - 2.0,0.0,1.0);
 
-				float noise = texture2D(noisetex, worldPos.xz * 0.02).b;
+				vec2 driprate = vec2(0.0,frameTimeCounter)*0.05;
+
+				vec2 UV = mix(worldPos.xz, worldPos.xy*vec2(2.0, 0.5)+driprate, abs(flatNormals.z));
+				UV = mix(UV, worldPos.zy*vec2(2.0, 0.5)+driprate, abs(flatNormals.x));
+				
+				float noise = texture2D(noisetex, UV * 0.02).b;
 				
 				float puddles = max(halfWet - noise,0.0);
 				puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
@@ -1483,12 +1489,15 @@ void main() {
 				// vec3 orbitstar = vec3(feetPlayerPos_normalized.x,abs(feetPlayerPos_normalized.y),feetPlayerPos_normalized.z); orbitstar.x -= WsunVec.x*0.2;
 				vec3 worldDir = normalize(mat3(gbufferModelViewInverse) * toScreenSpace(vec3(texcoord/RENDER_SCALE,1.0)));
 
-				vec3 orbitstar = customRotation(sunPathRotation, worldTime) * worldDir;
+				vec3 orbitstar = customRotation(sunPathRotation, worldTimeSmooth) * worldDir;
 
+				vec3 starColor = vec3(1.0);
 				#if defined OVERWORLD_SHADER && defined TWILIGHT_FOREST_FLAG
-					Background += stars(orbitstar) * 100.0;
+					float stars = stars(orbitstar, starColor) * 100.0;
+					Background += stars * starColor;
   				#else
-					Background += stars(orbitstar) * 10.0 * clamp(-unsigned_WsunVec.y*2.0,0.0,1.0);
+					float stars = stars(orbitstar, starColor) * 10.0;
+					Background += stars * starColor * mix(clamp(-unsigned_WsunVec.y*2.0,0.0,1.0), 1.0, clamp(cameraPosition.y-15000.0, 0.0, 45000.0)/45000.0);
 				#endif
 
 				#if !defined ambientLight_only && (RESOURCEPACK_SKY == 1 || RESOURCEPACK_SKY == 0)
@@ -1515,7 +1524,13 @@ void main() {
 						}
 					#endif
 
-					Background += drawSun(dot(unsigned_WsunVec, feetPlayerPos_normalized), sunCol / 2400.0);
+					#ifdef SMOOTH_SUN_ROTATION
+						vec3 sunVec = WsunVecSmooth;
+					#else
+						vec3 sunVec = unsigned_WsunVec;
+					#endif
+
+					Background += drawSun(dot(sunVec, feetPlayerPos_normalized), sunCol / 2400.0);
 
 					#ifdef REALMOON
 						vec3 tangent = normalize(cross(WmoonVec, vec3(0.0, 1.0, 0.0)));
@@ -1613,7 +1628,8 @@ void main() {
 		#endif
 
 		#ifdef END_SHADER
-			Background += stars(normalize(mat3(gbufferModelViewInverse) * toScreenSpace(vec3(texcoord/RENDER_SCALE,1.0)))) * 5.0;
+			vec3 starColor = vec3(1.0);
+			Background += stars(normalize(mat3(gbufferModelViewInverse) * toScreenSpace(vec3(texcoord/RENDER_SCALE,1.0))), starColor) * 5.0;
 		#endif
 
 		gl_FragData[0].rgb = clamp(fp10Dither(Background, triangularize(noise_2)), 0.0, 65000.);

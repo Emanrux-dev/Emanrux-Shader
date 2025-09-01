@@ -5,6 +5,7 @@ It started out with smaller features, but then the additions just kept piling up
 
 Notable changes/additions compared to Bliss unstable:
  + Custom moon orbit with possible eclipses
+ + Water wave simulation for the player
  + Additional cirrus & cumulonimbus cloud layers (WIP)
  + Distant Horizons chunk fading
  + Moon Texture with phases
@@ -27,6 +28,10 @@ Note: With default settings there is at least one guaranteed eclipse per ingame 
 ## Overhauled end lighting for the main island
 
 <img width="2560" height="1440" alt="2025-08-12_01 31 12" src="https://github.com/user-attachments/assets/a1a408cc-ed2a-46a3-a465-4b09d0d00660" />
+
+## Water wave simulation
+
+<img width="1920" height="1080" alt="2025-09-02_00 29 28" src="https://github.com/user-attachments/assets/87cbd02c-1149-4764-9ff0-7da521b0273a" />
 
 ## Shader snow effect
 

@@ -40,7 +40,7 @@ layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 layout (rg16f) uniform image2D waveSim;
 layout (rgba16f) uniform image2D waveSim2;
 
-const ivec2 resolution = ivec2(imageSize(waveSim));
+const ivec2 resolution = ivec2(workGroups.x * 32, workGroups.y * 32);
 
 uniform int frameCounter;
 uniform float frameTime;

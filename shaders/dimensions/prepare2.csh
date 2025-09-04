@@ -104,7 +104,7 @@ void main() {
         pressure += delta * pVel;
         
         // "Spring" motion. This makes the waves look more like water waves and less like sound waves.
-        pVel -= 0.00185 * delta * pressure;
+        pVel -= 0.0014 * delta * pressure;
         
         // Velocity damping so things eventually calm down
         pVel *= 1.0 - 0.003 * delta;
@@ -119,13 +119,13 @@ void main() {
             velocity.y *= 1.15;
             float speed = length(velocity);
 
-            float size = 20.0;
+            float size = 10.0;
             if(inBoat) {
-                size += 52.0 * smoothstep(0.0, 10.0, speed);
+                size += 26.0 * smoothstep(0.0, 10.0, speed);
             } else if (inShip) {
-                size += 122.0 * smoothstep(0.0, 10.0, speed);
+                size += 61.0 * smoothstep(0.0, 10.0, speed);
             } else {
-                size += 20.0 * smoothstep(0.1, 13.0, speed);
+                size += 10.0 * smoothstep(0.1, 13.0, speed);
             }
             #if WATER_SIM_SCALE == 0
                 size *= 0.5;

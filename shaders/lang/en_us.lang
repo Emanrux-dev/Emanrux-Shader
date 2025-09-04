@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §dECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 2.0.0
+    value.SHADER_VERSION_LABEL.482 = 2.1.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -86,7 +86,10 @@ screen.EndLighting = End Lighting
 
 option.STARS_AMOUNT = Stars Amount
 option.STARS_BRIGHTNESS = Stars Brightness
-screen.Misc_Settings = §cDebugging§r/Experimental Settings
+screen.Misc_Settings = Other Settings
+screen.EXPERIMENTAL_STUFF = Experimental Stuff
+screen.DEBUG_STUFF = §cDebug Settings§r
+screen.LEGACY_STUFF = Legacy Settings
 screen.Mod_support = Settings For Supported Mods
 
 option.RESOURCEPACK_SKY = Resource Pack Sky §c(slightly bugged)

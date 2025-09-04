@@ -320,17 +320,19 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	vec3 waterNormals = worldSpaceNormals;
 
-    if(iswater && abs(worldSpaceNormals.y) > 0.1){
-	    vec3 waterPos = (playerPos+cameraPosition).xzy;
+	#ifndef Vanilla_like_water
+		if(iswater && abs(worldSpaceNormals.y) > 0.1){
+			vec3 waterPos = (playerPos+cameraPosition).xzy;
 
-		vec3 bump = normalize(getWaveNormal(waterPos, playerPos));
+			vec3 bump = normalize(getWaveNormal(waterPos, playerPos));
 
-		float bumpmult = WATER_WAVE_STRENGTH;
+			float bumpmult = WATER_WAVE_STRENGTH;
 
-		bump = bump * vec3(bumpmult, bumpmult, bumpmult) + vec3(0.0f, 0.0f, 1.0f - bumpmult);
+			bump = bump * vec3(bumpmult, bumpmult, bumpmult) + vec3(0.0f, 0.0f, 1.0f - bumpmult);
 
-        waterNormals.xz = bump.xy;
-    }
+			waterNormals.xz = bump.xy;
+		}
+	#endif
 
 	normals = worldToView(waterNormals);
     
@@ -346,7 +348,9 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec3 Albedo = toLinear(gl_FragData[0].rgb);
 
 	#ifndef WhiteWorld
-	    #ifndef Vanilla_like_water
+	    #ifdef Vanilla_like_water
+			if (iswater) Albedo *= sqrt(luma(Albedo));
+		#else
 	    	if (iswater){
 	    		Albedo = vec3(0.0);
 	    		gl_FragData[0].a = 1.0/255.0;

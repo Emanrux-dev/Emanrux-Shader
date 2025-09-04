@@ -98,7 +98,7 @@ vec4 toClipSpace3(vec3 viewSpacePosition) {
 
 float getWave (vec3 pos, float range){
 	// return pow(1.0-texture2D(noisetex, (pos.xz + frameTimeCounter * WATER_WAVE_SPEED)/150.0).b,2.0) * WATER_WAVE_STRENGTH * range;
-	return pow(1.0-texture2D(noisetex, (pos.xz + frameTimeCounter * WATER_WAVE_SPEED)/125.0).r,5.0) * WATER_WAVE_STRENGTH * range;
+	return pow(1.0-texture2D(noisetex, (pos.xz + frameTimeCounter * WATER_WAVE_SPEED)/125.0).r,5.0) * min(WATER_WAVE_STRENGTH, 1.0) * range;
 }
 
 vec3 getWaveNormal(vec3 posxz, float range){

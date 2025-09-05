@@ -84,7 +84,7 @@ void main() {
 		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
 	#endif
 
-	#ifdef CUSTOM_MOON_ROTATION
+	#if defined CUSTOM_MOON_ROTATION && defined OVERWORLD_SHADER
 		vec3 moonVec = customMoonVecSSBO;
 		sunlightCol *= smoothstep(0.005, 0.09, length(moonVec - WsunVec));
 	#else

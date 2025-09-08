@@ -111,7 +111,7 @@ void main() {
         
         // Pressure damping to prevent it from building up forever.
         float distFade = smoothstep(0.49*resolution.x, 0.4*resolution.x, dist);
-        pressure *= 0.992 * distFade;
+        pressure *= 0.985 * distFade;
         pVel *= distFade;
 
         if (onWaterSurface) {

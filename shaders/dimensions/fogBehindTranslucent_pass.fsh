@@ -278,7 +278,7 @@ void main() {
 
 
 	bool iswater = alpha > 0.99;
-	bool isLightning = alpha < 0.51 || alpha > 0.49;
+	bool isLightning = alpha < 0.51 && alpha > 0.49;
 	//////////////////////////////////////////////////////////
 	///////////////// BEHIND OF TRANSLUCENTS /////////////////
 	//////////////////////////////////////////////////////////
@@ -288,19 +288,21 @@ void main() {
 		float noise_1 = R2_dither();
 		float noise_2 = blueNoise();
 
-		float z0 = texelFetch2D(depthtex0, ivec2((floor(gl_FragCoord.xy - 0.5)/VL_RENDER_RESOLUTION*texelSize)/texelSize), 0 ).x;
+		ivec2 texcoord = ivec2(tc/texelSize);
+
+		float z0 = texelFetch2D(depthtex0, texcoord, 0 ).x;
 
 		#ifdef DISTANT_HORIZONS
-			float DH_z0 = texelFetch2D(dhDepthTex, ivec2((floor(gl_FragCoord.xy - 0.5)/VL_RENDER_RESOLUTION*texelSize)/texelSize), 0 ).x;//texture2D(dhDepthTex,tc).x;
+			float DH_z0 = texelFetch2D(dhDepthTex, texcoord, 0 ).x;//texture2D(dhDepthTex,tc).x;
 		#else
 			float DH_z0 = 0.0;
 		#endif
 
-		float z = texelFetch2D(depthtex1, ivec2((floor(gl_FragCoord.xy - 0.5)/VL_RENDER_RESOLUTION*texelSize)/texelSize), 0 ).x;
+		float z = texelFetch2D(depthtex1, texcoord, 0 ).x;
 
 		#ifdef DISTANT_HORIZONS
 			// float DH_z = texture2D(dhDepthTex1,tc).x;
-			float DH_z = texelFetch2D(dhDepthTex1, ivec2((floor(gl_FragCoord.xy - 0.5)/VL_RENDER_RESOLUTION*texelSize)/texelSize), 0 ).x;//texture2D(dhDepthTex,tc).x;
+			float DH_z = texelFetch2D(dhDepthTex1, texcoord, 0 ).x;//texture2D(dhDepthTex,tc).x;
 		#else
 			float DH_z = 0.0;
 		#endif

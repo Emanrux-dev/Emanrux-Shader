@@ -487,7 +487,7 @@ vec2 SSRT_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, boo
 			float dist = abs(linearSampledDepth - linearCurrentPos) / linearCurrentPos;
 			
 			// if (dist < 0.035){
-			if (dist < 0.035/(1.0+linearCurrentPos) && (sampleDepth < newPos.z )) shadows = 0.0;
+			if (dist < 0.035/(1.0+linearCurrentPos)) shadows = 0.0;
 
 			// if (dist < 0.3/(1.0+linearCurrentPos)) SSS += distanceScale2;
 			if (dist < SSSdistanceScale) SSS += distanceScale2;

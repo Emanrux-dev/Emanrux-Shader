@@ -10,8 +10,8 @@
         lightRange = lightColorRange.a * 255.0;
 
         if (lightRange > 0.0) {
-            float lightDist = length(playerPos);
-            vec3 lightDir = playerPos / lightDist;
+            float lightDist = length(playerPos+relativeEyePosition);
+            // vec3 lightDir = playerPos / lightDist;
             float NoL = 1.0;//max(dot(normal, lightDir), 0.0);
             float falloff = pow(1.0 - lightDist / lightRange, 3.0);
             lightFinal = lightColor * NoL * max(falloff, 0.0);

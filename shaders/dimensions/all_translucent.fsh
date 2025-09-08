@@ -178,6 +178,9 @@ uniform float dhFarPlane;
 #ifdef FORWARD_ROUGH_REFLECTION
 #endif
 
+uniform vec3 relativeEyePosition;
+
+
 #include "/lib/blocks.glsl"
 #include "/lib/lpv_blocks.glsl"
 #include "/lib/lpv_buffer.glsl"
@@ -453,7 +456,6 @@ void Emission(
 }
 
 uniform vec3 eyePosition;
-uniform vec3 relativeEyePosition;
 
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////

@@ -224,6 +224,7 @@ float convertHandDepth_2(in float depth, bool hand) {
 #ifdef DEFERRED_ROUGH_REFLECTION
 #endif
 
+uniform vec3 relativeEyePosition;
 #define FULLRESDEPTH
 
 #include "/lib/specular.glsl"

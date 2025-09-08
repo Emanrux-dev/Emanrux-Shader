@@ -74,6 +74,7 @@ flat varying float HELD_ITEM_BRIGHTNESS;
 
 uniform mat4 gbufferPreviousModelView;
 uniform vec3 previousCameraPosition;
+uniform vec3 relativeEyePosition;
 
 
 #include "/lib/util.glsl"
@@ -275,7 +276,6 @@ float luma(vec3 color) {
 	return dot(color,vec3(0.21, 0.72, 0.07));
 }
 uniform vec3 eyePosition;
-uniform vec3 relativeEyePosition;
 
 #if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
 	float R2_dither(){

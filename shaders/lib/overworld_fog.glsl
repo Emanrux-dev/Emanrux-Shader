@@ -128,7 +128,7 @@ vec4 GetVolumetricFog(
 	// float totalAbsorbance = 1.0;
 	vec3 totalAbsorbance = vec3(1.0);
 
-	float fogAbsorbance = 1.0;
+	// float fogAbsorbance = 1.0;
 	// float atmosphereAbsorbance = 1.0;
 	vec3 atmosphereAbsorbance = vec3(1.0);
 
@@ -137,7 +137,7 @@ vec4 GetVolumetricFog(
 	///// ----- fog lighting
 	//Mie phase + somewhat simulates multiple scattering (Horizon zero down cloud approx)
 	float sunPhase = fogPhase(SdotV)*5.0;//  phaseCloudFog(SdotV, 0.9) + phaseCloudFog(SdotV, 0.85) + phaseCloudFog(SdotV, 0.5) * 5.0;
-	float sunPhase2 = (phaseCloudFog(SdotV, 0.85) + phaseCloudFog(SdotV, 0.5)) * 5.0;
+	// float sunPhase2 = (phaseCloudFog(SdotV, 0.85) + phaseCloudFog(SdotV, 0.5)) * 5.0;
 	float skyPhase = 2.0 + pow(1.0-pow(1.0-clamp(normalize(wpos).y*0.5+0.5,0.0,1.0),2.0),5.0)*2.0 ;//pow(clamp(normalize(wpos).y*0.5+0.5,0.0,1.0),4.0)*5.0;
 	float rayL = phaseRayleigh(SdotV);
 
@@ -173,7 +173,7 @@ vec4 GetVolumetricFog(
 	float lightLevelZero = pow(clamp(eyeBrightnessSmooth.y/240.0 ,0.0,1.0),3.0);
 
 	// SkyLightColor *= lightLevelZero*0.9 + 0.1;
-	vec3 finalsceneColor = vec3(0.0);
+	// vec3 finalsceneColor = vec3(0.0);
 
 
 	for (int i = 0; i < SAMPLECOUNT; i++) {

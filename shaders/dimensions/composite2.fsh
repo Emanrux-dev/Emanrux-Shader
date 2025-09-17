@@ -155,6 +155,7 @@ float invLinZ (float lindepth){
 uniform float nightVision;
 
 #ifdef OVERWORLD_SHADER
+	uniform float auroraAmount;
 	const bool shadowHardwareFiltering = true;
 	uniform sampler2DShadow shadow;
 
@@ -555,7 +556,7 @@ void main() {
 		#ifdef CAVE_FOG
 			#if (CAVE_DETECTION == 0.0) || (CAVE_DETECTION == 1.0)
 				#if (CAVE_DETECTION == 1.0)
-					float caveFactor = 1-smoothstep(60.0, 63.0, cameraPosition.y);
+					float caveFactor = 1.0-smoothstep(60.0, 63.0, cameraPosition.y);
 				#else
 					float caveFactor = 1.0;
 				#endif
@@ -570,7 +571,7 @@ void main() {
 
 		float atmosphereAlpha = 1.0;
 
-		vec3 sceneColor = texelFetch2D(colortex3,ivec2(tc/texelSize),0).rgb * VolumetricClouds.a + VolumetricClouds.rgb;
+		vec3 sceneColor = texelFetch2D(colortex3,texcoord,0).rgb * VolumetricClouds.a + VolumetricClouds.rgb;
 		vec4 VolumetricFog = GetVolumetricFog(viewPos0, WsunVec, BN, directLightColor, indirectLightColor, indirectLightColor_dynamic, atmosphereAlpha, VolumetricClouds.rgb, cloudPlaneDistance);
 
 		VolumetricFog = vec4(VolumetricClouds.rgb * VolumetricFog.a  + VolumetricFog.rgb, VolumetricFog.a*VolumetricClouds.a);

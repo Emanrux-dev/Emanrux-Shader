@@ -624,15 +624,17 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		
 			waterPos.xyz = getParallaxDisplacement(waterPos, playerPos);
 
+			vec3 bump = getWaveNormal(waterPos, playerPos);
+
 			#ifdef RIPPLE_WATER
 				if(viewDist < 35 && rainStrength > 0.0 && biome_precipitation == 1 && abs(worldSpaceNormal.z) < 0.95 && abs(worldSpaceNormal.x) < 0.95) {
 					float effectStrength = smoothstep(0.85, 1.0, lightmap.y);
 					rippleBump = ripples(worldPos.xz);
-					waterPos.xyz += RIPPLE_STRENGTH * rippleBump * rainStrength * effectStrength * smoothstep(35.0, 10.0, viewDist);
+					bump += 0.6 * RIPPLE_STRENGTH * rippleBump * rainStrength * effectStrength * smoothstep(35.0, 10.0, viewDist);
 				}
 			#endif
 
-			vec3 bump = normalize(getWaveNormal(waterPos, playerPos));
+			bump = normalize(bump);
 
 			float bumpmult = WATER_WAVE_STRENGTH;
 			bump = bump * vec3(bumpmult, bumpmult, bumpmult) + vec3(0.0f, 0.0f, 1.0f - bumpmult);
@@ -882,6 +884,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	#ifdef LIGHTNING
 		vec3 lightColor = vec3(1.0);
+		gl_FragData[0].a = max(gl_FragData[0].a, 1.0/255.0);
 	#else
 		vec3 lightColor = vec3(TORCH_R,TORCH_G,TORCH_B);
 	#endif
@@ -972,7 +975,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			float maxOverdrawDistance = OVERDRAW_MAX_DISTANCE;
 		#endif
 	 
-		bool WATER = texture2D(colortex7, gl_FragCoord.xy*texelSize).a > 0.0 && length(feetPlayerPos) > clamp(far-16.0*4.0, 16.0, maxOverdrawDistance) && texture2D(depthtex1, gl_FragCoord.xy*texelSize).x >= 1.0;
+		bool WATER = texture2D(colortex7, gl_FragCoord.xy*texelSize).a > 0.0 && length(feetPlayerPos) > clamp(far-16.0*4.0, 16.0, maxOverdrawDistance) && texelFetch2D(depthtex1, ivec2(gl_FragCoord.xy), 0).x >= 1.0;
 
 		if(WATER && isWater) {
 			gl_FragData[0].a = 0.0;
@@ -987,7 +990,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#endif
 	#if DEBUG_VIEW == debug_NORMALS
 		gl_FragData[0].rgb = worldSpaceNormal.xyz * 0.1;
-		gl_FragData[0].a = 1;
+		gl_FragData[0].a = 1.0;
 	#endif
 	#if DEBUG_VIEW == debug_INDIRECT
 		gl_FragData[0].rgb = Indirect_lighting * 0.1;

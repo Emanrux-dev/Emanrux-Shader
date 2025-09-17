@@ -96,21 +96,29 @@ void main() {
 	#endif
 
 
-	#ifdef WEATHER
+	#if defined WEATHER || defined LINES
 		vec3 position = mat3(gl_ModelViewMatrix) * vec3(gl_Vertex) + gl_ModelViewMatrix[3].xyz;
+		vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
 
-   		vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz + cameraPosition;
-		bool istopv = worldpos.y > cameraPosition.y + 5.0 && lmtexcoord.w > 0.99;
+		#ifdef WEATHER
+			worldpos += cameraPosition;
+			bool istopv = worldpos.y > cameraPosition.y + 5.0 && lmtexcoord.w > 0.99;
 
-		if(!istopv){
+			if(!istopv){
 			worldpos.xyz -= cameraPosition - vec3(2.0,0.0,2.0) * min(max(clamp(eyeBrightnessSmooth.y/240.0,0,1)-0.95,0)/0.05,1);
-		}else{
+			}else{
 			worldpos.xyz -= cameraPosition;
-		}
+			}
+		#endif
 
-		position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;
+		#if defined LINES && defined PLANET_CURVATURE
+			float curvature = length(worldpos) / (16*8);
+			worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
+		#endif
 
-		gl_Position = toClipSpace3(position);
+			position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;
+
+			gl_Position = toClipSpace3(position);
 	#else
 		gl_Position = ftransform();
 	#endif

@@ -1,8 +1,69 @@
+#if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS && defined IS_LPV_ENABLED
+    float swapperlinZ2(float depth, float _near, float _far) {
+        return (2.0 * _near) / (_far + _near - depth * (_far - _near));
+    }
+
+    float SSRT_Handlight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, vec3 normals, bool hand){
+        
+        if(hand) return 1.0;
+
+        vec3 WlightDir = normalize((gbufferModelViewInverse*vec4(lightDir, 1.0)).xyz);
+
+        float NdotL = dot(normals, WlightDir);
+        NdotL = smoothstep(0.0, 0.2, abs(NdotL));
+
+        float shadows = 1.0;
+        float samples = 16.0;
+        float SSS = 0.0;
+
+        float _near = near; float _far = far*4.0;
+
+        if (depthCheck) {
+            _near = dhNearPlane;
+            _far = dhFarPlane;
+        }
+
+        vec3 position = toClipSpace3_DH(viewPos, depthCheck) ;
+        
+        //prevents the ray from going behind the camera
+        float rayLength = ((viewPos.z + lightDir.z * _far * sqrt(3.)) > -_near) ? (-_near - viewPos.z) / lightDir.z : _far * sqrt(3.);
+
+        vec3 direction = toClipSpace3_DH(viewPos + lightDir*rayLength, depthCheck) - position;
+        direction.xyz = direction.xyz / max(max(abs(direction.x)/0.0015, abs(direction.y)/0.0015),400.0);	//fixed step size
+        direction *= 6.0;
+
+        position.xy *= RENDER_SCALE;
+        direction.xy *= RENDER_SCALE;
+        
+        vec3 newPos = position + direction*noise;
+        // literally shadow bias to fight shadow acne due to precision problems when comparing sampled depth and marched position
+        //newPos += direction*0.3;
+
+
+        for (int i = 0; i < int(10); i++) {
+            
+            float samplePos = texelFetch2D(depthtex2, ivec2(newPos.xy/texelSize).xy,0).x;
+            
+            #ifdef DISTANT_HORIZONS
+                if(depthCheck) samplePos = texelFetch2D(dhDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+            #endif
+
+            if(samplePos < newPos.z && samplePos > 0.0){// && (samplePos <= max(minZ,maxZ) && samplePos >= min(minZ,maxZ))){
+                shadows = 0.0;
+                break;
+            } 
+        
+            newPos += direction;
+        }
+
+        return clamp(shadows*NdotL, 1.0-LPV_HANDHELD_SHADOWS_STRENGTH, 1.0);
+    }
+#endif
+
 #ifdef IS_LPV_ENABLED
-    vec3 GetHandLight(const in int itemId, const in vec3 playerPos, const in vec3 normal) {
+    vec3 GetHandLight(const in int itemId, const in vec3 playerPos, inout float lightRange) {
         vec3 lightFinal = vec3(0.0);
         vec3 lightColor = vec3(0.0);
-        float lightRange = 0.0;
 
         uvec2 blockData = texelFetch(texBlockData, itemId, 0).rg;
         vec4 lightColorRange = unpackUnorm4x8(blockData.r);
@@ -24,6 +85,9 @@
 vec3 doBlockLightLighting(
     vec3 lightColor, float lightmap,
     vec3 playerPos, vec3 lpvPos
+    #ifdef MAIN_SHADOW_PASS
+    , vec3 viewPos, bool depthCheck, float noise, vec3 normals, bool hand
+    #endif
 ){
     lightmap = clamp(lightmap,0.0,1.0);
 
@@ -54,13 +118,29 @@ vec3 doBlockLightLighting(
 
         #ifdef Hand_Held_lights
             // create handheld lightsources
-            const vec3 normal = vec3(0.0); // TODO
 
-                if (heldItemId > 0)
-                blockLight += GetHandLight(heldItemId, playerPos, normal);
+            if (heldItemId > 0){
+                    float lightRange = 0.0;
+                    vec3 handLightCol = GetHandLight(heldItemId, playerPos, lightRange);
 
-                if (heldItemId2 > 0)
-                blockLight += GetHandLight(heldItemId2, playerPos, normal);
+                    #if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS
+                        if (lightRange > 0.0) handLightCol *=  SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(-0.25, 0.2, 0.0)), noise, normals, hand);
+                    #endif
+
+                    blockLight += handLightCol;
+            }
+            
+
+            if (heldItemId2 > 0){
+                    float lightRange2 = 0.0;
+                    vec3 handLightCol2 = GetHandLight(heldItemId2, playerPos, lightRange2);
+                    
+                    #if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS
+                        if (lightRange2 > 0.0) handLightCol2 *= SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(0.25, 0.2, 0.0)), noise, normals, hand);
+                    #endif
+
+                    blockLight += handLightCol2;
+            }
         #endif
     #endif
 

@@ -9,13 +9,13 @@ Notable changes/additions compared to Bliss unstable:
  + Additional cirrus & cumulonimbus cloud layers (WIP)
  + Distant Horizons chunk fading
  + Moon Texture with phases
- + Improved Puddles, Snow Overlay and Rain Ripples
+ + Snow Overlay and Rain Ripples
  + Better mod support
  + Better shader-side (hardcoded) emissives
  + Lightsource with shadows on the main end island
  + Rain & thunder cloud coverage and daily weather
  + Much better lightning strikes with clouds lighting up and shadows
- + Rainbows
+ + Aurora & Rainbow
  + Caelum (Arda Craft) support
  + Emissive Ores
 
@@ -65,15 +65,8 @@ Note: With default settings there is at least one guaranteed eclipse per ingame 
 
 ### [You can contact me by joining Xonk's discord server and using the Eclipse channel!](https://discord.gg/8nVt56H9zH)
 
-# IN-DEVELOPMENT VERSIONS AND RELEASE VERSIONS
-`Unstable` are the very latest versions, and are released regularly to be tested by anyone. **Please report any issues you find.**
 
-`Release versions` are uploaded when the in-development version is stable enough, and has enough changes to warrant a release. These are the versions uploaded to Modrinth or Curseforge. The release versions are not the very latest version.
-### Download the latest `Unstable` version:
+# How to download the latest version:
  - locate the `green "code" button` on this page. this button is NOT in the `releases` page.
  - click the `green "code" button` and select `"download zip"`.
- - once the zip file finishes downloading, install it like a normal shader. you do NOT need to unzip/extract/decompress.
-### Download the latest `Release` version:
- - locate the `"Releases"` tab on the right side of this page.
- - find the release version you want to download. locate the files attactched to it, and download the file named similar to `"Eclipse_(version)_chocapic13_shaders_edit.zip"`
  - once the zip file finishes downloading, install it like a normal shader. you do NOT need to unzip/extract/decompress.

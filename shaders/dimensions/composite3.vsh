@@ -1,5 +1,9 @@
 #include "/lib/settings.glsl"
 
+#ifdef CUSTOM_MOON_ROTATION
+	#include "/lib/SSBOs.glsl"
+#endif
+
 varying vec2 texcoord;
 flat varying vec3 zMults;
 
@@ -13,6 +17,7 @@ flat varying vec3 zMults;
 #endif
 
 flat varying vec3 WsunVec;
+flat varying vec3 WmoonVec;
 
 uniform float far;
 uniform float near;
@@ -21,6 +26,7 @@ uniform float dhNearPlane;
 
 uniform mat4 gbufferModelViewInverse;
 uniform vec3 sunPosition;
+uniform vec3 moonPosition;
 uniform float sunElevation;
 flat varying vec2 TAA_Offset;
 uniform int framemod8;
@@ -45,6 +51,19 @@ void main() {
 			WsunVec = WsunVecSmooth;
 		#else
 			WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+		#endif
+
+		#if AURORA_LOCATION > 0
+			#ifdef CUSTOM_MOON_ROTATION
+				WmoonVec = customMoonVecSSBO;
+			#else
+				#ifdef SMOOTH_MOON_ROTATION
+					WmoonVec = WmoonVecSmooth;
+				#else
+					WmoonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+				#endif
+				if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
+			#endif
 		#endif
 
 		#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0

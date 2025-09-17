@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §dECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 2.1.4
+    value.SHADER_VERSION_LABEL.482 = 3.0.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -203,7 +203,9 @@ screen.Direct_Light = Direct Light
             value.LPV_VL_FOG_ILLUMINATION.2 = On
         option.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS = Fog Light Propagation Brightness
             suffix.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS=%
-	option.VANILLA_LIGHTMAP_MASK = Vanilla Lightmap Mask
+	    option.VANILLA_LIGHTMAP_MASK = Vanilla Lightmap Mask
+        option.LPV_HANDHELD_SHADOWS = Handheld Shadows
+        option.LPV_HANDHELD_SHADOWS_STRENGTH = Handheld Shadows Strength
 
 
 screen.Ambient_light = Ambient Light
@@ -767,6 +769,19 @@ screen.Rainbow_Settings = Rainbow Settings
     option.RAINBOW_TIME = Rainbow Fade Time (seconds)
     option.RAINBOW_ONLY_BELOW_CLOUDS = Rainbow above Clouds
 
+screen.AURORA_SETTINGS = Aurora Settings
+    option.AURORA_LOCATION = Aurora
+        value.AURORA_LOCATION.0 = Off
+        value.AURORA_LOCATION.1 = Only in snowy biome
+        value.AURORA_LOCATION.2 = Always on
+    option.AURORA_MOON = Aurora only when moon is below horizon
+    option.AURORA_CHANCE = Aurora Chance
+        suffix.AURORA_CHANCE = %
+    option.AURORA_BRIGHTNESS = Aurora Brightness
+    option.AURORA_R = Aurora Red
+    option.AURORA_G = Aurora Green
+    option.AURORA_B = Aurora Blue
+
 option.MATERIAL_AO = Material Ambient Occlusion
 option.NORMAL_MAP_MULT = Normal map multiplier
 value.NORMAL_MAP_MULT.1.0 = Default 1.0 §aresourcepacks expect this value
@@ -922,7 +937,7 @@ screen.POM.comment = Configure settings related to parallax occlusion mapping th
     
 screen.Porosity.comment = Configure settings related to wetness and puddles
     option.Porosity.comment = §bWhat is this?§r Porosity is a description of how porous some material is, or essentially how much water can be held inside it. for examle, sponges are very porous; water is contained within and darkens it as a results. §aPERFORMANCE COST:§r low
-    option.Puddles.comment = Toggle puddles for when it rains. §aPERFORMANCE COST:§r low
+    option.PUDDLE_MODE.comment = Toggle puddles for when it rains. §aPERFORMANCE COST:§r low
     option.Puddle_Size.comment = Configure the size of the puddles.
 
 option.FAKE_REFRACTION_AMOUNT.comment = Configure the amount of distortion refraction will do. §bWhat is this?§r you could think of refraction as light bending when going through water or glass, making the things viewed through them look stretched, squished, distorted. §aPERFORMANCE COST:§r very low
@@ -963,7 +978,11 @@ screen.World.comment = Configure settings for various things that happen in the 
     screen.Water_fog_color.comment = Configure colors of the water fog.
 
     screen.World_Effects = World Weather Effects
-        option.Puddles = Puddles
+        option.PUDDLE_MODE = Puddles
+            value.PUDDLE_MODE.0 = No Wetness
+            value.PUDDLE_MODE.1 = Puddles + Completely Wet
+            value.PUDDLE_MODE.2 = Only Puddles
+            value.PUDDLE_MODE.3 = Only Complete Wetness
         option.Puddle_Size = Puddle Size Multiplier
         option.Puddle_Reflection_Sharpness = Puddle Reflection Sharpness
         option.Puddle_Reflection_Sharpness.comment = Controls the blurriness of puddles. 1.0 means mirror like

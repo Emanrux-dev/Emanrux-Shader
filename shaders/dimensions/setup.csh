@@ -961,6 +961,19 @@ void main() {
                 mixMask = BuildLpvMask(1u, 1u, 1u, 1u, 1u, 0u);
                 mixWeight = 0.9;
                 break;
+            case BLOCK_SCULK_VEIN:
+                mixMask = BuildLpvMask(1u, 1u, 1u, 1u, 1u, 0u);
+                mixWeight = 0.9;
+                break;
+            case BLOCK_GLOW_LICHEN:
+                mixWeight = 1.00;
+                break;
+            case BLOCK_VINE:
+                mixWeight = 1.00;
+                break;
+            case BLOCK_VINE_OTHER:
+                mixWeight = 0.5;
+                break;
 
             case BLOCK_DOOR_N:
                 mixMask = BuildLpvMask(0u, 1u, 1u, 1u, 1u, 1u);

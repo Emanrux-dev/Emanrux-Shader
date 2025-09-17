@@ -4,6 +4,7 @@ flat varying vec3 zMults;
 
 flat varying vec2 TAA_Offset;
 flat varying vec3 WsunVec;
+flat varying vec3 WmoonVec;
 
 #ifdef OVERWORLD_SHADER
   flat varying vec3 skyGroundColor;
@@ -344,7 +345,7 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
   for(int i = 0; i < 5; i++) {
 
 		#ifdef DISTANT_HORIZONS
-		  float offsetDepth = sqrt(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).a/65000.0);
+		  float offsetDepth = sqrt(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).z/65000.0);
     #else
       float offsetDepth = linearize(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE, 0).r);
     #endif
@@ -506,6 +507,11 @@ float getBorderFogDensity(float linearDistance, vec3 playerPos, bool sky){
   return borderFogDensity;
 }
 
+#if AURORA_LOCATION > 0
+  uniform float auroraAmount;
+  #include "/lib/aurora.glsl"
+#endif
+
 void main() {
   /* RENDERTARGETS:7,3,10 */
 
@@ -520,7 +526,7 @@ void main() {
 	float swappedDepth = z;
 
 	#ifdef DISTANT_HORIZONS
-    float DH_depth0 = texture2D(dhDepthTex,texcoord).x;
+    float DH_depth0 = texelFetch2D(dhDepthTex, ivec2(gl_FragCoord.xy),0).x;
 		float depthOpaque = z;
 		float depthOpaqueL = linearizeDepthFast(depthOpaque, near, farPlane);
 		
@@ -547,7 +553,7 @@ void main() {
 	vec3 playerPos_normalized = normalize(playerPos);
 
   #ifndef DISTANT_HORIZONS
-    float z2 = texture2D(depthtex1, texcoord).x;
+    float z2 = texelFetch2D(depthtex1, ivec2(gl_FragCoord.xy),0).x;
     vec3 viewPos_alt = toScreenSpace(vec3(texcoord/RENDER_SCALE, z2));
     vec3 playerPos_alt = mat3(gbufferModelViewInverse) * viewPos_alt + gbufferModelViewInverse[3].xyz;
     float linearDistance_cylinder_alt = length(playerPos_alt.xz);
@@ -587,8 +593,8 @@ void main() {
 
   ////// --------------- get volumetrics
   #ifdef DISTANT_HORIZONS
-	  float DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy),0).a/65000.0);
-    vec4 temporallyFilteredVL = VLTemporalFiltering(viewPos, DH_mixedLinearZ, colortex12,hand);
+	  float DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy),0).z/65000.0);
+    vec4 temporallyFilteredVL = VLTemporalFiltering(viewPos, DH_mixedLinearZ, colortex12, hand);
   #else
     vec4 temporallyFilteredVL = VLTemporalFiltering(viewPos, frDepth, depthtex0, hand);
   #endif
@@ -794,7 +800,7 @@ void main() {
   // blend all fog types. volumetric fog, volumetric clouds, distance based fogs for lava, powdered snow, blindness, and darkness.
   blendAllFogTypes(color, bloomyFogMult, temporallyFilteredVL, linearDistance, playerPos_normalized, cameraPosition, isSky, isLightning);
 
-  ////// --------------- RAINBOWS
+  ////// --------------- RAINBOW
 
   #if RAINBOW > 0  && defined OVERWORLD_SHADER
     #if RAINBOW > 1 
@@ -830,6 +836,27 @@ void main() {
 
       color += rainbowColor * (1.0 - caveDetection);
     } 
+  #endif
+
+  ////// --------------- AURORA
+
+  #if AURORA_LOCATION > 0 && defined OVERWORLD_SHADER
+    if (WsunVec.y < 0.0 && temporallyFilteredVL.a > 0.001 && isSky
+      #if AURORA_LOCATION < 2
+        && auroraAmount > 0.001
+      #endif
+      #ifdef AURORA_MOON
+        && WmoonVec.y < 0.1
+      #endif
+      #if AURORA_CHANCE < 100
+        && hash_aurora(float(worldDay)) <= 0.01 * float(AURORA_CHANCE)
+      #endif
+      )
+      {
+      vec3 aurora = 0.0875*aurora(playerPos_normalized, 21, blueNoise(), WmoonVec.y, WsunVec.y);
+
+      color += aurora * temporallyFilteredVL.a;
+    }
   #endif
 
 ////// --------------- FINALIZE

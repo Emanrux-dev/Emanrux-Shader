@@ -63,6 +63,9 @@ uniform ivec2 eyeBrightnessSmooth;
 // uniform ivec2 eyeBrightness;
 uniform float caveDetection;
 uniform int isEyeInWater;
+uniform float auroraAmount;
+
+#define LUT
 
 // vec4 lightCol = vec4(lightSourceColor, float(sunElevation > 1e-5)*2-1.);
 
@@ -216,6 +219,9 @@ uniform bool worldTimeChangeCheck;
 
 uniform int hideGUI;
 
+#if AURORA_LOCATION > 0
+	#include "/lib/aurora.glsl"
+#endif
 
 void main() {
 /* DRAWBUFFERS:4 */
@@ -381,7 +387,6 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 
 	vec3 sky = texelFetch2D(colortex4,ivec2(gl_FragCoord.xy)-ivec2(257,0),0).rgb/150.0;	
 	sky = mix(averageSkyCol_Clouds * AmbientLightTint * 0.25, sky,  pow(clamp(viewVector.y+1.0,0.0,1.0),5.0));
-	
 	vec3 suncol = lightSourceColor;
 
 	#ifdef ambientLight_only
@@ -401,7 +406,26 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 
 	float atmosphereAlpha = 1.0;
 	WsunVec = mix(WmoonVec, WsunVec, clamp(float(sunElevation > 1e-5)*2.0-1.0 ,0,1));
-	vec4 volumetricFog = GetVolumetricFog(viewPos, WsunVec,   vec2(noise, 1.0-noise), suncol*2.5, skyGroundCol/30.0, averageSkyCol_Clouds*5.0, atmosphereAlpha, volumetricClouds.rgb, cloudPlaneDistance);
+	vec4 volumetricFog = GetVolumetricFog(viewPos, WsunVec, vec2(noise, 1.0-noise), suncol*2.5, skyGroundCol/30.0, averageSkyCol_Clouds*5.0, atmosphereAlpha, volumetricClouds.rgb, cloudPlaneDistance);
+
+	#if AURORA_LOCATION > 0
+		if (WsunVec.y < 0.0 && volumetricClouds.a > 0.01
+		#if AURORA_LOCATION < 2
+		 && auroraAmount > 0.001
+		#endif
+		#ifdef AURORA_MOON
+		 && WmoonVec.y < 0.1
+		#endif
+		#if AURORA_CHANCE < 100
+		 && hash_aurora(float(worldDay)) <= 0.01 * float(AURORA_CHANCE)
+		#endif
+		)
+		{
+		vec3 aurora = aurora(viewVector, 10, noise, WmoonVec.y, WsunVec.y);
+
+		sky += 2.4 * aurora;
+		}
+	#endif
 
 	sky = sky * volumetricClouds.a + volumetricClouds.rgb / 5.0;
 	sky = sky * volumetricFog.a + volumetricFog.rgb / 5.0;

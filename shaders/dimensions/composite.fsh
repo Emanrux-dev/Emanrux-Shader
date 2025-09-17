@@ -261,7 +261,7 @@ float convertHandDepth_2(in float depth, bool hand) {
 vec2 SSAO(
 	vec3 viewPos, vec3 normal, vec3 flatnormal, bool hand, float noise
 ){
-	int samples = 4;
+	int samples = 7;
 	float occlusion = 0.0; 
 	float sss = 0.0;
 
@@ -271,8 +271,6 @@ vec2 SSAO(
 	float linearViewDistance = length(viewPos);
 	float distanceScale = hand ? 30.0 : mix(40.0, 10.0, pow(clamp(1.0 - linearViewDistance/50.0,0.0,1.0),2.0));
 	float depthCancelation = (linearViewDistance*linearViewDistance) / distanceScale ;
-
-	if (linearViewDistance < 15.0 || hand) samples = 7;
 
 	// distanceScale *= 10;
   	vec2 screenEdges = 2.0/vec2(viewWidth, viewHeight);
@@ -377,9 +375,11 @@ void main() {
 	// bool blocklights = abs(dataUnpacked1.w-0.8) <0.01;
 
 	float z = texelFetch2D(depthtex1,ivec2(gl_FragCoord.xy),0).x;
+	float z0 = texelFetch2D(depthtex0,ivec2(gl_FragCoord.xy),0).x;
 
 	#ifdef DISTANT_HORIZONS
 		float DH_depth1 = texelFetch2D(dhDepthTex1,ivec2(gl_FragCoord.xy),0).x;
+		float DH_depth0 = texelFetch2D(dhDepthTex,ivec2(gl_FragCoord.xy),0).x;
 		float swappedDepth = z >= 1.0 ? DH_depth1 : z;
 	#else
 		float DH_depth1 = 1.0;
@@ -390,6 +390,7 @@ void main() {
 	vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos;
 	
 	float depth = z;
+	float depth0 = z0;
 
 	#ifdef DISTANT_HORIZONS
 		float _near = near;
@@ -402,16 +403,29 @@ void main() {
 
 		depth = linearizeDepthFast(depth, _near, _far);
 		depth = depth / dhFarPlane;
+
+		_near = near;
+		_far = far*4.0;
+
+		if (depth0 >= 1.0) {
+			depth0 = DH_depth1;
+			_near = dhNearPlane;
+			_far = dhFarPlane;
+		}
+
+		depth0 = linearizeDepthFast(depth0, _near, _far);
+		depth0 = depth0 / dhFarPlane;
 	#endif
 
-	if(depth < 1.0)
-		gl_FragData[2] = vec4(vec3(0.0), depth * depth * 65000.0);
+	if(depth < 1.0 || depth0 < 1.0)
+		gl_FragData[2] = vec4(vec2(0.0), depth0 * depth0 * 65000.0, depth * depth * 65000.0);
 	else
-		gl_FragData[2] = vec4(vec3(0.0), 65000.0);
+		gl_FragData[2] = vec4(vec2(0.0), 65000.0, 65000.0);
+
+	vec3 FlatNormals = normalize(texture2D(colortex15,texcoord).rgb * 2.0 - 1.0);
 
 	#if defined DENOISE_SSS_AND_SSAO && indirect_effect == 1
 
-		vec3 FlatNormals = normalize(texture2D(colortex15,texcoord).rgb * 2.0 - 1.0);
 		if(z >= 1.0) FlatNormals = normal;
 
 

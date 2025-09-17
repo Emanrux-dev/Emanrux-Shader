@@ -184,12 +184,12 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 
 		#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS 
 			#ifdef FULLRESDEPTH
-				float div = 1.0; // buffer is full res after first composite pass
+				// buffer is full res after first composite pass
+				float sampleDepth = texelFetch2D(colortex12, ivec2(spos.xy/texelSize),0).b/65000.0;
 			#else
-				float div = 4.0;
+				float sampleDepth = texelFetch2D(colortex12, ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
 			#endif
 			
-			float sampleDepth = texelFetch2D(colortex12, ivec2(spos.xy/texelSize/div),0).a/65000.0;
 			float sp = invertLinearizeDepthFast(sqrt(sampleDepth)*dhFarPlane);
 		#else
 			float sampleDepth = texelFetch2D(colortex4, ivec2(spos.xy/texelSize/4.0),0).a/65000.0;

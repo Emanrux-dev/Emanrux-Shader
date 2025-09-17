@@ -265,7 +265,7 @@ void main() {
 			lmtexcoord.w = 0.0;
 		}
 
-		#if defined Puddles || ShaderSnow > 0
+		#if PUDDLE_MODE > 0 || ShaderSnow > 0
 			if(blockID == 215) lmtexcoord.w = 0.0;
 		#endif
 	#endif
@@ -307,7 +307,7 @@ void main() {
 	// normal block lightsources		
 	if(mc_Entity.x >= 100 && mc_Entity.x < 300) EMISSIVE = 0.5;
 
-	if(mc_Entity.x == 266) EMISSIVE = 0.2; // sculk stuff
+	if(mc_Entity.x == 266 || mc_Entity.x == 497) EMISSIVE = 0.2; // sculk stuff
 
 	if(mc_Entity.x == 195) EMISSIVE = 2.3; // glow lichen
 
@@ -323,7 +323,7 @@ void main() {
 
 	if(mc_Entity.x == 244) EMISSIVE = 1.5; // soul fire
 
-	#if defined Puddles || ShaderSnow > 0
+	#if PUDDLE_MODE > 0 || ShaderSnow > 0
 		if (mc_Entity.x == 244 || mc_Entity.x == 189) lmtexcoord.w = 0.0;
 	#endif
 

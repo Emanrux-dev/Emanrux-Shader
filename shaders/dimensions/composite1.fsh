@@ -45,11 +45,11 @@ uniform float rainStrength;
 		uniform sampler2D snowTexA;
 		uniform sampler2D snowTexN;
 	#endif
-	#if ShaderSnow > 0 || defined Puddles
+	#if ShaderSnow > 0 || PUDDLE_MODE > 0
 		uniform sampler2D snowTexR;
 	#endif
 
-	#if defined RIPPLE_PUDDLES && defined Puddles
+	#if defined RIPPLE_PUDDLES && PUDDLE_MODE > 0
 		#include "/lib/ripples.glsl"
 
 		uniform int biome_precipitation;
@@ -225,6 +225,7 @@ float convertHandDepth_2(in float depth, bool hand) {
 #endif
 
 uniform vec3 relativeEyePosition;
+#define MAIN_SHADOW_PASS
 #define FULLRESDEPTH
 
 #include "/lib/specular.glsl"
@@ -500,13 +501,19 @@ vec2 SSRT_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, boo
 	return vec2(shadows, SSS / samples );
 }
 
-float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise){
+#if defined FLASHLIGHT_SHADOWS && defined FLASHLIGHT
+float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, vec3 normals, bool hand){
 	
+	if(hand) return 1.0;
 
-    float steps = 16.0;
-	float Shadow = 1.0; 
+	vec3 WlightDir = normalize((gbufferModelViewInverse*vec4(lightDir, 1.0)).xyz);
+
+	float NdotL = dot(normals, WlightDir);
+	NdotL = smoothstep(0.0, 0.2, abs(NdotL));
+
+	float shadows = 1.0;
+	float samples = 16.0;
 	float SSS = 0.0;
-	// isSSS = true;
 
 	float _near = near; float _far = far*4.0;
 
@@ -514,44 +521,43 @@ float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, floa
 		_near = dhNearPlane;
 		_far = dhFarPlane;
 	}
-    
 
-	vec3 clipPosition = toClipSpace3_DH(viewPos, depthCheck);
+	vec3 position = toClipSpace3_DH(viewPos, depthCheck) ;
+	
 	//prevents the ray from going behind the camera
-	float rayLength = ((viewPos.z + lightDir.z * _far*sqrt(3.)) > -_near) ?
-      				  (-_near -viewPos.z) / lightDir.z : _far*sqrt(3.);
+	float rayLength = ((viewPos.z + lightDir.z * _far * sqrt(3.)) > -_near) ? (-_near - viewPos.z) / lightDir.z : _far * sqrt(3.);
 
-    vec3 direction = toClipSpace3_DH(viewPos + lightDir*rayLength, depthCheck) - clipPosition;  //convert to clip space
+	vec3 direction = toClipSpace3_DH(viewPos + lightDir*rayLength, depthCheck) - position;
+	direction.xyz = direction.xyz / max(max(abs(direction.x)/0.0005, abs(direction.y)/0.0005),400.0);	//fixed step size
+	direction *= 6.0;
 
-    direction.xyz = direction.xyz / max(abs(direction.x)/0.0005, abs(direction.y)/0.0005);	//fixed step size
+	position.xy *= RENDER_SCALE;
+	direction.xy *= RENDER_SCALE;
+	
+	vec3 newPos = position + direction*noise;
+	// literally shadow bias to fight shadow acne due to precision problems when comparing sampled depth and marched position
+	//newPos += direction*0.3;
 
-	float Stepmult = 6.0;
 
-    vec3 rayDir = direction * Stepmult * vec3(RENDER_SCALE,1.0);
-	vec3 screenPos = clipPosition * vec3(RENDER_SCALE,1.0) + rayDir*noise;
-
-
-	for (int i = 0; i < int(steps); i++) {
+	for (int i = 0; i < int(16); i++) {
 		
-		float samplePos = texture2D(depthtex2, screenPos.xy).x;
+		float samplePos = texelFetch2D(depthtex2, ivec2(newPos.xy/texelSize).xy,0).x;
 		
 		#ifdef DISTANT_HORIZONS
-			if(depthCheck) samplePos = texture2D(dhDepthTex1, screenPos.xy).x;
+			if(depthCheck) samplePos = texelFetch2D(dhDepthTex1, ivec2(newPos.xy/texelSize),0).x;
 		#endif
 
-		if(samplePos < screenPos.z){// && (samplePos <= max(minZ,maxZ) && samplePos >= min(minZ,maxZ))){
-			// vec2 linearZ = vec2(swapperlinZ(screenPos.z, _near, _far), swapperlinZ(samplePos, _near, _far));
-			// float calcthreshold = abs(linearZ.x - linearZ.y) / linearZ.x;
-
-			// if (calcthreshold < 0.035) 
-			Shadow = 0.0;
+		if(samplePos < newPos.z && samplePos > 0.0){// && (samplePos <= max(minZ,maxZ) && samplePos >= min(minZ,maxZ))){
+			shadows = 0.0;
+			break;
 		} 
 	
-		screenPos += rayDir;
+		newPos += direction;
 	}
 
-	return Shadow;
+	return clamp(shadows*NdotL, 1.0-FLASHLIGHT_SHADOWS_STRENGTH, 1.0);
 }
+#endif
 
 void Emission(
 	inout vec3 Lighting,
@@ -587,7 +593,7 @@ void doEdgeAwareBlur(
 
 	for(int i = 0; i < 4; i++) {
 		#ifdef DISTANT_HORIZONS
-			float offsetDepth = sqrt(texelFetch2D(depth, UV + OFFSET[i] + UV_NOISE,0).a/65000.0);
+			float offsetDepth = sqrt(texelFetch2D(depth, UV + OFFSET[i] + UV_NOISE,0).z/65000.0);
 		#else
 			float offsetDepth = ld(convertHandDepth_2(texelFetch2D(depth, UV + OFFSET[i] + UV_NOISE, 0).r,hand));
 		#endif
@@ -636,7 +642,7 @@ vec4 BilateralUpscale_VLFOG(sampler2D tex, sampler2D depth, float referenceDepth
 	  ivec2( 0, 0)
 	);
 
-	for(int i = 0; i < 4; i++) {
+	for(int i = 0; i < 5; i++) {
 		#ifdef DISTANT_HORIZONS
 			float offsetDepth = sqrt(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).a/65000.0);
 		#else
@@ -775,15 +781,22 @@ uniform float wetness;
 	void applyPuddles(
 		in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, in int isEyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0
 	){
+		/* PUDDLE_MODE
+			0 = OFF, NO WETNESS
+			1 = puddles + full wetness
+			2 = only puddles
+			3 = only full wetness
+		*/
+
 		float effectStrength = smoothstep(0.85, 1.0, lightmap.y);
 		//float effectStrength = smoothstep(0.85, 1.0, max(lightmap.y-step(1.0,lightmap.x), 0.0));
 		vec2 snowCoords = worldPos.xz*0.1;
 
-		#if ShaderSnow > 0 || defined Puddles
+		#if ShaderSnow > 0 || PUDDLE_MODE > 0
 			float snowR = texture2D(snowTexR, snowCoords).g;
 		#endif
 
-		#ifdef Puddles
+		#if PUDDLE_MODE > 0
 			if (wetnessAmount > 0.01) {
 				float halfWet = min(wetnessAmount,1.0);
 				float fullWet = clamp(wetnessAmount - 2.0,0.0,1.0);
@@ -794,11 +807,23 @@ uniform float wetness;
 				UV = mix(UV, worldPos.zy*vec2(2.0, 0.5)+driprate, abs(flatNormals.x));
 				
 				float noise = texture2D(noisetex, UV * 0.02).b;
-				
-				float puddles = max(halfWet - noise,0.0);
-				puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
 
-				float wetnessStages = mix(puddles, 1.0, fullWet) * effectStrength;
+				#if PUDDLE_MODE == 1
+					float puddles = max(halfWet - noise,0.0);
+					puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
+					puddles = mix(puddles, 1.0, fullWet);
+				#endif
+
+				#if PUDDLE_MODE == 2
+					float puddles = max(halfWet - noise,0.0);
+					puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
+				#endif
+
+				#if PUDDLE_MODE == 3
+					float puddles = fullWet;
+				#endif				
+
+				float wetnessStages = puddles * effectStrength;
 				if(isWater) wetnessStages = 0.0;
 
 				#ifdef RIPPLE_PUDDLES
@@ -881,9 +906,9 @@ void main() {
 		bool isDHrange = z >= 1.0;
 
 		#ifdef DISTANT_HORIZONS
-			float DH_mixedLinearZ = sqrt(texture2D(colortex12,texcoord).a/65000.0);
-			float DH_depth0 = texture2D(dhDepthTex,texcoord).x;
-			float DH_depth1 = texture2D(dhDepthTex1,texcoord).x;
+			float DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy), 0).z/65000.0);
+			float DH_depth0 = texelFetch2D(dhDepthTex,ivec2(gl_FragCoord.xy), 0).x;
+			float DH_depth1 = texelFetch2D(dhDepthTex1,ivec2(gl_FragCoord.xy), 0).x;
 
 			float depthOpaque = z;
 			float depthOpaqueL = linearizeDepthFast(depthOpaque, near, farPlane);
@@ -1349,18 +1374,20 @@ void main() {
 		#else
 			const vec3 lpvPos = vec3(0.0);
 		#endif
-		vec3 blockLightColor = doBlockLightLighting( vec3(TORCH_R,TORCH_G,TORCH_B), lightmap.x, feetPlayerPos, lpvPos);
+		
+		vec3 blockLightColor = doBlockLightLighting(vec3(TORCH_R,TORCH_G,TORCH_B), lightmap.x, feetPlayerPos, lpvPos, viewPos, isDHrange, blueNoise(), FlatNormals, hand);
 		Indirect_lighting += blockLightColor;
 
 		vec4 flashLightSpecularData = vec4(0.0);
 		#ifdef FLASHLIGHT
-			vec3 newViewPos = viewPos;
-
-
-			float flashlightshadows = SSRT_FlashLight_Shadows(toScreenSpace_DH(texcoord/RENDER_SCALE, z, DH_depth1), isDHrange, newViewPos, interleaved_gradientNoise_temporal());
+			#ifdef FLASHLIGHT_SHADOWS
+				vec3 newViewPos = viewPos + vec3(-0.25, 0.2, 0.0);
+				float flashlightshadows = SSRT_FlashLight_Shadows(toScreenSpace_DH(texcoord/RENDER_SCALE, z, DH_depth1), isDHrange, -newViewPos, blueNoise(), FlatNormals, hand);
+			#else
+				float flashlightshadows = 1.0;
+			#endif
 			
-			
-			Indirect_lighting += calculateFlashlight(texcoord, viewPos, albedoSmooth, slopednormal, flashLightSpecularData, hand);
+			Indirect_lighting += flashlightshadows*calculateFlashlight(texcoord, viewPos, albedoSmooth, slopednormal, flashLightSpecularData, hand);
 		#endif
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -1458,7 +1485,7 @@ void main() {
 			#endif
 		#endif
 
-		#if defined OVERWORLD_SHADER && defined DEFERRED_SPECULAR && (defined Puddles || ShaderSnow > 0)
+		#if defined OVERWORLD_SHADER && defined DEFERRED_SPECULAR && (PUDDLE_MODE > 0 || ShaderSnow > 0)
 			if(!hand && !entities && (wetnessAmount > 0.01 || snowAmount > 0.01)) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap, isWater, isEyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g);
 		#endif
 

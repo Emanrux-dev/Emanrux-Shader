@@ -87,6 +87,7 @@ float linearizeDepthFast(const in float depth, const in float near, const in flo
 
 
 #ifdef OVERWORLD_SHADER
+	uniform float auroraAmount;
 	const bool shadowHardwareFiltering = true;
 	uniform sampler2DShadow shadow;
 
@@ -259,6 +260,11 @@ vec2 decodeVec2(float a){
     return fract( a * constant1 ) * constant2 ;
 }
 
+#if AURORA_LOCATION > 0
+	#define LUT
+	#include "/lib/aurora.glsl"
+#endif
+
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -278,12 +284,11 @@ void main() {
 
 
 	bool iswater = alpha > 0.99;
-	bool isLightning = alpha < 0.51 && alpha > 0.49;
 	//////////////////////////////////////////////////////////
 	///////////////// BEHIND OF TRANSLUCENTS /////////////////
 	//////////////////////////////////////////////////////////
 
-	if(blendedAlpha > 0.0 || iswater || isLightning){
+	if(blendedAlpha > 0.0 || iswater){
 		
 		float noise_1 = R2_dither();
 		float noise_2 = blueNoise();
@@ -328,9 +333,11 @@ void main() {
 		vec3 directLightColor = lightCol.rgb / 2400.0;
 		vec3 directSunlightColor = sunlightCol / 2400.0;
 		vec3 directMoonlightColor = moonlightCol / 2400.0;
+
 		#ifdef CUSTOM_MOON_ROTATION
 			directMoonlightColor *= mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
 		#endif
+		
 		vec3 indirectLightColor = averageSkyCol / 1200.0;
 		vec3 indirectLightColor_dynamic = averageSkyCol_Clouds / 1200.0;
 
@@ -360,7 +367,7 @@ void main() {
 
 		indirectLightColor_dynamic += mix(MIN_LIGHT_AMOUNT * 0.004 + nightVision*0.02, MIN_LIGHT_AMOUNT_INSIDE * 0.004 + nightVision*0.02, 1.0 - lightmap.y);
 
-		indirectLightColor_dynamic += vec3(TORCH_R,TORCH_G,TORCH_B)	* pow(1.0-sqrt(1.0-clamp(lightmap.x,0.0,1.0)),2.0)  * TORCH_AMOUNT;
+		indirectLightColor_dynamic += vec3(TORCH_R,TORCH_G,TORCH_B)	* pow(1.0-sqrt(1.0-clamp(lightmap.x,0.0,1.0)),2.0)  * TORCH_AMOUNT * blendedAlpha;
 
 		vec4 finalVolumetrics = vec4(0.0,0.0,0.0,1.0);
 		float cloudPlaneDistance = 0.0;
@@ -371,7 +378,26 @@ void main() {
 
 			float atmosphereAlpha = 1.0;
 			vec4 VolumetricFog = GetVolumetricFog(viewPos1, WsunVec, vec2(noise_1, noise_2), directLightColor, indirectLightColor, indirectLightColor_dynamic, atmosphereAlpha, VolumetricClouds.rgb,cloudPlaneDistance);
-			
+
+			#if AURORA_LOCATION > 0
+				if (WrealSunVec.y < 0.0 && VolumetricClouds.a > 0.01
+				#if AURORA_LOCATION < 2
+				&& auroraAmount > 0.001
+				#endif
+				#ifdef AURORA_MOON
+				&& WmoonVec.y < 0.1
+				#endif
+				#if AURORA_CHANCE < 100
+				&& hash_aurora(float(worldDay)) <= 0.01 * float(AURORA_CHANCE)
+				#endif
+				)
+				{
+				vec3 aurora = aurora(normalize(playerPos), 10, noise_2, WmoonVec.y, WrealSunVec.y);
+
+				finalVolumetrics.rgb += 0.7 * aurora * VolumetricClouds.a;
+				}
+			#endif
+
 			finalVolumetrics.rgb += VolumetricClouds.rgb;
 			finalVolumetrics.a *= VolumetricClouds.a;
 		#endif

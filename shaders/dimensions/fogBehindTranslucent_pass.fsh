@@ -380,7 +380,7 @@ void main() {
 			vec4 VolumetricFog = GetVolumetricFog(viewPos1, WsunVec, vec2(noise_1, noise_2), directLightColor, indirectLightColor, indirectLightColor_dynamic, atmosphereAlpha, VolumetricClouds.rgb,cloudPlaneDistance);
 
 			#if AURORA_LOCATION > 0
-				if (WrealSunVec.y < 0.0 && VolumetricClouds.a > 0.01
+				if (WrealSunVec.y < 0.0 && VolumetricClouds.a > 0.01 && z == 1.0
 				#if AURORA_LOCATION < 2
 				&& auroraAmount > 0.001
 				#endif

@@ -13,8 +13,7 @@
         NdotL = smoothstep(0.0, 0.2, abs(NdotL));
 
         float shadows = 1.0;
-        float samples = 16.0;
-        float SSS = 0.0;
+        float samples = 10.0;
 
         float _near = near; float _far = far*4.0;
 
@@ -40,7 +39,7 @@
         //newPos += direction*0.3;
 
 
-        for (int i = 0; i < int(10); i++) {
+        for (int i = 0; i < int(samples); i++) {
             
             float samplePos = texelFetch2D(depthtex2, ivec2(newPos.xy/texelSize).xy,0).x;
             
@@ -124,7 +123,7 @@ vec3 doBlockLightLighting(
                     vec3 handLightCol = GetHandLight(heldItemId, playerPos, lightRange);
 
                     #if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS
-                        if (lightRange > 0.0) handLightCol *=  SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(-0.25, 0.2, 0.0)), noise, normals, hand);
+                        if (lightRange > 0.0 && firstPersonCamera) handLightCol *=  SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(-0.25, 0.2, 0.0)), noise, normals, hand);
                     #endif
 
                     blockLight += handLightCol;
@@ -136,7 +135,7 @@ vec3 doBlockLightLighting(
                     vec3 handLightCol2 = GetHandLight(heldItemId2, playerPos, lightRange2);
                     
                     #if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS
-                        if (lightRange2 > 0.0) handLightCol2 *= SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(0.25, 0.2, 0.0)), noise, normals, hand);
+                        if (lightRange2 > 0.0 && firstPersonCamera) handLightCol2 *= SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(0.25, 0.2, 0.0)), noise, normals, hand);
                     #endif
 
                     blockLight += handLightCol2;

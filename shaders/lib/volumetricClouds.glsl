@@ -614,7 +614,7 @@ vec4 raymarchCloud(
 			const float mult = 0.015*AURORA_BRIGHTNESS;
 		#endif
 
-		vec3 auroraColor = sin(vec3(AURORA_R, AURORA_G, AURORA_B) + 0.63) * 0.5 + 0.5;
+		const vec3 auroraColor = sin(vec3(AURORA_R, AURORA_G, AURORA_B) + 0.63) * 0.5 + 0.5;
 
 		vec3 auroraLighting = mult*auroraColor * auroraAmount * smoothstep(0.0, -0.1, sunVector.y) * smoothstep(0.1, 0.0, moonVector.y);
 	#endif

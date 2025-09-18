@@ -135,6 +135,7 @@ uniform mat4 gbufferPreviousModelView;
 uniform vec3 previousCameraPosition;
 uniform float updateFadeTime;
 // uniform float centerDepthSmooth;
+uniform bool firstPersonCamera;
 
 // uniform float far;
 uniform float near;
@@ -504,7 +505,7 @@ vec2 SSRT_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, boo
 #if defined FLASHLIGHT_SHADOWS && defined FLASHLIGHT
 float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, vec3 normals, bool hand){
 	
-	if(hand) return 1.0;
+	if(hand || !firstPersonCamera) return 1.0;
 
 	vec3 WlightDir = normalize((gbufferModelViewInverse*vec4(lightDir, 1.0)).xyz);
 
@@ -513,7 +514,6 @@ float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, floa
 
 	float shadows = 1.0;
 	float samples = 16.0;
-	float SSS = 0.0;
 
 	float _near = near; float _far = far*4.0;
 
@@ -539,7 +539,7 @@ float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, floa
 	//newPos += direction*0.3;
 
 
-	for (int i = 0; i < int(16); i++) {
+	for (int i = 0; i < int(samples); i++) {
 		
 		float samplePos = texelFetch2D(depthtex2, ivec2(newPos.xy/texelSize).xy,0).x;
 		

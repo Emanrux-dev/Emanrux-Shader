@@ -387,7 +387,7 @@ void main() {
 	#endif
 
 	vec3 viewPos = toScreenSpace_DH(texcoord/RENDER_SCALE - TAA_Offset*texelSize*0.5, z, DH_depth1);
-	vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos;
+	// vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos;
 	
 	float depth = z;
 	float depth0 = z0;
@@ -408,7 +408,7 @@ void main() {
 		_far = far*4.0;
 
 		if (depth0 >= 1.0) {
-			depth0 = DH_depth1;
+			depth0 = DH_depth0;
 			_near = dhNearPlane;
 			_far = dhFarPlane;
 		}

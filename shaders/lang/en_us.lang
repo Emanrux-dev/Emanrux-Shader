@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §dECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 3.0.1
+    value.SHADER_VERSION_LABEL.482 = 3.0.2
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -301,6 +301,8 @@ screen.Fog = Fog Settings
 
 screen.Clouds = Cloud Settings
     option.VOLUMETRIC_CLOUDS = Volumetric Clouds
+    option.HQ_CLOUD_UPSAMPLE = More accurate upsampling
+    option.HQ_CLOUD_UPSAMPLE.comment = Lowers light leaking around edges. §aPERFORMANCE COST:§r low
     option.CLOUDS_QUALITY = Cloud Resolution Scaling
     option.CLOUDS_SHADOWS = Cloud Shadows
     option.CLOUD_SHADOW_STRENGTH = Cloud Shadow Strength

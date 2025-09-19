@@ -627,6 +627,12 @@ vec4 BilateralUpscale_VLFOG(sampler2D tex, sampler2D depth, float referenceDepth
 		float threshold = referenceDepth * 0.05;
 	#endif
 
+	#ifdef HQ_CLOUD_UPSAMPLE
+		const int samples = 9;
+	#else
+		const int samples = 5;
+	#endif
+
 	vec2 coord = gl_FragCoord.xy - 1.5;
 	vec2 UV = coord;
 	const ivec2 SCALE = ivec2(1.0/VL_RENDER_RESOLUTION);
@@ -634,27 +640,32 @@ vec4 BilateralUpscale_VLFOG(sampler2D tex, sampler2D depth, float referenceDepth
 	ivec2 UV_COLOR = ivec2(UV*VL_RENDER_RESOLUTION);
 	ivec2 UV_NOISE = ivec2(gl_FragCoord.xy*texelSize + 1);
 
-	ivec2 OFFSET[5] = ivec2[](
-	  ivec2(-1,-1),
-	  ivec2( 1, 1),
-	  ivec2(-1, 1),
-	  ivec2( 1,-1),
-	  ivec2( 0, 0)
-	);
+	ivec2 OFFSET[9] = ivec2[](
+		ivec2(-1,-1),
+		ivec2( 1, 1),
+		ivec2(-1, 1),
+		ivec2( 1,-1),
+		ivec2( 0, 0),
+		ivec2( 0, 1),
+		ivec2( 0,-1),
+		ivec2( 1, 0),
+		ivec2(-1, 0)
+  	);
 
-	for(int i = 0; i < 5; i++) {
+	for(int i = 0; i < samples; i++) {
 		#ifdef DISTANT_HORIZONS
 			float offsetDepth = sqrt(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).a/65000.0);
 		#else
 			float offsetDepth = ld(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE, 0).r);
 		#endif
 
-		float edgeDiff = abs(offsetDepth - referenceDepth) < threshold ? 1.0 : 1e-7;
+		float edgeDiff = abs(offsetDepth - referenceDepth) < threshold ? 1.0 : 0.0;
 		vec4 offsetColor = texelFetch2D(tex, UV_COLOR + OFFSET[i] + UV_NOISE, 0).rgba;
 		colorSum += offsetColor*edgeDiff;
 		edgeSum += edgeDiff;
 	}
 
+	if (edgeSum == 0.0) return vec4(0.0);
 	return colorSum/edgeSum;
 }
 

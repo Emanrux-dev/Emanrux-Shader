@@ -693,9 +693,9 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 						float NORMAL_SCALE = 0.01;
 					#endif
 
-					vec2 waveUV = (worldPos.xz - previousCameraPositionWave2.xz) * NORMAL_SCALE + 0.5;
-					if(length(waveUV) < 1.5 && abs(worldSpaceNormal.y) > 0.5 && !noSimOngoing) {
-						vec4 waves = texture2D(waveSim2Sampler, waveUV);
+					vec2 waveUV = (worldPos.xz - previousCameraPositionWave2.xz) * NORMAL_SCALE;
+					if(length(waveUV) < 0.5 && abs(worldSpaceNormal.y) > 0.5 && !noSimOngoing) {
+						vec4 waves = texture2D(waveSim2Sampler, waveUV+0.5);
 				#endif
 						vec3 waveNormals = normalize(vec3(waves.z, waves.w, 1.0));
 						bump = mix(bump, waveNormals, clamp(WATER_SIM_STRENGTH*sqrt(sqrt(abs(waves.x))), 0.0, 1.0));

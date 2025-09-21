@@ -6,6 +6,8 @@ It started out with smaller features, but then the additions just kept piling up
 Notable changes/additions compared to Bliss unstable:
  + Custom moon orbit with possible eclipses
  + Water wave simulation for the player
+ + Aurora & Rainbow
+ + Handheld shadows
  + Additional cirrus & cumulonimbus cloud layers (WIP)
  + Distant Horizons chunk fading
  + Moon Texture with phases
@@ -14,8 +16,7 @@ Notable changes/additions compared to Bliss unstable:
  + Better shader-side (hardcoded) emissives
  + Lightsource with shadows on the main end island
  + Rain & thunder cloud coverage and daily weather
- + Much better lightning strikes with clouds lighting up and shadows
- + Aurora & Rainbow
+ + Better lightning strikes with clouds lighting up and shadows
  + Caelum (Arda Craft) support
  + Emissive Ores
 

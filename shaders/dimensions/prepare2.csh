@@ -135,7 +135,7 @@ void main() {
 
             float upOrDown = step(-0.1, cameraPosition.y-relativeEyePosition.y-previousCameraPositionWave.y)*2.0-1.0;
 
-            pressure += smoothstep(size, 0.8*size, dist) * upOrDown;
+            pressure += smoothstep(size, 0.7*size, dist) * upOrDown;
         }
 
         imageStore(waveSim2, imgCoord, vec4(pressure, pVel, (p_right - p_left) / 2.0, (p_up - p_down) / 2.0));

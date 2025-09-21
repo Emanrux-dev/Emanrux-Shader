@@ -148,7 +148,7 @@ void main() {
 
             float upOrDown = step(-0.1, cameraPosition.y-relativeEyePosition.y-previousCameraPositionWave.y)*2.0-1.0;
 
-            pressure += smoothstep(size, 0.8*size, dist) * upOrDown;
+            pressure += smoothstep(size, 0.7*size, dist) * upOrDown;
         }
 
         if(abs(pressure) > 0.0) noSimOngoingCheck = false;

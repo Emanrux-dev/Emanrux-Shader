@@ -287,7 +287,7 @@ vec4 GetVolumetricFog(
 		//------------------------------------
 
 			// maximum range for atmosphere haze, basically.
-			float planetVolume = 1.0 - exp(clamp(1.0 - length(progressW-cameraPosition) / (16.0*150.0), 0.0,1.0) * -10.0);
+			float planetVolume = smoothstep(1.0 - exp(clamp(1.0 - length(progressW-cameraPosition) / (16.0*150.0), 0.0,1.0) * -10.0), 0.0, progressW.y-cameraPosition.y-500.0);
 
 			// just air
 			vec2 airCoef = (exp2(-max(progressW.y-SEA_LEVEL,0.0)/vec2(8.0e3, 1.2e3)*vec2(6.0,7.0)) * 192.0 * Haze_amount) * planetVolume;

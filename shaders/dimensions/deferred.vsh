@@ -152,7 +152,7 @@ void main() {
 	vec3 minimumlight =  vec3(1.0) * 0.01 * MIN_LIGHT_AMOUNT + nightVision * 0.05;
 
 	// luminance based reinhard is useful ouside of tonemapping too.
-	averageSkyCol_Clouds = 1.5 * (averageSkyCol_Clouds / (1.0+luma(averageSkyCol_Clouds)*0.2));
+	averageSkyCol_Clouds = averageSkyCol_Clouds / (1.0+luma(averageSkyCol_Clouds)*0.2);
 
 	averageSkyCol = max(averageSkyCol * PLANET_GROUND_BRIGHTNESS,0.0) + minimumlight;
 

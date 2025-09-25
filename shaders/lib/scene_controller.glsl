@@ -218,7 +218,7 @@ vec3 writeSceneControllerParameters(
     // /* (2,2) */ bool middleMiddle = uv.x > 2 && uv.x < 3 && uv.y > 2 && uv.y < 3;
     // /* (3,2) */ bool middleRight = uv.x > 3 && uv.x < 5 && uv.y > 2 && uv.y < 3;
     // /* (1,1) */ bool bottomLeft = uv.x > 1 && uv.x < 2 && uv.y > 1 && uv.y < 2;
-    // /* (2,1) */ bool bottomMiddle = uv.x > 2 && uv.x < 3 && uv.y > 1 && uv.y < 2;
+    /* (2,1) */ bool bottomMiddle = uv.x > 2 && uv.x < 3 && uv.y > 1 && uv.y < 2;
     // /* (3,1) */ bool bottomRight = uv.x > 3 && uv.x < 5 && uv.y > 1 && uv.y < 2;
 
     vec3 data = vec3(0.0,0.0,0.0);
@@ -226,6 +226,7 @@ vec3 writeSceneControllerParameters(
     if(topLeft) data    = vec3(smallCumulus.xy, largeCumulus.x);
     if(topMiddle) data  = vec3(largeCumulus.y, altostratus.xy);
     if(topRight) data   = vec3(cirrus.xy, 0.0);
+    if(bottomMiddle) data = vec3(fog.xy, 0.0);
 
     // if(topRight)  	data = vec4(groundSunColor,fogSunColor.r);
     // if(middleLeft)   data = vec4(groundAmbientColor,fogSunColor.g);
@@ -252,10 +253,11 @@ void readSceneControllerParameters(
 	vec3 data1 = texelFetch2D(colortex,ivec2(1,3),0).rgb/150.0;
 	vec3 data2 = texelFetch2D(colortex,ivec2(2,3),0).rgb/150.0;
     vec3 data3 = texelFetch2D(colortex,ivec2(3,3),0).rgb/150.0;
+    vec3 data4 = texelFetch2D(colortex,ivec2(2,1),0).rgb/150.0;
 
 	smallCumulus    = vec2(data1.x,data1.y);
 	largeCumulus    = vec2(data1.z,data2.x);
 	altostratus     = vec2(data2.y,data2.z);
     cirrus          = vec2(data3.x,data3.y);
-	fog             = vec2(0.0);
+	fog             = vec2(data4.x,data4.y);
 }

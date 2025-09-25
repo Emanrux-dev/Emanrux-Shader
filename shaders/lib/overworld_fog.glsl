@@ -42,7 +42,7 @@ float cloudVol(in vec3 pos, float maxDistance ){
 		medium_gradientFog = mix(medium_gradientFog, 1.0, sandStorm+snowStorm);
 	}
 
-	FogDensities(medium_gradientFog, cloudyFog, rainyFog, maxDistance, 1.0, 1.0);
+	FogDensities(medium_gradientFog, cloudyFog, rainyFog, maxDistance, parameters.fog.x, parameters.fog.y);
 
 	return uniformFog + medium_gradientFog + cloudyFog + rainyFog;
 }

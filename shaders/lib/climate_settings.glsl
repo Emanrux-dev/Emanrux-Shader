@@ -218,6 +218,12 @@
 		
 		Rainy = Rainy*RainFog_amount;
 
+		#ifdef Daily_Weather
+			// let daily weather influence fog densities.
+			UniformDensity = max(UniformDensity, DailyWeather_UniformFogDensity);
+			CloudyDensity = max(CloudyDensity, DailyWeather_CloudyFogDensity);
+		#endif
+
 		#ifdef PER_BIOME_ENVIRONMENT
 			BiomeFogDensity(UniformDensity, CloudyDensity, maxDistance); // let biome fog hijack to control densities, and overrride any other density controller...
 		#endif

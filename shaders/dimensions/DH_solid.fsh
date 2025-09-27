@@ -3,6 +3,7 @@
 
 varying vec4 pos;
 varying vec4 localPos;
+varying vec4 vPos;
 varying vec4 gcolor;
 varying vec2 lightmapCoords;
 varying vec4 normals_and_materials;
@@ -116,10 +117,10 @@ vec3 quantize(const in vec3 val, const in int stepSize) {
     return floor(val * stepSize) / stepSize;
 }
 
-vec4 applyNoise(in vec4 fragColor, const in vec3 viewPos, const in float viewDist) {
-    // vec3 vertexNormal = normalize(cross(dFdy(vPos.xyz), dFdx(vPos.xyz)));
+vec4 applyNoise(in vec4 fragColor, const in float viewDist) {
+    vec3 vertexNormal = normalize(cross(dFdy(vPos.xyz), dFdx(vPos.xyz)));
     // // This bit of code is required to fix the vertex position problem cus of floats in the verted world position varuable
-    // vec3 fixedVPos = vPos.xyz + vertexNormal * 0.001;
+    vec3 fixedVPos = vPos.xyz + vertexNormal * 0.001;
 
     float noiseAmplification = noiseIntensity * 0.01;
     float lum = (fragColor.r + fragColor.g + fragColor.b) / 3.0;
@@ -128,7 +129,7 @@ vec4 applyNoise(in vec4 fragColor, const in vec3 viewPos, const in float viewDis
     
     // Mikis idea. make it such that you can control the step amount as distance increases out from where vanilla chunks end.
     // ideally, close = higher steps and far = lower steps
-    float highestSteps = NOISE_RESOLUTION;
+    float highestSteps = NOISE_RESOLUTION + blueNoise();
     float lowestSteps = 2.0;
     float transitionLength = 16.0 * 16.0; // distance it takes to reach the lowest steps from the highest. measured in meters/blocks.
     
@@ -138,7 +139,7 @@ vec4 applyNoise(in vec4 fragColor, const in vec3 viewPos, const in float viewDis
     int dynamicNoiseSteps = int(mix(highestSteps, lowestSteps, transitionGradient));
 
     // Random value for each position
-    float randomValue = rand(quantize(viewPos, dynamicNoiseSteps))
+    float randomValue = rand(quantize(fixedVPos+cameraPosition, dynamicNoiseSteps))
     * 2.0 * noiseAmplification - noiseAmplification;
 
     // Modifies the color
@@ -191,7 +192,7 @@ void main() {
     
     // alpha is material masks, set it to 0.65 to make a DH LODs mask. 
 	#ifdef DH_NOISE_TEXTURE
-		vec4 Albedo = applyNoise(gcolor, localPos.xyz+cameraPosition, viewDist);
+		vec4 Albedo = applyNoise(gcolor, viewDist);
 	#else
 		vec4 Albedo = vec4(gcolor.rgb, 1.0);
 	#endif

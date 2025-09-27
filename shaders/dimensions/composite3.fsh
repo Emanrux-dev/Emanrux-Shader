@@ -570,8 +570,8 @@ void main() {
     float linearDistance_cylinder_alt = length(playerPos_alt.xz);
   #endif
 
-	float lightleakfix = clamp(pow(eyeBrightnessSmooth.y/240.,2.) ,0.0,1.0);
-	float lightleakfixfast = clamp(eyeBrightness.y/240.,0.0,1.0);
+	// float lightleakfix = clamp(pow(eyeBrightnessSmooth.y/240.,2.) ,0.0,1.0);
+	// float lightleakfixfast = clamp(eyeBrightness.y/240.,0.0,1.0);
 
 	////// --------------- UNPACK OPAQUE GBUFFERS --------------- //////
 	// float opaqueMasks = decodeVec2(texture2D(colortex1,texcoord).a).y;

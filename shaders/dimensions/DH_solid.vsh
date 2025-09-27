@@ -3,6 +3,7 @@
 
 varying vec4 pos;
 varying vec4 localPos;
+varying vec4 vPos;
 varying vec4 gcolor;
 varying vec2 lightmapCoords;
 varying vec4 normals_and_materials;
@@ -58,7 +59,7 @@ void main() {
 
 	// gl_Position = toClipSpace3(position);
 	
-    vec4 vPos = gl_Vertex;
+    vPos = gl_Vertex;
 
     vec3 cameraOffset = fract(cameraPosition);
     vPos.xyz = floor(vPos.xyz + cameraOffset + 0.5) - cameraOffset;

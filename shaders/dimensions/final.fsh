@@ -166,6 +166,14 @@ void main() {
     applyGameplayEffects(COLOR, texcoord, noise);
   #endif
 
+  #ifdef FILM_GRAIN
+    // basic film grain implementation from https://www.shadertoy.com/view/4sXSWs slightly edited
+    float x = (texcoord.x + 4.0 ) * (texcoord.y + 4.0 ) * (frameTimeCounter * 10.0);
+    vec3 grain = vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01)-0.005) * FILM_GRAIN_STRENGTH;
+
+    COLOR += grain;
+  #endif
+
   #ifdef DROWNING_EFFECT
     if (currentPlayerAir != -1.0) COLOR *= 0.2 + 0.8*drowningSmooth;
   #endif

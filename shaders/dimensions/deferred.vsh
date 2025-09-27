@@ -154,7 +154,7 @@ void main() {
 	// luminance based reinhard is useful ouside of tonemapping too.
 	averageSkyCol_Clouds = averageSkyCol_Clouds / (1.0+luma(averageSkyCol_Clouds)*0.2);
 
-	averageSkyCol = max(averageSkyCol * PLANET_GROUND_BRIGHTNESS,0.0) + minimumlight;
+	averageSkyCol = max(averageSkyCol, 0.0) + minimumlight;
 
 	#ifdef USE_CUSTOM_SKY_GROUND_LIGHTING_COLORS
 		averageSkyCol = luma(averageSkyCol) * vec3(SKY_GROUND_R,SKY_GROUND_G,SKY_GROUND_B);

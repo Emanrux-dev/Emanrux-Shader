@@ -14,7 +14,7 @@ flat varying vec3 sunlightCol;
 flat varying vec3 moonlightCol;
 flat varying vec3 averageSkyCol;
 flat varying vec3 averageSkyCol_Clouds;
-flat varying float exposure;
+// flat varying float exposure;
 
 // uniform int dhRenderDistance;
 uniform sampler2D noisetex;
@@ -106,7 +106,6 @@ float linearizeDepthFast(const in float depth, const in float near, const in flo
 	#define TIMEOFDAYFOG
 	#include "/lib/lightning_stuff.glsl"
 
-	#define CLOUDS_INTERSECT_TERRAIN
 	// #define CLOUDSHADOWSONLY
 	#include "/lib/volumetricClouds.glsl"
 	#include "/lib/climate_settings.glsl"
@@ -260,7 +259,7 @@ vec2 decodeVec2(float a){
     return fract( a * constant1 ) * constant2 ;
 }
 
-#if AURORA_LOCATION > 0
+#if AURORA_LOCATION > 0 && defined OVERWORLD_SHADER
 	#define LUT
 	#include "/lib/aurora.glsl"
 #endif

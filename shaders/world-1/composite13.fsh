@@ -4,6 +4,6 @@
 	#version 120
 #endif
 
-#define OVERWORLD_SHADER
+#define NETHER_SHADER
 
 #include "/dimensions/composite12.fsh"

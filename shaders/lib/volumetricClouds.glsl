@@ -250,7 +250,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 				erosion += (1.0-densityAtPos(samplePos * CloudLayer0_detail * CloudLayer0_scale / 3.0)) * sqrt(omShape);
 
 				float falloff = 1.0 - clamp(posToMax/(CloudLayer0_tallness/CloudLayer0_scale),0.0,1.0);
-				erosion += abs(densityAtPos(samplePos * CloudLayer0_detail * CloudLayer0_scale) - falloff) * 0.75 * (omShape) * (1.0-falloff*0.25);
+				erosion += abs(densityAtPos(samplePos * CloudLayer0_detail * CloudLayer0_scale) - falloff) * 0.75 * (omShape*omShape) * (1.0-falloff*0.25);
 
 				erosion = erosion*erosion*erosion*erosion;
 			break; }
@@ -258,7 +258,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 				erosion += (1.0 - densityAtPos(samplePos * CloudLayer1_detail * CloudLayer1_scale / 4.5)) * sqrt(omShape);
 
 				float falloff = 1.0 - clamp(posToMax/(CloudLayer1_tallness/CloudLayer1_scale),0.0,1.0);
-				erosion += abs(densityAtPos(samplePos * CloudLayer1_detail * CloudLayer1_scale) - falloff) * 0.75 * (omShape) * (1.0-falloff*0.5);
+				erosion += abs(densityAtPos(samplePos * CloudLayer1_detail * CloudLayer1_scale) - falloff) * 0.75 * (omShape*omShape) * (1.0-falloff*0.5);
 
 				erosion = erosion*erosion*erosion*erosion;
 			break; }
@@ -454,12 +454,22 @@ uniform sampler2D colortex4;
 		float gg = g * g;
 		return (gg * -0.25 + 0.25) * pow(-2.0 * (g * x) + (gg + 1.0), -1.5) / 3.14;
 	}
-#else
+#elif CLOUD_PHASE == 1
 	// Cornette-Shanks
 	float phaseCloud(float x, float g){
 		return (3.0 * (1.0 - g * g) * (1.0 + x * x)) / (25.133 * (2.0 + g * g) * pow(1.0 + g * g - 2.0 * g * x, 1.5));
 	}
+#else
+	// HG-Draine
+	float phaseCloud(in float x, in float g)
+	{
+		const float a = 0.9;
+		float gg = g * g;
+		return ((1 - gg)*(1 + a*x*x))/(4.*(1 + (a*(1 + 2*gg))/3.) * 3.1415926 * pow(1 + gg - 2*g*x,1.5));
+	}
 #endif
+
+
 
 float getCloudScattering(
 	int LayerIndex,

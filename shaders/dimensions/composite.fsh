@@ -265,6 +265,10 @@ vec2 SSAO(
 	float occlusion = 0.0; 
 	float sss = 0.0;
 
+	#if indirect_effect == SSAO_HQ
+		samples = 21;
+	#endif
+
 	vec2 jitterOffsets = TAA_Offset*texelSize*0.5 * RENDER_SCALE - texelSize*0.5;
 
 	// scale the offset radius down as distance increases.
@@ -424,7 +428,7 @@ void main() {
 
 	vec3 FlatNormals = normalize(texture2D(colortex15,texcoord).rgb * 2.0 - 1.0);
 
-	#if defined DENOISE_SSS_AND_SSAO && indirect_effect == 1
+	#if defined DENOISE_SSS_AND_SSAO && SSAO_FILTERED || indirect_effect == SSAO_HQ
 
 		if(z >= 1.0) FlatNormals = normal;
 

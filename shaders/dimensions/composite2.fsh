@@ -175,7 +175,6 @@ uniform float nightVision;
 	#define TIMEOFDAYFOG
 	#include "/lib/lightning_stuff.glsl"
 
-	// #define CLOUDS_INTERSECT_TERRAIN
 	#include "/lib/volumetricClouds.glsl"
 
 	#include "/lib/climate_settings.glsl"

@@ -1,0 +1,86 @@
+layout (triangles, fractional_odd_spacing, ccw) in;
+
+in vec4 color[];
+in float VanillaAO[];
+
+in vec4 lmtexcoord[];
+in vec4 normalMat[];
+
+in vec4 texcoordam[]; // .st for add, .pq for mul
+in vec4 texcoord[];
+
+#ifdef MC_NORMAL_MAP
+	in vec4 tangent[];
+	in vec3 FlatNormals[];
+#endif
+
+flat in float blockID[];
+
+in int NameTags[];
+
+flat in float SSSAMOUNT[];
+flat in float EMISSIVE[];
+flat in int LIGHTNING[];
+flat in int PORTAL[];
+flat in int SIGN[];
+
+in vec4 grassSideCheck[];
+out vec4 vgrassSideCheck;
+
+in vec3 centerPosition[];
+out vec3 vcenterPosition;
+
+out vec4 vcolor;
+out float vVanillaAO;
+
+out vec4 vlmtexcoord;
+out vec4 vnormalMat;
+
+out vec4 vtexcoordam; // .st for add, .pq for mul
+out vec4 vtexcoord;
+
+#ifdef MC_NORMAL_MAP
+	out vec4 vtangent;
+	out vec3 vFlatNormals;
+#endif
+
+flat out float vblockID;
+
+out int vNameTags;
+
+flat out float vSSSAMOUNT;
+flat out float vEMISSIVE;
+flat out int vLIGHTNING;
+flat out int vPORTAL;
+flat out int vSIGN;
+
+#define calcTessellation(u, v, w) (gl_TessCoord.x * u + gl_TessCoord.y * v + gl_TessCoord.z * w)
+
+void main() {
+
+    gl_Position = calcTessellation(gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position);
+
+    vcolor = color[0];
+    vVanillaAO = VanillaAO[0];
+    vlmtexcoord = calcTessellation(lmtexcoord[0], lmtexcoord[1], lmtexcoord[2]);
+    vnormalMat = calcTessellation(normalMat[0], normalMat[1], normalMat[2]);
+    vtexcoordam = calcTessellation(texcoordam[0], texcoordam[1], texcoordam[2]);
+    vtexcoord = calcTessellation(texcoord[0], texcoord[1], texcoord[2]);
+
+    #ifdef MC_NORMAL_MAP
+        vtangent = calcTessellation(tangent[0], tangent[1], tangent[2]);
+        vFlatNormals = calcTessellation(FlatNormals[0], FlatNormals[1], FlatNormals[2]);
+    #endif
+
+    vblockID = blockID[0];
+    vNameTags = NameTags[0];
+    vSSSAMOUNT = SSSAMOUNT[0];
+    vEMISSIVE = EMISSIVE[0];
+    vLIGHTNING = LIGHTNING[0];
+    vPORTAL = PORTAL[0];
+    vSIGN = SIGN[0];
+    vgrassSideCheck = grassSideCheck[0];
+
+    vcenterPosition = centerPosition[0];
+
+}

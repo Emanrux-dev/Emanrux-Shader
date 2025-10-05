@@ -1,0 +1,177 @@
+layout (vertices=3) out;
+
+#include "/lib/settings.glsl"
+
+in vec4 vcolor[];
+in float vVanillaAO[];
+
+in vec4 vlmtexcoord[];
+in vec4 vnormalMat[];
+
+in vec4 vtexcoordam[]; // .st for add, .pq for mul
+in vec4 vtexcoord[];
+
+#ifdef MC_NORMAL_MAP
+	in vec4 vtangent[];
+	in vec3 vFlatNormals[];
+#endif
+
+flat in float vblockID[];
+
+in int vNameTags[];
+
+flat in float vSSSAMOUNT[];
+flat in float vEMISSIVE[];
+flat in int vLIGHTNING[];
+flat in int vPORTAL[];
+flat in int vSIGN[];
+flat in int vdiscardGrass[];
+
+in vec4 vgrassSideCheck[];
+out vec4 grassSideCheck[];
+
+in vec3 vcenterPosition[];
+out vec3 centerPosition[];
+
+out vec4 color[];
+out float VanillaAO[];
+
+out vec4 lmtexcoord[];
+out vec4 normalMat[];
+
+out vec4 texcoordam[]; // .st for add, .pq for mul
+out vec4 texcoord[];
+
+#ifdef MC_NORMAL_MAP
+	out vec4 tangent[];
+	out vec3 FlatNormals[];
+#endif
+
+flat out float blockID[];
+
+out int NameTags[];
+
+flat out float SSSAMOUNT[];
+flat out float EMISSIVE[];
+flat out int LIGHTNING[];
+flat out int PORTAL[];
+flat out int SIGN[];
+
+uniform mat4 gbufferModelViewInverse;
+uniform vec3 cameraPosition;
+
+vec3 viewToWorld(vec3 viewPosition) {
+    vec4 pos;
+    pos.xyz = viewPosition;
+    pos.w = 0.0;
+    pos = gbufferModelViewInverse * pos;
+    return pos.xyz;
+}
+
+void main() {
+
+    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+
+    color[gl_InvocationID] = vcolor[gl_InvocationID];
+    VanillaAO[gl_InvocationID] = vVanillaAO[gl_InvocationID];
+    lmtexcoord[gl_InvocationID] = vlmtexcoord[gl_InvocationID];
+    normalMat[gl_InvocationID] = vnormalMat[gl_InvocationID];
+    texcoordam[gl_InvocationID] = vtexcoordam[gl_InvocationID];
+    texcoord[gl_InvocationID] = vtexcoord[gl_InvocationID];
+
+    grassSideCheck[gl_InvocationID] = vgrassSideCheck[gl_InvocationID];
+
+    centerPosition[gl_InvocationID] = vcenterPosition[gl_InvocationID];
+
+    #ifdef MC_NORMAL_MAP
+        tangent[gl_InvocationID] = vtangent[gl_InvocationID];
+        FlatNormals[gl_InvocationID] = vFlatNormals[gl_InvocationID];
+    #endif
+    blockID[gl_InvocationID] = vblockID[gl_InvocationID];
+    NameTags[gl_InvocationID] = vNameTags[gl_InvocationID];
+    SSSAMOUNT[gl_InvocationID] = vSSSAMOUNT[gl_InvocationID];
+    EMISSIVE[gl_InvocationID] = vEMISSIVE[gl_InvocationID];
+    LIGHTNING[gl_InvocationID] = vLIGHTNING[gl_InvocationID];
+    PORTAL[gl_InvocationID] = vPORTAL[gl_InvocationID];
+    SIGN[gl_InvocationID] = vSIGN[gl_InvocationID];
+
+    #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS
+
+        #ifdef MC_NORMAL_MAP
+            vec3 normals = viewToWorld(vFlatNormals[0]);
+        #else
+            const vec3 normals = vec3(0.0, 1.0, 0.0);
+        #endif
+
+        float vDist = length(gl_out[gl_InvocationID].gl_Position.xyz);
+
+        #if REPLACE_SHORT_GRASS == 2
+        if (vblockID[0] == 85 && normals.y > 0.9 && vDist < GRASS_RANGE && vgrassSideCheck[gl_InvocationID].x > 1.5)
+        #else
+        if (vblockID[0] == 85 && normals.y > 0.9 && vDist < GRASS_RANGE)
+        #endif
+        {
+            // This removes the second layer of some texture packs like patrix, otherwise the grass is duplicated
+            float fractYPos = fract(gl_out[gl_InvocationID].gl_Position.y+cameraPosition.y);
+            if(fractYPos > 0.9999 || fractYPos < 0.0001 || abs(fractYPos - 0.5) < 0.0001)
+            {
+                #if GRASS_DENSITY == 3
+                    int innerDivisions = 8;
+                    int outerDivisions = 6;
+                    if (vDist > 10) {innerDivisions = 7; outerDivisions = 5;}
+                    if (vDist > 20) {innerDivisions = 5; outerDivisions = 3;}
+                    if (vDist > 25) {innerDivisions = 4; outerDivisions = 2;}
+                #elif GRASS_DENSITY == 2
+                    int innerDivisions = 7;
+                    int outerDivisions = 5;
+                    if (vDist > 13) {innerDivisions = 5; outerDivisions = 3;}
+                    if (vDist > 22) {innerDivisions = 4; outerDivisions = 2;}
+                #elif GRASS_DENSITY == 1
+                    int innerDivisions = 5;
+                    int outerDivisions = 6;
+                    if (vDist > 10) {innerDivisions = 5; outerDivisions = 3;}
+                    if (vDist > 20) {innerDivisions = 4; outerDivisions = 2;}
+                #else
+                    int innerDivisions = 5;
+                    int outerDivisions = 4;
+                    if (vDist > 10) {innerDivisions = 4; outerDivisions = 2;}
+                    if (vDist > 20) {innerDivisions = 3; outerDivisions = 2;}
+                #endif
+
+                gl_TessLevelOuter[0] = outerDivisions;
+                gl_TessLevelOuter[1] = outerDivisions;
+                gl_TessLevelOuter[2] = outerDivisions;
+
+                gl_TessLevelInner[0] = innerDivisions;
+            } else {
+                gl_TessLevelOuter[0] = 0;
+                gl_TessLevelOuter[1] = 0;
+                gl_TessLevelOuter[2] = 0;
+
+                gl_TessLevelInner[0] = 0;
+            }
+        } else {
+            gl_TessLevelOuter[0] = 1;
+            gl_TessLevelOuter[1] = 1;
+            gl_TessLevelOuter[2] = 1;
+
+            gl_TessLevelInner[0] = 0;
+        }
+
+        #if REPLACE_SHORT_GRASS > 0
+        if(vdiscardGrass[gl_InvocationID] == 1){
+            gl_TessLevelOuter[0] = 0;
+            gl_TessLevelOuter[1] = 0;
+            gl_TessLevelOuter[2] = 0;
+
+            gl_TessLevelInner[0] = 0;
+        }
+        #endif
+    #else
+        gl_TessLevelOuter[0] = 1;
+        gl_TessLevelOuter[1] = 1;
+        gl_TessLevelOuter[2] = 1;
+
+        gl_TessLevelInner[0] = 0;
+    #endif
+}

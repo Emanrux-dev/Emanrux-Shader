@@ -6,7 +6,7 @@
 #endif
 
 #include "/lib/settings.glsl"
-#if defined IS_LPV_ENABLED || WATER_INTERACTION == 2
+#if defined IS_LPV_ENABLED || WATER_INTERACTION == 2 || defined SHADER_GRASS
 	#extension GL_ARB_explicit_attrib_location: enable
 	#extension GL_ARB_shader_image_load_store: enable
 #endif
@@ -61,7 +61,7 @@ uniform int entityId;
 #include "/lib/blocks.glsl"
 #include "/lib/entities.glsl"
 
-#if defined IS_LPV_ENABLED || WATER_INTERACTION == 2
+#if defined IS_LPV_ENABLED || WATER_INTERACTION == 2 || defined SHADER_GRASS
 	#ifdef IRIS_FEATURE_BLOCK_EMISSION_ATTRIBUTE
 		attribute vec4 at_midBlock;
 	#else
@@ -214,7 +214,7 @@ void main() {
 	playerpos = mat3(shadowModelViewInverse) * position + shadowModelViewInverse[3].xyz;
 	// #endif
 
-	#if defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store || WATER_INTERACTION == 2
+	#if defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store || WATER_INTERACTION == 2 || defined SHADER_GRASS
 		PopulateShadowVoxel(playerpos);
 	#endif
 

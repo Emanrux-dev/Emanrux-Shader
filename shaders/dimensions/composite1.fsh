@@ -202,7 +202,6 @@ float convertHandDepth_2(in float depth, bool hand) {
 	
 	#define CLOUDSHADOWSONLY
 	#include "/lib/volumetricClouds.glsl"
-	#define CLOUDS_INTERSECT_TERRAIN
 #endif
 
 #ifdef IS_LPV_ENABLED
@@ -284,11 +283,18 @@ vec3 fp10Dither(vec3 color,float dither){
 }
 
 float interleaved_gradientNoise_temporal(){
+	// #ifdef TAA
+	// 	return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y ) + 1.0/1.6180339887 * frameCounter);
+	// #else
+	// 	return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y ) + 1.0/1.6180339887);
+	// #endif
+
+	vec2 coord = gl_FragCoord.xy;
 	#ifdef TAA
-		return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y ) + 1.0/1.6180339887 * frameCounter);
-	#else
-		return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y ) + 1.0/1.6180339887);
+		coord += (frameCounter%40000) * 2.0;
 	#endif
+
+	return fract(52.9829189*fract(0.06711056*coord.x + 0.00583715*coord.y ) + 1.0/1.6180339887);
 }
 
 float interleaved_gradientNoise(){
@@ -603,16 +609,21 @@ void doEdgeAwareBlur(
 		#ifdef Variable_Penumbra_Shadows
 			shadow_RESULT += texelFetch2D(tex1, UV + OFFSET[i] + UV_NOISE, 0).rgb*edgeDiff;
 		#endif
-		// #if indirect_effect == 1
+		#if indirect_effect == SSAO_FILTERED
 			ssao_RESULT += texelFetch2D(tex2, UV + OFFSET[i] + UV_NOISE, 0).rg*edgeDiff;
-		// #endif
+		#endif
 
 		edgeSum += edgeDiff;
 	}
 	// sample without an offset with texture filtering to get a slightly blurred sample. make sure to average without skewing the rest of the average.
 	filteredShadow = shadow_RESULT/edgeSum * 0.8 + 0.2 * texture2D(tex1, texelSize*gl_FragCoord.xy).rgb;
-	ambientEffects =   ssao_RESULT/edgeSum * 0.8 + 0.2 * texture2D(tex2, texelSize*gl_FragCoord.xy).rg;
-	// ambientEffects.x = edgeSum / 4.0;
+
+	#if indirect_effect == SSAO_FILTERED
+		ambientEffects = ssao_RESULT/edgeSum * 0.8 + 0.2 * texture2D(tex2, texelSize*gl_FragCoord.xy).rg;
+	#endif
+	#if indirect_effect == SSAO_HQ
+		ambientEffects = texture2D(tex2, texelSize*gl_FragCoord.xy).rg;
+	#endif
 
 }
 
@@ -790,7 +801,7 @@ uniform float wetness;
 
 #ifdef OVERWORLD_SHADER
 	void applyPuddles(
-		in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, in int isEyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0
+		in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, in int isEyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0, in bool isShaderGrass
 	){
 		/* PUDDLE_MODE
 			0 = OFF, NO WETNESS
@@ -816,6 +827,8 @@ uniform float wetness;
 
 				vec2 UV = mix(worldPos.xz, worldPos.xy*vec2(2.0, 0.5)+driprate, abs(flatNormals.z));
 				UV = mix(UV, worldPos.zy*vec2(2.0, 0.5)+driprate, abs(flatNormals.x));
+
+				if(isShaderGrass) UV = worldPos.xz;
 				
 				float noise = texture2D(noisetex, UV * 0.02).b;
 
@@ -837,21 +850,23 @@ uniform float wetness;
 				float wetnessStages = puddles * effectStrength;
 				if(isWater) wetnessStages = 0.0;
 
-				#ifdef RIPPLE_PUDDLES
-					float viewDist = length(worldPos - cameraPosition);
-					vec3 rippleNormal = flatNormals;
+				if(!isShaderGrass) {
+					#ifdef RIPPLE_PUDDLES
+						float viewDist = length(worldPos - cameraPosition);
+						vec3 rippleNormal = flatNormals;
 
-					if(viewDist < 35 && rainStrength > 0.0 && biome_precipitation == 1 && snowAmount < 0.01) {
-						vec3 ripple = ripples(1.2 * worldPos.xz);
-						
-						ripple = ripple.xzy;
-						rippleNormal = mix(flatNormals, ripple, smoothstep(35, 10, viewDist) * rainStrength);
-					}
+						if(viewDist < 35 && rainStrength > 0.0 && biome_precipitation == 1 && snowAmount < 0.01) {
+							vec3 ripple = ripples(1.2 * worldPos.xz);
+							
+							ripple = ripple.xzy;
+							rippleNormal = mix(flatNormals, ripple, smoothstep(35, 10, viewDist) * rainStrength);
+						}
 
-					normals = mix(normals, rippleNormal, effectStrength * clamp(flatNormals.y,0.0,1.0));
-				#else
-					normals = mix(normals, flatNormals, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
-				#endif
+						normals = mix(normals, rippleNormal, effectStrength * clamp(flatNormals.y,0.0,1.0));
+					#else
+						normals = mix(normals, flatNormals, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
+					#endif
+				}
 
 				roughness = mix(roughness, 0.5*(1+snowR), wetnessStages * Puddle_Reflection_Sharpness);
 
@@ -897,7 +912,7 @@ void main() {
 		vec2 bnoise = blueNoise(gl_FragCoord.xy).rg;
 
 		#ifdef TAA
-			int seed = (frameCounter*5)%40000;
+			int seed = frameCounter*8%40000;
 		#else
 			int seed = 600;
 		#endif
@@ -956,8 +971,14 @@ void main() {
 
 		lightmap.xy = min(max(lightmap.xy - 0.05,0.0)*1.06,1.0); // small offset to hide flickering from precision error in the encoding/decoding on values close to 1.0 or 0.0
 		
-		#if !defined OVERWORLD_SHADER
-			lightmap.y = 1.0;
+		#if MC_VERSION < 12109
+			#if !defined OVERWORLD_SHADER
+				lightmap.y = 1.0;
+			#endif
+		#else
+			#if !defined OVERWORLD_SHADER && !defined END_SHADER
+				lightmap.y = 1.0;
+			#endif
 		#endif
 
 	////// --------------- UNPACK MISC --------------- //////
@@ -971,7 +992,7 @@ void main() {
 		vec3 slopednormal = normal;
 
 		float vanilla_AO = z < 1.0 ? clamp(normalAndAO.a,0,1) : 0.0;
-		normalAndAO.a = clamp(pow(normalAndAO.a*5,4),0,1);
+		// normalAndAO.a = clamp(pow(normalAndAO.a*5,4),0,1);
 
 		if(isDHrange){
 			FlatNormals = normal;
@@ -1003,6 +1024,7 @@ void main() {
 		bool entities = abs(opaqueMasks-0.45) < 0.01;	
 		bool isGrass = abs(opaqueMasks-0.60) < 0.01;
 		bool hand = abs(opaqueMasks-0.75) < 0.01 && z < 1.0;
+		bool isShaderGrass = abs(opaqueMasks-0.4) < 0.01;
 		// bool handwater = abs(translucentMasks-0.3) < 0.01 ;
 		// bool blocklights = abs(opaqueMasks-0.8) <0.01;
 
@@ -1308,7 +1330,7 @@ void main() {
         vec3 lightPos = LightSourcePosition(feetPlayerPos+cameraPosition, cameraPosition,vortexBounds);
 
 		float lightningflash = texelFetch2D(colortex4,ivec2(1,1),0).x/150.0;
-		vec3 lightColors = LightSourceColors(vortexBounds, lightningflash);
+		vec3 lightColors = pow(lightmap.y,8) * LightSourceColors(vortexBounds, lightningflash);
 		
 		float end_NdotL = clamp(dot(slopednormal, normalize(-lightPos))*0.5+0.5,0.0,1.0);
 		end_NdotL *= end_NdotL;
@@ -1327,7 +1349,7 @@ void main() {
 		#if defined OVERWORLD_SHADER
 			float skylight = 1.0;
 		
-			#if indirect_effect == 0 || indirect_effect == 1 || indirect_effect == 2
+			#if indirect_effect == VANILLA_AO || indirect_effect == SSAO_FILTERED || indirect_effect == SSAO_HQ || indirect_effect == GTAO
 
 				vec3 indirectNormal = slopednormal / dot(abs(slopednormal),vec3(1.0));
 
@@ -1342,7 +1364,7 @@ void main() {
 				// skylight = 1.0;
 			#endif
 
-			#if indirect_effect == 3 || indirect_effect == 4
+			#if indirect_effect == SSRT_AO || indirect_effect == SSRT_AO_GI
 				skylight = 1.0;
 			#endif
 			
@@ -1354,7 +1376,7 @@ void main() {
 			Indirect_lighting = volumetricsFromTex(normalize(normal), colortex4, 6).rgb / 1200.0;
 			vec3 up = volumetricsFromTex(vec3(0.0,1.0,0.0), colortex4, 6).rgb / 1200.0;
 			
-			#if indirect_effect == 1
+			#if indirect_effect == SSAO_FILTERED || indirect_effect == SSAO_HQ
 				Indirect_lighting = mix(up, Indirect_lighting,  clamp(pow(1.0-pow(1.0-SSAO_SSS.x, 0.5),2.0),0.0,1.0));
 			#endif
 			
@@ -1365,9 +1387,13 @@ void main() {
 			Indirect_lighting = vec3(AmbientLightEnd_R,AmbientLightEnd_G,AmbientLightEnd_B);
 			
 			Indirect_lighting = Indirect_lighting + 0.7*mix(-Indirect_lighting, Indirect_lighting * dot(slopednormal, feetPlayerPos_normalized), clamp(pow(1.0-pow(1.0-SSAO_SSS.x, 0.5),2.0),0.0,1.0));
-			Indirect_lighting *= 0.1;
+			Indirect_lighting *= 0.05 * lightmap.y*lightmap.y;
 
 			Indirect_lighting += lightColors * (endPhase*endPhase) * (1.0-exp(vec3(0.6,2.0,2.0) * -(endPhase*0.01))) /1000.0;
+
+			// float minimumLightAmount = 0.02*nightVision + 0.005 * mix(MINIMUM_INDOOR_LIGHT, MINIMUM_OUTDOOR_LIGHT, clamp(eyeBrightnessSmooth.y/240.0 + lightmap.y,0.0,1.0));
+    		// Indirect_lighting += MinimumLightColor * minimumLightAmount;
+			Indirect_lighting += MinimumLightColor * (MIN_LIGHT_AMOUNT * 0.02 * 0.2 + nightVision*0.02);
 		#endif
 		
 		#ifdef IS_LPV_ENABLED
@@ -1413,7 +1439,7 @@ void main() {
 			Indirect_lighting *= AO;
 		#endif
 
-		#if indirect_effect == 1
+		#if indirect_effect == SSAO_FILTERED || indirect_effect == SSAO_HQ
 			SkySSS = SSAO_SSS.y;
 
 			float vanillaAO_curve = pow(1.0 - vanilla_AO*vanilla_AO,5.0);
@@ -1426,19 +1452,19 @@ void main() {
 		#endif
 
 		// // GTAO... this is so dumb but whatevverrr
-		#if indirect_effect == 2
+		#if indirect_effect == GTAO
 			float vanillaAO_curve = pow(1.0 - vanilla_AO*vanilla_AO,5.0);
 
 			vec2 r2 = fract(R2_samples((frameCounter%40000) + frameCounter*2) + bnoise);
-			float GTAO =  !hand ? ambient_occlusion(vec3(texcoord/RENDER_SCALE-TAA_Offset*texelSize*0.5, z), viewPos, worldToView(slopednormal), r2) : 1.0;
+			float getGTAO =  !hand ? ambient_occlusion(vec3(texcoord/RENDER_SCALE-TAA_Offset*texelSize*0.5, z), viewPos, worldToView(slopednormal), r2) : 1.0;
 			
-			AO = vec3(min(vanillaAO_curve,GTAO));
+			AO = vec3(min(vanillaAO_curve,getGTAO));
 			
 			Indirect_lighting *= AO;
 		#endif
 
 		// RTAO and/or SSGI
-		#if indirect_effect == 3 || indirect_effect == 4
+		#if indirect_effect == SSRT_AO || indirect_effect == SSRT_AO_GI
 			if(!hand) Indirect_lighting = ApplySSRT(Indirect_lighting, blockLightColor, MinimumLightColor, viewPos, normal, vec3(bnoise, noise_2), lightmap.y, isGrass, isDHrange);
 		#endif
 
@@ -1449,7 +1475,7 @@ void main() {
 	////////////////////////////////////////////////////////////////////////////////
 	
 	/////////////////////////////	SKY SSS		/////////////////////////////
-		#if defined Ambient_SSS && defined OVERWORLD_SHADER // && indirect_effect == 1
+		#if defined Ambient_SSS && defined OVERWORLD_SHADER && (indirect_effect == SSAO_FILTERED || indirect_effect == SSAO_HQ)
 			vec3 ambientColor = AmbientLightColor * ambientsss_brightness * ambient_brightness * 2.0;
 
 			Indirect_SSS = SubsurfaceScattering_sky(albedo, SkySSS, LabSSS);
@@ -1459,14 +1485,7 @@ void main() {
 			thingy = pow(thingy,3.5);
 			thingy = 1-pow(1-thingy,5);
 
-			Indirect_lighting = Indirect_lighting + Indirect_SSS * ambientColor;
-			// float lightmapCurve =  ((pow(lightmap.y,15.0)*2.0 + lightmap.y*lightmap.y)/3.0);
-			// Indirect_lighting = ambient_brightness * AmbientLightColor * mix(Indirect_SSS*lightmap.y*2.5, vec3(1.0), skylight * SSAO_curve * lightmapCurve);
-			// Indirect_lighting += blockLightColor * SSAO_curve;
-
-			// #ifdef OVERWORLD_SHADER
-			// 	if(LabSSS > 0.0) Indirect_lighting += (1.0-SkySSS) * LightningPhase * lightningEffect *  pow(lightmap.y,10);
-			// #endif
+			Indirect_lighting += Indirect_SSS * ambientColor;
 		#endif
 	
 	/////////////////////////////////////////////////////////////////////////
@@ -1497,7 +1516,7 @@ void main() {
 		#endif
 
 		#if defined OVERWORLD_SHADER && defined DEFERRED_SPECULAR && (PUDDLE_MODE > 0 || ShaderSnow > 0)
-			if(!hand && !entities && (wetnessAmount > 0.01 || snowAmount > 0.01)) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap, isWater, isEyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g);
+			if(!hand && !entities && (wetnessAmount > 0.01 || snowAmount > 0.01)) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap, isWater, isEyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g, isShaderGrass);
 		#endif
 
 		vec3 FINAL_COLOR = (Indirect_lighting + Direct_lighting) * albedo;

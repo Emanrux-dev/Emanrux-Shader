@@ -1,5 +1,5 @@
 ivec3 GetVoxelIndex(const in vec3 playerPos) {
-	#if !defined IS_LPV_ENABLED
+	#if !defined IS_LPV_ENABLED && !defined SHADER_GRASS
 		vec3 cameraOffset = fract(cameraPosition-relativeEyePosition);
 	#else
 		vec3 cameraOffset = fract(cameraPosition);
@@ -7,8 +7,7 @@ ivec3 GetVoxelIndex(const in vec3 playerPos) {
 	return ivec3(floor(playerPos + cameraOffset) + VoxelSize3/2u);
 }
 
-void SetVoxelBlock(const in vec3 playerPos, const in uint blockId) {
-	ivec3 voxelPos = GetVoxelIndex(playerPos);
+void SetVoxelBlock(const in ivec3 voxelPos, const in uint blockId) {
 	if (clamp(voxelPos, ivec3(0), ivec3(VoxelSize-1u)) != voxelPos) return;
 
 	imageStore(imgVoxelMask, voxelPos, uvec4(blockId));
@@ -32,6 +31,12 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 
 		originPos += at_midBlock.xyz/64.0;
 	}
+
+	#if !defined IS_LPV_ENABLED && !defined SHADER_GRASS
+		ivec3 voxelPos = GetVoxelIndex(originPos+relativeEyePosition);
+	#else
+		ivec3 voxelPos = GetVoxelIndex(originPos);
+	#endif
 	
 	#ifdef LPV_ENTITY_LIGHTS
 		if (
@@ -42,8 +47,12 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 					voxelId = uint(blockEntityId);
 			}
 			else if (currentRenderedItemId > 0 && currentRenderedItemId < 1200) {
-				if (entityId != ENTITY_ITEM_FRAME && entityId != ENTITY_PLAYER)
-					voxelId = uint(currentRenderedItemId);
+				if (entityId != ENTITY_ITEM_FRAME && entityId != ENTITY_PLAYER) {
+					uint oldID = imageLoad(imgVoxelMask, voxelPos).r;
+					// offset by a random number that came into my head to make entities and items not interact with grass
+					voxelId = uint(currentRenderedItemId)+1200u;
+					if(oldID == 12u) voxelId += 1200u;
+				}
 			}
 			else {
 				switch (entityId) {
@@ -54,7 +63,7 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 					case ENTITY_MAGMA_CUBE:
 					case ENTITY_SPECTRAL_ARROW:
 					case ENTITY_TNT:
-						voxelId = uint(entityId);
+						voxelId = uint(entityId)+1200u;
 						break;
 				}
 			}
@@ -68,18 +77,14 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 			switch (entityId) {
 				case ENTITY_BOAT:
 				case ENTITY_SMALLSHIPS:
-					voxelId = uint(entityId);
+					voxelId = uint(entityId)+1200u;
 					break;
 			}
 		}
 	#endif
 
 	if (voxelId > 0u){
-		#if !defined IS_LPV_ENABLED
-			SetVoxelBlock(originPos+relativeEyePosition, voxelId);
-		#else
-			SetVoxelBlock(originPos, voxelId);
-		#endif
+		SetVoxelBlock(voxelPos, voxelId);
 	}
 		
 }

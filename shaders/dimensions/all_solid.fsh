@@ -6,7 +6,7 @@
 #include "/lib/items.glsl"
 #include "/lib/hsv.glsl"
 
-flat varying int NameTags;
+in int NameTags;
 
 #ifdef HAND
 #undef POM
@@ -23,7 +23,7 @@ flat varying int NameTags;
 #endif
 
 
-varying float VanillaAO;
+in float VanillaAO;
 
 const float mincoord = 1.0/4096.0;
 const float maxcoord = 1.0-mincoord;
@@ -36,30 +36,32 @@ uniform vec2 texelSize;
 uniform int framemod8;
 
 // #ifdef POM
-varying vec4 vtexcoordam; // .st for add, .pq for mul
-varying vec4 vtexcoord;
+in vec4 texcoordam; // .st for add, .pq for mul
+in vec4 texcoord;
 
-vec2 dcdx = dFdx(vtexcoord.st*vtexcoordam.pq)*exp2(Texture_MipMap_Bias);
-vec2 dcdy = dFdy(vtexcoord.st*vtexcoordam.pq)*exp2(Texture_MipMap_Bias);
+vec2 dcdx = dFdx(texcoord.st*texcoordam.pq)*exp2(Texture_MipMap_Bias);
+vec2 dcdy = dFdy(texcoord.st*texcoordam.pq)*exp2(Texture_MipMap_Bias);
 // #endif
 
 #include "/lib/res_params.glsl"
-varying vec4 lmtexcoord;
+in vec4 lmtexcoord;
 
-varying vec4 color;
+in vec4 color;
 
 uniform float far;
 
 
 uniform float wetness;
-varying vec4 normalMat;
+in vec4 normalMat;
 
 
 #ifdef MC_NORMAL_MAP
 	uniform sampler2D normals;
-	varying vec4 tangent;
-	varying vec3 FlatNormals;
+	in vec4 tangent;
+	in vec3 FlatNormals;
 #endif
+
+in vec3 GrassNormals;
 
 
 uniform sampler2D specular;
@@ -91,16 +93,19 @@ uniform vec4 entityColor;
 
 // in vec3 velocity;
 
-flat varying float blockID;
+flat in float blockID;
 
-flat varying float SSSAMOUNT;
-flat varying float EMISSIVE;
-flat varying int LIGHTNING;
-flat varying int PORTAL;
-flat varying int SIGN;
+flat in float SSSAMOUNT;
+flat in float EMISSIVE;
+flat in int LIGHTNING;
+flat in int PORTAL;
+flat in int SIGN;
+flat in int ISSHADERGRASS;
+
+uniform int heldItemId;
+uniform int heldItemId2;
 
 
-flat varying float HELD_ITEM_BRIGHTNESS;
 uniform float noPuddleAreas;
 uniform float nightVision;
 uniform vec3 relativeEyePosition;
@@ -131,13 +136,13 @@ float R2_dither(){
 	vec2 alpha = vec2(0.75487765, 0.56984026);
 	return fract(alpha.x * coord.x + alpha.y * coord.y ) ;
 }
-float blueNoise(){
-	#ifdef TAA
-  		return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
-	#else
-		return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887);
-	#endif
-}
+
+#ifdef TAA
+	#define blueNoise fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter)
+#else
+	#define blueNoise fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887)
+#endif
+
 
 mat3 inverseMatrix(mat3 m) {
   float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];
@@ -210,11 +215,11 @@ vec3 toClipSpace3(vec3 viewSpacePosition) {
 #ifdef POM
 	vec4 readNormal(in vec2 coord)
 	{
-		return texture2DGradARB(normals,fract(coord)*vtexcoordam.pq+vtexcoordam.st,dcdx,dcdy);
+		return texture2DGradARB(normals,fract(coord)*texcoordam.pq+texcoordam.st,dcdx,dcdy);
 	}
 	vec4 readTexture(in vec2 coord)
 	{
-		return texture2DGradARB(texture,fract(coord)*vtexcoordam.pq+vtexcoordam.st,dcdx,dcdy);
+		return texture2DGradARB(texture,fract(coord)*texcoordam.pq+texcoordam.st,dcdx,dcdy);
 	}
 #endif
 
@@ -248,8 +253,8 @@ float ld(float dist) {
 
 
 vec4 readNoise(in vec2 coord){
-	// return texture2D(noisetex,coord*vtexcoordam.pq+vtexcoord.st);
-		return texture2DGradARB(noisetex,coord*vtexcoordam.pq + vtexcoordam.st,dcdx,dcdy);
+	// return texture2D(noisetex,coord*texcoordam.pq+texcoord.st);
+		return texture2DGradARB(noisetex,coord*texcoordam.pq + texcoordam.st,dcdx,dcdy);
 }
 float EndPortalEffect(
 	inout vec4 ALBEDO,
@@ -265,7 +270,7 @@ float EndPortalEffect(
 	if ( viewVec.z < 0.0 && length(FragPos) < maxdist) {
 		float endportalGLow = 0.0;
 		float Depth = 0.3;
-		vec3 interval = (viewVec.xyz /-viewVec.z/quality*Depth) * (0.7 + (blueNoise()-0.5)*0.1);
+		vec3 interval = (viewVec.xyz /-viewVec.z/quality*Depth) * (0.7 + (blueNoise-0.5)*0.1);
 
 		vec3 coord = vec3(WorldPos.xz , 1.0);
 		coord += interval;
@@ -282,7 +287,7 @@ float EndPortalEffect(
 }
 
 float bias(){
-	// return (Texture_MipMap_Bias + (blueNoise()-0.5)*0.5) - (1.0-RENDER_SCALE.x) * 2.0;
+	// return (Texture_MipMap_Bias + (blueNoise-0.5)*0.5) - (1.0-RENDER_SCALE.x) * 2.0;
 	return Texture_MipMap_Bias - (1.0-RENDER_SCALE.x) * 2.0;
 }
 vec4 texture2D_POMSwitch(
@@ -309,7 +314,7 @@ void convertHandDepth(inout float depth) {
 
 float getEmission(vec3 Albedo) {
 	vec3 hsv = RgbToHsv(Albedo);
-    float emissive = smoothstep(0.05, 0.35, hsv.y) * pow(hsv.z, 3.5);
+    float emissive = smoothstep(0.05, 0.15, hsv.y) * pow(hsv.z, 3.5);
     return emissive * 0.5;
 }
 
@@ -339,7 +344,7 @@ void main() {
 		ifPOM = true;
 	#endif
 
-	if(SIGN > 0) ifPOM = false;
+	if(SIGN > 0 || ISSHADERGRASS > 0) ifPOM = false;
 
 	vec3 normal = normalMat.xyz;
 
@@ -371,12 +376,15 @@ void main() {
 			}
 		#endif
 
+		float HELD_ITEM_BRIGHTNESS = 0.0;
+		if(heldItemId > 999 || heldItemId2 > 999 ) HELD_ITEM_BRIGHTNESS = 0.9;
+
 		// if(HELD_ITEM_BRIGHTNESS > 0.0) torchlightmap = max(torchlightmap, HELD_ITEM_BRIGHTNESS * clamp( pow(max(1.0-length(worldpos-playerCamPos)/HANDHELD_LIGHT_RANGE,0.0),1.5),0.0,1.0));
 		if(HELD_ITEM_BRIGHTNESS > 0.0){ 
 			
 			float pointLight = clamp(1.0-(length(worldpos-playerCamPos)-1.)/HANDHELD_LIGHT_RANGE,0.0,1.0);
 
-			if (torchlightmap < 0.99) {
+			if (torchlightmap < 0.99) { 
 				torchlightmap = mix(torchlightmap, HELD_ITEM_BRIGHTNESS, pointLight);
 			}
 		}
@@ -392,7 +400,7 @@ void main() {
 
 #if defined POM && defined WORLD && !defined ENTITIES && !defined HAND
 	// vec2 tempOffset=offsets[framemod8];
-	adjustedTexCoord = fract(vtexcoord.st)*vtexcoordam.pq+vtexcoordam.st;
+	adjustedTexCoord = fract(texcoord.st)*texcoordam.pq+texcoordam.st;
 	// vec3 fragpos = toScreenSpace(gl_FragCoord.xyz*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize*0.5,0.0));
 	vec3 viewVector = normalize(tbnMatrix*fragpos);
 	float dist = length(playerpos);
@@ -407,21 +415,21 @@ void main() {
 	if(!ifPOM) maxdist = 0.0;
 
 	gl_FragDepth = gl_FragCoord.z;
-	if (falloff > 0.0) {
+	if (falloff > 0.0 && ISSHADERGRASS == 0) {
 
-		float depthmap = readNormal(vtexcoord.st).a;
+		float depthmap = readNormal(texcoord.st).a;
 		float used_POM_DEPTH = 1.0;
 		float pomdepth = POM_DEPTH*falloff;
 
  		if ( viewVector.z < 0.0 && depthmap < 0.9999 && depthmap > 0.00001) {	
-			float noise = blueNoise();
+			float noise = blueNoise;
 			#ifdef Adaptive_Step_length
 				vec3 interval = (viewVector.xyz /-viewVector.z/MAX_OCCLUSION_POINTS * pomdepth) * clamp(1.0-pow(depthmap,2),0.1,1.0);
 				used_POM_DEPTH = 1.0;
 			#else
 				vec3 interval = viewVector.xyz /-viewVector.z/MAX_OCCLUSION_POINTS*pomdepth;
 			#endif
-			vec3 coord = vec3(vtexcoord.st , 1.0);
+			vec3 coord = vec3(texcoord.st , 1.0);
 
 			coord += interval * noise * used_POM_DEPTH;
 
@@ -438,7 +446,7 @@ void main() {
 				}
 			}
 			
-			adjustedTexCoord = mix(fract(coord.st)*vtexcoordam.pq+vtexcoordam.st, adjustedTexCoord, max(dist-MIX_OCCLUSION_DISTANCE,0.0)/(MAX_OCCLUSION_DISTANCE-MIX_OCCLUSION_DISTANCE));
+			adjustedTexCoord = mix(fract(coord.st)*texcoordam.pq+texcoordam.st, adjustedTexCoord, max(dist-MIX_OCCLUSION_DISTANCE,0.0)/(MAX_OCCLUSION_DISTANCE-MIX_OCCLUSION_DISTANCE));
 
 			vec3 truePos = fragpos + sumVec*inverseMatrix(tbnMatrix)*interval;
 
@@ -455,7 +463,14 @@ void main() {
 
 	float textureLOD = bias();
 
-	vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD) * color;
+	vec4 Albedo = color;
+	
+	if (ISSHADERGRASS < 1) Albedo *= texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
+
+	#if REPLACE_SHORT_GRASS < 2
+		// darken the top of grass blocks a bit
+		if(blockID == 85 && viewToWorld(FlatNormals).y > abs(0.9) && ISSHADERGRASS < 1) Albedo *= smoothstep(-30.0, 25.0, length(playerpos));
+	#endif
 
 	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
 			float viewDist = length(playerpos); 
@@ -499,14 +514,14 @@ void main() {
 
 		vec2 rayDir = ((correctedViewVec.xy) / -correctedViewVec.z) / steps * 5.0 ;
 	
-		vec2 uv = correctedWorldPos + rayDir * blueNoise();
+		vec2 uv = correctedWorldPos + rayDir * blueNoise;
 		uv += rayDir * 10.0;
 
 		vec2 animation = vec2(frameTimeCounter, -frameTimeCounter)*0.01;
 		
 		for (int i = 0; i < int(steps); i++) {
 			
-			float verticalGradient = (i + blueNoise())/steps ;
+			float verticalGradient = (i + blueNoise)/steps ;
 			float verticalGradient2 = exp(-7*(1-verticalGradient*verticalGradient));
 		
 			float density = max(max(verticalGradient - texture2D(noisetex, uv/256.0 + animation.xy).b*0.5,0.0) - (1.0-texture2D(noisetex, uv/32.0 + animation.xx).r) * (0.4 + 0.1 * (texture2D(noisetex, uv/10.0 - animation.yy).b)),0.0);
@@ -584,18 +599,20 @@ void main() {
 	//////////////////////////////// 				//////////////////////////////// 
 
 	#if defined WORLD && defined MC_NORMAL_MAP
-		vec4 NormalTex = texture2D_POMSwitch(normals, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD).xyzw;
-		
-		#ifdef MATERIAL_AO
-			Albedo.rgb *= NormalTex.b*0.5+0.5;
-		#endif
+		if(ISSHADERGRASS < 1) {
+			vec4 NormalTex = texture2D_POMSwitch(normals, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD).xyzw;
+			
+			#ifdef MATERIAL_AO
+				Albedo.rgb *= NormalTex.b*0.5+0.5;
+			#endif
 
-		float Heightmap = 1.0 - NormalTex.w;
+			float Heightmap = 1.0 - NormalTex.w;
 
-		NormalTex.xy = NormalTex.xy * 2.0-1.0;
-		NormalTex.z = sqrt(max(1.0 - dot(NormalTex.xy, NormalTex.xy), 0.0));
+			NormalTex.xy = NormalTex.xy * 2.0-1.0;
+			NormalTex.z = sqrt(max(1.0 - dot(NormalTex.xy, NormalTex.xy), 0.0));
 
-		normal = applyBump(tbnMatrix, NormalTex.xyz);
+			normal = applyBump(tbnMatrix, NormalTex.xyz);
+		}
 	#endif
 	
 	//////////////////////////////// 				////////////////////////////////
@@ -603,7 +620,12 @@ void main() {
 	//////////////////////////////// 				//////////////////////////////// 
 	
 	#ifdef WORLD
-		vec4 SpecularTex = texture2D_POMSwitch(specular, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD);
+		vec4 SpecularTex = vec4(0.0);
+		if (ISSHADERGRASS > 0) {
+			SpecularTex = vec4(0.15, 0.025, 1.0, 0.0);
+		} else {
+			SpecularTex = texture2D_POMSwitch(specular, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD);
+		}
 
 		// SpecularTex.r = max(SpecularTex.r, rainfall);
 		// SpecularTex.g = max(SpecularTex.g, max(Puddle_shape*0.02,0.02));
@@ -661,11 +683,17 @@ void main() {
 	#ifdef WORLD
 		// apply noise to lightmaps to reduce banding.
 		vec2 PackLightmaps = vec2(torchlightmap, lmtexcoord.w);
-		vec4 data1 = clamp( encode(viewToWorld(normal), PackLightmaps), 0.0, 1.0);
+
+		normal = viewToWorld(normal);
+
+		vec3 flatNormals = viewToWorld(FlatNormals);
+		if (ISSHADERGRASS > 0) {flatNormals = FlatNormals; normal = GrassNormals;}
+
+		vec4 data1 = clamp( encode(normal, PackLightmaps), 0.0, 1.0);
 
 		gl_FragData[0] = vec4(encodeVec2(Albedo.x,data1.x),	encodeVec2(Albedo.y,data1.y),	encodeVec2(Albedo.z,data1.z),	encodeVec2(data1.w,Albedo.w));
 
-		gl_FragData[2] = vec4(viewToWorld(FlatNormals) * 0.5 + 0.5, VanillaAO);	
+		gl_FragData[2] = vec4(flatNormals * 0.5 + 0.5, VanillaAO);	
 	#endif
 	
 }

@@ -47,10 +47,6 @@ vec4 Weather_properties = Moon_Weather_properties;
 // #include "/lib/biome_specifics.glsl"
 #include "/lib/bokeh.glsl"
 
-#if WHITE_BALANCE != 6500
-	#include "/lib/util.glsl"
-#endif
-
 float cdist(vec2 coord) {
 	return max(abs(coord.s-0.5),abs(coord.t-0.5))*2.0;
 }
@@ -185,6 +181,29 @@ vec4 texture2D_bicubic(sampler2D tex, vec2 uv)
 //   return color;
 // }
 
+vec3 srgbToLinear(vec3 srgb){
+    return mix(
+        srgb / 12.92,
+        pow(.947867 * srgb + .0521327, vec3(2.4) ),
+        step( .04045, srgb )
+    );
+}
+vec3 blackbody(float Temp)
+{
+    float t = pow(Temp, -1.5);
+    float lt = log(Temp);
+
+    vec3 WB_temp = vec3(0.0);
+         WB_temp.r = 220000.0 * t + 0.58039215686;
+         WB_temp.g = 0.39231372549 * lt - 2.44549019608;
+         WB_temp.g = Temp > 6500. ? 138039.215686 * t + 0.72156862745 : WB_temp.g;
+         WB_temp.b = 0.76078431372 * lt - 5.68078431373;
+         WB_temp = clamp(WB_temp,0,1);
+         WB_temp = Temp < 1000. ? WB_temp * Temp * 0.001 : WB_temp;
+
+    return srgbToLinear(WB_temp);
+}
+
 void main() {
   /* DRAWBUFFERS:7 */
 	float vignette = (1.5-dot(texcoord-0.5,texcoord-0.5)*2.);
@@ -257,26 +276,31 @@ void main() {
 		float lightScat = clamp(BLOOM_STRENGTH * 0.3,0.0,1.0) * vignette;
 	#endif
 
-	#ifdef AUTO_EXPOSURE
-		float purkinje = clamp(exposure.a*exposure.a,0.0,1.0) * clamp(rodExposureDepth.x/(1.0+rodExposureDepth.x)*Purkinje_strength,0,1);
-	#else
-		float purkinje = clamp(rodExposureDepth.x/(1.0+rodExposureDepth.x)*Purkinje_strength,0,1);
-	#endif	
-	
-
  	float VL_abs = texture2D(colortex7, texcoord*RENDER_SCALE).r;
 
-  	VL_abs = clamp((1.0-VL_abs)*BLOOMY_FOG*0.75*(1.0+rainStrength) * (1.0-purkinje*0.3),0.0,1.0)*clamp(1.0-pow(cdist(texcoord.xy),15.0),0.0,1.0);
+	#if Purkinje_strength > 0
+		float pstrength = float(Purkinje_strength) / 100.0;
+		
+		#ifdef AUTO_EXPOSURE
+			float purkinje = clamp(exposure.a*exposure.a,0.0,1.0) * clamp(rodExposureDepth.x/(1.0+rodExposureDepth.x)*pstrength,0,1);
+		#else
+			float purkinje = clamp(rodExposureDepth.x/(1.0+rodExposureDepth.x)*pstrength,0,1);
+		#endif	
+		
+  		VL_abs = clamp((1.0-VL_abs)*BLOOMY_FOG*0.75*(1.0+rainStrength) * (1.0-purkinje*0.3),0.0,1.0)*clamp(1.0-pow(cdist(texcoord.xy),15.0),0.0,1.0);
+		col = (mix(col, fogBloom, VL_abs) + bloom*lightScat) * exposure.rgb;
 	
-	col = (mix(col, fogBloom, VL_abs) + bloom*lightScat) * exposure.rgb;
+  		float lum = dot(col, vec3(0.15,0.3,0.55));
+		float lum2 = dot(col, vec3(0.85,0.7,0.45));
+		float rodLum = lum2*200.0;
+		float rodCurve = clamp(mix(1.0, rodLum/(2.5+rodLum), purkinje),0.0,1.0);
+
+		col = mix(lum * vec3(Purkinje_R, Purkinje_G, Purkinje_B) * Purkinje_Multiplier, col, rodCurve);
+	#else
+  		VL_abs = clamp((1.0-VL_abs)*BLOOMY_FOG*0.75*(1.0+rainStrength),0.0,1.0)*clamp(1.0-pow(cdist(texcoord.xy),15.0),0.0,1.0);
+		col = (mix(col, fogBloom, VL_abs) + bloom*lightScat) * exposure.rgb;
+	#endif
 	
-  	float lum = dot(col, vec3(0.15,0.3,0.55));
-	float lum2 = dot(col, vec3(0.85,0.7,0.45));
-	float rodLum = lum2*200.0;
-	float rodCurve = clamp(mix(1.0, rodLum/(2.5+rodLum), purkinje),0.0,1.0);
-
-	col = mix(lum * vec3(Purkinje_R, Purkinje_G, Purkinje_B) * Purkinje_Multiplier, col, rodCurve);
-
 	#if WHITE_BALANCE != 6500
 		col *= blackbody(WHITE_BALANCE);
 	#endif
@@ -324,6 +348,6 @@ void main() {
 		#endif
 
 		// focus = gl_FragCoord.x * 0.1;
-		if (hideGUI < 1) gl_FragData[0].rgb += laserColor * pow( clamp( 	 1.0-abs(focus-abs(depth))		,0,1),25) ;
+		if( hideGUI < 1) gl_FragData[0].rgb += laserColor * pow( clamp( 	 1.0-abs(focus-abs(depth))		,0,1),25) ;
 	#endif
 }

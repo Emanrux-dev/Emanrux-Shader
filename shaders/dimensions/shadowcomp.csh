@@ -52,8 +52,12 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
     uint GetVoxelBlock(const in ivec3 voxelPos) {
         if (clamp(voxelPos, ivec3(0), ivec3(VoxelSize3-1u)) != voxelPos)
             return BLOCK_EMPTY;
-        
-        return imageLoad(imgVoxelMask, voxelPos).r;
+
+        uint blockId = imageLoad(imgVoxelMask, voxelPos).r;
+
+        blockId = blockId % 1200;
+                
+        return blockId;
     }
 
     void PopulateSharedIndex(const in ivec3 imgCoordOffset, const in ivec3 workGroupOffset, const in uint i) {

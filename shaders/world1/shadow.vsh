@@ -18,7 +18,7 @@ This code is from Chocapic13' shaders
 Read the terms of modification and sharing before changing something below please !
 !! DO NOT REMOVE !!
 */
-#if defined IS_LPV_ENABLED || defined END_ISLAND_LIGHT || WATER_INTERACTION == 2
+#if defined IS_LPV_ENABLED || defined END_ISLAND_LIGHT || WATER_INTERACTION == 2 || defined SHADER_GRASS
 	uniform int renderStage;
 	uniform mat4 shadowModelViewInverse;
 	uniform int entityId;
@@ -26,7 +26,7 @@ Read the terms of modification and sharing before changing something below pleas
 	#include "/lib/entities.glsl"
 #endif
 
-#if defined IS_LPV_ENABLED || WATER_INTERACTION == 2
+#if defined IS_LPV_ENABLED || WATER_INTERACTION == 2  || defined SHADER_GRASS
 	attribute vec4 mc_Entity;
 	#ifdef IRIS_FEATURE_BLOCK_EMISSION_ATTRIBUTE
 		attribute vec4 at_midBlock;
@@ -64,7 +64,7 @@ void main() {
 		vec3 feetPlayerPos = mat3(shadowModelViewInverse) * shadowViewPos + shadowModelViewInverse[3].xyz;
 	#endif
 
-	#if defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store || WATER_INTERACTION == 2
+	#if defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store || WATER_INTERACTION == 2  || defined SHADER_GRASS
 		#ifdef LPV_NOSHADOW_HACK
 			vec3 playerpos = gl_Vertex.xyz;
 		#else

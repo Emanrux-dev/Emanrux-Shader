@@ -6,6 +6,7 @@ It started out with smaller features, but then the additions just kept piling up
 Notable changes/additions compared to Bliss unstable:
  + Custom moon orbit with possible eclipses
  + Water wave simulation for the player
+ + Shader Grass
  + Aurora & Rainbow
  + Handheld shadows
  + Additional cirrus & cumulonimbus cloud layers (WIP)
@@ -34,13 +35,13 @@ Note: With default settings there is at least one guaranteed eclipse per ingame 
 
 <img width="1920" height="1080" alt="2025-09-02_00 29 28" src="https://github.com/user-attachments/assets/87cbd02c-1149-4764-9ff0-7da521b0273a" />
 
-## Shader snow effect
+## Shader Snow
 
 <img width="1920" height="1080" alt="2025-08-13_13 38 18" src="https://github.com/user-attachments/assets/31e5102e-d872-4aec-a606-39ae88385d45" />
 
-## Puddles with rain ripples
+## Shader Grass
 
-<img width="2560" height="1440" alt="2025-08-12_02 28 27" src="https://github.com/user-attachments/assets/81d50e88-8935-4be9-a236-ba9714443b15" />
+<img width="1920" height="1080" alt="2025-10-06_01 34 47" src="https://github.com/user-attachments/assets/47dfabab-51cf-4490-9247-35f7879a3690" />
 
 ## Lightning Shadows
 

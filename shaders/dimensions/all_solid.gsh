@@ -21,7 +21,7 @@ in vec4 vtexcoord[];
 
 flat in float vblockID[];
 
-in int vNameTags[];
+flat in int vNameTags[];
 
 flat in float vSSSAMOUNT[];
 flat in float vEMISSIVE[];
@@ -50,7 +50,7 @@ out vec3 GrassNormals;
 
 flat out float blockID;
 
-out int NameTags;
+flat out int NameTags;
 
 flat out float SSSAMOUNT;
 flat out float EMISSIVE;

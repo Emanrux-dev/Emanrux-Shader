@@ -68,7 +68,7 @@ uniform int heldItemId2;
 	attribute vec3 at_midBlock;
 #endif
 
-out int vNameTags;
+flat out int vNameTags;
 
 uniform int frameCounter;
 uniform float far;
@@ -315,7 +315,7 @@ void main() {
 
 	if(mc_Entity.x == BLOCK_AIR_WAVING) vnormalMat.a = 0.55;
 
-    /////// ----- vEMISSIVE STUFF ----- ///////
+    /////// ----- EMISSIVE STUFF ----- ///////
 		vEMISSIVE = 0.0;
 		vLIGHTNING = 0;
 	// if(vNameTags > 0) vEMISSIVE = 0.9;

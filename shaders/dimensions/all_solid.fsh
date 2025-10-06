@@ -6,7 +6,7 @@
 #include "/lib/items.glsl"
 #include "/lib/hsv.glsl"
 
-in int NameTags;
+flat in int NameTags;
 
 #ifdef HAND
 #undef POM

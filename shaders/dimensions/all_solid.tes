@@ -16,7 +16,7 @@ in vec4 texcoord[];
 
 flat in float blockID[];
 
-in int NameTags[];
+flat in int NameTags[];
 
 flat in float SSSAMOUNT[];
 flat in float EMISSIVE[];
@@ -46,7 +46,7 @@ out vec4 vtexcoord;
 
 flat out float vblockID;
 
-out int vNameTags;
+flat out int vNameTags;
 
 flat out float vSSSAMOUNT;
 flat out float vEMISSIVE;

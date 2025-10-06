@@ -467,7 +467,7 @@ void main() {
 	
 	if (ISSHADERGRASS < 1) Albedo *= texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
 
-	#if REPLACE_SHORT_GRASS < 2
+	#if REPLACE_SHORT_GRASS < 2 && defined SHADER_GRASS
 		// darken the top of grass blocks a bit
 		if(blockID == 85 && viewToWorld(FlatNormals).y > abs(0.9) && ISSHADERGRASS < 1) Albedo *= smoothstep(-30.0, 25.0, length(playerpos));
 	#endif

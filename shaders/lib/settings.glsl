@@ -1131,6 +1131,12 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #if WATER_INTERACTION == 2
 	#define WATER_INTERACTION 1
 #endif
+#undef SHADER_GRASS
+#endif
+
+// only iris 1.7+ allows tessellation
+#if MC_VERSION < 12001 || MC_VERSION == 12002
+	#undef SHADER_GRASS
 #endif
 
 #if CUMULONIMBUS == 0 && !defined CloudLayer0 && !defined CloudLayer1 && !defined CloudLayer2 && !defined CloudLayer3

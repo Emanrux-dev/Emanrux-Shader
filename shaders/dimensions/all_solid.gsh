@@ -69,6 +69,7 @@ vec4 toClipSpace3(vec3 viewSpacePosition) {
 uniform int frameCounter;
 uniform int hideGUI;
 uniform float aspectRatio;
+uniform float screenBrightness;
 
 #include "/lib/settings.glsl"
 #include "/lib/TAA_jitter.glsl"
@@ -388,7 +389,7 @@ void main() {
 
                     #ifdef MC_NORMAL_MAP
                         tangent = vtangent[i];
-                        FlatNormals = vFlatNormals[i];
+                        // FlatNormals = vFlatNormals[i];
                     
                         FlatNormals = GrassNormal;
 

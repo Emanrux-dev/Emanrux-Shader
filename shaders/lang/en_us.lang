@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 4.0.1
+    value.SHADER_VERSION_LABEL.482 = 4.0.2
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -107,7 +107,7 @@ screen.Foliage = Foliage
     option.WAVY_STRENGTH = Waving Strength
     option.WAVY_SPEED = Waving Speed
 
-    option.SHADER_GRASS = Shader Grass
+    option.SHADER_GRASS = Shader Grass §c(Iris 1.7+)
     option.GRASS_BASE_THICKNESS = Grass Blade Base Thickness
     option.GRASS_THICKNESS_FALLOFF = Grass Thickness Falloff
         option.GRASS_THICKNESS_FALLOFF.comment = Controls how quickly each blade of grass becomes narrower. At 1.0 it will stay the same thickness until the tip

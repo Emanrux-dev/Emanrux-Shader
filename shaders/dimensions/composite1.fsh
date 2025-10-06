@@ -859,7 +859,7 @@ uniform float wetness;
 							vec3 ripple = ripples(1.2 * worldPos.xz);
 							
 							ripple = ripple.xzy;
-							rippleNormal = mix(flatNormals, ripple, smoothstep(35, 10, viewDist) * rainStrength);
+							rippleNormal = mix(flatNormals, ripple, smoothstep(35., 10., viewDist) * rainStrength);
 						}
 
 						normals = mix(normals, rippleNormal, effectStrength * clamp(flatNormals.y,0.0,1.0));
@@ -876,17 +876,17 @@ uniform float wetness;
 
 		#if ShaderSnow > 0
 			if (snowAmount > 0.01) {
-				float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(flatNormals.y,0.5,1.0),0,1);
-				float snow = clamp(1.0 - 2*upnormal - (1.0-effectStrength),0.0,1.0);
+				float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(flatNormals.y,0.5,1.0),0.,1.);
+				float snow = clamp(1.0 - 2.*upnormal - (1.0-effectStrength),0.0,1.0);
 
 				if(isWater || f0 > 229.5/255.0 || isEyeInWater == 1) snow = 0.0;
 
 				vec3 snowA = pow(texture2D(snowTexA, snowCoords).rgb, vec3(2.0/(ShaderSnowStrength-0.1)));
-				vec3 snowN = 2*texture2D(snowTexN, snowCoords).rgb - 1;
+				vec3 snowN = 2.*texture2D(snowTexN, snowCoords).rgb - 1.;
 
 				snowN = snowN.xzy;
 				
-				float omSA = 1-snowAmount;
+				float omSA = 1.-snowAmount;
 
 				float textureMult = smoothstep(0.1+0.5*omSA, 0.5+0.9*omSA, length(snowA)*snow*snowAmount);
 

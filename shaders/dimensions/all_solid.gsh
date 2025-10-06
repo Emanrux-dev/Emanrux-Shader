@@ -66,8 +66,14 @@ vec4 toClipSpace3(vec3 viewSpacePosition) {
     return vec4(projMAD(gl_ProjectionMatrix, viewSpacePosition),-viewSpacePosition.z);
 }
 
+uniform int frameCounter;
+uniform int hideGUI;
+uniform float aspectRatio;
+
 #include "/lib/settings.glsl"
 #include "/lib/TAA_jitter.glsl"
+#include "/lib/res_params.glsl"
+#include "/lib/bokeh.glsl"
 
 
 uniform mat4 gbufferModelView;
@@ -107,16 +113,6 @@ vec3 calculateNormal(vec3 v0, vec3 v1, vec3 v2) {
     vec3 edge2 = v2 - v0;
     vec3 normal = cross(edge1, edge2);
     return normalize(vec3(normal.x, normal.y, normal.z));
-}
-
-mat3 rotateY(float theta) {
-    float c = cos(theta);
-    float s = sin(theta);
-    return mat3(
-        vec3(c, 0, s),
-        vec3(0, 1, 0),
-        vec3(-s, 0, c)
-    );
 }
 
 float rand(vec2 co) { return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453); }
@@ -325,11 +321,11 @@ void main() {
 
                     float grassCurvature = smoothstep(0.0, 1.0, grassHeights[i]);
 
-                    vertex.xz += 0.7*playerDist*vec2(dir2)*sqrt(grassCurvature);
+                    vertex.xz += 0.7*playerDist*vec2(dir2)*grassCurvature;
 
                     vertex.xz += grassCurvature*totalRandBend;
 
-                    vertex += 1.6*calcMovePlants(vertex + cameraPosition)*grassCurvature;
+                    vertex += 1.6*calcMovePlants(vertex + cameraPosition)*grassCurvature*grassCurvature;
 
                     verticies[i] = vertex + 0.125 * worldOffset;
                 }

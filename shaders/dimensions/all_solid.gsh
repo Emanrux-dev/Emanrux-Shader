@@ -131,7 +131,7 @@ void main() {
 		vec4 vertex = gl_in[i].gl_Position;
 
         #if !defined ENTITIES && !defined HAND
-        vertex = toClipSpace3(mat3(gbufferModelView) * (vec3(vertex) + vec3(0.0, 0.0, 0.0)) + gbufferModelView[3].xyz);
+        vertex = toClipSpace3(mat3(gbufferModelView) * vec3(vertex) + gbufferModelView[3].xyz);
         #endif
 
         gl_Position = vertex;

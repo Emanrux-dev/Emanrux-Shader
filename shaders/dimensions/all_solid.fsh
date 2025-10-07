@@ -366,7 +366,11 @@ void main() {
 
 #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	// vec2 tempOffset=offsets[framemod8];
-	adjustedTexCoord = fract(texcoord.st)*texcoordam.pq+texcoordam.st;
+	
+	#ifndef COLORWHEEL
+		adjustedTexCoord = fract(texcoord.st)*texcoordam.pq+texcoordam.st;
+	#endif
+
 	// vec3 fragpos = toScreenSpace(gl_FragCoord.xyz*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize*0.5,0.0));
 	vec3 viewVector = normalize(tbnMatrix*fragpos);
 	float dist = length(playerpos);

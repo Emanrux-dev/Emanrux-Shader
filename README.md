@@ -18,7 +18,7 @@ Notable changes/additions compared to Bliss unstable:
  + Lightsource with shadows on the main end island
  + Rain & thunder cloud coverage and daily weather
  + Better lightning strikes with clouds lighting up and shadows
- + Caelum (Arda Craft) support
+ + Colorwheel & Caelum (Arda Craft) support
  + Emissive Ores
 
 Note: With default settings there is at least one guaranteed eclipse per ingame year.

@@ -22,8 +22,9 @@ flat in int NameTags;
 #define MC_NORMAL_MAP
 #endif
 
-
-in float VanillaAO;
+#ifndef COLORWHEEL
+	in float VanillaAO;
+#endif
 
 const float mincoord = 1.0/4096.0;
 const float maxcoord = 1.0-mincoord;
@@ -361,44 +362,9 @@ void main() {
 	vec3 playerpos = mat3(gbufferModelViewInverse) * fragpos  + gbufferModelViewInverse[3].xyz;
 	vec3 worldpos = playerpos + cameraPosition;
 
-	float torchlightmap = lmtexcoord.z;
-
-	#if defined Hand_Held_lights && !defined LPV_ENABLED
-		#ifdef IS_IRIS
-			vec3 playerCamPos = cameraPosition - relativeEyePosition;
-		#else
-			vec3 playerCamPos = cameraPosition;
-		#endif
-
-		#ifdef VIVECRAFT
-        	if (vivecraftIsVR) { 
-				playerCamPos = cameraPosition - vivecraftRelativeMainHandPos;
-			}
-		#endif
-
-		float HELD_ITEM_BRIGHTNESS = 0.0;
-		if(heldItemId > 999 || heldItemId2 > 999 ) HELD_ITEM_BRIGHTNESS = 0.9;
-
-		// if(HELD_ITEM_BRIGHTNESS > 0.0) torchlightmap = max(torchlightmap, HELD_ITEM_BRIGHTNESS * clamp( pow(max(1.0-length(worldpos-playerCamPos)/HANDHELD_LIGHT_RANGE,0.0),1.5),0.0,1.0));
-		if(HELD_ITEM_BRIGHTNESS > 0.0){ 
-			
-			float pointLight = clamp(1.0-(length(worldpos-playerCamPos)-1.)/HANDHELD_LIGHT_RANGE,0.0,1.0);
-
-			if (torchlightmap < 0.99) { 
-				torchlightmap = mix(torchlightmap, HELD_ITEM_BRIGHTNESS, pointLight);
-			}
-		}
-
-		#ifdef HAND
-			torchlightmap *= 0.9;
-		#endif
-	#endif
-	
-	float lightmap = clamp( (lmtexcoord.w-0.9) * 10.0,0.,1.);
-
 	vec2 adjustedTexCoord = lmtexcoord.xy;
 
-#if defined POM && defined WORLD && !defined ENTITIES && !defined HAND
+#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	// vec2 tempOffset=offsets[framemod8];
 	adjustedTexCoord = fract(texcoord.st)*texcoordam.pq+texcoordam.st;
 	// vec3 fragpos = toScreenSpace(gl_FragCoord.xyz*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize*0.5,0.0));
@@ -463,9 +429,20 @@ void main() {
 
 	float textureLOD = bias();
 
-	vec4 Albedo = color;
-	
-	if (ISSHADERGRASS < 1) Albedo *= texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
+	vec2 lmcoord = lmtexcoord.zw;
+
+	#ifndef COLORWHEEL
+		vec4 Albedo = color;
+		if (ISSHADERGRASS < 1) Albedo *= texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
+	#else
+		vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
+		vec4 overlayColor;
+		float VanillaAO;
+
+		clrwl_computeFragment(Albedo, Albedo, lmcoord, VanillaAO, overlayColor);
+		lmcoord = clamp((lmcoord - 1.0 / 32.0) * 32.0 / 30.0, 0.0, 1.0);
+		VanillaAO = 1.0 - clamp(VanillaAO, 0,1);
+	#endif
 
 	#if REPLACE_SHORT_GRASS < 2 && defined SHADER_GRASS
 		// darken the top of grass blocks a bit
@@ -484,6 +461,41 @@ void main() {
 	#endif
 
 	if(LIGHTNING > 0) Albedo = vec4(1);
+
+	float torchlightmap = lmcoord.x;
+
+	#if defined Hand_Held_lights && !defined LPV_ENABLED
+		#ifdef IS_IRIS
+			vec3 playerCamPos = cameraPosition - relativeEyePosition;
+		#else
+			vec3 playerCamPos = cameraPosition;
+		#endif
+
+		#ifdef VIVECRAFT
+        	if (vivecraftIsVR) { 
+				playerCamPos = cameraPosition - vivecraftRelativeMainHandPos;
+			}
+		#endif
+
+		float HELD_ITEM_BRIGHTNESS = 0.0;
+		if(heldItemId > 999 || heldItemId2 > 999 ) HELD_ITEM_BRIGHTNESS = 0.9;
+
+		// if(HELD_ITEM_BRIGHTNESS > 0.0) torchlightmap = max(torchlightmap, HELD_ITEM_BRIGHTNESS * clamp( pow(max(1.0-length(worldpos-playerCamPos)/HANDHELD_LIGHT_RANGE,0.0),1.5),0.0,1.0));
+		if(HELD_ITEM_BRIGHTNESS > 0.0){ 
+			
+			float pointLight = clamp(1.0-(length(worldpos-playerCamPos)-1.)/HANDHELD_LIGHT_RANGE,0.0,1.0);
+
+			if (torchlightmap < 0.99) { 
+				torchlightmap = mix(torchlightmap, HELD_ITEM_BRIGHTNESS, pointLight);
+			}
+		}
+
+		#ifdef HAND
+			torchlightmap *= 0.9;
+		#endif
+	#endif
+	
+	float lightmap = clamp( (lmcoord.y-0.9) * 10.0,0.,1.);
 
 	#if  defined WORLD && !defined ENTITIES && !defined HAND
 	float endPortalEmission = 0.0;
@@ -593,6 +605,10 @@ void main() {
 		gl_FragData[3] = vec4(0.0);
 	#endif
 
+	#ifdef COLORWHEEL
+		Albedo.a = 0.4;
+	#endif
+
 	
 	//////////////////////////////// 				////////////////////////////////
 	////////////////////////////////	NORMAL		////////////////////////////////
@@ -672,8 +688,12 @@ void main() {
 	#endif
 
 	// hit glow effect...
-	#ifdef ENTITIES
+	#if defined ENTITIES && !defined COLORWHEEL
 		Albedo.rgb = mix(Albedo.rgb, entityColor.rgb, clamp(entityColor.a*1.5,0,1));
+	#endif
+
+	#ifdef COLORWHEEL
+		Albedo.rgb = mix(Albedo.rgb, overlayColor.rgb, clamp(overlayColor.a*1.5,0,1));
 	#endif
 
 	//////////////////////////////// 				////////////////////////////////
@@ -682,7 +702,7 @@ void main() {
 
 	#ifdef WORLD
 		// apply noise to lightmaps to reduce banding.
-		vec2 PackLightmaps = vec2(torchlightmap, lmtexcoord.w);
+		vec2 PackLightmaps = vec2(torchlightmap, lmcoord.y);
 
 		normal = viewToWorld(normal);
 

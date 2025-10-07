@@ -187,11 +187,15 @@ void main() {
         PORTAL = vPORTAL[i];
         SIGN = vSIGN[i];
 
+        #ifdef COLORWHEEL
+            clrwl_setVertexOut(i);
+        #endif
+
 		EmitVertex();
 	}
 	EndPrimitive();
 
-    #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS
+    #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL
 
         int j;
 

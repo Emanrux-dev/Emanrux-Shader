@@ -1,3 +1,14 @@
+#ifdef IS_LPV_ENABLED
+	#extension GL_EXT_shader_image_load_store: enable
+	#extension GL_ARB_shading_language_packing: enable
+#endif
+
+#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0 && defined OVERWORLD_SHADER && defined COLORWHEEL
+	#extension GL_NV_gpu_shader5 : enable
+	#extension GL_ARB_shader_image_load_store : enable
+	#extension GL_EXT_shader_image_load_store : enable
+#endif
+
 #include "/lib/settings.glsl"
 
 #if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT || WATER_INTERACTION == 2
@@ -9,11 +20,6 @@
 // #if defined END_SHADER || defined NETHER_SHADER
 // 	#undef IS_LPV_ENABLED
 // #endif
-
-#ifdef IS_LPV_ENABLED
-	#extension GL_EXT_shader_image_load_store: enable
-	#extension GL_ARB_shading_language_packing: enable
-#endif
 
 #include "/lib/res_params.glsl"
 
@@ -508,8 +514,21 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 ////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// ALBEDO /////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+
+	vec2 lightmap = lmtexcoord.zw;
 	
-	gl_FragData[0] = texture2D(texture, lmtexcoord.xy, Texture_MipMap_Bias) * color;
+	#ifndef COLORWHEEL
+		gl_FragData[0] = texture2D(texture, lmtexcoord.xy, Texture_MipMap_Bias) * color;
+	#else
+		vec4 _color = texture2D(texture, lmtexcoord.xy, Texture_MipMap_Bias);
+		float ao;
+		vec4 overlayColor;
+
+		clrwl_computeFragment(_color, _color, lightmap, ao, overlayColor);
+		lightmap = clamp((lightmap - 1.0 / 32.0) * 32.0 / 30.0, 0.0, 1.0);
+
+		gl_FragData[0] = _color;
+	#endif
 
 	float UnchangedAlpha = gl_FragData[0].a;
 
@@ -551,8 +570,12 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		}
 	#endif
 
-	#ifdef ENTITIES
+	#if defined ENTITIES && !defined COLORWHEEL
 		Albedo.rgb = mix(Albedo.rgb, entityColor.rgb, clamp(entityColor.a*1.5,0,1));
+	#endif
+
+	#ifdef COLORWHEEL
+		Albedo.rgb = mix(Albedo.rgb, overlayColor.rgb, clamp(overlayColor.a*1.5,0,1));
 	#endif
 
 	vec4 GLASS_TINT_COLORS = vec4(Albedo, UnchangedAlpha);
@@ -609,7 +632,6 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	vec3 rippleBump = vec3(0.0);
 
-	vec2 lightmap = lmtexcoord.zw;
 	#if !defined HAND && !defined Vanilla_like_water
 		if (isWater){
 			vec3 playerPos = shadowPlayerPos;
@@ -960,7 +982,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		gl_FragData[0].rgb = FinalColor*0.1;
 	#endif
 
-	#if defined ENTITIES
+	#if defined ENTITIES && !defined COLORWHEEL
 		// do not allow specular to be very visible in these regions on entities
 		// this helps with specular on slimes, and entities with skin overlays like piglins/players
     	if (!gl_FrontFacing) {
@@ -1001,7 +1023,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	gl_FragData[3] = vec4(encodeVec2(lightmap.x, lightmap.y), 1, 1, 1);
 
-	#if defined ENTITIES && defined IS_IRIS
+	#if defined ENTITIES && defined IS_IRIS && !defined COLORWHEEL
 		if(NAMETAG > 0) {
 			//  WHY DO THEY HAVE TO AHVE LIGHTING AAAAAAUGHAUHGUAHG
 			#ifndef OVERWORLD_SHADER

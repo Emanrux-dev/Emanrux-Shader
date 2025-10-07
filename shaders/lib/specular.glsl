@@ -35,7 +35,7 @@ vec2 R2_Sample(int n){
 	return fract(alpha * n);
 }
 
-float fma(float a,float b,float c){
+float fma2(float a,float b,float c){
  return a * b + c;
 }
 
@@ -52,7 +52,7 @@ vec3 SampleVNDFGGX(
     const float tau = 6.2831853; // 2 * pi
     float phi = tau * xy.x;
 
-    float cosTheta = fma(1.0 - xy.y, 1.0 + viewerDirection.z, -viewerDirection.z);
+    float cosTheta = fma2(1.0 - xy.y, 1.0 + viewerDirection.z, -viewerDirection.z);
     float sinTheta = sqrt(clamp(1.0 - cosTheta * cosTheta, 0.0, 1.0));
 
 	sinTheta = clamp(sinTheta,0.0,1.0);
@@ -116,9 +116,6 @@ float shlickFresnelRoughness(float XdotN, float roughness){
 //    return vec2(clamp(u, 0.0, 1.0), clamp(v, 0.0, 1.0));
 //}
 //
-//#extension GL_NV_gpu_shader5 : enable
-//#extension GL_ARB_shader_image_load_store : enable
-//#extension GL_EXT_shader_image_load_store : enable
 //
 //layout (rgba32f) uniform image2D reflectionSphere;
 //

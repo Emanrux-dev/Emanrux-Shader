@@ -34,9 +34,11 @@ float lightningFlash = mix(0.1, 2.5, randomSeed);
 #endif
 
 #if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
-	#extension GL_NV_gpu_shader5 : enable
-	#extension GL_ARB_shader_image_load_store : enable
-	#extension GL_EXT_shader_image_load_store : enable
+	#ifndef COLORWHEEL
+		#extension GL_NV_gpu_shader5 : enable
+		#extension GL_ARB_shader_image_load_store : enable
+		#extension GL_EXT_shader_image_load_store : enable
+	#endif
 
 	layout (rgba16f) uniform image2D cloudDepthTex;
 

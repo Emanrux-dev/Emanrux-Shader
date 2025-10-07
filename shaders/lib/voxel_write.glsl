@@ -18,10 +18,21 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 	vec3 originPos = playerPos;
 
 	if (
-		renderStage == MC_RENDER_STAGE_TERRAIN_SOLID || renderStage == MC_RENDER_STAGE_TERRAIN_TRANSLUCENT ||
-		renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT || renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT_MIPPED
-	) {
-		voxelId = uint(mc_Entity.x + 0.5);
+		#ifdef COLORWHEEL
+			renderStage == CLRWL_RENDER_STAGE_SOLID || renderStage == CLRWL_RENDER_STAGE_TRANSLUCENT 
+		#else
+			renderStage == MC_RENDER_STAGE_TERRAIN_SOLID || renderStage == MC_RENDER_STAGE_TERRAIN_TRANSLUCENT ||
+			renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT || renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT_MIPPED
+		#endif
+	)
+	{
+		float blockID = mc_Entity.x;
+
+		#ifdef COLORWHEEL
+			if(mc_Entity.x < 0.0) blockID = blockEntityId;
+		#endif
+
+		voxelId = uint(blockID + 0.5);
 
 		#ifdef IRIS_FEATURE_BLOCK_EMISSION_ATTRIBUTE
 			if (voxelId == 0u && at_midBlock.w > 0) voxelId = uint(BLOCK_LIGHT_1 + at_midBlock.w - 1);
@@ -38,7 +49,7 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 		ivec3 voxelPos = GetVoxelIndex(originPos);
 	#endif
 	
-	#ifdef LPV_ENTITY_LIGHTS
+	#if defined LPV_ENTITY_LIGHTS && !defined COLORWHEEL
 		if (
 			((renderStage == MC_RENDER_STAGE_ENTITIES && (currentRenderedItemId > 0 || entityId > 0)) || renderStage == MC_RENDER_STAGE_BLOCK_ENTITIES)
 		) {
@@ -70,7 +81,7 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 		}
 	#endif
 
-	#if WATER_INTERACTION == 2
+	#if WATER_INTERACTION == 2 && !defined COLORWHEEL
 		if (
 			((renderStage == MC_RENDER_STAGE_ENTITIES && (currentRenderedItemId > 0 || entityId > 0)) || renderStage == MC_RENDER_STAGE_BLOCK_ENTITIES)
 		) {

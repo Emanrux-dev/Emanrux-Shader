@@ -1,3 +1,18 @@
+#ifdef IS_LPV_ENABLED
+	#extension GL_EXT_shader_image_load_store: enable
+	#extension GL_ARB_shading_language_packing: enable
+#endif
+
+#if defined DAMAGE_BLOCK_EFFECT && defined POM
+	#extension GL_ARB_shader_texture_lod : enable
+#endif
+
+#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0 && defined OVERWORLD_SHADER && defined COLORWHEEL
+	#extension GL_NV_gpu_shader5 : enable
+	#extension GL_ARB_shader_image_load_store : enable
+	#extension GL_EXT_shader_image_load_store : enable
+#endif
+
 #include "/lib/settings.glsl"
 
 #if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
@@ -7,11 +22,6 @@
 // #if defined END_SHADER || defined NETHER_SHADER
 // 	#undef IS_LPV_ENABLED
 // #endif
-
-#ifdef IS_LPV_ENABLED
-	#extension GL_EXT_shader_image_load_store: enable
-	#extension GL_ARB_shading_language_packing: enable
-#endif
 
 #include "/lib/res_params.glsl"
 
@@ -210,9 +220,7 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 }
 #endif
 
-#if defined DAMAGE_BLOCK_EFFECT && defined POM
-	#extension GL_ARB_shader_texture_lod : enable
-	
+#if defined DAMAGE_BLOCK_EFFECT && defined POM	
 	mat3 inverseMatrix(mat3 m) {
 	  float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];
 	  float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];
@@ -361,6 +369,15 @@ void main() {
 		vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy));
 	#else
 		vec4 Albedo = texture2D(texture, adjustedTexCoord.xy);
+	#endif
+
+	#ifdef COLORWHEEL
+		float ao;
+		vec4 overlayColor;
+		vec2 lmcoord = lmtexcoord.zw;
+
+		clrwl_computeFragment(Albedo, Albedo, lmcoord, ao, overlayColor);
+		Albedo.rgb = mix(Albedo.rgb, overlayColor.rgb, clamp(overlayColor.a*1.5,0,1));
 	#endif
 	
 	Albedo.rgb = toLinear(Albedo.rgb);

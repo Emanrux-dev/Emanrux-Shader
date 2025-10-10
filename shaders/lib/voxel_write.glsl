@@ -57,12 +57,17 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 				if (blockEntityId > 0 && blockEntityId < 500)
 					voxelId = uint(blockEntityId);
 			}
-			else if (currentRenderedItemId > 0 && currentRenderedItemId < 1200) {
+			else if (currentRenderedItemId > 100 && currentRenderedItemId < 300) {
 				if (entityId != ENTITY_ITEM_FRAME && entityId != ENTITY_PLAYER) {
-					uint oldID = imageLoad(imgVoxelMask, voxelPos).r;
+					voxelId = uint(currentRenderedItemId);
+
 					// offset by a random number that came into my head to make entities and items not interact with grass
-					voxelId = uint(currentRenderedItemId)+1200u;
-					if(oldID == 12u) voxelId += 1200u;
+					voxelId += 2000u;
+
+					#if defined SHADER_GRASS && REPLACE_SHORT_GRASS < 2
+						uint oldID = imageLoad(imgVoxelMask, voxelPos).r;
+						if(oldID == 12u) voxelId += 2000u;
+					#endif
 				}
 			}
 			else {
@@ -74,7 +79,7 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 					case ENTITY_MAGMA_CUBE:
 					case ENTITY_SPECTRAL_ARROW:
 					case ENTITY_TNT:
-						voxelId = uint(entityId)+1200u;
+						voxelId = uint(entityId)+2000u;
 						break;
 				}
 			}
@@ -88,7 +93,7 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 			switch (entityId) {
 				case ENTITY_BOAT:
 				case ENTITY_SMALLSHIPS:
-					voxelId = uint(entityId)+1200u;
+					voxelId = uint(entityId)+2000u;
 					break;
 			}
 		}

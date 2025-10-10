@@ -1029,6 +1029,9 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #ifdef LPV_ENABLED
 #endif
 
+#ifdef LPV_ENTITY_LIGHTS
+#endif
+
 #if defined CUSTOM_MOON_ROTATION || defined IS_LPV_ENABLED
 	const float voxelDistance = 64.0;
 #endif

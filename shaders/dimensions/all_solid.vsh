@@ -439,7 +439,7 @@ void main() {
 					uint blockTop = 0;
 				#endif
 
-				if(blockTop == 12 || blockTop > 2400) {
+				if(blockTop == 12 || blockTop > 4000) {
 					vgrassSideCheck = vec4(2.0);
 				}
 				#if REPLACE_SHORT_GRASS < 2
@@ -449,25 +449,25 @@ void main() {
 					uint blockSouth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y + 0.6, LPVpos.z + 1.0));
 					uint blockNorth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y + 0.6, LPVpos.z - 1.0));
 
-					if(blockEast > 2400 || blockEast == 12 || (blockEast > 80 && blockEast < 86) || blockEast == 503 || (blockEast > 406 && blockEast < 440)) {vgrassSideCheck.x = 1.0;} else {
+					if(blockEast > 4000 || blockEast == 12 || (blockEast > 80 && blockEast < 86) || blockEast == 503 || (blockEast > 406 && blockEast < 440)) {vgrassSideCheck.x = 1.0;} else {
 						#ifdef GRASS_DETECT_FALLOFF
 							blockEast = GetVoxelBlock(ivec3(LPVpos.x + 1.0, LPVpos.y, LPVpos.z));
 							if(blockEast != 85) {vgrassSideCheck.x = -1.0;}
 						#endif
 					}
-					if(blockWest > 2400 || blockWest == 12 || (blockWest > 80 && blockWest < 86) || blockWest == 503 || (blockWest > 406 && blockWest < 440)) {vgrassSideCheck.y = 1.0;} else {
+					if(blockWest > 4000 || blockWest == 12 || (blockWest > 80 && blockWest < 86) || blockWest == 503 || (blockWest > 406 && blockWest < 440)) {vgrassSideCheck.y = 1.0;} else {
 						#ifdef GRASS_DETECT_FALLOFF
 							blockWest = GetVoxelBlock(ivec3(LPVpos.x - 1.0, LPVpos.y, LPVpos.z));
 							if(blockWest != 85) {vgrassSideCheck.y = -1.0;}
 						#endif
 					}
-					if(blockSouth > 2400 || blockSouth == 12 || (blockSouth > 80 && blockSouth < 86) || blockSouth == 503 || (blockSouth > 406 && blockSouth < 440)) {vgrassSideCheck.z = 1.0;} else {
+					if(blockSouth > 4000 || blockSouth == 12 || (blockSouth > 80 && blockSouth < 86) || blockSouth == 503 || (blockSouth > 406 && blockSouth < 440)) {vgrassSideCheck.z = 1.0;} else {
 						#ifdef GRASS_DETECT_FALLOFF
 							blockSouth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y, LPVpos.z+ 1.0));
 							if(blockSouth != 85) {vgrassSideCheck.z = -1.0;}
 						#endif
 					}
-					if(blockNorth > 2400 || blockNorth == 12 || (blockNorth > 80 && blockNorth < 86) || blockNorth == 503 || (blockNorth > 406 && blockNorth < 440)) {vgrassSideCheck.w = 1.0;} else {
+					if(blockNorth > 4000 || blockNorth == 12 || (blockNorth > 80 && blockNorth < 86) || blockNorth == 503 || (blockNorth > 406 && blockNorth < 440)) {vgrassSideCheck.w = 1.0;} else {
 						#ifdef GRASS_DETECT_FALLOFF
 							blockNorth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y, LPVpos.z - 1.0));
 							if(blockNorth != 85) {vgrassSideCheck.w = -1.0;}

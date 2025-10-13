@@ -116,7 +116,21 @@ vec3 calculateNormal(vec3 v0, vec3 v1, vec3 v2) {
     return normalize(vec3(normal.x, normal.y, normal.z));
 }
 
-float rand(vec2 co) { return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453); }
+float rand(vec2 co) {
+    vec2 i = floor(co);
+    vec2 f = fract(co);
+    
+    float a = fract(sin(dot(i, vec2(12.9898, 78.233))) * 43758.5453);
+    float b = fract(sin(dot(i + vec2(0.06, 0.0), vec2(12.9898, 78.233))) * 43758.5453);
+    float c = fract(sin(dot(i + vec2(0.0, 0.13), vec2(12.9898, 78.233))) * 43758.5453);
+    float d = fract(sin(dot(i + vec2(0.16, 0.1), vec2(12.9898, 78.233))) * 43758.5453);
+    
+    f = f * f * (3.0 - 2.0 * f);
+    
+    float ab = mix(a, b, f.x);
+    float cd = mix(c, d, f.x);
+    return mix(ab, cd, f.y);
+}
 
 void main() {
 
@@ -263,9 +277,9 @@ void main() {
             vec2 Wvertex = gl_in[0].gl_Position.xz+cameraPosition.xz;
 
             // otherwise it flickers... (but this gives a little clumping effect so it's nice too I guess)
-            Wvertex = floor(Wvertex * 20.0) / 20.0;
+            Wvertex = floor(Wvertex * 25.0) / 25.0;
 
-            vec2 randomDir = 2.0*vec2(rand(vec2(Wvertex.x, 2.*Wvertex.y)), rand(2.125*vec2(-Wvertex.x, 2.*Wvertex.y)))-1.0;
+            vec2 randomDir = 2.0*vec2(rand(10.0*vec2(Wvertex.x, 2.*Wvertex.y)), rand(20.0*vec2(-Wvertex.x, 2.*Wvertex.y)))-1.0;
             // vertex.xz -= 0.05*randomDir;
 
 
@@ -317,7 +331,7 @@ void main() {
 
                 vec3 verticies[3];
 
-                vec2 totalRandBend = 0.35*randomDir + edgeBlend;
+                vec2 totalRandBend = GRASS_RANDOMNESS*randomDir + edgeBlend;
 
                 for (i = 0; i < 3; i++)
                 {

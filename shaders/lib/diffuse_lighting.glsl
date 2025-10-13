@@ -13,7 +13,13 @@
         NdotL = smoothstep(0.0, 0.2, abs(NdotL));
 
         float shadows = 1.0;
-        float samples = 10.0;
+        #if LPV_HANDHELD_SHADOWS_QUALITY == 0
+            float samples = 10.0;
+            float div = 0.0015;
+        #else
+            float samples = 20.0;
+            float div = 0.0005;
+        #endif
 
         float _near = near; float _far = far*4.0;
 
@@ -28,7 +34,7 @@
         float rayLength = ((viewPos.z + lightDir.z * _far * sqrt(3.)) > -_near) ? (-_near - viewPos.z) / lightDir.z : _far * sqrt(3.);
 
         vec3 direction = toClipSpace3_DH(viewPos + lightDir*rayLength, depthCheck) - position;
-        direction.xyz = direction.xyz / max(max(abs(direction.x)/0.0015, abs(direction.y)/0.0015),400.0);	//fixed step size
+        direction.xyz = direction.xyz / max(max(abs(direction.x)/div, abs(direction.y)/div),400.0);	//fixed step size
         direction *= 6.0;
 
         position.xy *= RENDER_SCALE;

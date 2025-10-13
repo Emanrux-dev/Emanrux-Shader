@@ -1,6 +1,6 @@
 #include "/lib/settings.glsl"
 
-#ifdef CUSTOM_MOON_ROTATION
+#if defined CUSTOM_MOON_ROTATION || (defined END_SHADER && defined END_ISLAND_LIGHT)
 	#include "/lib/SSBOs.glsl"
 #endif
 

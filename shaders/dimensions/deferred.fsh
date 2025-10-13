@@ -248,7 +248,7 @@ float mixhistory = 0.06;
 	/// --- STORE COLOR LUT --- ///
 	///////////////////////////////
 	#ifdef SeparateAmbientColorRain
-		vec3 AmbientLightTint = mix(vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B), vec3(AmbientLightRain_R, AmbientLightRain_G, AmbientLightRain_B), rainStrength*noPuddleAreas);
+		vec3 AmbientLightTint = mix(vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B), mix(vec3(AmbientLightRain_R, AmbientLightRain_G, AmbientLightRain_B), vec3(AmbientLightThunder_R, AmbientLightThunder_G, AmbientLightThunder_B), thunderStrength), rainStrength*noPuddleAreas);
 	#else
 		vec3 AmbientLightTint = vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B);
 	#endif

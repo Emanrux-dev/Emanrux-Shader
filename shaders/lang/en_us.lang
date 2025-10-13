@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 4.1.2
+    value.SHADER_VERSION_LABEL.482 = 4.2.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -136,6 +136,7 @@ screen.Foliage = Foliage
         value.GRASS_QUALITY.2 = High
     option.GRASS_RANGE = Grass Maximum Range
     option.GRASS_WAVY_STRENGTH = Grass Waving Strength
+    option.GRASS_RANDOMNESS = Grass Randomness Strength
 
 screen.Direct_Light = Direct Light
     screen.Shadows = Shadows
@@ -240,6 +241,9 @@ screen.Direct_Light = Direct Light
 	    option.VANILLA_LIGHTMAP_MASK = Vanilla Lightmap Mask
         option.LPV_HANDHELD_SHADOWS = Handheld Shadows
         option.LPV_HANDHELD_SHADOWS_STRENGTH = Handheld Shadows Strength
+        option.LPV_HANDHELD_SHADOWS_QUALITY = Handheld Shadows Quality
+            value.LPV_HANDHELD_SHADOWS_QUALITY.0 = Low
+            value.LPV_HANDHELD_SHADOWS_QUALITY.1 = High
 
 
 screen.Ambient_light = Ambient Light
@@ -270,13 +274,16 @@ screen.Ambient_light = Ambient Light
         option.AmbientLight_R = Red Amount
         option.AmbientLight_G = Green Amount
         option.AmbientLight_B = Blue Amount
-        option.SeparateAmbientColorRain = Separate Ambient Light Color during Rain
-        option.AmbientLightRain_R = Red Amount (Rain)
-        option.AmbientLightRain_G = Green Amount (Rain)
-        option.AmbientLightRain_B = Blue Amount (Rain)
-        option.AmbientLightEnd_R = Red Amount (End)
-        option.AmbientLightEnd_G = Green Amount (End)
-        option.AmbientLightEnd_B = Blue Amount (End)
+        option.SeparateAmbientColorRain = Separate Ambient Light Color during Rain/Thunder
+        option.AmbientLightRain_R = Red (Rain)
+        option.AmbientLightRain_G = Green (Rain)
+        option.AmbientLightRain_B = Blue (Rain)
+        option.AmbientLightThunder_R = Red (Thunder)
+        option.AmbientLightThunder_G = Green (Thunder)
+        option.AmbientLightThunder_B = Blue (Thunder)
+        option.AmbientLightEnd_R = Red (End)
+        option.AmbientLightEnd_G = Green (End)
+        option.AmbientLightEnd_B = Blue (End)
         option.ambient_colortype = Coloring Type
             value.ambient_colortype.0 = Temperature
             value.ambient_colortype.1 = RGB

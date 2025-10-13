@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 4.2.0
+    value.SHADER_VERSION_LABEL.482 = 4.2.1
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -137,6 +137,9 @@ screen.Foliage = Foliage
     option.GRASS_RANGE = Grass Maximum Range
     option.GRASS_WAVY_STRENGTH = Grass Waving Strength
     option.GRASS_RANDOMNESS = Grass Randomness Strength
+    option.GRASS_NOISE1_SCALE = Grass Randomness Noise 1 Scale
+    option.GRASS_NOISE2_SCALE = Grass Randomness Noise 2 Scale
+
 
 screen.Direct_Light = Direct Light
     screen.Shadows = Shadows

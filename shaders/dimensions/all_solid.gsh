@@ -87,6 +87,8 @@ uniform vec3 relativeEyePosition;
 const float PI48 = 150.796447372*WAVY_SPEED;
 float pi2wt = PI48*frameTimeCounter;
 
+uniform sampler2D noisetex;
+
 vec3 viewToWorld(vec3 viewPosition) {
     vec4 pos;
     pos.xyz = viewPosition;
@@ -114,22 +116,6 @@ vec3 calculateNormal(vec3 v0, vec3 v1, vec3 v2) {
     vec3 edge2 = v2 - v0;
     vec3 normal = cross(edge1, edge2);
     return normalize(vec3(normal.x, normal.y, normal.z));
-}
-
-float rand(vec2 co) {
-    vec2 i = floor(co);
-    vec2 f = fract(co);
-    
-    float a = fract(sin(dot(i, vec2(12.9898, 78.233))) * 43758.5453);
-    float b = fract(sin(dot(i + vec2(0.06, 0.0), vec2(12.9898, 78.233))) * 43758.5453);
-    float c = fract(sin(dot(i + vec2(0.0, 0.13), vec2(12.9898, 78.233))) * 43758.5453);
-    float d = fract(sin(dot(i + vec2(0.16, 0.1), vec2(12.9898, 78.233))) * 43758.5453);
-    
-    f = f * f * (3.0 - 2.0 * f);
-    
-    float ab = mix(a, b, f.x);
-    float cd = mix(c, d, f.x);
-    return mix(ab, cd, f.y);
 }
 
 void main() {
@@ -276,10 +262,7 @@ void main() {
 
             vec2 Wvertex = gl_in[0].gl_Position.xz+cameraPosition.xz;
 
-            // otherwise it flickers... (but this gives a little clumping effect so it's nice too I guess)
-            Wvertex = floor(Wvertex * 25.0) / 25.0;
-
-            vec2 randomDir = 2.0*vec2(rand(10.0*vec2(Wvertex.x, 2.*Wvertex.y)), rand(20.0*vec2(-Wvertex.x, 2.*Wvertex.y)))-1.0;
+            vec2 randomDir = 2.0*(texture2D(noisetex, GRASS_NOISE1_SCALE*Wvertex).xy+texture2D(noisetex, GRASS_NOISE2_SCALE*Wvertex.yx).xy)-1.0;
             // vertex.xz -= 0.05*randomDir;
 
 

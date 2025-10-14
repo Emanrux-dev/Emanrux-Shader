@@ -1694,7 +1694,7 @@ void main() {
 	}
 
 
-	if(translucentMasks > 0.0 ){
+	if(translucentMasks > 0.0 && !hand){
 		// water absorbtion will impact ALL light coming up from terrain underwater.
 		gl_FragData[0].rgb *= Absorbtion;
 

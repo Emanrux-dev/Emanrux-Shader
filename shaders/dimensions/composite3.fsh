@@ -326,7 +326,11 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
 
   vec4 colorSum = vec4(0.0);
   float edgeSum = 0.0;
-  float threshold = 0.005;
+  #ifdef DISTANT_HORIZONS
+    float threshold = 0.05;
+  #else
+    float threshold = 0.005;
+  #endif
 
   #ifdef HQ_CLOUD_UPSAMPLE
     const int samples = 9;
@@ -806,7 +810,7 @@ void main() {
 
   // bloomy rain effect
   #ifdef OVERWORLD_SHADER
-    float rainDrops =  clamp(texture2D(colortex9,texcoord).a,  0.0,1.0); 
+    float rainDrops =  clamp(texture2D(colortex9,texcoord).a,  0.0,1.0)*(1.0-TranslucentShader.a); 
     if(rainDrops > 0.0) bloomyFogMult *= clamp(1.0 - pow(rainDrops*5.0,2),0.0,1.0);
   #endif
 

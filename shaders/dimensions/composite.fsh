@@ -1,9 +1,5 @@
 #include "/lib/settings.glsl"
 
-#ifndef DH_AMBIENT_OCCLUSION
-	#undef DISTANT_HORIZONS
-#endif
-
 #if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
 	#include "/lib/SSBOs.glsl"
 #endif

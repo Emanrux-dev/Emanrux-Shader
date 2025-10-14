@@ -304,13 +304,10 @@ void main() {
 	// if(gl_Color.a < 1.0) vNameTags = 1;
 	// if(gl_Color.a >= 0.24 && gl_Color.a <= 0.25 ) gl_Position = vec4(10,10,10,1);
 	#ifdef INCLUDE_UNLISTED_ENTITIES
-		bool unlistedEntity = true;
+		vnormalMat.a = 0.45;
 	#else
-		bool unlistedEntity = false;
+		if(entityId == ENTITY_BOAT || entityId == ENTITY_SMALLSHIPS || entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468) vnormalMat.a = 0.45;
 	#endif
-
-	if(entityId == ENTITY_BOAT || entityId == ENTITY_SMALLSHIPS || entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468 || unlistedEntity) vnormalMat.a = 0.45;
-	
 #endif
 
 	if(mc_Entity.x == BLOCK_AIR_WAVING) vnormalMat.a = 0.55;

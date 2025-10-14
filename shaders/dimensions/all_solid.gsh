@@ -199,7 +199,9 @@ void main() {
 
         int j;
 
-        float vertexDist = length(gl_in[0].gl_Position);
+        vec3 vertex = (gl_in[0].gl_Position+gl_in[1].gl_Position+gl_in[2].gl_Position).xyz/3.0;
+
+        float vertexDist = length(vertex);
 
         #ifdef MC_NORMAL_MAP
             vec3 normals = viewToWorld(vFlatNormals[1]);
@@ -230,8 +232,6 @@ void main() {
                 if(vertexDist > 10.0) {triangle_count = 1; heightMult = 5.0;}
             #endif
 
-            vec3 vertex = (gl_in[0].gl_Position+gl_in[1].gl_Position+gl_in[2].gl_Position).xyz/3.0;
-
 
             float eastHeightMult = pow(clamp(abs(vgrassSideCheck[0].x) * abs(vertex.x-(vcenterPosition[0].x-0.5)), 0.0, 1.0), 2.0);
             float westHeightMult = pow(clamp(abs(vgrassSideCheck[0].y) * abs(vertex.x-(vcenterPosition[0].x+0.5)), 0.0, 1.0), 2.0);
@@ -260,7 +260,7 @@ void main() {
             float playerDist = smoothstep(0.5, 0.05, length(offsetPos.xz)) * smoothstep(1.0, 0.2, abs(offsetPos.y));
             vec2 dir2 = normalize(vertex.xz+relativeEyePosition.xz);
 
-            vec2 Wvertex = gl_in[0].gl_Position.xz+cameraPosition.xz;
+            vec2 Wvertex = vertex.xz+cameraPosition.xz;
 
             vec2 randomDir = 2.0*(texture2D(noisetex, GRASS_NOISE1_SCALE*Wvertex).xy+texture2D(noisetex, GRASS_NOISE2_SCALE*Wvertex.yx).xy)-1.0;
             // vertex.xz -= 0.05*randomDir;

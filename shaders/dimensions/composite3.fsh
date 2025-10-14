@@ -96,6 +96,8 @@ uniform float sunElevation;
 
   #define LIGHTNINGONLY
   #include "/lib/volumetricClouds.glsl"
+#else
+  uniform int worldDay;
 #endif
 
 #include "/lib/waterBump.glsl"

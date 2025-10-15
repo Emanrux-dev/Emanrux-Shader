@@ -83,6 +83,11 @@ void main() {
 		LIGHTNING = 0.0;
 		if (renderStage == MC_RENDER_STAGE_ENTITIES && (entityId == ENTITY_LIGHTNING || (entityId == 0 && gl_Color.a < 0.2 && abs(normal.y) < 0.2))) LIGHTNING = 1.0;
 
+		#ifdef PLANET_CURVATURE
+			float curvature = length(feetPlayerPos) / (16*8);
+			feetPlayerPos.y -= curvature*curvature * CURVATURE_AMOUNT;
+		#endif
+
 		gl_Position = customShadowPerspectiveSSBO * customShadowMatrixSSBO * vec4(feetPlayerPos, 1.0);
 	
   		gl_Position.z /= 6.0;

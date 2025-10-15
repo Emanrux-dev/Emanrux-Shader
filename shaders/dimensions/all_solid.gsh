@@ -130,6 +130,11 @@ void main() {
 	{
 		vec4 vertex = gl_in[i].gl_Position;
 
+        #if defined PLANET_CURVATURE && !defined HAND
+            float curvature = length(vertex.xyz) / (16.0*8.0);
+            vertex.y -= curvature*curvature * CURVATURE_AMOUNT;
+        #endif
+
         #if !defined ENTITIES && !defined HAND
         vertex = toClipSpace3(mat3(gbufferModelView) * vec3(vertex) + gbufferModelView[3].xyz);
         #endif
@@ -203,6 +208,11 @@ void main() {
 
         float vertexDist = length(vertex);
 
+        #ifdef PLANET_CURVATURE
+            float curvature = vertexDist / (16.0*8.0);
+            vertex.y -= curvature*curvature * CURVATURE_AMOUNT;
+        #endif
+
         #ifdef MC_NORMAL_MAP
             vec3 normals = viewToWorld(vFlatNormals[1]);
         #else
@@ -262,7 +272,7 @@ void main() {
 
             vec2 Wvertex = vertex.xz+cameraPosition.xz;
 
-            vec2 randomDir = 2.0*(texture2D(noisetex, GRASS_NOISE1_SCALE*Wvertex).xy+texture2D(noisetex, GRASS_NOISE2_SCALE*Wvertex.yx).xy)-1.0;
+            vec2 randomDir = 2.0*(texture2D(noisetex, fract(GRASS_NOISE1_SCALE*Wvertex)).xy+texture2D(noisetex, fract(GRASS_NOISE2_SCALE*Wvertex.yx)).xy)-1.0;
             // vertex.xz -= 0.05*randomDir;
 
 
@@ -302,9 +312,9 @@ void main() {
                     worldOffset2
                 );
 
-                float grassHeight0 = abs(gl_in[0].gl_Position.y-originalVertex.y- 0.125 * worldOffset0.y);
-                float grassHeight1 = abs(gl_in[0].gl_Position.y-originalVertex.y- 0.125 * worldOffset1.y);
-                float grassHeight2 = abs(gl_in[0].gl_Position.y-originalVertex.y- 0.125 * worldOffset2.y);
+                float grassHeight0 = 0.125 * worldOffset0.y;
+                float grassHeight1 = 0.125 * worldOffset1.y;
+                float grassHeight2 = 0.125 * worldOffset2.y;
 
                 float grassHeights[3] = float[](
                     grassHeight0,

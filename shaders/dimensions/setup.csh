@@ -10,7 +10,7 @@ const ivec3 workGroups = ivec3(6, 6, 1);
 
     const vec3 LightColor_Amethyst = vec3(0.464, 0.227, 0.788);
     const vec3 LightColor_Candles = vec3(1.0, 0.4, 0.1);
-    const vec3 LightColor_CopperBulb = vec3(1.0);
+    const vec3 LightColor_CopperBulb = vec3(1.0, 0.7, 0.6);
     const vec3 LightColor_LightBlock = vec3(1.0);
     const vec3 LightColor_RedstoneTorch = vec3(0.939, 0.305, 0.164);
     const vec3 LightColor_SeaPickle = vec3(0.283, 0.394, 0.212);
@@ -788,6 +788,14 @@ void main() {
             blockId == BLOCK_SOUL_LANTERN || blockId == ITEM_SOUL_LANTERN
         ) {
             lightColor = vec3(0.1, 0.6, 1.0);
+            lightRange = 10.0;
+            mixWeight = 0.8;
+        }
+
+        if (
+            blockId == BLOCK_COPPER_LANTERN || blockId == ITEM_COPPER_LANTERN
+        ) {
+            lightColor = vec3(0.1, 0.8, 0.3);
             lightRange = 10.0;
             mixWeight = 0.8;
         }

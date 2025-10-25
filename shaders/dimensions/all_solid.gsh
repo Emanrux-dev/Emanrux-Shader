@@ -410,9 +410,6 @@ void main() {
                         GrassNormals = normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade)));
                     #endif
 
-
-                    normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade)));
-
                     blockID = vblockID[i];
                     NameTags = vNameTags[i];
                     SSSAMOUNT = 1.0;

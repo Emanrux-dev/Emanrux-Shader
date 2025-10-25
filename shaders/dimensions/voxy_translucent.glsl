@@ -185,7 +185,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
     #ifndef WhiteWorld
 		#ifdef Vanilla_like_water
-			if (isWater) Albedo *= sqrt(luma(Albedo));
+			if (isWater) Albedo *= luma(Albedo);
 		#else
 			if (isWater){
 				Albedo = vec3(0.0);
@@ -239,7 +239,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		vec3 DirectLightColor = lightCol.rgb/2400.0;
 
     	float NdotL = clamp(dot(normal, WsunVec),0.0,1.0); 
-        NdotL = clamp((-15 + NdotL*255.0) / 240.0  ,0.0,1.0);
+        NdotL = clamp((-15.0 + NdotL*255.0) / 240.0  ,0.0,1.0);
 
         float Shadows = 1.0;
 
@@ -278,7 +278,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		}
 	#endif
 
-    vec3 normals = worldToView(normal);
+    vec3 normals = normalize(worldToView(normal));
+
     #if defined FORWARD_SPECULAR
 		vec3 Reflections_Final = vec3(0.0);
 		vec4 Reflections = vec4(0.0);
@@ -287,13 +288,12 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		float SSR_HIT_SKY_MASK = indoors;
 		
         float roughness = 0.0;
-		float f0 = 0.02;
-		// f0 = 0.9;
+		float f0 = 0.0002;
 
         vec3 reflectedVector = reflect(normalize(viewPos), normals);
 	    float normalDotEye = dot(normals, normalize(viewPos));
 
-	    float fresnel =  pow(clamp(1.0 + normalDotEye, 0.0, 1.0),5.0);
+	    float fresnel =  pow(clamp(1.0 + normalDotEye, 0.0, 1.0), 25.0);
 
 	    fresnel = mix(f0, 1.0, fresnel);
 
@@ -326,7 +326,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 		gbuffer_data_0.a = gbuffer_data_0.a + (1.0-gbuffer_data_0.a) * fresnel;
 	
-		gbuffer_data_0.rgb = 0.1*clamp((Reflections_Final/gbuffer_data_0.a) * 0.1,0.0,65000.0);
+		gbuffer_data_0.rgb = clamp((Reflections_Final/gbuffer_data_0.a) * 0.1,0.0,65000.0);
 
 		if (gbuffer_data_0.r > 65000.) gbuffer_data_0.rgba = vec4(0.0);
 	#else

@@ -1,8 +1,4 @@
-#ifndef MC_OS_MAC
-	#version 430 compatibility
-#else
-	#version 120
-#endif
+#version 430 compatibility
 #extension GL_ARB_explicit_attrib_location: enable
 #extension GL_ARB_shader_image_load_store: enable
 

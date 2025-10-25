@@ -134,8 +134,8 @@ uniform float waterEnteredAltitude;
 	#endif
 #endif
 
-uniform float dhNearPlane;
-uniform float dhFarPlane;
+uniform float dhVoxyNearPlane;
+uniform float dhVoxyFarPlane;
 
 #include "/lib/util.glsl"
 #include "/lib/Shadow_Params.glsl"

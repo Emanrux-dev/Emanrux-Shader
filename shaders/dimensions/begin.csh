@@ -44,12 +44,11 @@ const ivec3 workGroups = ivec3(1, 1, 1);
     #include "/lib/SSBOs.glsl"
     uniform vec3 cameraPosition;
     #if defined END_ISLAND_LIGHT && defined END_SHADER
-        float NEAR = 15.0;
-        float FAR = 256.0;
+        const float NEAR = 15.0;
+        const float FAR = 256.0;
 
         mat4 createPerspectiveMatrix() {
-            float fov = END_LIGHT_FOV;
-            float yScale = 1.0 / tan(radians(fov) * 0.5);
+            float yScale = 1.0 / tan(radians(END_LIGHT_FOV) * 0.5);
 
             return mat4(
                     yScale, 0.0, 0.0, 0.0,

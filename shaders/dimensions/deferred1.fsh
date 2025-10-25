@@ -9,22 +9,31 @@ uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
 
 #ifdef DISTANT_HORIZONS
-uniform sampler2D dhDepthTex;
-uniform sampler2D dhDepthTex1;
+	uniform sampler2D dhDepthTex;
+	uniform sampler2D dhDepthTex1;
+	#define dhVoxyDepthTex dhDepthTex
+	#define dhVoxyDepthTex1 dhDepthTex1
+#endif
+
+#ifdef VOXY
+	uniform sampler2D vxDepthTexOpaque;
+	uniform sampler2D vxDepthTexTrans;
+	#define dhVoxyDepthTex vxDepthTexOpaque
+	#define dhVoxyDepthTex1 vxDepthTexTrans
 #endif
 uniform float near;
 uniform float far;
-uniform float dhFarPlane;
-uniform float dhNearPlane;
+uniform float dhVoxyFarPlane;
+uniform float dhVoxyNearPlane;
 
 float linZ(float depth) {
     return (2.0 * near) / (far + near - depth * (far - near));
 }
 float DH_ld(float dist) {
-    return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
+    return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
 }
 float DH_invLinZ (float lindepth){
-	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
+	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 }
 
 float linearizeDepthFast(const in float depth, const in float near, const in float far) {
@@ -57,8 +66,8 @@ void main() {
 
 	if(hand) convertHandDepth(newTex);
 
-    #ifdef DISTANT_HORIZONS
-        float QuarterResDepth = texelFetch2D(dhDepthTex, ivec2(gl_FragCoord.xy*4), 0).x;
+    #if defined DISTANT_HORIZONS || defined VOXY
+        float QuarterResDepth = texelFetch2D(dhVoxyDepthTex, ivec2(gl_FragCoord.xy*4), 0).x;
         if(newTex == 1.0) {
             float depth = DH_ld(QuarterResDepth);
             gl_FragData[0] = vec4(oldTex, 650000.0);
@@ -77,12 +86,12 @@ void main() {
 		float _far = far*4.0;
 		if (depth >= 1.0) {
 			depth = QuarterResDepth;
-			_near = dhNearPlane;
-			_far = dhFarPlane;
+			_near = dhVoxyNearPlane;
+			_far = dhVoxyFarPlane;
 		}
 
 		depth = linearizeDepthFast(depth, _near, _far);
-		depth = depth / dhFarPlane;
+		depth = depth / dhVoxyFarPlane;
 
         if(depth < 1.0) {
 		    gl_FragData[1].a = depth * depth * 65000.0;

@@ -385,8 +385,12 @@ void main() {
 	if(!ifPOM) maxdist = 0.0;
 
 	gl_FragDepth = gl_FragCoord.z;
-	if (falloff > 0.0 && ISSHADERGRASS == 0) {
-
+	#ifdef SHADER_GRASS
+	 if (falloff > 0.0 && ISSHADERGRASS == 0)
+	#else
+	 if (falloff > 0.0)
+	#endif
+	{
 		float depthmap = readNormal(texcoord.st).a;
 		float used_POM_DEPTH = 1.0;
 		float pomdepth = POM_DEPTH*falloff;
@@ -437,7 +441,12 @@ void main() {
 
 	#ifndef COLORWHEEL
 		vec4 Albedo = color;
-		if (ISSHADERGRASS < 1) Albedo *= texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
+		#ifdef SHADER_GRASS
+		if (ISSHADERGRASS < 1)
+		#endif
+		{
+		 Albedo *= texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
+		}
 	#else
 		vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
 		vec4 overlayColor;
@@ -504,7 +513,7 @@ void main() {
 	#if  defined WORLD && !defined ENTITIES && !defined HAND
 	float endPortalEmission = 0.0;
 	if(PORTAL > 0) {
-		float steps = 20;
+		const float steps = 20;
 
 		vec3 color = vec3(0.0);
 		float absorbance = 1.0;
@@ -619,7 +628,10 @@ void main() {
 	//////////////////////////////// 				//////////////////////////////// 
 
 	#if defined WORLD && defined MC_NORMAL_MAP
-		if(ISSHADERGRASS < 1) {
+		#ifdef SHADER_GRASS
+		if(ISSHADERGRASS < 1)
+		#endif
+		{
 			vec4 NormalTex = texture2D_POMSwitch(normals, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD).xyzw;
 			
 			#ifdef MATERIAL_AO
@@ -641,9 +653,13 @@ void main() {
 	
 	#ifdef WORLD
 		vec4 SpecularTex = vec4(0.0);
+		#ifdef SHADER_GRASS
 		if (ISSHADERGRASS > 0) {
 			SpecularTex = vec4(0.15, 0.025, 1.0, 0.0);
-		} else {
+		} else
+		#endif
+		{
+
 			SpecularTex = texture2D_POMSwitch(specular, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD);
 		}
 
@@ -711,7 +727,10 @@ void main() {
 		normal = viewToWorld(normal);
 
 		vec3 flatNormals = viewToWorld(FlatNormals);
-		if (ISSHADERGRASS > 0) {flatNormals = FlatNormals; normal = GrassNormals;}
+
+		#ifdef SHADER_GRASS
+			if (ISSHADERGRASS > 0) {flatNormals = FlatNormals; normal = GrassNormals;}
+		#endif
 
 		vec4 data1 = clamp( encode(normal, PackLightmaps), 0.0, 1.0);
 

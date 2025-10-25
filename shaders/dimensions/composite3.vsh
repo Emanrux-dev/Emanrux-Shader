@@ -21,8 +21,8 @@ flat varying vec3 WmoonVec;
 
 uniform float far;
 uniform float near;
-uniform float dhFarPlane;
-uniform float dhNearPlane;
+uniform float dhVoxyFarPlane;
+uniform float dhVoxyNearPlane;
 
 uniform mat4 gbufferModelViewInverse;
 uniform vec3 sunPosition;
@@ -67,7 +67,7 @@ void main() {
 		#endif
 
 		#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
-			readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.cirrus, parameters.fog);
+			readSceneControllerParameters(colortex4, SC_parameters.smallCumulus, SC_parameters.largeCumulus, SC_parameters.altostratus, SC_parameters.cirrus, SC_parameters.fog);
 		#endif
 	#endif
 

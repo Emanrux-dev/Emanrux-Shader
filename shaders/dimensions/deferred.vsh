@@ -1,7 +1,7 @@
 #include "/lib/settings.glsl"
 #include "/lib/res_params.glsl"
 
-// uniform int dhRenderDistance;
+// uniform int dhVoxyRenderDistance;
 uniform float frameTimeCounter;
 #include "/lib/Shadow_Params.glsl"
 
@@ -206,11 +206,11 @@ void main() {
 
 	// components are split for readability/user friendliness within this function
 	applySceneControllerParameters(
-		parameters.smallCumulus.x, parameters.smallCumulus.y, 
-		parameters.largeCumulus.x, parameters.largeCumulus.y,
-		parameters.altostratus.x, parameters.altostratus.y,
-		parameters.cirrus.x, parameters.cirrus.y,
-		parameters.fog.x, parameters.fog.y
+		SC_parameters.smallCumulus.x, SC_parameters.smallCumulus.y, 
+		SC_parameters.largeCumulus.x, SC_parameters.largeCumulus.y,
+		SC_parameters.altostratus.x, SC_parameters.altostratus.y,
+		SC_parameters.cirrus.x, SC_parameters.cirrus.y,
+		SC_parameters.fog.x, SC_parameters.fog.y
 	);
 
 #ifdef Daily_Weather
@@ -251,10 +251,10 @@ void main() {
  	vec4 getWeatherProfile_coverage = weatherProfile_cloudCoverage[dayCounter];
  	vec4 getWeatherProfile_density = weatherProfile_cloudDensity[dayCounter];
 	
- 	parameters.smallCumulus = vec2(getWeatherProfile_coverage.r, getWeatherProfile_density.r);
- 	parameters.largeCumulus = vec2(getWeatherProfile_coverage.g, getWeatherProfile_density.g);
- 	parameters.altostratus =  vec2(getWeatherProfile_coverage.b, getWeatherProfile_density.b);
-	parameters.cirrus =  vec2(getWeatherProfile_coverage.a, getWeatherProfile_density.a);
+ 	SC_parameters.smallCumulus = vec2(getWeatherProfile_coverage.r, getWeatherProfile_density.r);
+ 	SC_parameters.largeCumulus = vec2(getWeatherProfile_coverage.g, getWeatherProfile_density.g);
+ 	SC_parameters.altostratus =  vec2(getWeatherProfile_coverage.b, getWeatherProfile_density.b);
+	SC_parameters.cirrus =  vec2(getWeatherProfile_coverage.a, getWeatherProfile_density.a);
 
  	//----------- fog density
  	vec2 weatherProfile_fogDensity[10] = vec2[](
@@ -270,7 +270,7 @@ void main() {
  		vec2(DAY9_ufog_density, DAY9_cfog_density)
  	);
 
- 	parameters.fog = weatherProfile_fogDensity[dayCounter];
+ 	SC_parameters.fog = weatherProfile_fogDensity[dayCounter];
 #endif
 
 //////////////////////////////

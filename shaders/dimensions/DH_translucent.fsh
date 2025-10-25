@@ -48,8 +48,8 @@ varying vec2 lightmapCoords;
 flat varying int isWater;
 
 // uniform float far;
-uniform float dhFarPlane;
-uniform float dhNearPlane;
+uniform float dhVoxyFarPlane;
+uniform float dhVoxyNearPlane;
 
 uniform vec3 previousCameraPosition;
 // uniform vec3 cameraPosition;
@@ -102,17 +102,17 @@ float ld(float dist) {
 }
 
 // float DH_ld(float dist) {
-//     return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
+//     return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
 // }
 // float DH_invLinZ (float lindepth){
-// 	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
+// 	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 // }
 
 float DH_ld(float dist) {
-    return (2.0 * near) / (dhFarPlane + near - dist * (dhFarPlane - near));
+    return (2.0 * near) / (dhVoxyFarPlane + near - dist * (dhVoxyFarPlane - near));
 }
 float DH_inv_ld (float lindepth){
-	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
+	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 }
 
 float linearizeDepthFast(const in float depth, const in float near, const in float far) {
@@ -164,7 +164,7 @@ uniform int framemod8;
 #include "/lib/TAA_jitter.glsl"
 
 float invLdFast(float linearDepth) {
-    return (dhFarPlane * (dhNearPlane - linearDepth)) / ((dhNearPlane - dhFarPlane) * linearDepth);
+    return (dhVoxyFarPlane * (dhVoxyNearPlane - linearDepth)) / ((dhVoxyNearPlane - dhVoxyFarPlane) * linearDepth);
 }
 
 #define FORWARD_SSR_QUALITY 30 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 200 300 400 500]
@@ -176,10 +176,15 @@ vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
     float quality = float(FORWARD_SSR_QUALITY);
     vec3 clipPosition = DH_toClipSpace3(position);
 
-    float rayLength = ((position.z + dir.z * dhFarPlane*sqrt(3.)) > -dhNearPlane) ?
-       (-dhNearPlane - position.z) / dir.z : dhFarPlane*sqrt(3.);
+    float rayLength = ((position.z + dir.z * dhVoxyFarPlane*sqrt(3.)) > -dhVoxyNearPlane) ?
+       (-dhVoxyNearPlane - position.z) / dir.z : dhVoxyFarPlane*sqrt(3.);
     
     vec3 direction = DH_toClipSpace3(position + dir * rayLength) - clipPosition;  //convert to clip space
+
+	#if FORWARD_SSR_QUALITY == 1
+		vec3 reflectedTC = vec3((direction.xy + clipPosition.xy) * RENDER_SCALE, 0.999999);
+		return reflectedTC;
+	#endif
 
 	//get at which length the ray intersects with the edge of the screen
     vec3 maxLengths = (step(0.0, direction) - clipPosition) / direction;
@@ -201,7 +206,7 @@ vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
 		#endif
 
         float sampleDepth = sqrt(texelFetch2D(colortex12, ivec2(spos.xy / (texelSize * 4.0)), 0).a / 65000.0);
-		float sp = invLdFast(sampleDepth*dhFarPlane);
+		float sp = invLdFast(sampleDepth*dhVoxyFarPlane);
         
         if (sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {
             return vec3(spos.xy / RENDER_SCALE, sp);
@@ -290,7 +295,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec3 viewPos = pos.xyz;
     vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
 	float viewDist = length(playerPos);
-    float transition = exp(-25* pow(clamp(1.0 - viewDist/(far-8),0.0,1.0),2));
+    // float transition = exp(-25* pow(clamp(1.0 - viewDist/(far-8),0.0,1.0),2));
 
 	#if DH_CHUNK_FADING > 0
 		if (!iswater){

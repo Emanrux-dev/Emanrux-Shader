@@ -130,7 +130,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
     	default : { break; }
 
 		case CIRRUS_LAYER: {
-			coverage = parameters.cirrus.x;
+			coverage = SC_parameters.cirrus.x;
 
 			vec2 coord = position.zx + 6.0*cloud_movement;
 			
@@ -166,7 +166,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		break; }
 
 		case ALTOSTRATUS_LAYER: {
-			coverage = parameters.altostratus.x;
+			coverage = SC_parameters.altostratus.x;
 			coverage += Rain_coverage * rainStrength;
 			coverage += Thunder_coverage * thunderStrength;
 
@@ -185,7 +185,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		break; }
 
 		case LARGECUMULUS_LAYER: {
-			coverage = parameters.largeCumulus.x;
+			coverage = SC_parameters.largeCumulus.x;
 			coverage += Rain_coverage * rainStrength;
 			coverage += Thunder_coverage * thunderStrength;
 
@@ -201,7 +201,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		break; }
 
 		case SMALLCUMULUS_LAYER: {
-			coverage = parameters.smallCumulus.x;
+			coverage = SC_parameters.smallCumulus.x;
 			coverage += Rain_coverage * rainStrength;
 			coverage += Thunder_coverage * thunderStrength;
 
@@ -420,15 +420,15 @@ float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 
 		#ifdef CloudLayer0
 			startPosition = playerPos + startOffset * max((CloudLayer0_height + 20.0) - playerPos.y, 0.0);
-			cloudShadows = getCloudShape(SMALLCUMULUS_LAYER, 0, startPosition, CloudLayer0_height, CloudLayer0_height + CloudLayer0_tallness/CloudLayer0_scale)*(getRainDensity(parameters.smallCumulus.y));
+			cloudShadows = getCloudShape(SMALLCUMULUS_LAYER, 0, startPosition, CloudLayer0_height, CloudLayer0_height + CloudLayer0_tallness/CloudLayer0_scale)*(getRainDensity(SC_parameters.smallCumulus.y));
 		#endif
 		#ifdef CloudLayer1
 			startPosition = playerPos + startOffset * max((CloudLayer1_height + 30.0) - playerPos.y, 0.0);
-			cloudShadows += getCloudShape(LARGECUMULUS_LAYER, 0, startPosition, CloudLayer1_height, CloudLayer1_height + CloudLayer1_tallness/CloudLayer1_scale)*(getRainDensity(parameters.largeCumulus.y));
+			cloudShadows += getCloudShape(LARGECUMULUS_LAYER, 0, startPosition, CloudLayer1_height, CloudLayer1_height + CloudLayer1_tallness/CloudLayer1_scale)*(getRainDensity(SC_parameters.largeCumulus.y));
 		#endif
 		#ifdef CloudLayer2
 			startPosition = playerPos + startOffset * max(CloudLayer2_height - playerPos.y, 0.0);
-			cloudShadows += getCloudShape(ALTOSTRATUS_LAYER, 0, startPosition, CloudLayer2_height, CloudLayer2_height + 5.0)*parameters.altostratus.y * (1.0-abs(WsunVec.y));
+			cloudShadows += getCloudShape(ALTOSTRATUS_LAYER, 0, startPosition, CloudLayer2_height, CloudLayer2_height + 5.0)*SC_parameters.altostratus.y * (1.0-abs(sunVector.y));
 		#endif
 		#if CUMULONIMBUS > 0
 			float distanceFactor = clamp(degrees(acos(dot(vec3(0.0, 1.0, 0.0), sunVector))), 45.0, 90.0) - 45.0;
@@ -656,10 +656,10 @@ vec4 raymarchCloud(
 		vec3 newPos = rayPosition - cameraPosition;
 
 		if(LayerIndex == ALTOSTRATUS_LAYER) {
-			density = parameters.altostratus.y;
+			density = SC_parameters.altostratus.y;
 			density *= smoothstep(CloudLayer2_distance, CloudLayer2_distance*0.5, length(newPos));
 		} else {
-			density = parameters.cirrus.y;
+			density = SC_parameters.cirrus.y;
 			density *= smoothstep(CloudLayer3_distance, CloudLayer3_distance*0.5, length(newPos));
 		}
 		if (density == 0.0) return vec4(color, totalAbsorbance);
@@ -713,13 +713,13 @@ vec4 raymarchCloud(
 
 		vec3 newPos = rayPosition - cameraPosition;
 
-		float densityLarge = getRainDensity(parameters.largeCumulus.y);
+		float densityLarge = getRainDensity(SC_parameters.largeCumulus.y);
 
 		float density = 0.0;
 
-		if(LayerIndex == SMALLCUMULUS_LAYER) density = getRainDensity(parameters.smallCumulus.y) * smoothstep(CloudLayer0_distance, CloudLayer0_distance*0.5, length(newPos));
+		if(LayerIndex == SMALLCUMULUS_LAYER) density = getRainDensity(SC_parameters.smallCumulus.y) * smoothstep(CloudLayer0_distance, CloudLayer0_distance*0.5, length(newPos));
 
-		if(LayerIndex == LARGECUMULUS_LAYER) density = getRainDensity(parameters.largeCumulus.y) * smoothstep(CloudLayer1_distance, CloudLayer1_distance*0.5, length(newPos));
+		if(LayerIndex == LARGECUMULUS_LAYER) density = getRainDensity(SC_parameters.largeCumulus.y) * smoothstep(CloudLayer1_distance, CloudLayer1_distance*0.5, length(newPos));
 
 		if(LayerIndex == CUMULONIMBUS_LAYER) density = 0.8;
 
@@ -818,7 +818,7 @@ vec4 raymarchCloud(
 					// altostratus layer -> all cumulus layers
 					#ifdef CloudLayer2
 						shadowStartPos = rayPosition + mainLightVec / abs(mainLightVec.y) * max(CloudLayer2_height - rayPosition.y, 0.0);
-						sunShadowMask += getCloudShape(ALTOSTRATUS_LAYER, 0, shadowStartPos, CloudLayer2_height, CloudLayer2_height) * parameters.altostratus.y * (1.0-abs(mainLightVec.y));
+						sunShadowMask += getCloudShape(ALTOSTRATUS_LAYER, 0, shadowStartPos, CloudLayer2_height, CloudLayer2_height) * SC_parameters.altostratus.y * (1.0-abs(mainLightVec.y));
 					#endif
 					
 					vec3 lighting = getCloudLighting(LayerIndex, shapeWithDensity, shapeWithDensityFaded, sunShadowMask, sunScattering, moonScattering, indirectShadowMask, skyScattering*skylightOcclusion, rayPosition, backScatterPhase, phaseLevels, backScatterPhase2, phaseLevels2);
@@ -937,8 +937,8 @@ vec4 GetVolumetricClouds(
 
 	float heightRelativeToClouds = clamp(1.0 - max(cameraPosition.y - minHeight,0.0) / 100.0 ,0.0,1.0);
 
-	#if defined DISTANT_HORIZONS
-		float maxdist = dhFarPlane - 16.0;
+	#if defined DISTANT_HORIZONS || defined VOXY
+		float maxdist = dhVoxyFarPlane - 16.0;
 	#else
 		float maxdist = far + 16.0*5.0;
 	#endif
@@ -985,8 +985,8 @@ vec4 GetVolumetricClouds(
 	// setup for getting distance
 	vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos;
 
-	#ifdef DISTANT_HORIZONS
-		float maxLength = min(length(playerPos), max(far, dhRenderDistance))/length(playerPos);
+	#if defined DISTANT_HORIZONS || defined VOXY
+		float maxLength = min(length(playerPos), max(far, dhVoxyRenderDistance))/length(playerPos);
 	#else
 		float maxLength = min(length(playerPos), far)/length(playerPos);
 	#endif

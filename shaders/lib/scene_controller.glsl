@@ -190,13 +190,23 @@ void applySceneControllerParameters(
 // fog = (uniform fog density, cloudy fog density)
 // ... and more, eventually
 
-flat varying struct sceneController {
-  vec2 smallCumulus;
-  vec2 largeCumulus;
-  vec2 altostratus;
-  vec2 cirrus;
-  vec2 fog;
-} parameters;
+#ifndef VOXY_PROGRAM
+    flat varying struct sceneController {
+      vec2 smallCumulus;
+      vec2 largeCumulus;
+      vec2 altostratus;
+      vec2 cirrus;
+      vec2 fog;
+    } SC_parameters;
+#else
+    struct sceneController {
+      vec2 smallCumulus;
+      vec2 largeCumulus;
+      vec2 altostratus;
+      vec2 cirrus;
+      vec2 fog;
+    } SC_parameters;
+#endif
 
 vec3 writeSceneControllerParameters(
 	vec2 uv,
@@ -250,10 +260,10 @@ void readSceneControllerParameters(
     
     // in colortex4, read the data stored within the 3 components of the sampled pixels, and pass it to the fragment stage
     // 4th compnent/alpha is storing 1/4 res depth so i cant store there lol
-	vec3 data1 = texelFetch2D(colortex,ivec2(1,3),0).rgb/150.0;
-	vec3 data2 = texelFetch2D(colortex,ivec2(2,3),0).rgb/150.0;
-    vec3 data3 = texelFetch2D(colortex,ivec2(3,3),0).rgb/150.0;
-    vec3 data4 = texelFetch2D(colortex,ivec2(2,1),0).rgb/150.0;
+	vec3 data1 = texelFetch(colortex,ivec2(1,3),0).rgb/150.0;
+	vec3 data2 = texelFetch(colortex,ivec2(2,3),0).rgb/150.0;
+    vec3 data3 = texelFetch(colortex,ivec2(3,3),0).rgb/150.0;
+    vec3 data4 = texelFetch(colortex,ivec2(2,1),0).rgb/150.0;
 
 	smallCumulus    = vec2(data1.x,data1.y);
 	largeCumulus    = vec2(data1.z,data2.x);

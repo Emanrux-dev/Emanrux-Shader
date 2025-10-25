@@ -1,5 +1,7 @@
+#ifndef VOXY_PROGRAM
 uniform float far;
-uniform int dhRenderDistance;
+uniform int dhVoxyRenderDistance;
+#endif
 
 const float k = 1.8;
 const float d0 = 0.04 + (1.0-clamp(shadowDistance-64.0, 0.0,1.0)) * 0.1;
@@ -9,7 +11,7 @@ float b = (exp(d1)-a)*150./128.0;
 
 // thank you Espen
 // #ifdef DISTANT_HORIZONS_SHADOWMAP
-//   float b = (exp(d1)-a)*min(dhRenderDistance, shadowDistance)/shadowDistance;
+//   float b = (exp(d1)-a)*min(dhVoxyRenderDistance, shadowDistance)/shadowDistance;
 // #else
 //   float b = (exp(d1)-a)*min(far+16.0*3.5, shadowDistance)/shadowDistance;
 // #endif

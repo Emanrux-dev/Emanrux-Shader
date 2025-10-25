@@ -1,8 +1,4 @@
-#ifndef MC_OS_MAC
-	#version 430 compatibility
-#else
-	#version 120
-#endif
+#version 430 compatibility
 
 /*
 !! DO NOT REMOVE !!
@@ -33,7 +29,7 @@ flat varying int water;
 #define  projMAD(m, v) (diagonal3(m) * (v) + (m)[3].xyz)
 
 // uniform float far;
-uniform float dhFarPlane;
+uniform float dhVoxyFarPlane;
 
 #include "/lib/DistantHorizons_projections.glsl"
 

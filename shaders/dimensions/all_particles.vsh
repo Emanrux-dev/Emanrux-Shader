@@ -101,13 +101,10 @@ void main() {
 		vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
 
 		#ifdef WEATHER
-			worldpos += cameraPosition;
-			bool istopv = worldpos.y > cameraPosition.y + 5.0 && lmtexcoord.w > 0.99;
+			bool istopv = worldpos.y > 5.0 && lmtexcoord.w > 0.99;
 
 			if(!istopv){
-			worldpos.xyz -= cameraPosition - vec3(2.0,0.0,2.0) * min(max(clamp(eyeBrightnessSmooth.y/240.0,0,1)-0.95,0)/0.05,1);
-			}else{
-			worldpos.xyz -= cameraPosition;
+			worldpos += vec3(2.0,0.0,2.0) * min(max(clamp(eyeBrightnessSmooth.y/240.0,0,1)-0.95,0)/0.05,1);
 			}
 		#endif
 
@@ -145,7 +142,7 @@ void main() {
 			WsunVec = lightCol.a * normalize(mat3(gbufferModelViewInverse) * sunPosition);
 		#endif
 
-		readSceneControllerParameters(colortex4, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.cirrus, parameters.fog);
+		readSceneControllerParameters(colortex4, SC_parameters.smallCumulus, SC_parameters.largeCumulus, SC_parameters.altostratus, SC_parameters.cirrus, SC_parameters.fog);
 	#endif
 	
 

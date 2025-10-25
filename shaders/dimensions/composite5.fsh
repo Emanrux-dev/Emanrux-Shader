@@ -132,12 +132,19 @@ float convertHandDepth2( float depth) {
 
 
 #ifdef DISTANT_HORIZONS
-uniform sampler2D dhDepthTex;
+	uniform sampler2D dhDepthTex;
+	#define dhVoxyDepthTex dhDepthTex
 #endif
+
+#ifdef VOXY
+	uniform sampler2D vxDepthTexOpaque;
+	#define dhVoxyDepthTex vxDepthTexOpaque
+#endif
+
 uniform float near;
 uniform float far;
-uniform float dhFarPlane;
-uniform float dhNearPlane;
+uniform float dhVoxyFarPlane;
+uniform float dhVoxyNearPlane;
 
 #include "/lib/DistantHorizons_projections.glsl"
 
@@ -146,10 +153,10 @@ float ld(float dist) {
     return (2.0 * near) / (far + near - dist * (far - near));
 }
 float DH_ld(float dist) {
-    return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
+    return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
 }
 float DH_inv_ld (float lindepth){
-	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
+	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 }
 
 float linearizeDepthFast(const in float depth, const in float near, const in float far) {
@@ -161,8 +168,8 @@ float invertlinearDepthFast(const in float depth, const in float near, const in 
 
 vec3 toClipSpace3Prev_DH( vec3 viewSpacePosition, bool depthCheck ) {
 
-	#ifdef DISTANT_HORIZONS
-		mat4 projectionMatrix = depthCheck ? dhPreviousProjection : gbufferPreviousProjection;
+	#if defined DISTANT_HORIZONS || defined VOXY
+		mat4 projectionMatrix = depthCheck ? dhVoxyProjectionPrev : gbufferPreviousProjection;
    		return projMAD(projectionMatrix, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
 	#else
     	return projMAD(gbufferPreviousProjection, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
@@ -174,12 +181,12 @@ vec3 toScreenSpace_DH_special(vec3 POS, bool depthCheck ) {
 	vec4 viewPos = vec4(0.0);
 	vec3 feetPlayerPos = vec3(0.0);
 	vec4 iProjDiag = vec4(0.0);
-	#ifdef DISTANT_HORIZONS
+	#if defined DISTANT_HORIZONS || defined VOXY
     	if (depthCheck) {
-			iProjDiag = vec4(dhProjectionInverse[0].x, dhProjectionInverse[1].y, dhProjectionInverse[2].zw);
+			iProjDiag = vec4(dhVoxyProjectionInverse[0].x, dhVoxyProjectionInverse[1].y, dhVoxyProjectionInverse[2].zw);
 
     		feetPlayerPos = POS * 2.0 - 1.0;
-    		viewPos = iProjDiag * feetPlayerPos.xyzz + dhProjectionInverse[3];
+    		viewPos = iProjDiag * feetPlayerPos.xyzz + dhVoxyProjectionInverse[3];
 			viewPos.xyz /= viewPos.w;
 
 		} else {
@@ -190,7 +197,7 @@ vec3 toScreenSpace_DH_special(vec3 POS, bool depthCheck ) {
     		viewPos = iProjDiag * feetPlayerPos.xyzz + gbufferProjectionInverse[3];
 			viewPos.xyz /= viewPos.w;
 			
-	#ifdef DISTANT_HORIZONS
+	#if defined DISTANT_HORIZONS || defined VOXY
 		}
 	#endif
 
@@ -326,9 +333,9 @@ vec4 computeTAA(vec2 texcoord, bool hand){
 
 	// get previous frames position stuff for UV	
 	//use velocity from the nearest texel from camera in a 3x3 box in order to improve edge quality in motion	
-	#ifdef DISTANT_HORIZONS
+	#if defined DISTANT_HORIZONS || defined VOXY
 		bool depthCheck = texture2D(depthtex0,adjTC).x >= 1.0;
-		vec3 closestToCamera = closestToCamera5taps_DH(adjTC, depthtex0, dhDepthTex, depthCheck);
+		vec3 closestToCamera = closestToCamera5taps_DH(adjTC, depthtex0, dhVoxyDepthTex, depthCheck);
 		vec3 viewPos = toScreenSpace_DH_special(closestToCamera, depthCheck);
 	#else
 		vec3 closestToCamera = closestToCamera5taps(adjTC, depthtex0);
@@ -338,7 +345,7 @@ vec4 computeTAA(vec2 texcoord, bool hand){
 	vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
 	vec3 previousPosition = mat3(gbufferPreviousModelView) * playerPos + gbufferPreviousModelView[3].xyz;
 	
-	#ifdef DISTANT_HORIZONS
+	#if defined DISTANT_HORIZONS || defined VOXY
 		previousPosition = toClipSpace3Prev_DH(previousPosition, depthCheck);
 	#else
 		previousPosition = toClipSpace3Prev(previousPosition);

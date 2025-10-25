@@ -62,7 +62,7 @@ vec4 BilateralUpscale_SSAO(sampler2D tex, sampler2D depth, vec2 coord, float ref
 	// 	ivec2(0,-1),
 	// 	ivec2(-1,0)
 	// );
-	#ifdef DISTANT_HORIZONS
+	#if defined DISTANT_HORIZONS || defined VOXY
 		float diffThreshold = 0.0005 ;
 	#else
 		float diffThreshold = 0.005;
@@ -74,7 +74,7 @@ vec4 BilateralUpscale_SSAO(sampler2D tex, sampler2D depth, vec2 coord, float ref
 	for (int i = 0; i < 4; i++) {
 		
 		ivec2 radius = getRadius[i];
-		#ifdef DISTANT_HORIZONS
+		#if defined DISTANT_HORIZONS || defined VOXY
 			float offsetDepth = sqrt(texelFetch2D(depth, posDepth + radius * scaling + pos * scaling,0).a/65000.0);
 		#else
 			float offsetDepth = ld(texelFetch2D(depth, posDepth + radius * scaling + pos * scaling, 0).r);

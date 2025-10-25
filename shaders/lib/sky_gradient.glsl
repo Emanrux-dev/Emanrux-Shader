@@ -175,11 +175,11 @@ vec3 skyFromTex(vec3 pos,sampler2D sampler){
 
 	return texture2D(sampler,p*texelSize*256.+vec2(18.5,1.5)*texelSize).rgb;
 }
-vec3 skyFromTexLOD(vec3 pos,sampler2D sampler, float LOD){
-	vec2 p = sphereToCarte(pos);
-
-	return texture2DLod(sampler,p*texelSize*256.+vec2(18.5,1.5)*texelSize,LOD).rgb;
-}
+// vec3 skyFromTexLOD(vec3 pos,sampler2D sampler, float LOD){
+// 	vec2 p = sphereToCarte(pos);
+// 
+// 	return texture2DLod(sampler,p*texelSize*256.+vec2(18.5,1.5)*texelSize,LOD).rgb;
+// }
 
 vec4 skyCloudsFromTex(vec3 pos,sampler2D sampler){
 
@@ -231,5 +231,5 @@ vec4 volumetricsFromTex(vec3 pos,sampler2D sampler, float LOD){
 
 	vec2 uv = p*texelSize*256. + vec2(256.0 - 256.0*0.12,1.5)*texelSize;
 
-	return texture2DLod(sampler, uv, LOD);
+	return texture2D(sampler, uv, LOD);
 }

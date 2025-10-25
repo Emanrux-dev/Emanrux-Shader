@@ -1,6 +1,6 @@
 #if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
 	float invLinZ_DH (float lindepth){
-		return -((2.0*near/lindepth)-dhFarPlane-near)/(dhFarPlane-near);
+		return -((2.0*near/lindepth)-dhVoxyFarPlane-near)/(dhVoxyFarPlane-near);
 	}
 #endif
 
@@ -103,22 +103,6 @@ float shlickFresnelRoughness(float XdotN, float roughness){
 	return shlickFresnel;
 }
 
-//vec2 directionToSphericalUV(vec3 direction) {    
-//    vec3 dir = normalize(direction);
-//    
-//    float phi = atan(dir.z, dir.x);
-//    float theta = acos(clamp(dir.y, -1.0, 1.0));
-//    
-//    float u = (phi + 3.1415926535) / (2.0 * 3.1415926535);
-//    float v = theta / 3.1415926535;
-//    v = 1.0 - v;
-//
-//    return vec2(clamp(u, 0.0, 1.0), clamp(v, 0.0, 1.0));
-//}
-//
-//
-//layout (rgba32f) uniform image2D reflectionSphere;
-//
 #if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
 	uniform vec4 combined_projection_matrix_0;
 	uniform vec4 combined_projection_matrix_1;
@@ -127,7 +111,7 @@ float shlickFresnelRoughness(float XdotN, float roughness){
 	#define combined_projection_matrix mat4(combined_projection_matrix_0, combined_projection_matrix_1, combined_projection_matrix_2, combined_projection_matrix_3)
 
 	float invertLinearizeDepthFast(const in float z) {
-		return (dhFarPlane * (z - near)) / (z * (dhFarPlane - near));
+		return (dhVoxyFarPlane * (z - near)) / (z * (dhVoxyFarPlane - near));
 	}
 #endif
 
@@ -187,7 +171,7 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 				float sampleDepth = texelFetch2D(colortex12, ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
 			#endif
 			
-			float sp = invertLinearizeDepthFast(sqrt(sampleDepth)*dhFarPlane);
+			float sp = invertLinearizeDepthFast(sqrt(sampleDepth)*dhVoxyFarPlane);
 		#else
 			float sampleDepth = texelFetch2D(colortex4, ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
 			float sp = invLinZ(sqrt(sampleDepth));

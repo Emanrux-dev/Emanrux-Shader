@@ -63,10 +63,16 @@ float ld(float depth) {
 // uniform sampler2D depthtex0;
 
 #ifdef DISTANT_HORIZONS
-uniform sampler2D dhDepthTex;
+	uniform sampler2D dhDepthTex;
+	#define dhVoxyDepthTex dhDepthTex
 #endif
-uniform float dhNearPlane;
-uniform float dhFarPlane;
+
+#ifdef VOXY
+	uniform sampler2D vxDepthTexOpaque;
+	#define dhVoxyDepthTex vxDepthTexOpaque
+#endif
+uniform float dhVoxyNearPlane;
+uniform float dhVoxyFarPlane;
 
 float linearizeDepthFast(const in float depth, const in float near, const in float far) {
     return (near * far) / (depth * (near - far) + far);
@@ -332,14 +338,14 @@ void main() {
 		#endif
 		float depth = texture(depthtex0, texcoord).r;
 		
-		#ifdef DISTANT_HORIZONS
+		#if defined DISTANT_HORIZONS || defined VOXY
 		float _near = near;
 		float _far = far*4.0;
 
 		if (depth >= 1.0) {
-			depth = texture2D(dhDepthTex, texcoord).x;
-			_near = dhNearPlane;
-			_far = dhFarPlane;
+			depth = texture2D(dhVoxyDepthTex, texcoord).x;
+			_near = dhVoxyNearPlane;
+			_far = dhVoxyFarPlane;
 		}
 
 		depth = linearizeDepthFast(depth, _near, _far);

@@ -1,5 +1,8 @@
 layout(triangles) in;
-#if !defined ENTITIES && !defined HAND
+
+#include "/lib/settings.glsl"
+
+#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL
 layout(triangle_strip, max_vertices = 24) out;
 #else
 layout(triangle_strip, max_vertices = 3) out;
@@ -71,7 +74,6 @@ uniform int hideGUI;
 uniform float aspectRatio;
 uniform float screenBrightness;
 
-#include "/lib/settings.glsl"
 #include "/lib/TAA_jitter.glsl"
 #include "/lib/res_params.glsl"
 #include "/lib/bokeh.glsl"
@@ -285,7 +287,11 @@ void main() {
 
             worldUp *= heightMult;
 
-            originalVertex -= right*0.25*GRASS_BASE_THICKNESS;
+            originalVertex -= right*0.0625*GRASS_BASE_THICKNESS;
+
+            vec3 verticies[21];
+            float grassHeights[21];
+            vec3 GrassNormal[7];
 
             for (j = 0; j < triangle_count; j++) {
 
@@ -312,17 +318,10 @@ void main() {
                     worldOffset2
                 );
 
-                float grassHeight0 = 0.125 * worldOffset0.y;
-                float grassHeight1 = 0.125 * worldOffset1.y;
-                float grassHeight2 = 0.125 * worldOffset2.y;
+                grassHeights[3*j] = 0.125 * worldOffset0.y;
+                grassHeights[3*j+1] = 0.125 * worldOffset1.y;
+                grassHeights[3*j+2] = 0.125 * worldOffset2.y;
 
-                float grassHeights[3] = float[](
-                    grassHeight0,
-                    grassHeight1,
-                    grassHeight2
-                );
-
-                vec3 verticies[3];
 
                 vec2 totalRandBend = GRASS_RANDOMNESS*randomDir + edgeBlend;
 
@@ -331,7 +330,7 @@ void main() {
                     vec3 worldOffset = worldOffsets[i];
                     vertex = originalVertex;
 
-                    float grassCurvature = smoothstep(0.0, 1.0, grassHeights[i]);
+                    float grassCurvature = smoothstep(0.0, 1.0, grassHeights[3*j+i]);
 
                     vertex.xz += 0.7*playerDist*vec2(dir2)*grassCurvature;
 
@@ -339,16 +338,19 @@ void main() {
 
                     vertex += 1.6*calcMovePlants(vertex + cameraPosition)*grassCurvature*grassCurvature;
 
-                    verticies[i] = vertex + 0.125 * worldOffset;
+                    verticies[3*j+i] = vertex + 0.125 * worldOffset;
                 }
 
-                vec3 GrassNormal = calculateNormal(verticies[0], verticies[1], verticies[2]);
+                GrassNormal[j] = calculateNormal(verticies[3*j], verticies[3*j+1], verticies[3*j+2]);
+            
+            }
+
+            for (j = 0; j < triangle_count; j++) {
 
                 for (i = 0; i < 3; i++)
                 {
 
-
-                    gl_Position = toClipSpace3(mat3(gbufferModelView) * (verticies[i]) + gbufferModelView[3].xyz);
+                    gl_Position = toClipSpace3(mat3(gbufferModelView) * (verticies[3*j+i]) + gbufferModelView[3].xyz);
 
                     #ifdef TAA_UPSCALING
                         gl_Position.xy = gl_Position.xy * RENDER_SCALE + RENDER_SCALE * gl_Position.w - gl_Position.w;
@@ -382,7 +384,7 @@ void main() {
                         gl_Position.xy += hideGUI >= 1 ? totalOffset : vec2(0);
                     #endif
 
-                    float heightfade = smoothstep(-0.35, 1.0, grassHeights[i]);
+                    float heightfade = smoothstep(-0.35, 1.0, grassHeights[3*j+i]);
 
                     // vec3 podzolColor = mix(vec3(0.15, 0.26, 0.01), vec3(168, 158, 91)/255., heightfade);
 
@@ -402,11 +404,14 @@ void main() {
                         tangent = vtangent[i];
                         // FlatNormals = vFlatNormals[i];
                     
-                        FlatNormals = GrassNormal;
+                        FlatNormals = GrassNormal[j];
 
-                        // TODO: MAKE SMOOTH NORMALS
-                        GrassNormals = GrassNormal;
+                        heightfade = smoothstep(0.1, grassHeights[triangle_count], grassHeights[3*j+i]);
+                        GrassNormals = normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade)));
                     #endif
+
+
+                    normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade)));
 
                     blockID = vblockID[i];
                     NameTags = vNameTags[i];

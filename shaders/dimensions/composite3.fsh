@@ -15,8 +15,17 @@ uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
 
 #ifdef DISTANT_HORIZONS
-uniform sampler2D dhDepthTex;
-uniform sampler2D dhDepthTex1;
+	uniform sampler2D dhDepthTex;
+	uniform sampler2D dhDepthTex1;
+	#define dhVoxyDepthTex dhDepthTex
+	#define dhVoxyDepthTex1 dhDepthTex1
+#endif
+
+#ifdef VOXY
+	uniform sampler2D vxDepthTexOpaque;
+	uniform sampler2D vxDepthTexTrans;
+	#define dhVoxyDepthTex vxDepthTexTrans
+	#define dhVoxyDepthTex1 vxDepthTexOpaque
 #endif
 
 uniform sampler2D colortex0;
@@ -48,8 +57,8 @@ uniform int frameCounter;
 uniform float far;
 uniform float near;
 uniform float farPlane;
-uniform float dhNearPlane;
-uniform float dhFarPlane;
+uniform float dhVoxyNearPlane;
+uniform float dhVoxyFarPlane;
 
 uniform mat4 gbufferModelViewInverse;
 uniform mat4 gbufferModelView;
@@ -61,7 +70,7 @@ uniform vec3 cameraPosition;
 uniform vec3 previousCameraPosition;
 
 uniform int hideGUI;
-uniform int dhRenderDistance;
+uniform int dhVoxyRenderDistance;
 uniform int isEyeInWater;
 uniform ivec2 eyeBrightnessSmooth;
 uniform ivec2 eyeBrightness;
@@ -130,7 +139,12 @@ float convertHandDepth(float depth) {
 }
 
 float linearize(float dist) {
-  return (2.0 * near) / (far + near - dist * (far - near));
+  #ifdef VOXY
+    float _far = far * 3000.0;
+  #else
+    float _far = far;
+  #endif
+  return (2.0 * near) / (_far + near - dist * (_far - near));
 }
 
 float luma(vec3 color) {
@@ -192,11 +206,11 @@ vec3 normVec (vec3 vec){
 }
 
 float DH_ld(float dist) {
-    return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
+    return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
 }
 
 float DH_inv_ld (float lindepth){
-	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
+	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 }
 
 float linearizeDepthFast(const in float depth, const in float near, const in float far) {
@@ -314,8 +328,8 @@ vec3 toClipSpace3Prev(vec3 viewSpacePosition) {
 
 vec3 toClipSpace3Prev_DH( vec3 viewSpacePosition, bool depthCheck ) {
 
-	#ifdef DISTANT_HORIZONS
-		mat4 projectionMatrix = depthCheck ? dhPreviousProjection : gbufferPreviousProjection;
+	#if defined DISTANT_HORIZONS || defined VOXY
+		mat4 projectionMatrix = depthCheck ? dhVoxyProjectionPrev : gbufferPreviousProjection;
    		return projMAD(projectionMatrix, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
 	#else
     	return projMAD(gbufferPreviousProjection, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
@@ -326,7 +340,7 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
 
   vec4 colorSum = vec4(0.0);
   float edgeSum = 0.0;
-  #ifdef DISTANT_HORIZONS
+  #if defined DISTANT_HORIZONS || defined VOXY
     float threshold = 0.05;
   #else
     float threshold = 0.005;
@@ -360,7 +374,7 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
 
   for(int i = 0; i < samples; i++) {
 
-		#ifdef DISTANT_HORIZONS
+		#if defined DISTANT_HORIZONS || defined VOXY
 		  float offsetDepth = sqrt(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).z/65000.0);
     #else
       float offsetDepth = linearize(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE, 0).r);
@@ -511,8 +525,8 @@ float getBorderFogDensity(float linearDistance, vec3 playerPos, bool sky){
 
   if(sky) return 0.0;
 
-  #ifdef DISTANT_HORIZONS
-  	float borderFogDensity = smoothstep(1.0, 0.0, min(max(1.0 - linearDistance / dhRenderDistance,0.0)*3.0,1.0)   );
+  #if defined DISTANT_HORIZONS || defined VOXY
+  	float borderFogDensity = smoothstep(1.0, 0.0, min(max(1.0 - linearDistance / dhVoxyRenderDistance,0.0)*3.0,1.0)   );
   #else
   	float borderFogDensity = smoothstep(1.0, 0.0, min(max(1.0 - linearDistance / far,0.0)*3.0,1.0)   );
   #endif
@@ -542,13 +556,17 @@ void main() {
 
 	float swappedDepth = z;
 
-	#ifdef DISTANT_HORIZONS
-    float DH_depth0 = texelFetch2D(dhDepthTex, ivec2(gl_FragCoord.xy),0).x;
+	#if defined DISTANT_HORIZONS || defined VOXY
+    float DH_depth0 = texelFetch2D(dhVoxyDepthTex, ivec2(gl_FragCoord.xy),0).x;
+    #ifdef VOXY
+      float DH_depth1 = texelFetch2D(dhVoxyDepthTex1, ivec2(gl_FragCoord.xy),0).x;
+      DH_depth0 = min(DH_depth0, DH_depth1);
+    #endif
 		float depthOpaque = z;
 		float depthOpaqueL = linearizeDepthFast(depthOpaque, near, farPlane);
 		
 		float dhDepthOpaque = DH_depth0;
-		float dhDepthOpaqueL = linearizeDepthFast(dhDepthOpaque, dhNearPlane, dhFarPlane);
+		float dhDepthOpaqueL = linearizeDepthFast(dhDepthOpaque, dhVoxyNearPlane, dhVoxyFarPlane);
 	  if (depthOpaque >= 1.0 || (dhDepthOpaqueL < depthOpaqueL && dhDepthOpaque > 0.0)){
 		  depthOpaque = dhDepthOpaque;
 		  depthOpaqueL = dhDepthOpaqueL;
@@ -569,7 +587,7 @@ void main() {
   float linearDistance_cylinder = length(playerPos.xz);
 	vec3 playerPos_normalized = normalize(playerPos);
 
-  #ifndef DISTANT_HORIZONS
+  #if !defined DISTANT_HORIZONS && !defined VOXY
     float z2 = texelFetch2D(depthtex1, ivec2(gl_FragCoord.xy),0).x;
     vec3 viewPos_alt = toScreenSpace(vec3(texcoord/RENDER_SCALE, z2));
     vec3 playerPos_alt = mat3(gbufferModelViewInverse) * viewPos_alt + gbufferModelViewInverse[3].xyz;
@@ -609,7 +627,7 @@ void main() {
 	bool isEntity = abs(translucentMasks - 0.9) < 0.01 || isReflectiveEntity;
 
   ////// --------------- get volumetrics
-  #ifdef DISTANT_HORIZONS
+  #if defined DISTANT_HORIZONS || defined VOXY
 	  float DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy),0).z/65000.0);
     vec4 temporallyFilteredVL = VLTemporalFiltering(viewPos, DH_mixedLinearZ, colortex12, hand);
   #else
@@ -648,7 +666,7 @@ void main() {
       
       float z0 = depth < 0.56 ? convertHandDepth(depth) : depth;
 
-      #ifdef DISTANT_HORIZONS
+      #if defined DISTANT_HORIZONS || defined VOXY
         float DH_z0 = DH_depth0;
       #else
         float DH_z0 = 1.0;
@@ -780,7 +798,7 @@ void main() {
       borderFog.rgb = skyFromTex(playerPos_normalized, colortex4)/1200.0 * Sky_Brightness;
     #endif
     borderFog *= BorderFogIntensity;
-    #if !defined DISTANT_HORIZONS
+    #if !defined DISTANT_HORIZONS && !defined VOXY
       if(!isWater) color = mix(color, borderFog.rgb, getBorderFogDensity(linearDistance_cylinder_alt, normalize(playerPos_alt), z2 >= 1.0 || TranslucentShader.a <= 0));
     #endif
   #else
@@ -810,7 +828,7 @@ void main() {
 
   // bloomy rain effect
   #ifdef OVERWORLD_SHADER
-    float rainDrops =  clamp(texture2D(colortex9,texcoord).a,  0.0,1.0); 
+    float rainDrops =  clamp(texture2D(colortex9,texcoord).a,  0.0,1.0);
     if(hand) rainDrops *= (1.0-TranslucentShader.a);
     if(rainDrops > 0.0) bloomyFogMult *= clamp(1.0 - pow(rainDrops*5.0,2),0.0,1.0);
   #endif
@@ -827,8 +845,8 @@ void main() {
 
     float cosAngle = dot(-WsunVec, playerPos_normalized);
     if (isEyeInWater == 0 && rainbowAmount > 0.0 && cosAngle < 0.7431448 && cosAngle > 0.7071068) {
-      #ifdef DISTANT_HORIZONS
-        float clippingDistance = dhFarPlane;
+      #if defined DISTANT_HORIZONS || defined VOXY
+        float clippingDistance = dhVoxyFarPlane;
       #else
         float clippingDistance = 4.0 * far;
       #endif

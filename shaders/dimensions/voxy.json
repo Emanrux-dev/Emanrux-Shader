@@ -1,0 +1,108 @@
+{   
+    "unusedString": "
+        #include "/lib/settings.glsl"
+        #include "/lib/res_params.glsl"
+    ",
+    "version": 1,
+    "opaqueDrawBuffers": [1, 8, 15],
+    "excludeLodsFromVanillaDepth": true,
+    "translucentDrawBuffers": [2, 7, 14],
+    #ifdef TAA
+    "taaOffset": "{ 
+    const vec2[4] offsets = vec2[4](
+		vec2(-0.125,	-0.875),
+		vec2( 0.875,	-0.125),
+		vec2( 0.125,	 0.875),
+		vec2(-0.875,	 0.125)
+	);
+    return offsets[framemod4_DH]*texelSize; 
+    }",
+    #endif
+    #ifdef TAA_UPSCALING 
+    "renderScale": [SCALE_FACTOR, SCALE_FACTOR],
+    #endif
+    "blending": {-1:"ONE ONE_MINUS_SRC_ALPHA ONE ONE_MINUS_SRC_ALPHA"},
+    "ssbos": {0:"{
+        mat4 customShadowMatrixSSBO;
+
+        vec3 customMoonVecSSBO;
+
+        vec3 customMoonVec2SSBO;
+
+        mat4 customShadowPerspectiveSSBO;
+
+        vec3 customSunVecSSBO;
+
+        bool onWaterSurface;
+
+        bool inBoat;
+
+        bool inBoatCurrentFrame;
+
+        bool inBoatLastFrame;
+
+        bool inShip;
+
+        bool inShipCurrentFrame;
+
+        bool inShipLastFrame;
+
+        float lastFrameTimeCount;
+
+        vec3 previousCameraPositionWave;
+
+        vec3 previousCameraPositionWave2;
+
+        bool noSimOngoing;
+
+        bool noSimOngoingCheck;
+    
+    }"},
+    "uniforms": [
+        "framemod4_DH",
+        "vxModelView",
+        "vxModelViewPrev",
+        "vxModelViewInv",
+        "frameCounter",
+        "framemod8",
+        "dhVoxyFarPlane",
+        "dhVoxyNearPlane",
+        "vxProj",
+        "vxProjInv",
+        "vxProjPrev",
+        "gbufferModelView",
+        "gbufferModelViewInverse",
+        "gbufferProjection",
+        "gbufferProjectionInverse",
+        "gbufferPreviousModelView",
+        "gbufferPreviousProjection",
+        "shadowModelView",
+        "shadowModelViewInverse",
+        "shadowProjection",
+        "shadowProjectionInverse",
+        "cameraPosition",
+        "previousCameraPosition",
+        "near",
+        "far",
+        "frameTimeCounter",
+        "texelSize",
+        "sunPosition",
+        "sunElevation",
+        "lightningBoltPosition",
+        "rainStrength",
+        "unsigned_WsunVecSmooth",
+        "unsigned_WmoonVecSmooth",
+        "isEyeInWater"
+    ], 
+    "samplers": [
+        "vxDepthTexOpaque",
+        "noisetex",
+        "colortex4",
+        "colortex5",
+        "colortex7",
+        "colortex8",
+        "colortex12",
+        "depthtex0",
+        "depthtex1"
+    ]
+}

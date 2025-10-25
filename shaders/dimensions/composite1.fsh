@@ -99,8 +99,17 @@ uniform sampler2D depthtex1;
 uniform sampler2D depthtex2;
 
 #ifdef DISTANT_HORIZONS
-uniform sampler2D dhDepthTex;
-uniform sampler2D dhDepthTex1;
+	uniform sampler2D dhDepthTex;
+	uniform sampler2D dhDepthTex1;
+	#define dhVoxyDepthTex dhDepthTex
+	#define dhVoxyDepthTex1 dhDepthTex1
+#endif
+
+#ifdef VOXY
+	uniform sampler2D vxDepthTexOpaque;
+	uniform sampler2D vxDepthTexTrans;
+	#define dhVoxyDepthTex vxDepthTexTrans
+	#define dhVoxyDepthTex1 vxDepthTexOpaque
 #endif
 
 uniform sampler2D colortex0; //clouds
@@ -140,8 +149,8 @@ uniform bool firstPersonCamera;
 // uniform float far;
 uniform float near;
 uniform float farPlane;
-uniform float dhFarPlane;
-uniform float dhNearPlane;
+uniform float dhVoxyFarPlane;
+uniform float dhVoxyNearPlane;
 
 flat varying vec3 zMults;
 
@@ -252,11 +261,11 @@ vec2 decodeVec2(float a){
     return fract( a * constant1 ) * constant2 ;
 }
 float DH_ld(float dist) {
-    return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
+    return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
 }
 
 float DH_inv_ld (float lindepth){
-	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
+	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 }
 
 float linearizeDepthFast(const in float depth, const in float near, const in float far) {
@@ -396,8 +405,8 @@ float swapperlinZ(float depth, float _near, float _far) {
 // 	float _near = near; float _far = far*4.0;
 
 // 	if (depthCheck) {
-// 		_near = dhNearPlane;
-// 		_far = dhFarPlane;
+// 		_near = dhVoxyNearPlane;
+// 		_far = dhVoxyFarPlane;
 // 	}
     
 
@@ -458,8 +467,8 @@ vec2 SSRT_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, boo
 	float _near = near; float _far = far*4.0;
 
 	if (depthCheck) {
-		_near = dhNearPlane;
-		_far = dhFarPlane;
+		_near = dhVoxyNearPlane;
+		_far = dhVoxyFarPlane;
 	}
     
     vec3 position = toClipSpace3_DH(viewPos, depthCheck) ;
@@ -485,8 +494,8 @@ vec2 SSRT_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, boo
 		
 		float sampleDepth = convertHandDepth_2(texelFetch2D(depthtex1, ivec2(newPos.xy/texelSize),0).x,hand);
 		
-		#ifdef DISTANT_HORIZONS
-			if(depthCheck) sampleDepth = texelFetch2D(dhDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+		#if defined DISTANT_HORIZONS || defined VOXY
+			if(depthCheck) sampleDepth = texelFetch2D(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
 		#endif
 
 		if(sampleDepth < newPos.z){
@@ -524,8 +533,8 @@ float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, floa
 	float _near = near; float _far = far*4.0;
 
 	if (depthCheck) {
-		_near = dhNearPlane;
-		_far = dhFarPlane;
+		_near = dhVoxyNearPlane;
+		_far = dhVoxyFarPlane;
 	}
 
 	vec3 position = toClipSpace3_DH(viewPos, depthCheck) ;
@@ -549,8 +558,8 @@ float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, floa
 		
 		float samplePos = texelFetch2D(depthtex2, ivec2(newPos.xy/texelSize).xy,0).x;
 		
-		#ifdef DISTANT_HORIZONS
-			if(depthCheck) samplePos = texelFetch2D(dhDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+		#if defined DISTANT_HORIZONS || defined VOXY
+			if(depthCheck) samplePos = texelFetch2D(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
 		#endif
 
 		if(samplePos < newPos.z && samplePos > 0.0){// && (samplePos <= max(minZ,maxZ) && samplePos >= min(minZ,maxZ))){
@@ -598,7 +607,7 @@ void doEdgeAwareBlur(
 	);
 
 	for(int i = 0; i < 4; i++) {
-		#ifdef DISTANT_HORIZONS
+		#if defined DISTANT_HORIZONS || defined VOXY
 			float offsetDepth = sqrt(texelFetch2D(depth, UV + OFFSET[i] + UV_NOISE,0).z/65000.0);
 		#else
 			float offsetDepth = ld(convertHandDepth_2(texelFetch2D(depth, UV + OFFSET[i] + UV_NOISE, 0).r,hand));
@@ -632,7 +641,7 @@ vec4 BilateralUpscale_VLFOG(sampler2D tex, sampler2D depth, float referenceDepth
 	vec4 colorSum = vec4(0.0);
 	float edgeSum = 0.0;
 
-	#ifdef DISTANT_HORIZONS
+	#if defined DISTANT_HORIZONS || defined VOXY
 		float threshold = referenceDepth * mix(0.5,  0.05, min(max(0.1 - referenceDepth,0)/0.1,1));
 	#else
 		float threshold = referenceDepth * 0.05;
@@ -664,7 +673,7 @@ vec4 BilateralUpscale_VLFOG(sampler2D tex, sampler2D depth, float referenceDepth
   	);
 
 	for(int i = 0; i < samples; i++) {
-		#ifdef DISTANT_HORIZONS
+		#if defined DISTANT_HORIZONS || defined VOXY
 			float offsetDepth = sqrt(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).a/65000.0);
 		#else
 			float offsetDepth = ld(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE, 0).r);
@@ -929,19 +938,25 @@ void main() {
 		float z =  texelFetch2D(depthtex1, ivec2(gl_FragCoord.xy), 0).x;
 		float swappedDepth = z;
 
+
+
 		bool isDHrange = z >= 1.0;
 
-		#ifdef DISTANT_HORIZONS
+		#if defined DISTANT_HORIZONS || defined VOXY
 			float DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy), 0).z/65000.0);
-			float DH_depth0 = texelFetch2D(dhDepthTex,ivec2(gl_FragCoord.xy), 0).x;
-			float DH_depth1 = texelFetch2D(dhDepthTex1,ivec2(gl_FragCoord.xy), 0).x;
+			float DH_depth0 = texelFetch2D(dhVoxyDepthTex,ivec2(gl_FragCoord.xy), 0).x;
+			float DH_depth1 = texelFetch2D(dhVoxyDepthTex1,ivec2(gl_FragCoord.xy), 0).x;
+
+			#ifdef VOXY
+				DH_depth0 = min(DH_depth0, DH_depth1);
+			#endif
 
 			float depthOpaque = z;
 			float depthOpaqueL = linearizeDepthFast(depthOpaque, near, farPlane);
 			
-			#ifdef DISTANT_HORIZONS
+			#if defined DISTANT_HORIZONS || defined VOXY
 			    float dhDepthOpaque = DH_depth1;
-			    float dhDepthOpaqueL = linearizeDepthFast(dhDepthOpaque, dhNearPlane, dhFarPlane);
+			    float dhDepthOpaqueL = linearizeDepthFast(dhDepthOpaque, dhVoxyNearPlane, dhVoxyFarPlane);
 
 				if (depthOpaque >= 1.0 || (dhDepthOpaqueL < depthOpaqueL && dhDepthOpaque > 0.0)){
 			        depthOpaque = dhDepthOpaque;
@@ -987,7 +1002,7 @@ void main() {
 		float LabSSS = clamp((-65.0 + SpecularTex.z * 255.0) / 190.0 ,0.0,1.0);	
 		// LabSSS = 1;
 
-		vec4 normalAndAO = texture2D(colortex15,texcoord);
+		vec4 normalAndAO = texelFetch2D(colortex15, ivec2(gl_FragCoord.xy), 0);
 		vec3 FlatNormals = normalize(normalAndAO.rgb * 2.0 - 1.0);
 		vec3 slopednormal = normal;
 
@@ -1012,7 +1027,7 @@ void main() {
 		// 0.9 = entity mask
 		// 0.8 = reflective entities
 		// 0.7 = reflective blocks
-  		float translucentMasks = texture2D(colortex7, texcoord).a;
+  		float translucentMasks = texelFetch2D(colortex7, ivec2(gl_FragCoord.xy), 0).a;
 
 		bool isWater = translucentMasks > 0.99;
 		// bool isReflectiveEntity = abs(translucentMasks - 0.8) < 0.01;
@@ -1033,7 +1048,7 @@ void main() {
 			convertHandDepth(z0);
 		}
 
-		#ifdef DISTANT_HORIZONS
+		#if defined DISTANT_HORIZONS || defined VOXY
 			vec3 viewPos = toScreenSpace_DH(texcoord/RENDER_SCALE - TAA_Offset*texelSize*0.5, z, DH_depth1);
 		#else
 			vec3 viewPos = toScreenSpace(vec3(texcoord/RENDER_SCALE - TAA_Offset*texelSize*0.5, z));
@@ -1127,7 +1142,7 @@ void main() {
 		
 		feetPlayerPos += gbufferModelViewInverse[3].xyz;
 		
-		#ifdef DISTANT_HORIZONS
+		#if defined DISTANT_HORIZONS || defined VOXY
 			vec3 playerPos0 = mat3(gbufferModelViewInverse) *  toScreenSpace_DH(texcoord/RENDER_SCALE-TAA_Offset*texelSize*0.5, z0, DH_depth0) + gbufferModelViewInverse[3].xyz;
 		#else
 			vec3 playerPos0 = mat3(gbufferModelViewInverse) * toScreenSpace(vec3(texcoord/RENDER_SCALE-TAA_Offset*texelSize*0.5,z0)) + gbufferModelViewInverse[3].xyz;
@@ -1178,7 +1193,7 @@ void main() {
 	///////////////////////////////////	    FILTER STUFF      //////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////
 
-		#if defined DISTANT_HORIZONS && defined DH_AMBIENT_OCCLUSION
+		#if (defined DISTANT_HORIZONS || defined VOXY) && defined DH_AMBIENT_OCCLUSION
 			doEdgeAwareBlur(colortex3,	colortex14, colortex12, DH_mixedLinearZ, hand, SSAO_SSS, filteredShadow);
 		#else
 			doEdgeAwareBlur(colortex3,	colortex14, depthtex0, ld(z0), 	hand, SSAO_SSS, filteredShadow);
@@ -1280,7 +1295,7 @@ void main() {
 		float sunSSS_density = LabSSS;
 		float SSS_shadow = ShadowAlpha;
 		
-		#ifdef DISTANT_HORIZONS
+		#if defined DISTANT_HORIZONS || defined VOXY
 			shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / min(shadowDistance, max(far-32.0,32.0)),0.0)*5.0,1.0));
 		#endif
 
@@ -1698,7 +1713,7 @@ void main() {
 		// water absorbtion will impact ALL light coming up from terrain underwater.
 		gl_FragData[0].rgb *= Absorbtion;
 
-		#ifdef DISTANT_HORIZONS
+		#if defined DISTANT_HORIZONS || defined VOXY
 	  		float DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy),0).a/65000.0);
 			vec4 vlBehingTranslucents = BilateralUpscale_VLFOG(colortex13, colortex12, DH_mixedLinearZ);
 		#else

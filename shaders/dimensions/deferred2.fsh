@@ -1,7 +1,15 @@
 #include "/lib/settings.glsl"
 
 uniform sampler2D depthtex0;
-uniform sampler2D dhDepthTex;
+#ifdef DISTANT_HORIZONS
+	uniform sampler2D dhDepthTex;
+	#define dhVoxyDepthTex dhDepthTex
+#endif
+
+#ifdef VOXY
+	uniform sampler2D vxDepthTexOpaque;
+	#define dhVoxyDepthTex vxDepthTexOpaque
+#endif
 uniform sampler2D colortex1;
 uniform sampler2D colortex2;
 uniform vec2 texelSize;
@@ -34,8 +42,8 @@ void main() {
 		if(
 			texelFetch2D(depthtex0, ivec2(gl_FragCoord.xy), 0).x < 1.0 
 			
-			#ifdef DISTANT_HORIZONS
-				|| texelFetch2D(dhDepthTex, ivec2(gl_FragCoord.xy), 0).x < 1.0
+			#if defined DISTANT_HORIZONS || defined VOXY
+				|| texelFetch2D(dhVoxyDepthTex, ivec2(gl_FragCoord.xy), 0).x < 1.0
 			#endif
 
 		) {

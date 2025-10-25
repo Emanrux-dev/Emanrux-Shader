@@ -42,7 +42,7 @@ float cloudVol(in vec3 pos, float maxDistance ){
 		medium_gradientFog = mix(medium_gradientFog, 1.0, sandStorm+snowStorm);
 	}
 
-	FogDensities(medium_gradientFog, cloudyFog, rainyFog, maxDistance, parameters.fog.x, parameters.fog.y);
+	FogDensities(medium_gradientFog, cloudyFog, rainyFog, maxDistance, SC_parameters.fog.x, SC_parameters.fog.y);
 
 	return uniformFog + medium_gradientFog + cloudyFog + rainyFog;
 }
@@ -105,8 +105,8 @@ vec4 GetVolumetricFog(
 	vec3 dV = fragposition - start;
 	vec3 dVWorld = wpos - gbufferModelViewInverse[3].xyz;
 
-	#ifdef DISTANT_HORIZONS
-		float maxLength = min(length(dVWorld), max(far, dhRenderDistance))/length(dVWorld);
+	#if defined DISTANT_HORIZONS || defined VOXY
+		float maxLength = min(length(dVWorld), max(far, dhVoxyRenderDistance))/length(dVWorld);
 	#else
 		float maxLength = min(length(dVWorld), far)/length(dVWorld);
 	#endif

@@ -1,8 +1,4 @@
-#ifndef MC_OS_MAC
-	#version 430 compatibility
-#else
-	#version 330 compatibility
-#endif
+#version 430 compatibility
 
 #define OVERWORLD_SHADER
 

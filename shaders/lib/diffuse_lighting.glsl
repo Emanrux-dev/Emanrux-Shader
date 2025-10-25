@@ -24,8 +24,8 @@
         float _near = near; float _far = far*4.0;
 
         if (depthCheck) {
-            _near = dhNearPlane;
-            _far = dhFarPlane;
+            _near = dhVoxyNearPlane;
+            _far = dhVoxyFarPlane;
         }
 
         vec3 position = toClipSpace3_DH(viewPos, depthCheck) ;
@@ -49,8 +49,8 @@
             
             float samplePos = texelFetch2D(depthtex2, ivec2(newPos.xy/texelSize).xy,0).x;
             
-            #ifdef DISTANT_HORIZONS
-                if(depthCheck) samplePos = texelFetch2D(dhDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+            #if defined DISTANT_HORIZONS || defined VOXY
+                if(depthCheck) samplePos = texelFetch2D(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
             #endif
 
             if(samplePos < newPos.z && samplePos > 0.0){// && (samplePos <= max(minZ,maxZ) && samplePos >= min(minZ,maxZ))){

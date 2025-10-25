@@ -1,9 +1,7 @@
-#ifdef MC_OS_MAC
-	#version 120
-#else
-	#version 430 compatibility
-	#include "/lib/SSBOs.glsl"
-#endif
+#version 430 compatibility
+#include "/lib/SSBOs.glsl"
+
+
 #extension GL_ARB_explicit_attrib_location: enable
 #extension GL_ARB_shader_image_load_store: enable
 

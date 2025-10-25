@@ -126,35 +126,35 @@ vec3 toScreenSpace(vec3 p) {
 }
 
 uniform float near;
-uniform float dhFarPlane;
-uniform float dhNearPlane;
+uniform float dhVoxyFarPlane;
+uniform float dhVoxyNearPlane;
 
 
 #include "/lib/DistantHorizons_projections.glsl"
 
 vec3 DH_toScreenSpace(vec3 p) {
-	vec4 iProjDiag = vec4(dhProjectionInverse[0].x, dhProjectionInverse[1].y, dhProjectionInverse[2].zw);
+	vec4 iProjDiag = vec4(dhVoxyProjectionInverse[0].x, dhVoxyProjectionInverse[1].y, dhVoxyProjectionInverse[2].zw);
     vec3 feetPlayerPos = p * 2. - 1.;
-    vec4 viewPos = iProjDiag * feetPlayerPos.xyzz + dhProjectionInverse[3];
+    vec4 viewPos = iProjDiag * feetPlayerPos.xyzz + dhVoxyProjectionInverse[3];
     return viewPos.xyz / viewPos.w;
 }
 
 vec3 DH_toClipSpace3(vec3 viewSpacePosition) {
-    return projMAD(dhProjection, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
+    return projMAD(dhVoxyProjection, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
 }
 
 // float DH_ld(float dist) {
-//     return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
+//     return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
 // }
 // float DH_invLinZ (float lindepth){
-// 	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
+// 	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 // }
 
 float DH_ld(float dist) {
-    return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
+    return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
 }
 float DH_inv_ld (float lindepth){
-	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
+	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 }
 
 float linearizeDepthFast(const in float depth, const in float near, const in float far) {
@@ -241,7 +241,7 @@ float mixhistory = 0.06;
 	if (gl_FragCoord.x > 1 && gl_FragCoord.x < 4 && gl_FragCoord.y > 1 && gl_FragCoord.y < 4){
 		mixhistory = 10.0 * frameTime;
 
-		gl_FragData[0].rgb = writeSceneControllerParameters(gl_FragCoord.xy, parameters.smallCumulus, parameters.largeCumulus, parameters.altostratus, parameters.cirrus, parameters.fog);
+		gl_FragData[0].rgb = writeSceneControllerParameters(gl_FragCoord.xy, SC_parameters.smallCumulus, SC_parameters.largeCumulus, SC_parameters.altostratus, SC_parameters.cirrus, SC_parameters.fog);
 	}
 
 	///////////////////////////////

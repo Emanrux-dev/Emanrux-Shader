@@ -16,13 +16,23 @@ flat varying vec3 averageSkyCol;
 flat varying vec3 averageSkyCol_Clouds;
 // flat varying float exposure;
 
-// uniform int dhRenderDistance;
+// uniform int dhVoxyRenderDistance;
 uniform sampler2D noisetex;
 uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
+
 #ifdef DISTANT_HORIZONS
-uniform sampler2D dhDepthTex;
-uniform sampler2D dhDepthTex1;
+	uniform sampler2D dhDepthTex;
+	uniform sampler2D dhDepthTex1;
+	#define dhVoxyDepthTex dhDepthTex
+	#define dhVoxyDepthTex1 dhDepthTex1
+#endif
+
+#ifdef VOXY
+	uniform sampler2D vxDepthTexOpaque;
+	uniform sampler2D vxDepthTexTrans;
+	#define dhVoxyDepthTex vxDepthTexTrans
+	#define dhVoxyDepthTex1 vxDepthTexOpaque
 #endif
 
 uniform sampler2D colortex2;
@@ -40,8 +50,8 @@ uniform vec3 sunVec;
 uniform float sunElevation;
 
 // uniform float far;
-uniform float dhFarPlane;
-uniform float dhNearPlane;
+uniform float dhVoxyFarPlane;
+uniform float dhVoxyNearPlane;
 uniform float near;
 
 uniform int frameCounter;
@@ -75,10 +85,10 @@ uniform vec3 previousCameraPosition;
 #include "/lib/DistantHorizons_projections.glsl"
 
 float DH_ld(float dist) {
-    return (2.0 * near) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
+    return (2.0 * near) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
 }
 float DH_inv_ld (float lindepth){
-	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
+	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 }
 
 float linearizeDepthFast(const in float depth, const in float near, const in float far) {
@@ -278,8 +288,10 @@ void main() {
 
 	vec2 tc = floor(gl_FragCoord.xy)/VL_RENDER_RESOLUTION*texelSize+0.5*texelSize;
 
-	float alpha = texture2D(colortex7,tc).a ;
-	float blendedAlpha = texture2D(colortex2, tc).a;
+	ivec2 texcoord = ivec2(tc/texelSize);
+
+	float alpha = texelFetch2D(colortex7, texcoord, 0).a ;
+	float blendedAlpha = texelFetch2D(colortex2,  texcoord, 0).a;
 
 
 	bool iswater = alpha > 0.99;
@@ -292,21 +304,22 @@ void main() {
 		float noise_1 = R2_dither();
 		float noise_2 = blueNoise();
 
-		ivec2 texcoord = ivec2(tc/texelSize);
-
 		float z0 = texelFetch2D(depthtex0, texcoord, 0 ).x;
 
-		#ifdef DISTANT_HORIZONS
-			float DH_z0 = texelFetch2D(dhDepthTex, texcoord, 0 ).x;//texture2D(dhDepthTex,tc).x;
+		#if defined DISTANT_HORIZONS || defined VOXY
+			float DH_z0 = texelFetch2D(dhVoxyDepthTex, texcoord, 0 ).x;//texture2D(dhDepthTex,tc).x;
 		#else
 			float DH_z0 = 0.0;
 		#endif
 
 		float z = texelFetch2D(depthtex1, texcoord, 0 ).x;
 
-		#ifdef DISTANT_HORIZONS
+		#if defined DISTANT_HORIZONS || defined VOXY
 			// float DH_z = texture2D(dhDepthTex1,tc).x;
-			float DH_z = texelFetch2D(dhDepthTex1, texcoord, 0 ).x;//texture2D(dhDepthTex,tc).x;
+			float DH_z = texelFetch2D(dhVoxyDepthTex1, texcoord, 0 ).x;//texture2D(dhDepthTex,tc).x;
+			#ifdef VOXY
+				DH_z0 = min(DH_z0, DH_z);
+			#endif
 		#else
 			float DH_z = 0.0;
 		#endif

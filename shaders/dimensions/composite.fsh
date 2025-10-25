@@ -17,6 +17,15 @@ uniform sampler2D depthtex1;
 #ifdef DISTANT_HORIZONS
 	uniform sampler2D dhDepthTex;
 	uniform sampler2D dhDepthTex1;
+	#define dhVoxyDepthTex dhDepthTex
+	#define dhVoxyDepthTex1 dhDepthTex1
+#endif
+
+#ifdef VOXY
+	uniform sampler2D vxDepthTexOpaque;
+	uniform sampler2D vxDepthTexTrans;
+	#define dhVoxyDepthTex vxDepthTexTrans
+	#define dhVoxyDepthTex1 vxDepthTexOpaque
 #endif
 
 uniform sampler2D colortex1;
@@ -68,8 +77,8 @@ uniform float viewHeight;
 
 // uniform float far;
 uniform float near;
-uniform float dhFarPlane;
-uniform float dhNearPlane;
+uniform float dhVoxyFarPlane;
+uniform float dhVoxyNearPlane;
 
 #include "/lib/Shadows.glsl"
 
@@ -230,10 +239,10 @@ vec2 CleanSample(
 #include "/lib/DistantHorizons_projections.glsl"
 
 float DH_ld(float dist) {
-    return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
+    return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
 }
 float DH_inv_ld (float lindepth){
-	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
+	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 }
 
 float linearizeDepthFast(const in float depth, const in float near, const in float far) {
@@ -286,8 +295,8 @@ vec2 SSAO(
 			
 			float sampleDepth = convertHandDepth_2(texelFetch2D(depthtex1, offsetUV, 0).x, hand);
 
-			#ifdef DISTANT_HORIZONS
-				float sampleDHDepth = texelFetch2D(dhDepthTex1, offsetUV, 0).x;
+			#if defined DISTANT_HORIZONS || defined VOXY
+				float sampleDHDepth = texelFetch2D(dhVoxyDepthTex1, offsetUV, 0).x;
 				vec3 offsetViewPos = toScreenSpace_DH((offsetUV*texelSize - jitterOffsets) * (1.0/RENDER_SCALE), sampleDepth, sampleDHDepth);
 			#else
 				vec3 offsetViewPos = toScreenSpace(vec3((offsetUV*texelSize - jitterOffsets) * (1.0/RENDER_SCALE), sampleDepth));
@@ -377,9 +386,12 @@ void main() {
 	float z = texelFetch2D(depthtex1,ivec2(gl_FragCoord.xy),0).x;
 	float z0 = texelFetch2D(depthtex0,ivec2(gl_FragCoord.xy),0).x;
 
-	#ifdef DISTANT_HORIZONS
-		float DH_depth1 = texelFetch2D(dhDepthTex1,ivec2(gl_FragCoord.xy),0).x;
-		float DH_depth0 = texelFetch2D(dhDepthTex,ivec2(gl_FragCoord.xy),0).x;
+	#if defined DISTANT_HORIZONS || defined VOXY
+		float DH_depth1 = texelFetch2D(dhVoxyDepthTex1,ivec2(gl_FragCoord.xy),0).x;
+		float DH_depth0 = texelFetch2D(dhVoxyDepthTex,ivec2(gl_FragCoord.xy),0).x;
+		#ifdef VOXY
+			DH_depth0 = min(DH_depth1, DH_depth0);
+		#endif
 		float swappedDepth = z >= 1.0 ? DH_depth1 : z;
 	#else
 		float DH_depth1 = 1.0;
@@ -392,29 +404,29 @@ void main() {
 	float depth = z;
 	float depth0 = z0;
 
-	#ifdef DISTANT_HORIZONS
+	#if defined DISTANT_HORIZONS || defined VOXY
 		float _near = near;
 		float _far = far*4.0;
 		if (depth >= 1.0) {
 			depth = DH_depth1;
-			_near = dhNearPlane;
-			_far = dhFarPlane;
+			_near = dhVoxyNearPlane;
+			_far = dhVoxyFarPlane;
 		}
 
 		depth = linearizeDepthFast(depth, _near, _far);
-		depth = depth / dhFarPlane;
+		depth = depth / dhVoxyFarPlane;
 
 		_near = near;
 		_far = far*4.0;
 
 		if (depth0 >= 1.0) {
 			depth0 = DH_depth0;
-			_near = dhNearPlane;
-			_far = dhFarPlane;
+			_near = dhVoxyNearPlane;
+			_far = dhVoxyFarPlane;
 		}
 
 		depth0 = linearizeDepthFast(depth0, _near, _far);
-		depth0 = depth0 / dhFarPlane;
+		depth0 = depth0 / dhVoxyFarPlane;
 	#endif
 
 	if(depth < 1.0 || depth0 < 1.0)

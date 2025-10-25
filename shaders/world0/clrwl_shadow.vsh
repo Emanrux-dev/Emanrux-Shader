@@ -129,7 +129,7 @@ bool intersectCone(float coneHalfAngle, vec3 coneTip , vec3 coneAxis, vec3 rayOr
 
 
 // uniform float far;
-uniform float dhFarPlane;
+uniform float dhVoxyFarPlane;
 
 #include "/lib/DistantHorizons_projections.glsl"
 

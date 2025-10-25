@@ -420,10 +420,13 @@ uniform int moonPhase;
 #define daySpeed 1.0 // [0.1 0.125 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.5 3.0 3.5 4.0 4.5 5.0]
 #define nightSpeed 1.0 // [0.1 0.125 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.5 3.0 3.5 4.0 4.5 5.0]
 
+#ifndef VOXY_PROGRAM
 uniform vec3 unsigned_WsunVecSmooth;
+uniform vec3 unsigned_WmoonVecSmooth;
+#endif
+
 #define WsunVecSmooth normalize(unsigned_WsunVecSmooth)
 
-uniform vec3 unsigned_WmoonVecSmooth;
 #define WmoonVecSmooth normalize(unsigned_WmoonVecSmooth)
 
 #define SKY_GROUND
@@ -1055,6 +1058,17 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #ifdef LPV_HANDHELD_SHADOWS
 #endif
 
+
+//////////////////////////////////
+// ----- VOXY SETTINGS ----- //
+//////////////////////////////////
+
+#define VOXY_REFLECTIONS
+
+#ifdef VOXY_REFLECTIONS
+#endif
+
+
 ////////////////////////////////
 // ----- DEBUG SETTINGS ----- //
 ////////////////////////////////
@@ -1156,3 +1170,4 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 	#undef VOLUMETRIC_CLOUDS
 	#undef CLOUDS_SHADOWS
 #endif
+

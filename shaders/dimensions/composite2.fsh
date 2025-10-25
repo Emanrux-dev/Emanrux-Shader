@@ -18,8 +18,17 @@ uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
 
 #ifdef DISTANT_HORIZONS
-uniform sampler2D dhDepthTex;
-uniform sampler2D dhDepthTex1;
+	uniform sampler2D dhDepthTex;
+	uniform sampler2D dhDepthTex1;
+	#define dhVoxyDepthTex dhDepthTex
+	#define dhVoxyDepthTex1 dhDepthTex1
+#endif
+
+#ifdef VOXY
+	uniform sampler2D vxDepthTexOpaque;
+	uniform sampler2D vxDepthTexTrans;
+	#define dhVoxyDepthTex vxDepthTexTrans
+	#define dhVoxyDepthTex1 vxDepthTexOpaque
 #endif
 
 uniform sampler2D colortex0;
@@ -38,8 +47,8 @@ uniform float sunElevation;
 
 // uniform float far;
 uniform float near;
-uniform float dhFarPlane;
-uniform float dhNearPlane;
+uniform float dhVoxyFarPlane;
+uniform float dhVoxyNearPlane;
 
 uniform mat4 gbufferPreviousModelView;
 uniform vec3 previousCameraPosition;
@@ -66,7 +75,7 @@ uniform ivec2 eyeBrightnessSmooth;
 uniform float eyeAltitude;
 uniform float caveDetection;
 
-// uniform int dhRenderDistance;
+// uniform int dhVoxyRenderDistance;
 #define DHVLFOG
 #define diagonal3(m) vec3((m)[0].x, (m)[1].y, m[2].z)
 #define  projMAD(m, v) (diagonal3(m) * (v) + (m)[3].xyz)
@@ -82,10 +91,10 @@ uniform float caveDetection;
 #include "/lib/DistantHorizons_projections.glsl"
 
 float DH_ld(float dist) {
-    return (2.0 * dhNearPlane) / (dhFarPlane + dhNearPlane - dist * (dhFarPlane - dhNearPlane));
+    return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
 }
 float DH_inv_ld (float lindepth){
-	return -((2.0*dhNearPlane/lindepth)-dhFarPlane-dhNearPlane)/(dhFarPlane-dhNearPlane);
+	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 }
 
 float linearizeDepthFast(const in float depth, const in float near, const in float far) {
@@ -418,8 +427,8 @@ vec4 raymarchTest(
 	float minHeight = 250.0;
 	float maxHeight = minHeight + 100.0;
 	
-	#if defined DISTANT_HORIZONS
-		float maxdist = dhFarPlane - 16.0;
+	#if defined DISTANT_HORIZONS || defined VOXY
+		float maxdist = dhVoxyFarPlane - 16.0;
 	#else
 		float maxdist = far*4;
 	#endif
@@ -515,8 +524,12 @@ void main() {
 	
 	float z0 = depth < 0.56 ? convertHandDepth(depth) : depth;
 
-	#ifdef DISTANT_HORIZONS
-		float DH_z0 = texelFetch2D(dhDepthTex, texcoord,0).x;
+	#if defined DISTANT_HORIZONS || defined VOXY
+		float DH_z0 = texelFetch2D(dhVoxyDepthTex, texcoord,0).x;
+		#ifdef VOXY
+			float DH_z1= texelFetch2D(dhVoxyDepthTex1, texcoord,0).x;
+			DH_z0 = min(DH_z0, DH_z1);
+		#endif
 	#else
 		float DH_z0 = 0.0;
 	#endif

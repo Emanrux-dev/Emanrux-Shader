@@ -1,9 +1,6 @@
-#ifdef MC_OS_MAC
-	#version 120
-#else
-	#version 430 compatibility
-	#include "/lib/SSBOs.glsl"
-#endif
+#version 430 compatibility
+#include "/lib/SSBOs.glsl"
+
 
 #include "/lib/settings.glsl"
 #if defined IS_LPV_ENABLED || WATER_INTERACTION == 2 || defined SHADER_GRASS
@@ -130,7 +127,7 @@ bool intersectCone(float coneHalfAngle, vec3 coneTip , vec3 coneAxis, vec3 rayOr
 
 
 // uniform float far;
-uniform float dhFarPlane;
+uniform float dhVoxyFarPlane;
 
 #include "/lib/DistantHorizons_projections.glsl"
 

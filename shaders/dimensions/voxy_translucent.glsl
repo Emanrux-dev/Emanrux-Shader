@@ -178,7 +178,6 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
     gbuffer_data_0 = parameters.sampledColour * parameters.tinting;
 
     vec3 Albedo = toLinear(gbuffer_data_0.rgb);
-    float UnchangedAlpha = gbuffer_data_0.a;
     
     int blockID = int(parameters.customId);
     bool isWater = blockID == 8;
@@ -280,6 +279,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
     vec3 normals = normalize(worldToView(normal));
 
+	if(isWater) {
     #if defined FORWARD_SPECULAR
 		vec3 Reflections_Final = vec3(0.0);
 		vec4 Reflections = vec4(0.0);
@@ -332,6 +332,9 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#else
 		gbuffer_data_0.rgb = FinalColor*0.1;
 	#endif
+	} else {
+		gbuffer_data_0.rgb = FinalColor*0.1;
+	}
 
     float material = 0.7;
     if(isWater) material = 1.0;

@@ -299,14 +299,7 @@ void main() {
 	///////////////// BEHIND OF TRANSLUCENTS /////////////////
 	//////////////////////////////////////////////////////////
 
-	#ifdef VOXY
-		bool isVoxy = abs(alpha-0.7) > 0.01;
-
-		if(blendedAlpha > 0.0 || iswater || isVoxy)
-	#else
-		if(blendedAlpha > 0.0 || iswater)
-	#endif
-	{
+	if(blendedAlpha > 0.0 || iswater) {
 		float noise_1 = R2_dither();
 		float noise_2 = blueNoise();
 

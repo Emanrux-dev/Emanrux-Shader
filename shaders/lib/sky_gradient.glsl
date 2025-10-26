@@ -231,5 +231,5 @@ vec4 volumetricsFromTex(vec3 pos,sampler2D sampler, float LOD){
 
 	vec2 uv = p*texelSize*256. + vec2(256.0 - 256.0*0.12,1.5)*texelSize;
 
-	return texture2D(sampler, uv, LOD);
+	return textureLod(sampler, uv, LOD);
 }

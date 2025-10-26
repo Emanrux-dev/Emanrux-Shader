@@ -6,8 +6,6 @@
 #include "/lib/items.glsl"
 #include "/lib/hsv.glsl"
 
-flat in int NameTags;
-
 #ifdef HAND
 #undef POM
 #endif
@@ -51,10 +49,7 @@ in vec4 color;
 
 uniform float far;
 
-
-uniform float wetness;
 in vec4 normalMat;
-
 
 #ifdef MC_NORMAL_MAP
 	uniform sampler2D normals;
@@ -95,13 +90,6 @@ uniform vec4 entityColor;
 // in vec3 velocity;
 
 flat in float blockID;
-
-flat in float SSSAMOUNT;
-flat in float EMISSIVE;
-flat in int LIGHTNING;
-flat in int PORTAL;
-flat in int SIGN;
-flat in int ISSHADERGRASS;
 
 uniform int heldItemId;
 uniform int heldItemId2;
@@ -257,35 +245,35 @@ vec4 readNoise(in vec2 coord){
 	// return texture2D(noisetex,coord*texcoordam.pq+texcoord.st);
 		return texture2DGradARB(noisetex,coord*texcoordam.pq + texcoordam.st,dcdx,dcdy);
 }
-float EndPortalEffect(
-	inout vec4 ALBEDO,
-	vec3 FragPos,
-	vec3 WorldPos,
-	mat3 tbnMatrix
-){	
-
-	int maxdist = 25;
-	int quality = 35;
-
-	vec3 viewVec = normalize(tbnMatrix*FragPos);
-	if ( viewVec.z < 0.0 && length(FragPos) < maxdist) {
-		float endportalGLow = 0.0;
-		float Depth = 0.3;
-		vec3 interval = (viewVec.xyz /-viewVec.z/quality*Depth) * (0.7 + (blueNoise-0.5)*0.1);
-
-		vec3 coord = vec3(WorldPos.xz , 1.0);
-		coord += interval;
-
-		for (int loopCount = 0; (loopCount < quality) && (1.0 - Depth + Depth * ( 1.0-readNoise(coord.st).r - readNoise(-coord.st*3).b*0.2 ) ) < coord.p  && coord.p >= 0.0; ++loopCount) {
-			coord = coord+interval ; 
-			endportalGLow += (0.3/quality);
-		}
-
-  		ALBEDO.rgb = vec3(0.5,0.75,1.0) * sqrt(endportalGLow);
-
-		return clamp(pow(endportalGLow*3.5,3),0,1);
-	}
-}
+// float EndPortalEffect(
+// 	inout vec4 ALBEDO,
+// 	vec3 FragPos,
+// 	vec3 WorldPos,
+// 	mat3 tbnMatrix
+// ){	
+// 
+// 	int maxdist = 25;
+// 	int quality = 35;
+// 
+// 	vec3 viewVec = normalize(tbnMatrix*FragPos);
+// 	if ( viewVec.z < 0.0 && length(FragPos) < maxdist) {
+// 		float endportalGLow = 0.0;
+// 		float Depth = 0.3;
+// 		vec3 interval = (viewVec.xyz /-viewVec.z/quality*Depth) * (0.7 + (blueNoise-0.5)*0.1);
+// 
+// 		vec3 coord = vec3(WorldPos.xz , 1.0);
+// 		coord += interval;
+// 
+// 		for (int loopCount = 0; (loopCount < quality) && (1.0 - Depth + Depth * ( 1.0-readNoise(coord.st).r - readNoise(-coord.st*3).b*0.2 ) ) < coord.p  && coord.p >= 0.0; ++loopCount) {
+// 			coord = coord+interval ; 
+// 			endportalGLow += (0.3/quality);
+// 		}
+// 
+//   		ALBEDO.rgb = vec3(0.5,0.75,1.0) * sqrt(endportalGLow);
+// 
+// 		return clamp(pow(endportalGLow*3.5,3),0,1);
+// 	}
+// }
 
 float bias(){
 	// return (Texture_MipMap_Bias + (blueNoise-0.5)*0.5) - (1.0-RENDER_SCALE.x) * 2.0;
@@ -298,9 +286,12 @@ vec4 texture2D_POMSwitch(
 	bool ifPOM,
 	float LOD
 ){
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	if(ifPOM){
 		return texture2DGradARB(sampler, lightmapCoord, dcdxdcdy.xy, dcdxdcdy.zw);
-	}else{
+	}else
+	#endif
+	{
 		return texture2D(sampler, lightmapCoord, LOD);
 	}
 }
@@ -345,7 +336,23 @@ void main() {
 		ifPOM = true;
 	#endif
 
-	if(SIGN > 0 || ISSHADERGRASS > 0) ifPOM = false;
+	bool ShaderGrass = abs(blockID+15.0) < 0.1;
+
+	bool SIGN = false;
+	bool PORTAL = false;
+
+	if(blockID == BLOCK_SIGN) SIGN = true;
+
+	#ifdef ENTITIES
+		// disallow POM to work on item frames.
+		if(blockID == ENTITY_ITEM_FRAME) SIGN = true;
+	#else
+		if(blockID == BLOCK_SIGN) SIGN = true;
+	#endif
+
+	if(blockID == BLOCK_END_PORTAL || blockID == 187) PORTAL = true;
+
+	if(SIGN || ShaderGrass) ifPOM = false;
 
 	vec3 normal = normalMat.xyz;
 
@@ -386,7 +393,7 @@ void main() {
 
 	gl_FragDepth = gl_FragCoord.z;
 	#ifdef SHADER_GRASS
-	 if (falloff > 0.0 && ISSHADERGRASS == 0)
+	 if (falloff > 0.0 && !ShaderGrass)
 	#else
 	 if (falloff > 0.0)
 	#endif
@@ -442,7 +449,7 @@ void main() {
 	#ifndef COLORWHEEL
 		vec4 Albedo = color;
 		#ifdef SHADER_GRASS
-		if (ISSHADERGRASS < 1)
+		if (!ShaderGrass)
 		#endif
 		{
 		 Albedo *= texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
@@ -459,7 +466,7 @@ void main() {
 
 	#if REPLACE_SHORT_GRASS < 2 && defined SHADER_GRASS
 		// darken the top of grass blocks a bit
-		if(blockID == 85 && viewToWorld(FlatNormals).y > abs(0.9) && ISSHADERGRASS < 1) Albedo *= smoothstep(-30.0, 25.0, length(playerpos));
+		if(blockID == 85 && viewToWorld(FlatNormals).y > abs(0.9) && !ShaderGrass) Albedo *= smoothstep(-30.0, 25.0, length(playerpos));
 	#endif
 
 	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
@@ -472,8 +479,6 @@ void main() {
 	#if defined HAND
 		if (Albedo.a < 0.1) discard;
 	#endif
-
-	if(LIGHTNING > 0) Albedo = vec4(1);
 
 	float torchlightmap = lmcoord.x;
 
@@ -508,11 +513,9 @@ void main() {
 		#endif
 	#endif
 	
-	float lightmap = clamp( (lmcoord.y-0.9) * 10.0,0.,1.);
-
 	#if  defined WORLD && !defined ENTITIES && !defined HAND
 	float endPortalEmission = 0.0;
-	if(PORTAL > 0) {
+	if(PORTAL) {
 		const float steps = 20;
 
 		vec3 color = vec3(0.0);
@@ -522,11 +525,11 @@ void main() {
 
 		vec3 viewVec = normalize(tbnMatrix*fragpos);
 		vec3 correctedViewVec = viewVec;
-		if(PORTAL > 0){
+		
 		correctedViewVec.xy = mix(correctedViewVec.xy, vec2( viewVec.y,-viewVec.x), clamp( worldSpaceNormal.y,0,1));
 		correctedViewVec.xy = mix(correctedViewVec.xy, vec2(-viewVec.y, viewVec.x), clamp(-worldSpaceNormal.x,0,1)); 
 		correctedViewVec.xy = mix(correctedViewVec.xy, vec2(-viewVec.y, viewVec.x), clamp(-worldSpaceNormal.z,0,1));
-		}
+		
 		correctedViewVec.z = mix(correctedViewVec.z, -correctedViewVec.z, clamp(length(vec3(worldSpaceNormal.xz, clamp(-worldSpaceNormal.y,0,1))),0,1)); 
 		
 		vec2 correctedWorldPos = playerpos.xz + cameraPosition.xz;
@@ -629,7 +632,7 @@ void main() {
 
 	#if defined WORLD && defined MC_NORMAL_MAP
 		#ifdef SHADER_GRASS
-		if(ISSHADERGRASS < 1)
+		if(!ShaderGrass)
 		#endif
 		{
 			vec4 NormalTex = texture2D_POMSwitch(normals, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD).xyzw;
@@ -652,14 +655,108 @@ void main() {
 	//////////////////////////////// 				//////////////////////////////// 
 	
 	#ifdef WORLD
+
+		#if SSS_TYPE == 1 || SSS_TYPE == 2
+			float SSSAMOUNT = 0.0;
+
+			if (ShaderGrass) SSSAMOUNT = 1.0;
+
+			/////// ----- SSS ON BLOCKS ----- ///////
+			// strong
+			if (
+				blockID == BLOCK_SSS_STRONG || blockID == BLOCK_SAPLING || blockID == BLOCK_AIR_WAVING
+			) {
+				SSSAMOUNT = 1.0;
+			}
+
+			// medium
+			if (
+				blockID == BLOCK_GROUND_WAVING || blockID == BLOCK_GROUND_WAVING_VERTICAL
+				|| blockID == BLOCK_GRASS_SHORT || blockID == BLOCK_GRASS_TALL_UPPER || blockID == BLOCK_GRASS_TALL_LOWER
+			) {
+				SSSAMOUNT = 0.5;
+			}
+			if (
+				blockID == BLOCK_SSS_WEAK || blockID == BLOCK_SSS_WEAK_2 ||
+				blockID == BLOCK_GLOW_LICHEN || blockID == BLOCK_SNOW_LAYERS || blockID == BLOCK_CARPET ||
+				blockID == BLOCK_AMETHYST_BUD_MEDIUM || blockID == BLOCK_AMETHYST_BUD_LARGE || blockID == BLOCK_AMETHYST_CLUSTER ||
+				blockID == BLOCK_BAMBOO || blockID == BLOCK_SAPLING || blockID == BLOCK_VINE
+			) {
+				SSSAMOUNT = 0.5;
+			}
+			
+			// low
+			#ifdef MISC_BLOCK_SSS
+				if(
+					blockID == BLOCK_SSS_WEIRD || blockID == BLOCK_GRASS
+				){
+					SSSAMOUNT = 0.5;
+				}
+			#endif
+
+			#ifdef ENTITIES
+				#ifdef MOB_SSS
+					/////// ----- SSS ON MOBS----- ///////
+					// strong
+					if(blockID == ENTITY_SSS_MEDIUM) SSSAMOUNT = 0.75;
+			
+					// medium
+			
+					// low
+					if(blockID == ENTITY_SSS_WEAK || blockID == ENTITY_PLAYER) SSSAMOUNT = 0.4;
+				#endif
+			#endif
+
+			#ifdef BLOCKENTITIES
+				/////// ----- SSS ON BLOCK ENTITIES----- ///////
+				// strong
+
+				// medium
+				if(blockID == BLOCK_SSS_WEAK_3) SSSAMOUNT = 0.4;
+
+				// low
+
+			#endif
+		#endif
+
+		#if EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2
+			/////// ----- EMISSIVE STUFF ----- ///////
+			float EMISSIVE = 0.0;
+
+			// if(vNameTags > 0) EMISSIVE = 0.9;
+
+			// normal block lightsources
+			if(blockID >= 100 && blockID < 300) EMISSIVE = 0.5;
+
+			if(blockID == 266 || blockID == 497) EMISSIVE = 0.2; // sculk stuff
+
+			if(blockID == 195) EMISSIVE = 2.3; // glow lichen
+
+			if(blockID == 185) EMISSIVE = 1.5; // crying obsidian
+
+			if(blockID == 105) EMISSIVE = 2.0; // brewing stand
+			
+			if(blockID == 236) EMISSIVE = 1.0; // respawn anchor
+
+			if(blockID == 101) EMISSIVE = 0.7; // large amethyst bud
+
+			if(blockID == 103) EMISSIVE = 1.0; // amethyst cluster
+
+			if(blockID == 244) EMISSIVE = 1.5; // soul fire
+
+			#ifdef EMISSIVE_ORES
+				if(blockID == 502) EMISSIVE = EMISSIVE_ORES_STRENGTH;
+			#endif
+		#endif
+
+
 		vec4 SpecularTex = vec4(0.0);
 		#ifdef SHADER_GRASS
-		if (ISSHADERGRASS > 0) {
+		if (ShaderGrass) {
 			SpecularTex = vec4(0.15, 0.025, 1.0, 0.0);
 		} else
 		#endif
 		{
-
 			SpecularTex = texture2D_POMSwitch(specular, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD);
 		}
 
@@ -686,7 +783,7 @@ void main() {
 		#endif
 		
 		#if  defined WORLD && !defined ENTITIES && !defined HAND
-			if(PORTAL > 0) gl_FragData[1].a = endPortalEmission;
+			if(PORTAL) gl_FragData[1].a = endPortalEmission;
 		#endif
 
 		#if SSS_TYPE == 0
@@ -729,7 +826,7 @@ void main() {
 		vec3 flatNormals = viewToWorld(FlatNormals);
 
 		#ifdef SHADER_GRASS
-			if (ISSHADERGRASS > 0) {flatNormals = FlatNormals; normal = GrassNormals;}
+			if (ShaderGrass) {flatNormals = FlatNormals; normal = GrassNormals;}
 		#endif
 
 		vec4 data1 = clamp( encode(normal, PackLightmaps), 0.0, 1.0);

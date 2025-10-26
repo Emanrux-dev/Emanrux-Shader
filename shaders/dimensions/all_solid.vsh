@@ -1,4 +1,3 @@
-
 #include "/lib/settings.glsl"
 #include "/lib/res_params.glsl"
 #include "/lib/bokeh.glsl"
@@ -28,8 +27,11 @@ Read the terms of modification and sharing before changing something below pleas
 #define MC_NORMAL_MAP
 #endif
 
+#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES
 out vec4 vgrassSideCheck;
 out vec3 vcenterPosition;
+flat out int vdiscardGrass;
+#endif
 
 out vec4 vcolor;
 out float vVanillaAO;
@@ -68,8 +70,6 @@ uniform int heldItemId2;
 	attribute vec3 at_midBlock;
 #endif
 
-flat out int vNameTags;
-
 uniform int frameCounter;
 uniform float far;
 uniform float aspectRatio;
@@ -78,13 +78,6 @@ uniform float viewWidth;
 uniform int hideGUI;
 uniform float screenBrightness;
 uniform int isEyeInWater;
-
-flat out float vSSSAMOUNT;
-flat out float vEMISSIVE;
-flat out int vLIGHTNING;
-flat out int vPORTAL;
-flat out int vSIGN;
-flat out int vdiscardGrass;
 
 // in vec3 at_velocity;
 // out vec3 velocity;
@@ -270,156 +263,64 @@ void main() {
 	
 	vFlatNormals = vnormalMat.xyz;
 
-	vblockID = mc_Entity.x ;
+	#ifdef ENTITIES
+		vblockID = entityId;
+	#elif defined BLOCKENTITIES
+		vblockID = blockEntityId;
+	#else
+		vblockID = mc_Entity.x;
+	#endif
 
 	if(vblockID == BLOCK_GROUND_WAVING_VERTICAL || vblockID == BLOCK_GRASS_SHORT || vblockID == BLOCK_GRASS_TALL_LOWER || vblockID == BLOCK_GRASS_TALL_UPPER ) vnormalMat.a = 0.60;
 
-
-	vPORTAL = 0;
-	vSIGN = 0;
-
 	#if defined WORLD && !defined HAND
-		if(blockEntityId == BLOCK_SIGN) vSIGN = 1;
 
-		if(blockEntityId == BLOCK_END_PORTAL || blockEntityId == 187) {
-			vPORTAL = 1;
-			vlmtexcoord.w = 0.0;
-		}
+		#ifdef BLOCKENTITIES
+			if(blockEntityId == BLOCK_END_PORTAL || blockEntityId == 187) {
+				vlmtexcoord.w = 0.0;
+			}
+		#endif
 
 		#if PUDDLE_MODE > 0 || ShaderSnow > 0
 			if(vblockID == 215) vlmtexcoord.w = 0.0;
 		#endif
 	#endif
 	
-	vNameTags = 0;
-
-#ifdef ENTITIES
-
-	// disallow POM to work on item frames.
-	if(entityId == ENTITY_ITEM_FRAME) vSIGN = 1;
-
-
-	// try and single out nametag text and then discard nametag background
-	// if( dot(gl_Color.rgb, vec3(1.0/3.0)) < 1.0) vNameTags = 1;
-	// if(gl_Color.a < 1.0) vNameTags = 1;
-	// if(gl_Color.a >= 0.24 && gl_Color.a <= 0.25 ) gl_Position = vec4(10,10,10,1);
-	#ifdef INCLUDE_UNLISTED_ENTITIES
-		vnormalMat.a = 0.45;
-	#else
-		if(entityId == ENTITY_BOAT || entityId == ENTITY_SMALLSHIPS || entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468) vnormalMat.a = 0.45;
+	#ifdef ENTITIES
+		// try and single out nametag text and then discard nametag background
+		// if( dot(gl_Color.rgb, vec3(1.0/3.0)) < 1.0) vNameTags = 1;
+		// if(gl_Color.a < 1.0) vNameTags = 1;
+		// if(gl_Color.a >= 0.24 && gl_Color.a <= 0.25 ) gl_Position = vec4(10,10,10,1);
+		#ifdef INCLUDE_UNLISTED_ENTITIES
+			vnormalMat.a = 0.45;
+		#else
+			if(entityId == ENTITY_BOAT || entityId == ENTITY_SMALLSHIPS || entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468) vnormalMat.a = 0.45;
+		#endif
 	#endif
-#endif
 
 	if(mc_Entity.x == BLOCK_AIR_WAVING) vnormalMat.a = 0.55;
-
-    /////// ----- EMISSIVE STUFF ----- ///////
-		vEMISSIVE = 0.0;
-		vLIGHTNING = 0;
-	// if(vNameTags > 0) vEMISSIVE = 0.9;
-
-	// normal block lightsources		
-	if(mc_Entity.x >= 100 && mc_Entity.x < 300) vEMISSIVE = 0.5;
-
-	if(mc_Entity.x == 266 || mc_Entity.x == 497) vEMISSIVE = 0.2; // sculk stuff
-
-	if(mc_Entity.x == 195) vEMISSIVE = 2.3; // glow lichen
-
-	if(mc_Entity.x == 185) vEMISSIVE = 1.5; // crying obsidian
-
-	if(mc_Entity.x == 105) vEMISSIVE = 2.0; // brewing stand
-	
-	if(mc_Entity.x == 236) vEMISSIVE = 1.0; // respawn anchor
-
-	if(mc_Entity.x == 101) vEMISSIVE = 0.7; // large amethyst bud
-
-	if(mc_Entity.x == 103) vEMISSIVE = 1.0; // amethyst cluster
-
-	if(mc_Entity.x == 244) vEMISSIVE = 1.5; // soul fire
 
 	#if PUDDLE_MODE > 0 || ShaderSnow > 0
 		if (mc_Entity.x == 244 || mc_Entity.x == 189) vlmtexcoord.w = 0.0;
 	#endif
 
-	#ifdef EMISSIVE_ORES
-		if(mc_Entity.x == 502) vEMISSIVE = EMISSIVE_ORES_STRENGTH;
-	#endif
-
 	// special cases light lightning and beacon beams...	
 	#ifdef ENTITIES
 		if(entityId == ENTITY_LIGHTNING){
-			vLIGHTNING = 1;
 			vnormalMat.a = 0.50;
 		}
 	#endif
 
-    /////// ----- SSS STUFF ----- ///////
-		vSSSAMOUNT = 0.0;
 
 #ifdef WORLD
-    /////// ----- SSS ON BLOCKS ----- ///////
-	// strong
-	if (
-		mc_Entity.x == BLOCK_SSS_STRONG || mc_Entity.x == BLOCK_SAPLING || mc_Entity.x == BLOCK_AIR_WAVING
-	) {
-		vSSSAMOUNT = 1.0;
-	}
-
-	// medium
-	if (
-		mc_Entity.x == BLOCK_GROUND_WAVING || mc_Entity.x == BLOCK_GROUND_WAVING_VERTICAL
-		|| mc_Entity.x == BLOCK_GRASS_SHORT || mc_Entity.x == BLOCK_GRASS_TALL_UPPER || mc_Entity.x == BLOCK_GRASS_TALL_LOWER
-	) {
-		vSSSAMOUNT = 0.5;
-	}
-	if (
-		mc_Entity.x == BLOCK_SSS_WEAK || mc_Entity.x == BLOCK_SSS_WEAK_2 ||
-		mc_Entity.x == BLOCK_GLOW_LICHEN || mc_Entity.x == BLOCK_SNOW_LAYERS || mc_Entity.x == BLOCK_CARPET ||
-		mc_Entity.x == BLOCK_AMETHYST_BUD_MEDIUM || mc_Entity.x == BLOCK_AMETHYST_BUD_LARGE || mc_Entity.x == BLOCK_AMETHYST_CLUSTER ||
-		mc_Entity.x == BLOCK_BAMBOO || mc_Entity.x == BLOCK_SAPLING || mc_Entity.x == BLOCK_VINE
-	) {
-		vSSSAMOUNT = 0.5;
-	}
-	
-	// low
-	#ifdef MISC_BLOCK_SSS
-		if(
-			mc_Entity.x == BLOCK_SSS_WEIRD || mc_Entity.x == BLOCK_GRASS
-		){
-			vSSSAMOUNT = 0.5;
-		}
-	#endif
-
-	#ifdef ENTITIES
-		#ifdef MOB_SSS
-		    /////// ----- SSS ON MOBS----- ///////
-			// strong
-			if(entityId == ENTITY_SSS_MEDIUM) vSSSAMOUNT = 0.75;
-	
-			// medium
-	
-			// low
-			if(entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER) vSSSAMOUNT = 0.4;
-		#endif
-	#endif
-
-	#ifdef BLOCKENTITIES
-	    /////// ----- SSS ON BLOCK ENTITIES----- ///////
-		// strong
-
-		// medium
-		if(blockEntityId == BLOCK_SSS_WEAK_3) vSSSAMOUNT = 0.4;
-
-		// low
-
-	#endif
 
    	vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
 
 	vec3 worldNormals = viewToWorld(vFlatNormals);
 
-	vgrassSideCheck = vec4(0.0);
+	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && (defined GRASS_DETECT_FALLOFF || defined GRASS_DETECT_INV_FALLOFF || REPLACE_SHORT_GRASS > 0) && !defined BLOCKENTITIES
 
-	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && (defined GRASS_DETECT_FALLOFF || defined GRASS_DETECT_INV_FALLOFF || REPLACE_SHORT_GRASS > 0)
+		vgrassSideCheck = vec4(0.0);
 	
 		if(length(worldpos) < min(GRASS_RANGE, 0.5*float(LpvSize)) && vblockID == 85 && worldNormals.y > 0.9) {
 

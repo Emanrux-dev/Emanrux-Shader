@@ -18,20 +18,13 @@ in vec4 vtexcoord[];
 
 flat in float vblockID[];
 
-flat in int vNameTags[];
-
-flat in float vSSSAMOUNT[];
-flat in float vEMISSIVE[];
-flat in int vLIGHTNING[];
-flat in int vPORTAL[];
-flat in int vSIGN[];
-flat in int vdiscardGrass[];
-
-in vec4 vgrassSideCheck[];
-out vec4 grassSideCheck[];
-
-in vec3 vcenterPosition[];
-out vec3 centerPosition[];
+#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && defined WORLD
+    flat in int vdiscardGrass[];
+    in vec4 vgrassSideCheck[];
+    out vec4 grassSideCheck[];
+    in vec3 vcenterPosition[];
+    out vec3 centerPosition[];
+#endif
 
 out vec4 color[];
 out float VanillaAO[];
@@ -48,14 +41,6 @@ out vec4 texcoord[];
 #endif
 
 flat out float blockID[];
-
-flat out int NameTags[];
-
-flat out float SSSAMOUNT[];
-flat out float EMISSIVE[];
-flat out int LIGHTNING[];
-flat out int PORTAL[];
-flat out int SIGN[];
 
 uniform mat4 gbufferModelViewInverse;
 uniform vec3 cameraPosition;
@@ -79,23 +64,19 @@ void main() {
     texcoordam[gl_InvocationID] = vtexcoordam[gl_InvocationID];
     texcoord[gl_InvocationID] = vtexcoord[gl_InvocationID];
 
-    grassSideCheck[gl_InvocationID] = vgrassSideCheck[gl_InvocationID];
-
-    centerPosition[gl_InvocationID] = vcenterPosition[gl_InvocationID];
-
     #ifdef MC_NORMAL_MAP
         tangent[gl_InvocationID] = vtangent[gl_InvocationID];
         FlatNormals[gl_InvocationID] = vFlatNormals[gl_InvocationID];
     #endif
-    blockID[gl_InvocationID] = vblockID[gl_InvocationID];
-    NameTags[gl_InvocationID] = vNameTags[gl_InvocationID];
-    SSSAMOUNT[gl_InvocationID] = vSSSAMOUNT[gl_InvocationID];
-    EMISSIVE[gl_InvocationID] = vEMISSIVE[gl_InvocationID];
-    LIGHTNING[gl_InvocationID] = vLIGHTNING[gl_InvocationID];
-    PORTAL[gl_InvocationID] = vPORTAL[gl_InvocationID];
-    SIGN[gl_InvocationID] = vSIGN[gl_InvocationID];
 
-    #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS
+    blockID[gl_InvocationID] = vblockID[gl_InvocationID];
+
+    if(gl_InvocationID == 0) {
+    #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && defined WORLD
+
+        grassSideCheck[gl_InvocationID] = vgrassSideCheck[gl_InvocationID];
+
+        centerPosition[gl_InvocationID] = vcenterPosition[gl_InvocationID];
 
         #ifdef MC_NORMAL_MAP
             vec3 normals = viewToWorld(vFlatNormals[0]);
@@ -174,4 +155,5 @@ void main() {
 
         gl_TessLevelInner[0] = 0;
     #endif
+    }
 }

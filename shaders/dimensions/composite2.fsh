@@ -415,82 +415,82 @@ vec3 alterCoords(in vec3 coords, bool lighting){
 	
 	return coords;
 }
-vec4 raymarchTest(
-	in vec3 viewPosition,
-	in vec2 dither
-){
-	
-	vec3 color = vec3(0.0);
-	float totalAbsorbance = 1.0;
-	float expFactor = 16.0;
-
-	float minHeight = 250.0;
-	float maxHeight = minHeight + 100.0;
-	
-	#if defined DISTANT_HORIZONS || defined VOXY
-		float maxdist = dhVoxyFarPlane - 16.0;
-	#else
-		float maxdist = far*4;
-	#endif
-
-   	float referenceDistance = length(viewPosition) < maxdist ? length(viewPosition) - 1.0 : 100000000.0;
-
-	int SAMPLECOUNT = 8;
-
-	//project pixel position into projected shadowmap space
-	vec3 wpos =  mat3(gbufferModelViewInverse) * viewPosition + gbufferModelViewInverse[3].xyz;
-	vec3 dVWorld = wpos - gbufferModelViewInverse[3].xyz;
-	vec3 dVWorldN = normalize(dVWorld);
-
-	// dVWorld *= dVWorldN/abs(dVWorldN.y);
-	// float maxLength = min(length(dVWorld), 16 * 8)/length(dVWorld);
-	// dVWorld *= maxLength;
-
-	// float cloudRange = max(minHeight - cameraPosition.y,0.0);
-	float cloudRange = max(minHeight - cameraPosition.y, 0.0);
-
-	vec3 rayDirection = dVWorldN.xyz * ( (maxHeight - minHeight) / length(alterCoords(dVWorldN, false)) / SAMPLECOUNT);
-	
-	// float cloudRange = mix(max(cameraPosition.y - maxHeight,0.0), max(minHeight - cameraPosition.y,0.0), clamp(rayDirection.y,0.0,1.0));
-
-
-
-	vec3 rayProgress = rayDirection + cameraPosition + (rayDirection / length(alterCoords(rayDirection, false))) * 200.0;
-
-	float dL = length(rayDirection);
-	
-	// vec3 rayDirection = dVWorldN.xyz * ( (maxHeight - minHeight) / abs(dVWorldN.y) / SAMPLECOUNT);
-	// float flip = mix(max(cameraPosition.y - maxHeight,0.0), max(minHeight - cameraPosition.y,0.0), clamp(rayDirection.y,0.0,1.0));
-	// vec3 rayProgress = rayDirection*dither.x + cameraPosition + (rayDirection / abs(rayDirection.y)) *flip;
-	// float dL = length(rayDirection);
-
-
-	for (int i = 0; i < SAMPLECOUNT; i++) {
-		
-		if(length(rayProgress - cameraPosition) > referenceDistance) break;
-
-		float d = (pow(expFactor, float(i + dither.x)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);
-		float dd = pow(expFactor, float(i + dither.y)/float(SAMPLECOUNT)) * log(expFactor) / float(SAMPLECOUNT)/(expFactor-1.0);
-		
-		float theDistance = length(alterCoords(rayProgress-cameraPosition, true));
-
-		float fogDensity = min(max(texture2D(noisetex, rayProgress.xz/2048).b-0.5,0.0)*2.0,1.0) * clamp((minHeight+50) - theDistance, 0.0, clamp(theDistance-minHeight,0,1));
-
-		float fogVolumeCoeff = exp(-fogDensity*dd*dL);
-
-		// vec3 lighting = vec3(1.0) * (1.0-clamp((minHeight-50) - theDistance,0,1));
-
-		vec3 lighting = vec3(1.0) * clamp(minHeight - theDistance/1.2,0,1);
-
-		color += (lighting - lighting * fogVolumeCoeff) * totalAbsorbance;
-
-		totalAbsorbance *= fogVolumeCoeff;
-
-		rayProgress += rayDirection;
-
-	}
-	return vec4(color, totalAbsorbance);
-}
+// vec4 raymarchTest(
+// 	in vec3 viewPosition,
+// 	in vec2 dither
+// ){
+// 	
+// 	vec3 color = vec3(0.0);
+// 	float totalAbsorbance = 1.0;
+// 	float expFactor = 16.0;
+// 
+// 	float minHeight = 250.0;
+// 	float maxHeight = minHeight + 100.0;
+// 	
+// 	#if defined DISTANT_HORIZONS || defined VOXY
+// 		float maxdist = dhVoxyFarPlane - 16.0;
+// 	#else
+// 		float maxdist = far*4;
+// 	#endif
+// 
+//    	float referenceDistance = length(viewPosition) < maxdist ? length(viewPosition) - 1.0 : 100000000.0;
+// 
+// 	int SAMPLECOUNT = 8;
+// 
+// 	//project pixel position into projected shadowmap space
+// 	vec3 wpos =  mat3(gbufferModelViewInverse) * viewPosition + gbufferModelViewInverse[3].xyz;
+// 	vec3 dVWorld = wpos - gbufferModelViewInverse[3].xyz;
+// 	vec3 dVWorldN = normalize(dVWorld);
+// 
+// 	// dVWorld *= dVWorldN/abs(dVWorldN.y);
+// 	// float maxLength = min(length(dVWorld), 16 * 8)/length(dVWorld);
+// 	// dVWorld *= maxLength;
+// 
+// 	// float cloudRange = max(minHeight - cameraPosition.y,0.0);
+// 	float cloudRange = max(minHeight - cameraPosition.y, 0.0);
+// 
+// 	vec3 rayDirection = dVWorldN.xyz * ( (maxHeight - minHeight) / length(alterCoords(dVWorldN, false)) / SAMPLECOUNT);
+// 	
+// 	// float cloudRange = mix(max(cameraPosition.y - maxHeight,0.0), max(minHeight - cameraPosition.y,0.0), clamp(rayDirection.y,0.0,1.0));
+// 
+// 
+// 
+// 	vec3 rayProgress = rayDirection + cameraPosition + (rayDirection / length(alterCoords(rayDirection, false))) * 200.0;
+// 
+// 	float dL = length(rayDirection);
+// 	
+// 	// vec3 rayDirection = dVWorldN.xyz * ( (maxHeight - minHeight) / abs(dVWorldN.y) / SAMPLECOUNT);
+// 	// float flip = mix(max(cameraPosition.y - maxHeight,0.0), max(minHeight - cameraPosition.y,0.0), clamp(rayDirection.y,0.0,1.0));
+// 	// vec3 rayProgress = rayDirection*dither.x + cameraPosition + (rayDirection / abs(rayDirection.y)) *flip;
+// 	// float dL = length(rayDirection);
+// 
+// 
+// 	for (int i = 0; i < SAMPLECOUNT; i++) {
+// 		
+// 		if(length(rayProgress - cameraPosition) > referenceDistance) break;
+// 
+// 		float d = (pow(expFactor, float(i + dither.x)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);
+// 		float dd = pow(expFactor, float(i + dither.y)/float(SAMPLECOUNT)) * log(expFactor) / float(SAMPLECOUNT)/(expFactor-1.0);
+// 		
+// 		float theDistance = length(alterCoords(rayProgress-cameraPosition, true));
+// 
+// 		float fogDensity = min(max(texture2D(noisetex, rayProgress.xz/2048).b-0.5,0.0)*2.0,1.0) * clamp((minHeight+50) - theDistance, 0.0, clamp(theDistance-minHeight,0,1));
+// 
+// 		float fogVolumeCoeff = exp(-fogDensity*dd*dL);
+// 
+// 		// vec3 lighting = vec3(1.0) * (1.0-clamp((minHeight-50) - theDistance,0,1));
+// 
+// 		vec3 lighting = vec3(1.0) * clamp(minHeight - theDistance/1.2,0,1);
+// 
+// 		color += (lighting - lighting * fogVolumeCoeff) * totalAbsorbance;
+// 
+// 		totalAbsorbance *= fogVolumeCoeff;
+// 
+// 		rayProgress += rayDirection;
+// 
+// 	}
+// 	return vec4(color, totalAbsorbance);
+// }
 
 
 //////////////////////////////VOID MAIN//////////////////////////////

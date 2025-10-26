@@ -43,6 +43,7 @@ const ivec3 workGroups = ivec3(1, 1, 1);
 #if (defined CUSTOM_MOON_ROTATION && defined OVERWORLD_SHADER) || (defined END_ISLAND_LIGHT && defined END_SHADER)
     #include "/lib/SSBOs.glsl"
     uniform vec3 cameraPosition;
+    
     #if defined END_ISLAND_LIGHT && defined END_SHADER
         const float NEAR = 15.0;
         const float FAR = 256.0;

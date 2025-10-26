@@ -139,12 +139,7 @@ float convertHandDepth(float depth) {
 }
 
 float linearize(float dist) {
-  #ifdef VOXY
-    float _far = far * 3000.0;
-  #else
-    float _far = far;
-  #endif
-  return (2.0 * near) / (_far + near - dist * (_far - near));
+  return (2.0 * near) / (far + near - dist * (far - near));
 }
 
 float luma(vec3 color) {

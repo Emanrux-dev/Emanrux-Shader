@@ -1,5 +1,7 @@
 layout (triangles, fractional_odd_spacing, ccw) in;
 
+#include "/lib/settings.glsl"
+
 in vec4 color[];
 in float VanillaAO[];
 
@@ -16,19 +18,14 @@ in vec4 texcoord[];
 
 flat in float blockID[];
 
-flat in int NameTags[];
 
-flat in float SSSAMOUNT[];
-flat in float EMISSIVE[];
-flat in int LIGHTNING[];
-flat in int PORTAL[];
-flat in int SIGN[];
-
+#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && defined WORLD
 in vec4 grassSideCheck[];
 out vec4 vgrassSideCheck;
 
 in vec3 centerPosition[];
 out vec3 vcenterPosition;
+#endif
 
 out vec4 vcolor;
 out float vVanillaAO;
@@ -45,14 +42,6 @@ out vec4 vtexcoord;
 #endif
 
 flat out float vblockID;
-
-flat out int vNameTags;
-
-flat out float vSSSAMOUNT;
-flat out float vEMISSIVE;
-flat out int vLIGHTNING;
-flat out int vPORTAL;
-flat out int vSIGN;
 
 #define calcTessellation(u, v, w) (gl_TessCoord.x * u + gl_TessCoord.y * v + gl_TessCoord.z * w)
 
@@ -73,14 +62,10 @@ void main() {
     #endif
 
     vblockID = blockID[0];
-    vNameTags = NameTags[0];
-    vSSSAMOUNT = SSSAMOUNT[0];
-    vEMISSIVE = EMISSIVE[0];
-    vLIGHTNING = LIGHTNING[0];
-    vPORTAL = PORTAL[0];
-    vSIGN = SIGN[0];
-    vgrassSideCheck = grassSideCheck[0];
 
-    vcenterPosition = centerPosition[0];
+    #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && defined WORLD
+        vgrassSideCheck = grassSideCheck[0];
+        vcenterPosition = centerPosition[0];
+    #endif
 
 }

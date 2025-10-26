@@ -2,7 +2,7 @@ layout(triangles) in;
 
 #include "/lib/settings.glsl"
 
-#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL
+#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 layout(triangle_strip, max_vertices = 24) out;
 #else
 layout(triangle_strip, max_vertices = 3) out;
@@ -24,16 +24,10 @@ in vec4 vtexcoord[];
 
 flat in float vblockID[];
 
-flat in int vNameTags[];
-
-flat in float vSSSAMOUNT[];
-flat in float vEMISSIVE[];
-flat in int vLIGHTNING[];
-flat in int vPORTAL[];
-flat in int vSIGN[];
-
-in vec4 vgrassSideCheck[];
-in vec3 vcenterPosition[];
+#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+    in vec4 vgrassSideCheck[];
+    in vec3 vcenterPosition[];
+#endif
 
 out vec4 color;
 out float VanillaAO;
@@ -53,14 +47,6 @@ out vec3 GrassNormals;
 
 flat out float blockID;
 
-flat out int NameTags;
-
-flat out float SSSAMOUNT;
-flat out float EMISSIVE;
-flat out int LIGHTNING;
-flat out int PORTAL;
-flat out int SIGN;
-flat out int ISSHADERGRASS;
 
 #define diagonal3(m) vec3((m)[0].x, (m)[1].y, m[2].z)
 #define  projMAD(m, v) (diagonal3(m) * (v) + (m)[3].xyz)
@@ -121,8 +107,6 @@ vec3 calculateNormal(vec3 v0, vec3 v1, vec3 v2) {
 }
 
 void main() {
-
-    ISSHADERGRASS = 0;
 
     vec2 TAA_offsets = offsets[framemod8];
     
@@ -187,12 +171,6 @@ void main() {
         FlatNormals = vFlatNormals[i];
         #endif
         blockID = vblockID[i];
-        NameTags = vNameTags[i];
-        SSSAMOUNT = vSSSAMOUNT[i];
-        EMISSIVE = vEMISSIVE[i];
-        LIGHTNING = vLIGHTNING[i];
-        PORTAL = vPORTAL[i];
-        SIGN = vSIGN[i];
 
         #ifdef COLORWHEEL
             clrwl_setVertexOut(i);
@@ -202,7 +180,7 @@ void main() {
 	}
 	EndPrimitive();
 
-    #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL
+    #if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 
         int j;
 
@@ -398,7 +376,6 @@ void main() {
 
                     texcoordam = vtexcoordam[i];
                     texcoord = vtexcoord[i];
-                    ISSHADERGRASS = 1;
 
                     #ifdef MC_NORMAL_MAP
                         tangent = vtangent[i];
@@ -410,13 +387,7 @@ void main() {
                         GrassNormals = normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade)));
                     #endif
 
-                    blockID = vblockID[i];
-                    NameTags = vNameTags[i];
-                    SSSAMOUNT = 1.0;
-                    EMISSIVE = vEMISSIVE[i];
-                    LIGHTNING = vLIGHTNING[i];
-                    PORTAL = vPORTAL[i];
-                    SIGN = vSIGN[i];
+                    blockID = -15.0;
 
                     EmitVertex();
                 }

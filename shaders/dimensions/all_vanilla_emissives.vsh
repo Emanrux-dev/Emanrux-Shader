@@ -33,7 +33,7 @@ vec4 toClipSpace3(vec3 viewSpacePosition) {
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 
-uniform sampler2D colortex4;
+// uniform sampler2D colortex4;
 
 void main() {
 	color = gl_Color;

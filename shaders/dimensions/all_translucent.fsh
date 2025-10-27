@@ -45,7 +45,6 @@ uniform vec4 entityColor;
 #endif
 
 
-flat varying float HELD_ITEM_BRIGHTNESS;
 #if defined ENTITIES && defined IS_IRIS
 	flat varying int NAMETAG;
 #endif
@@ -114,6 +113,9 @@ uniform float sunIntensity;
 uniform vec3 sunColor;
 uniform vec3 nsunColor;
 
+uniform int heldItemId;
+uniform int heldItemId2;
+
 uniform float waterEnteredAltitude;
 
 #if WATER_INTERACTION == 1
@@ -161,9 +163,6 @@ uniform float dhVoxyFarPlane;
 #endif
 
 #ifdef IS_LPV_ENABLED
-	uniform int heldItemId;
-	uniform int heldItemId2;
-
 	#include "/lib/hsv.glsl"
 	#include "/lib/lpv_common.glsl"
 	#include "/lib/lpv_render.glsl"
@@ -778,9 +777,9 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			vec3 playerCamPos = cameraPosition;
 		#endif
 		
-		if(HELD_ITEM_BRIGHTNESS > 0.0){ 
+		if(heldItemId > 999 || heldItemId2 > 999){ 
 			float pointLight = clamp(1.0-length((worldPos)-playerCamPos)/HANDHELD_LIGHT_RANGE,0.0,1.0);
-			lightmap.x  = mix(lightmap.x , HELD_ITEM_BRIGHTNESS, pointLight*pointLight);
+			lightmap.x  = mix(lightmap.x , 0.9, pointLight*pointLight);
 		}
 
 	#endif

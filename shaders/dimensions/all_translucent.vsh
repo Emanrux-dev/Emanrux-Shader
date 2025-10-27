@@ -50,7 +50,6 @@ uniform mat4 gbufferModelViewInverse;
 uniform mat4 gbufferModelView;
 varying vec3 viewVector;
 
-flat varying int glass;
 #if defined ENTITIES && defined IS_IRIS
 	flat varying int NAMETAG;
 #endif
@@ -68,8 +67,6 @@ uniform vec3 moonPosition;
 uniform vec3 cameraPosition;
 uniform float sunElevation;
 
-varying vec4 tangent_other;
-
 uniform int frameCounter;
 // uniform float far;
 uniform float aspectRatio;
@@ -77,10 +74,6 @@ uniform float viewHeight;
 uniform float viewWidth;
 uniform int hideGUI;
 uniform float screenBrightness;
-
-uniform int heldItemId;
-uniform int heldItemId2;
-flat varying float HELD_ITEM_BRIGHTNESS;
 
 uniform vec2 texelSize;
 uniform int framemod8;
@@ -134,6 +127,8 @@ void main() {
 		if (entityId == 1599) gl_Position.z -= 10000.0;
 	#endif
 
+	bool isWater = mc_Entity.x == 8.0;
+
 	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
     	// basic texture to determine how shallow/far away from the shore the water is
     	physics_localWaviness = texelFetch(physics_waviness, ivec2(gl_Vertex.xz) - physics_textureOffset, 0).r;
@@ -153,7 +148,7 @@ void main() {
 	lmtexcoord.zw = lmcoord;
 
 	#if defined LARGE_WAVE_DISPLACEMENT && !defined PHYSICS_OCEAN
-		if(mc_Entity.x == 8.0) {
+		if(isWater) {
 				
 			vec3 playerPos = mat3(gbufferModelViewInverse) * position.xyz;
 
@@ -184,12 +179,6 @@ void main() {
 	#if !defined ENTITIES && !defined HAND
  		gl_Position = toClipSpace3(position);
 	#endif
-
-	HELD_ITEM_BRIGHTNESS = 0.0;
-	
-	#ifdef Hand_Held_lights
-		if(heldItemId > 999 || heldItemId2 > 999) HELD_ITEM_BRIGHTNESS = 0.9;
-	#endif
 	
 	// 1.0 = water mask
 	// 0.9 = entity mask
@@ -199,7 +188,7 @@ void main() {
 	float mat = 0.0;
 
 	// water mask
-	if(mc_Entity.x == 8.0) {
+	if(isWater) {
     	mat = 1.0;
   	}
 
@@ -229,7 +218,7 @@ void main() {
 						  tangent.z, binormal.z, normalMat.z);
 
 	#ifdef LARGE_WAVE_DISPLACEMENT
-		if(mc_Entity.x == 8.0) {
+		if(isWater) {
 			largeWaveDisplacementNormal = normalize(largeWaveDisplacementNormal * tbnMatrix);
 		}else{
 			largeWaveDisplacementNormal = normalMat.xyz;

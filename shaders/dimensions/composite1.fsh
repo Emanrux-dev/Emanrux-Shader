@@ -810,7 +810,7 @@ uniform float wetness;
 
 #ifdef OVERWORLD_SHADER
 	void applyPuddles(
-		in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, in int isEyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0, in bool isShaderGrass
+		in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, in bool eyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0, in bool isShaderGrass
 	){
 		/* PUDDLE_MODE
 			0 = OFF, NO WETNESS
@@ -837,7 +837,9 @@ uniform float wetness;
 				vec2 UV = mix(worldPos.xz, worldPos.xy*vec2(2.0, 0.5)+driprate, abs(flatNormals.z));
 				UV = mix(UV, worldPos.zy*vec2(2.0, 0.5)+driprate, abs(flatNormals.x));
 
+				#ifdef SHADER_GRASS
 				if(isShaderGrass) UV = worldPos.xz;
+				#endif
 				
 				float noise = texture2D(noisetex, UV * 0.02).b;
 
@@ -859,7 +861,10 @@ uniform float wetness;
 				float wetnessStages = puddles * effectStrength;
 				if(isWater) wetnessStages = 0.0;
 
-				if(!isShaderGrass) {
+				#ifdef SHADER_GRASS
+				if(!isShaderGrass)
+				#endif
+				{
 					#ifdef RIPPLE_PUDDLES
 						float viewDist = length(worldPos - cameraPosition);
 						vec3 rippleNormal = flatNormals;
@@ -888,7 +893,7 @@ uniform float wetness;
 				float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(flatNormals.y,0.5,1.0),0.,1.);
 				float snow = clamp(1.0 - 2.*upnormal - (1.0-effectStrength),0.0,1.0);
 
-				if(isWater || f0 > 229.5/255.0 || isEyeInWater == 1) snow = 0.0;
+				if(isWater || f0 > 229.5/255.0 || eyeInWater) snow = 0.0;
 
 				vec3 snowA = pow(texture2D(snowTexA, snowCoords).rgb, vec3(2.0/(ShaderSnowStrength-0.1)));
 				vec3 snowN = 2.*texture2D(snowTexN, snowCoords).rgb - 1.;
@@ -969,6 +974,8 @@ void main() {
 			float DH_depth0 = 0.0;
 			float DH_depth1 = 0.0;
 		#endif
+
+		bool eyeInWater = isEyeInWater == 1;
 
 	////// --------------- UNPACK OPAQUE GBUFFERS --------------- //////
 	
@@ -1138,7 +1145,7 @@ void main() {
 	////////////////////////////////////////////////////////////////////////////////////////////
 
 
- 	if ((isEyeInWater == 0 && isWater) || (isEyeInWater == 1 && !isWater)){
+ 	if ((isEyeInWater == 0 && isWater) || (eyeInWater && !isWater)){
 		
 		feetPlayerPos += gbufferModelViewInverse[3].xyz;
 		
@@ -1165,7 +1172,7 @@ void main() {
 		// based on the angle of the sun, sunlight will travel through more/less water to reach the same spot. scale absorbtion depth accordingly
 		vec3 sunlightAbsorbtion = exp(-totEpsilon * (estimatedDepth/abs(WsunVec.y)));
 
-		if (isEyeInWater == 1){
+		if (eyeInWater){
 			estimatedDepth = 1.0;
 
 			// viewerWaterDepth = max(0.9-lightmap.y,0.0)*3.0;
@@ -1223,7 +1230,7 @@ void main() {
 		float shadowMapFalloff = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / (shadowDistance+32.0),0.0)*5.0,1.0));
 		float shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / shadowDistance,0.0)*5.0,1.0));
 
-		if(isEyeInWater == 1){
+		if(eyeInWater){
 			shadowMapFalloff = 1.0;
 			shadowMapFalloff2 = 1.0;
 		}
@@ -1288,7 +1295,7 @@ void main() {
 		// shadowColor *= mix(isWater ? lightLeakFix : LM_shadowMapFallback, 1.0, shadowMapFalloff2);
 
 		#if LIGHTLEAKFIX_MODE == 2
-			if(isEyeInWater != 1) shadowColor *= lightLeakFix; // light leak fix
+			if(!eyeInWater) shadowColor *= lightLeakFix; // light leak fix
 		#endif
 		
 	////////////////////////////////	SUN SSS		////////////////////////////////
@@ -1325,7 +1332,7 @@ void main() {
 		// = is nice too though ???
 		SSSColor = SubsurfaceScattering_sun(albedo, ShadowBlockerDepth, sunSSS_density, clamp(dot(feetPlayerPos_normalized, WsunVec),0.0,1.0), SS_directLight.g, shadowMapFalloff2, hand);
 		
-		if(isEyeInWater != 1) SSSColor *= lightLeakFix;
+		if(!eyeInWater) SSSColor *= lightLeakFix;
 		
 		#ifndef END_SHADER
 			float cloudShadows = GetCloudShadow(feetPlayerPos.xyz + cameraPosition, WsunVec);
@@ -1531,7 +1538,7 @@ void main() {
 		#endif
 
 		#if defined OVERWORLD_SHADER && defined DEFERRED_SPECULAR && (PUDDLE_MODE > 0 || ShaderSnow > 0)
-			if(!hand && !entities && (wetnessAmount > 0.01 || snowAmount > 0.01)) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap, isWater, isEyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g, isShaderGrass);
+			if(!hand && !entities && (wetnessAmount > 0.01 || snowAmount > 0.01)) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap, isWater, eyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g, isShaderGrass);
 		#endif
 
 		vec3 FINAL_COLOR = (Indirect_lighting + Direct_lighting) * albedo;

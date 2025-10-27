@@ -391,7 +391,8 @@ vec4 computeTAA(vec2 texcoord, bool hand){
 	
     #ifdef DAMAGE_TAKEN_EFFECT
 		////// when this triggers, use current frame UV to sample history, for a funny trailing effect.
-		if(CriticalDamageTaken > 0.01) previousPosition.xy = texcoord;
+		bool criticalDamageTaken = CriticalDamageTaken > 0.01;
+		if(criticalDamageTaken) previousPosition.xy = texcoord;
 	#endif
 
 	vec3 frameHistory = max(FastCatmulRom(colortex5, previousPosition.xy, vec4(texelSize, 1.0/texelSize), 0.75).xyz,0.0);
@@ -411,7 +412,7 @@ vec4 computeTAA(vec2 texcoord, bool hand){
    
     #ifdef DAMAGE_TAKEN_EFFECT
 		////// when this triggers, do a funny trailing effect.
-		if(CriticalDamageTaken > 0.01) finalResult = mix(finalResult, frameHistory, sqrt(CriticalDamageTaken)*0.8);
+		if(criticalDamageTaken) finalResult = mix(finalResult, frameHistory, sqrt(CriticalDamageTaken)*0.8);
 	#endif
 	#ifdef SCREENSHOT_MODE
 		// when this is on, do "infinite frame accumulation	"

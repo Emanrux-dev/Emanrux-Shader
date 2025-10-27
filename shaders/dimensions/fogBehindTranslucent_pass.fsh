@@ -291,7 +291,7 @@ void main() {
 	ivec2 texcoord = ivec2(tc/texelSize);
 
 	float alpha = texelFetch2D(colortex7, texcoord, 0).a ;
-	float blendedAlpha = texelFetch2D(colortex2,  texcoord, 0).a;
+	float blendedAlpha = texelFetch2D(colortex2, texcoord, 0).a;
 
 
 	bool iswater = alpha > 0.99;
@@ -303,19 +303,19 @@ void main() {
 		float noise_1 = R2_dither();
 		float noise_2 = blueNoise();
 
-		float z0 = texelFetch2D(depthtex0, texcoord, 0 ).x;
+		float z0 = texelFetch2D(depthtex0, texcoord, 0).x;
 
 		#if defined DISTANT_HORIZONS || defined VOXY
-			float DH_z0 = texelFetch2D(dhVoxyDepthTex, texcoord, 0 ).x;//texture2D(dhDepthTex,tc).x;
+			float DH_z0 = texelFetch2D(dhVoxyDepthTex, texcoord, 0).x;//texture2D(dhDepthTex,tc).x;
 		#else
 			float DH_z0 = 0.0;
 		#endif
 
-		float z = texelFetch2D(depthtex1, texcoord, 0 ).x;
+		float z = texelFetch2D(depthtex1, texcoord, 0).x;
 
 		#if defined DISTANT_HORIZONS || defined VOXY
 			// float DH_z = texture2D(dhDepthTex1,tc).x;
-			float DH_z = texelFetch2D(dhVoxyDepthTex1, texcoord, 0 ).x;//texture2D(dhDepthTex,tc).x;
+			float DH_z = texelFetch2D(dhVoxyDepthTex1, texcoord, 0).x;//texture2D(dhDepthTex,tc).x;
 			#ifdef VOXY
 				DH_z0 = min(DH_z0, DH_z);
 			#endif

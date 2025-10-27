@@ -41,7 +41,6 @@ uniform ivec2 eyeBrightnessSmooth;
 
 uniform int heldItemId;
 uniform int heldItemId2;
-flat varying float HELD_ITEM_BRIGHTNESS;
 
 #include "/lib/TAA_jitter.glsl"
 
@@ -86,13 +85,6 @@ void main() {
 		tangent = vec4(normalize(gl_NormalMatrix * at_tangent.rgb), at_tangent.w);
 		
 		normalMat = vec4(normalize(gl_NormalMatrix * gl_Normal), 1.0);
-	#endif
-
-
-	HELD_ITEM_BRIGHTNESS = 0.0;
-
-	#ifdef Hand_Held_lights
-		if(heldItemId > 999 || heldItemId2 > 999) HELD_ITEM_BRIGHTNESS = 0.9;
 	#endif
 
 

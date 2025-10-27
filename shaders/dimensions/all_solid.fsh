@@ -57,13 +57,11 @@ in vec4 normalMat;
 	in vec3 FlatNormals;
 #endif
 
-in vec3 GrassNormals;
-
+#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+	in vec3 GrassNormals;
+#endif
 
 uniform sampler2D specular;
-
-
-
 uniform sampler2D texture;
 uniform sampler2D colortex1;//albedo(rgb),material(alpha) RGBA16
 uniform float frameTimeCounter;
@@ -336,10 +334,14 @@ void main() {
 		ifPOM = true;
 	#endif
 
-	bool ShaderGrass = abs(blockID+15.0) < 0.1;
+	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+		bool ShaderGrass = blockID == -15.0;
+		if(ShaderGrass) ifPOM = false;
+	#else
+		bool ShaderGrass = false;
+	#endif
 
 	bool SIGN = false;
-	bool PORTAL = false;
 
 	if(blockID == BLOCK_SIGN) SIGN = true;
 
@@ -350,9 +352,7 @@ void main() {
 		if(blockID == BLOCK_SIGN) SIGN = true;
 	#endif
 
-	if(blockID == BLOCK_END_PORTAL || blockID == 187) PORTAL = true;
-
-	if(SIGN || ShaderGrass) ifPOM = false;
+	if(SIGN) ifPOM = false;
 
 	vec3 normal = normalMat.xyz;
 
@@ -392,7 +392,7 @@ void main() {
 	if(!ifPOM) maxdist = 0.0;
 
 	gl_FragDepth = gl_FragCoord.z;
-	#ifdef SHADER_GRASS
+	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 	 if (falloff > 0.0 && !ShaderGrass)
 	#else
 	 if (falloff > 0.0)
@@ -448,7 +448,7 @@ void main() {
 
 	#ifndef COLORWHEEL
 		vec4 Albedo = color;
-		#ifdef SHADER_GRASS
+		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && defined WORLD
 		if (!ShaderGrass)
 		#endif
 		{
@@ -464,7 +464,7 @@ void main() {
 		VanillaAO = 1.0 - clamp(VanillaAO, 0,1);
 	#endif
 
-	#if REPLACE_SHORT_GRASS < 2 && defined SHADER_GRASS
+	#if REPLACE_SHORT_GRASS < 2 && !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 		// darken the top of grass blocks a bit
 		if(blockID == 85 && viewToWorld(FlatNormals).y > abs(0.9) && !ShaderGrass) Albedo *= smoothstep(-30.0, 25.0, length(playerpos));
 	#endif
@@ -495,16 +495,12 @@ void main() {
 			}
 		#endif
 
-		float HELD_ITEM_BRIGHTNESS = 0.0;
-		if(heldItemId > 999 || heldItemId2 > 999 ) HELD_ITEM_BRIGHTNESS = 0.9;
-
 		// if(HELD_ITEM_BRIGHTNESS > 0.0) torchlightmap = max(torchlightmap, HELD_ITEM_BRIGHTNESS * clamp( pow(max(1.0-length(worldpos-playerCamPos)/HANDHELD_LIGHT_RANGE,0.0),1.5),0.0,1.0));
-		if(HELD_ITEM_BRIGHTNESS > 0.0){ 
-			
+		if(heldItemId > 999 || heldItemId2 > 999){ 
 			float pointLight = clamp(1.0-(length(worldpos-playerCamPos)-1.)/HANDHELD_LIGHT_RANGE,0.0,1.0);
 
 			if (torchlightmap < 0.99) { 
-				torchlightmap = mix(torchlightmap, HELD_ITEM_BRIGHTNESS, pointLight);
+				torchlightmap = mix(torchlightmap, 0.9, pointLight);
 			}
 		}
 
@@ -513,61 +509,64 @@ void main() {
 		#endif
 	#endif
 	
-	#if  defined WORLD && !defined ENTITIES && !defined HAND
-	float endPortalEmission = 0.0;
-	if(PORTAL) {
-		const float steps = 20;
+	#if defined WORLD && !defined ENTITIES && !defined HAND && defined BLOCKENTITIES && !defined COLORWHEEL
+		bool PORTAL = false;
+		if(blockID == BLOCK_END_PORTAL || blockID == 187) PORTAL = true;
 
-		vec3 color = vec3(0.0);
-		float absorbance = 1.0;
+		float endPortalEmission = 0.0;
+		if(PORTAL) {
+			const float steps = 20;
 
-		vec3 worldSpaceNormal = viewToWorld(normal);
+			vec3 color = vec3(0.0);
+			float absorbance = 1.0;
 
-		vec3 viewVec = normalize(tbnMatrix*fragpos);
-		vec3 correctedViewVec = viewVec;
-		
-		correctedViewVec.xy = mix(correctedViewVec.xy, vec2( viewVec.y,-viewVec.x), clamp( worldSpaceNormal.y,0,1));
-		correctedViewVec.xy = mix(correctedViewVec.xy, vec2(-viewVec.y, viewVec.x), clamp(-worldSpaceNormal.x,0,1)); 
-		correctedViewVec.xy = mix(correctedViewVec.xy, vec2(-viewVec.y, viewVec.x), clamp(-worldSpaceNormal.z,0,1));
-		
-		correctedViewVec.z = mix(correctedViewVec.z, -correctedViewVec.z, clamp(length(vec3(worldSpaceNormal.xz, clamp(-worldSpaceNormal.y,0,1))),0,1)); 
-		
-		vec2 correctedWorldPos = playerpos.xz + cameraPosition.xz;
-		correctedWorldPos = mix(correctedWorldPos,	vec2(-playerpos.x,playerpos.z)	+	vec2(-cameraPosition.x,cameraPosition.z),	clamp(-worldSpaceNormal.y,0,1));
-		correctedWorldPos = mix(correctedWorldPos,	vec2( playerpos.z,playerpos.y)	+	vec2( cameraPosition.z,cameraPosition.y),	clamp( worldSpaceNormal.x,0,1));
-		correctedWorldPos = mix(correctedWorldPos,	vec2(-playerpos.z,playerpos.y)	+	vec2(-cameraPosition.z,cameraPosition.y),	clamp(-worldSpaceNormal.x,0,1));
-		correctedWorldPos = mix(correctedWorldPos,	vec2( playerpos.x,playerpos.y)	+	vec2( cameraPosition.x,cameraPosition.y),	clamp(-worldSpaceNormal.z,0,1));
-		correctedWorldPos = mix(correctedWorldPos,	vec2(-playerpos.x,playerpos.y)	+	vec2(-cameraPosition.x,cameraPosition.y),	clamp( worldSpaceNormal.z,0,1));
+			vec3 worldSpaceNormal = viewToWorld(normal);
 
-
-		vec2 rayDir = ((correctedViewVec.xy) / -correctedViewVec.z) / steps * 5.0 ;
-	
-		vec2 uv = correctedWorldPos + rayDir * blueNoise;
-		uv += rayDir * 10.0;
-
-		vec2 animation = vec2(frameTimeCounter, -frameTimeCounter)*0.01;
-		
-		for (int i = 0; i < int(steps); i++) {
+			vec3 viewVec = normalize(tbnMatrix*fragpos);
+			vec3 correctedViewVec = viewVec;
 			
-			float verticalGradient = (i + blueNoise)/steps ;
-			float verticalGradient2 = exp(-7*(1-verticalGradient*verticalGradient));
-		
-			float density = max(max(verticalGradient - texture2D(noisetex, uv/256.0 + animation.xy).b*0.5,0.0) - (1.0-texture2D(noisetex, uv/32.0 + animation.xx).r) * (0.4 + 0.1 * (texture2D(noisetex, uv/10.0 - animation.yy).b)),0.0);
-		
-			float volumeCoeff = exp(-density*(i+1));
+			correctedViewVec.xy = mix(correctedViewVec.xy, vec2( viewVec.y,-viewVec.x), clamp( worldSpaceNormal.y,0,1));
+			correctedViewVec.xy = mix(correctedViewVec.xy, vec2(-viewVec.y, viewVec.x), clamp(-worldSpaceNormal.x,0,1)); 
+			correctedViewVec.xy = mix(correctedViewVec.xy, vec2(-viewVec.y, viewVec.x), clamp(-worldSpaceNormal.z,0,1));
 			
-			vec3 lighting =  vec3(0.5,0.75,1.0) * 0.1 * exp(-10*density) + vec3(0.8,0.3,1.0) * verticalGradient2 * 1.7;
-			color += (lighting - lighting * volumeCoeff) * absorbance;;
+			correctedViewVec.z = mix(correctedViewVec.z, -correctedViewVec.z, clamp(length(vec3(worldSpaceNormal.xz, clamp(-worldSpaceNormal.y,0,1))),0,1)); 
+			
+			vec2 correctedWorldPos = playerpos.xz + cameraPosition.xz;
+			correctedWorldPos = mix(correctedWorldPos,	vec2(-playerpos.x,playerpos.z)	+	vec2(-cameraPosition.x,cameraPosition.z),	clamp(-worldSpaceNormal.y,0,1));
+			correctedWorldPos = mix(correctedWorldPos,	vec2( playerpos.z,playerpos.y)	+	vec2( cameraPosition.z,cameraPosition.y),	clamp( worldSpaceNormal.x,0,1));
+			correctedWorldPos = mix(correctedWorldPos,	vec2(-playerpos.z,playerpos.y)	+	vec2(-cameraPosition.z,cameraPosition.y),	clamp(-worldSpaceNormal.x,0,1));
+			correctedWorldPos = mix(correctedWorldPos,	vec2( playerpos.x,playerpos.y)	+	vec2( cameraPosition.x,cameraPosition.y),	clamp(-worldSpaceNormal.z,0,1));
+			correctedWorldPos = mix(correctedWorldPos,	vec2(-playerpos.x,playerpos.y)	+	vec2(-cameraPosition.x,cameraPosition.y),	clamp( worldSpaceNormal.z,0,1));
 
-			absorbance *= volumeCoeff;
-			endPortalEmission += verticalGradient*verticalGradient ;
-			uv += rayDir;
+
+			vec2 rayDir = ((correctedViewVec.xy) / -correctedViewVec.z) / steps * 5.0 ;
+		
+			vec2 uv = correctedWorldPos + rayDir * blueNoise;
+			uv += rayDir * 10.0;
+
+			vec2 animation = vec2(frameTimeCounter, -frameTimeCounter)*0.01;
+			
+			for (int i = 0; i < int(steps); i++) {
+				
+				float verticalGradient = (i + blueNoise)/steps ;
+				float verticalGradient2 = exp(-7*(1-verticalGradient*verticalGradient));
+			
+				float density = max(max(verticalGradient - texture2D(noisetex, uv/256.0 + animation.xy).b*0.5,0.0) - (1.0-texture2D(noisetex, uv/32.0 + animation.xx).r) * (0.4 + 0.1 * (texture2D(noisetex, uv/10.0 - animation.yy).b)),0.0);
+			
+				float volumeCoeff = exp(-density*(i+1));
+				
+				vec3 lighting =  vec3(0.5,0.75,1.0) * 0.1 * exp(-10*density) + vec3(0.8,0.3,1.0) * verticalGradient2 * 1.7;
+				color += (lighting - lighting * volumeCoeff) * absorbance;;
+
+				absorbance *= volumeCoeff;
+				endPortalEmission += verticalGradient*verticalGradient ;
+				uv += rayDir;
+			}
+
+			Albedo.rgb = clamp(color,0,1);
+			endPortalEmission = clamp(endPortalEmission/steps * 1.0,0.0,254.0/255.0);
+			
 		}
-
-		Albedo.rgb = clamp(color,0,1);
-		endPortalEmission = clamp(endPortalEmission/steps * 1.0,0.0,254.0/255.0);
-		
-	}
 	#endif
 	
 	#ifdef WhiteWorld
@@ -631,7 +630,7 @@ void main() {
 	//////////////////////////////// 				//////////////////////////////// 
 
 	#if defined WORLD && defined MC_NORMAL_MAP
-		#ifdef SHADER_GRASS
+		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 		if(!ShaderGrass)
 		#endif
 		{
@@ -751,7 +750,7 @@ void main() {
 
 
 		vec4 SpecularTex = vec4(0.0);
-		#ifdef SHADER_GRASS
+		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 		if (ShaderGrass) {
 			SpecularTex = vec4(0.15, 0.025, 1.0, 0.0);
 		} else
@@ -782,7 +781,7 @@ void main() {
 			gl_FragData[1].a = SpecularTex.a;
 		#endif
 		
-		#if  defined WORLD && !defined ENTITIES && !defined HAND
+		#if defined WORLD && !defined ENTITIES && !defined HAND && defined BLOCKENTITIES && !defined COLORWHEEL
 			if(PORTAL) gl_FragData[1].a = endPortalEmission;
 		#endif
 
@@ -825,7 +824,7 @@ void main() {
 
 		vec3 flatNormals = viewToWorld(FlatNormals);
 
-		#ifdef SHADER_GRASS
+		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 			if (ShaderGrass) {flatNormals = FlatNormals; normal = GrassNormals;}
 		#endif
 

@@ -27,6 +27,7 @@ flat in float vblockID[];
 #if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
     in vec4 vgrassSideCheck[];
     in vec3 vcenterPosition[];
+    out vec3 GrassNormals;
 #endif
 
 out vec4 color;
@@ -42,8 +43,6 @@ out vec4 texcoord;
 	out vec4 tangent;
 	out vec3 FlatNormals;
 #endif
-
-out vec3 GrassNormals;
 
 flat out float blockID;
 

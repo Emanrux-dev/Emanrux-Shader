@@ -80,8 +80,6 @@ uniform float nightVision;
 uniform float waterEnteredAltitude;
 
 
-flat varying float HELD_ITEM_BRIGHTNESS;
-
 uniform mat4 gbufferPreviousModelView;
 uniform vec3 previousCameraPosition;
 uniform vec3 relativeEyePosition;
@@ -108,10 +106,10 @@ uniform vec3 relativeEyePosition;
 	uniform int frameCounter;
 #endif
 
-#ifdef IS_LPV_ENABLED
-	uniform int heldItemId;
-	uniform int heldItemId2;
+uniform int heldItemId;
+uniform int heldItemId2;
 
+#ifdef IS_LPV_ENABLED
 	#include "/lib/hsv.glsl"
 	#include "/lib/lpv_common.glsl"
 	#include "/lib/lpv_render.glsl"
@@ -427,9 +425,9 @@ void main() {
 			vec3 playerCamPos = cameraPosition;
 		#endif
 		// lightmap.x = max(lightmap.x, HELD_ITEM_BRIGHTNESS * clamp( pow(max(1.0-length((feetPlayerPos+cameraPosition) - playerCamPos)/HANDHELD_LIGHT_RANGE,0.0),1.5),0.0,1.0));
-		if(HELD_ITEM_BRIGHTNESS > 0.0){ 
+		if(heldItemId > 999 || heldItemId2 > 999){ 
 			float pointLight = clamp(1.0-(length((feetPlayerPos+cameraPosition)-playerCamPos)-1.0)/HANDHELD_LIGHT_RANGE,0.0,1.0);
-			lightmap.x = mix(lightmap.x, HELD_ITEM_BRIGHTNESS, pointLight*pointLight);
+			lightmap.x = mix(lightmap.x, 0.9, pointLight*pointLight);
 		}
 	
 	#endif

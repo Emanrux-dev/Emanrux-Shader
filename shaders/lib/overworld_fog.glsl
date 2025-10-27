@@ -200,7 +200,7 @@ vec4 GetVolumetricFog(
 			vec3 shadowPos = vec3(progress.xy*distortFactor, progress.z);
 
 			vec3 sh = vec3(1.0);
-			if (abs(shadowPos.x) < 1.0-0.5/2048. && abs(shadowPos.y) < 1.0-0.5/2048){
+			if (abs(shadowPos.x) < 1.0-0.5/2048. && abs(shadowPos.y) < 1.0-0.5/2048.){
 				shadowPos = shadowPos*vec3(0.5,0.5,0.5/6.0)+0.5;
 
 				#ifdef TRANSLUCENT_COLORED_SHADOWS
@@ -214,9 +214,6 @@ vec4 GetVolumetricFog(
 					sh = vec3(shadow2D(shadow, shadowPos).x);
 				#endif
 			}
-			#ifdef RAYMARCH_CLOUDS_WITH_FOG
-				vec3 sh_forClouds = sh;
-			#endif
 
 			sh *= GetCloudShadow(progressW, sunVector);
 

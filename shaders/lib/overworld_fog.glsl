@@ -118,7 +118,7 @@ vec4 GetVolumetricFog(
 
 	vec3 progress = start.xyz;
 	vec3 progressW = vec3(0.0);
-	float expFactor = 11.0;
+	const float expFactor = 11.0;
 
 	/// -------------  COLOR/LIGHTING STUFF ------------- \\\
 	

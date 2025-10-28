@@ -782,6 +782,42 @@ vec4 raymarchCloud(
 				// check if the pixel has visible clouds before doing work.
 				if(shapeWithDensityFaded > 1e-5){
 					
+					#ifdef TERRAIN_SHADOW_ON_CLOUDS
+						#ifdef CUSTOM_MOON_ROTATION
+							vec3 fragposition = mat3(customShadowMatrixSSBO) * newPos + customShadowMatrixSSBO[3].xyz;
+						#else
+							vec3 fragposition = mat3(shadowModelView) * newPos + shadowModelView[3].xyz;
+						#endif
+						fragposition = diagonal3(shadowProjection) * fragposition + shadowProjection[3].xyz;
+
+						#if defined DISTORT_SHADOWMAP && defined OVERWORLD_SHADER
+							float distortFactor = calcDistort(fragposition.xy);
+						#else
+							float distortFactor = 1.0;
+						#endif
+
+						vec3 shadowPos = vec3(fragposition.xy * distortFactor, fragposition.z);
+
+						vec3 sh = vec3(1.0);
+						if (abs(shadowPos.x) < 1.0-0.5/2048. && abs(shadowPos.y) < 1.0-0.5/2048.){
+							shadowPos = shadowPos*vec3(0.5,0.5,0.5/6.0)+0.5;
+
+							#ifdef TRANSLUCENT_COLORED_SHADOWS
+								sh = vec3(shadow2D(shadowtex0, shadowPos).x);
+
+								if(shadow2D(shadowtex1, shadowPos).x > shadowPos.z && sh.x < 1.0){
+									vec4 translucentShadow = texture2D(shadowcolor0, shadowPos.xy);
+									if(translucentShadow.a < 0.9) sh = normalize(translucentShadow.rgb+0.0001);
+								}
+							#else
+								sh = vec3(shadow2D(shadow, shadowPos).x);
+							#endif
+						}
+						
+						sunScattering *= sh;
+						moonScattering *= sh;
+					#endif
+					
 					#if AURORA_LOCATION > 0
 						float skylightOcclusion = 1.0;
 						#if defined CloudLayer1 && defined CloudLayer0
@@ -938,9 +974,9 @@ vec4 GetVolumetricClouds(
 	float heightRelativeToClouds = clamp(1.0 - max(cameraPosition.y - minHeight,0.0) / 100.0 ,0.0,1.0);
 
 	#if defined DISTANT_HORIZONS || defined VOXY
-		float maxdist = dhVoxyFarPlane - 16.0;
+		const float maxdist = dhVoxyFarPlane - 16.0;
 	#else
-		float maxdist = far + 16.0*5.0;
+		const float maxdist = far + 16.0*5.0;
 	#endif
 
    	float lViewPosM = length(viewPos) < maxdist ? length(viewPos) - 1.0 : 100000000.0;
@@ -958,8 +994,8 @@ vec4 GetVolumetricClouds(
 		NormPlayerPos.y += 0.03 * heightRelativeToClouds;
 	#endif
 
-	float maxSamples = 20.0;
-	float minSamples = 12.0;
+	const float maxSamples = 20.0*CLOUD_SAMPLE_MULTIPLIER;
+	const float minSamples = 12.0*CLOUD_SAMPLE_MULTIPLIER;
 	int samples = int(clamp(maxSamples / exp2(abs(NormPlayerPos.y)), minSamples, maxSamples));
 	// int samples = 30;
    

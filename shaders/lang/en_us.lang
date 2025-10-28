@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.0.4
+    value.SHADER_VERSION_LABEL.482 = 5.1.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -360,6 +360,11 @@ screen.Clouds = Cloud Settings
     value.CLOUD_PHASE.0 = Henyey-Greenstein
     value.CLOUD_PHASE.1 = Cornette-Shanks
     value.CLOUD_PHASE.2 = Henyey-Greenstein-Draine
+
+    option.TERRAIN_SHADOW_ON_CLOUDS = Terrain Shadows On Clouds
+        comment.TERRAIN_SHADOW_ON_CLOUDS = Whether or not terrain can cast shadows onto cumulus clouds. §aPERFORMANCE COST:§r low to medium
+    option.CLOUD_SAMPLE_MULTIPLIER = Cloud Sample Count Multiplier
+        comment.CLOUD_SAMPLE_MULTIPLIER = Multiplies the cloud samples with this value. Especially useful to get lower noise in terrain shadows on clouds. §aPERFORMANCE COST:§r low to very high
 
     screen.CumulusClouds        = Cumulus Clouds
         option.CloudLayer0          = Small Cumulus Clouds
@@ -904,7 +909,7 @@ option.AEROCHROME_WOOL_ENABLED.comment = Technically wool things should be affec
 
 option.EMISSIVE_ORES = Emissive Ores
 option.EMISSIVE_ORES_STRENGTH = Emissive Ores Brightness
-option.PLANET_CURVATURE = Planet Curvature
+option.PLANET_CURVATURE = Planet Curvature §c(Voxy not supported!)
 option.CURVATURE_AMOUNT = Curvature Amount
 
 option.USE_CUSTOM_DIFFUSE_LIGHTING_COLORS = Custom Diffuse Colors

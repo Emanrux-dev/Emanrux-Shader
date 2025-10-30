@@ -58,7 +58,15 @@
         bool noSimOngoingCheck;
     
     }"},
+    "useViewportDims": true,
     "uniforms": [
+        "worldDay",
+        "worldTime",
+        "moonElevation",
+        "worldTimeSmooth",
+        #if CUMULONIMBUS > 0
+        "cumulonimbusStrength",
+        #endif
         "framemod4_DH",
         "vxModelView",
         "vxModelViewPrev",
@@ -89,6 +97,7 @@
         "sunPosition",
         "sunElevation",
         "lightningBoltPosition",
+        "thunderStrength",
         "rainStrength",
         "unsigned_WsunVecSmooth",
         "unsigned_WmoonVecSmooth",

@@ -7,8 +7,8 @@ uniform sampler2D depthtex0;
 #endif
 
 #ifdef VOXY
-	uniform sampler2D vxDepthTexOpaque;
-	#define dhVoxyDepthTex vxDepthTexOpaque
+	uniform sampler2D vxDepthTexTrans;
+	#define dhVoxyDepthTex vxDepthTexTrans
 #endif
 uniform sampler2D colortex1;
 uniform sampler2D colortex2;

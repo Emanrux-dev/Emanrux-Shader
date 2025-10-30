@@ -16,16 +16,12 @@ uniform sampler2D depthtex1;
 
 #ifdef DISTANT_HORIZONS
 	uniform sampler2D dhDepthTex;
-	uniform sampler2D dhDepthTex1;
 	#define dhVoxyDepthTex dhDepthTex
-	#define dhVoxyDepthTex1 dhDepthTex1
 #endif
 
 #ifdef VOXY
-	uniform sampler2D vxDepthTexOpaque;
 	uniform sampler2D vxDepthTexTrans;
 	#define dhVoxyDepthTex vxDepthTexTrans
-	#define dhVoxyDepthTex1 vxDepthTexOpaque
 #endif
 
 uniform sampler2D colortex0;
@@ -553,10 +549,7 @@ void main() {
 
 	#if defined DISTANT_HORIZONS || defined VOXY
     float DH_depth0 = texelFetch2D(dhVoxyDepthTex, ivec2(gl_FragCoord.xy),0).x;
-    #ifdef VOXY
-      float DH_depth1 = texelFetch2D(dhVoxyDepthTex1, ivec2(gl_FragCoord.xy),0).x;
-      DH_depth0 = min(DH_depth0, DH_depth1);
-    #endif
+
 		float depthOpaque = z;
 		float depthOpaqueL = linearizeDepthFast(depthOpaque, near, farPlane);
 		

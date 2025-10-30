@@ -234,7 +234,7 @@ vec4 GetVolumetricFog(
 	float verticalFactor = abs(normalize(dVWorld).y);
 	verticalFactor = pow(verticalFactor, 2.0);
 
-	#if defined DISTANT_HORIZONS
+	#if defined DISTANT_HORIZONS || defined VOXY
 		int SAMPLECOUNT = 19;
 		float expFactor = 33.0;
 		float maxDist = mix(800.0, 300.0, verticalFactor);

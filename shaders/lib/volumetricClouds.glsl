@@ -4,12 +4,13 @@
 #define LARGECUMULUS_LAYER 1
 #define SMALLCUMULUS_LAYER 0
 
+#ifndef VOXY_PROGRAM
 uniform float thunderStrength;
-uniform int entityId;
 uniform int worldDay;
 uniform int worldTime;
 uniform float moonElevation;
 uniform float worldTimeSmooth;
+#endif
 
 
 #if CLOUD_MOVEMENT_TYPE == 0
@@ -29,18 +30,20 @@ float lightningFlash = mix(0.1, 2.5, randomSeed);
 	float lightningFade = smoothstep(0.6, 0.22, timeInLightning);
 #endif
 
-#if CUMULONIMBUS == 1
+#if CUMULONIMBUS == 1 && !defined VOXY_PROGRAM
 	uniform float cumulonimbusStrength;
 #endif
 
 #if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
-	#ifndef COLORWHEEL
+	#if !defined COLORWHEEL && !defined VOXY_PROGRAM
 		#extension GL_NV_gpu_shader5 : enable
 		#extension GL_ARB_shader_image_load_store : enable
 		#extension GL_EXT_shader_image_load_store : enable
 	#endif
 
+	#ifndef VOXY_PROGRAM
 	layout (rgba16f) uniform image2D cloudDepthTex;
+	#endif
 
 	float lightningStart = mix(20.0, 1.0, smoothstep(0.0, 0.085, timeInLightning));
 	float lightningMid = smoothstep(0.0, 0.05, timeInLightning) * smoothstep(0.15, 0.066, timeInLightning);
@@ -129,6 +132,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 	switch (LayerIndex){
     	default : { break; }
 
+		#ifdef CloudLayer3
 		case CIRRUS_LAYER: {
 			coverage = SC_parameters.cirrus.x;
 
@@ -163,8 +167,10 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 			if (position.y < (-0.0001 * minHeight + 0.8)*minHeight) shape = 0.0;
 
 			return shape;
-		break; }
+		}
+		#endif
 
+		#ifdef CloudLayer2
 		case ALTOSTRATUS_LAYER: {
 			coverage = SC_parameters.altostratus.x;
 			coverage += Rain_coverage * rainStrength;
@@ -182,8 +188,10 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 			if (position.y < (-0.0001 * minHeight + 0.8)*minHeight) shape = 0.0;
 
 			return shape;
-		break; }
+		}
+		#endif
 
+		#ifdef CloudLayer1
 		case LARGECUMULUS_LAYER: {
 			coverage = SC_parameters.largeCumulus.x;
 			coverage += Rain_coverage * rainStrength;
@@ -199,7 +207,9 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 			shape = min(max(val - smallCloud,0.0)/sqrt(val),1.0);
 
 		break; }
+		#endif
 
+		#ifdef CloudLayer0
 		case SMALLCUMULUS_LAYER: {
 			coverage = SC_parameters.smallCumulus.x;
 			coverage += Rain_coverage * rainStrength;
@@ -215,6 +225,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 			
 			// shape = abs(largeCloud*2.0 - 1.2)*0.5 - (1.0-smallCloud);
 		break; }
+		#endif
 	}
 
 	// clamp density of the cloud within its upper/lower bounds
@@ -248,6 +259,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		switch (LayerIndex){  
     	    default : { break; }
 
+			#ifdef CloudLayer0
 			case SMALLCUMULUS_LAYER: {
 				erosion += (1.0-densityAtPos(samplePos * CloudLayer0_detail * CloudLayer0_scale / 3.0)) * sqrt(omShape);
 
@@ -256,6 +268,9 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 
 				erosion = erosion*erosion*erosion*erosion;
 			break; }
+			#endif
+			
+			#ifdef CloudLayer1
 			case LARGECUMULUS_LAYER: {
 				erosion += (1.0 - densityAtPos(samplePos * CloudLayer1_detail * CloudLayer1_scale / 4.5)) * sqrt(omShape);
 
@@ -264,6 +279,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 
 				erosion = erosion*erosion*erosion*erosion;
 			break; }
+			#endif
     	}
 
 		return max(shape - erosion*erodeAmount,0.0);

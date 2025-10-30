@@ -171,7 +171,7 @@ float invLdFast(float linearDepth) {
 
 vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
 
-	float biasAmount = 0.0000015;
+	const float biasAmount = 0.0000015;
 
     float quality = float(FORWARD_SSR_QUALITY);
     vec3 clipPosition = DH_toClipSpace3(position);
@@ -180,12 +180,7 @@ vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
        (-dhVoxyNearPlane - position.z) / dir.z : dhVoxyFarPlane*sqrt(3.);
     
     vec3 direction = DH_toClipSpace3(position + dir * rayLength) - clipPosition;  //convert to clip space
-
-	#if FORWARD_SSR_QUALITY == 1
-		vec3 reflectedTC = vec3((direction.xy + clipPosition.xy) * RENDER_SCALE, 0.999999);
-		return reflectedTC;
-	#endif
-
+	
 	//get at which length the ray intersects with the edge of the screen
     vec3 maxLengths = (step(0.0, direction) - clipPosition) / direction;
     float mult = min(min(maxLengths.x, maxLengths.y), maxLengths.z);

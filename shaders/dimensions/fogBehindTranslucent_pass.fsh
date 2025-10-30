@@ -316,9 +316,6 @@ void main() {
 		#if defined DISTANT_HORIZONS || defined VOXY
 			// float DH_z = texture2D(dhDepthTex1,tc).x;
 			float DH_z = texelFetch2D(dhVoxyDepthTex1, texcoord, 0).x;//texture2D(dhDepthTex,tc).x;
-			#ifdef VOXY
-				DH_z0 = min(DH_z0, DH_z);
-			#endif
 		#else
 			float DH_z = 0.0;
 		#endif

@@ -137,8 +137,8 @@ float convertHandDepth2( float depth) {
 #endif
 
 #ifdef VOXY
-	uniform sampler2D vxDepthTexOpaque;
-	#define dhVoxyDepthTex vxDepthTexOpaque
+	uniform sampler2D vxDepthTexTrans;
+	#define dhVoxyDepthTex vxDepthTexTrans
 #endif
 
 uniform float near;

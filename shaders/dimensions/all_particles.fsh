@@ -109,8 +109,11 @@ uniform vec3 relativeEyePosition;
 uniform int heldItemId;
 uniform int heldItemId2;
 
-#ifdef IS_LPV_ENABLED
+#if defined IS_LPV_ENABLED || RAINBOW_SELECT_BOX > 0
 	#include "/lib/hsv.glsl"
+#endif
+
+#ifdef IS_LPV_ENABLED
 	#include "/lib/lpv_common.glsl"
 	#include "/lib/lpv_render.glsl"
 #endif
@@ -527,7 +530,19 @@ void main() {
 		#ifdef LINES
 			gl_FragData[0].rgb = (Indirect_lighting + Direct_lighting) * toLinear(color.rgb);
 
-			if(SELECTION_BOX > 0) gl_FragData[0].rgba = vec4(toLinear(vec3(SELECT_BOX_COL_R, SELECT_BOX_COL_G, SELECT_BOX_COL_B)), 1.0);
+			#if RAINBOW_SELECT_BOX > 0
+
+				#if RAINBOW_SELECT_BOX == 1
+					float selectBoxHue = length(sin(mod(1.4*(feetPlayerPos+cameraPosition), 3.14159)));
+				#else
+					float selectBoxHue = length(sin(mod(1.4*(feetPlayerPos+cameraPosition)+0.7*frameTimeCounter, 3.14159)));
+				#endif
+
+				vec3 selectBoxColor = HsvToRgb(vec3(selectBoxHue, 1.0, 1.0));
+				if(SELECTION_BOX > 0) gl_FragData[0].rgba = vec4(toLinear(selectBoxColor), 1.0);
+			#else
+				if(SELECTION_BOX > 0) gl_FragData[0].rgba = vec4(toLinear(vec3(SELECT_BOX_COL_R, SELECT_BOX_COL_G, SELECT_BOX_COL_B)), 1.0);
+			#endif
 			
 			// float LITEMATICA_SCHEMATIC_THING_MASK = 0.0;
 			// if (renderStage == MC_RENDER_STAGE_NONE){

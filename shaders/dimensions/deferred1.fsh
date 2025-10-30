@@ -18,8 +18,8 @@ uniform sampler2D depthtex1;
 #ifdef VOXY
 	uniform sampler2D vxDepthTexOpaque;
 	uniform sampler2D vxDepthTexTrans;
-	#define dhVoxyDepthTex vxDepthTexOpaque
-	#define dhVoxyDepthTex1 vxDepthTexTrans
+	#define dhVoxyDepthTex vxDepthTexTrans
+	#define dhVoxyDepthTex1 vxDepthTexOpaque
 #endif
 uniform float near;
 uniform float far;

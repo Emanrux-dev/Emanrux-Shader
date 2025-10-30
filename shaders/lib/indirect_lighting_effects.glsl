@@ -98,7 +98,7 @@ vec4 BilateralUpscale_SSAO(sampler2D tex, sampler2D depth, vec2 coord, float ref
 
 vec3 rayTrace_GI(vec3 dir,vec3 position,float dither, float quality){
 
-	float biasAmount = 0.0001;
+	const float biasAmount = 0.0001;
 
 	vec3 clipPosition = toClipSpace3(position);
 
@@ -154,7 +154,7 @@ vec3 RT_alternate(vec3 dir, vec3 position, float noise, float stepsizes, bool ha
 
 	vec3 worldpos = mat3(gbufferModelViewInverse) * position;
 
-	float biasamount = 0.00005;
+	const float biasamount = 0.00005;
   	vec2 screenEdges = 2.0/vec2(viewWidth, viewHeight);
 
 	float dist = 1.0 + length(worldpos)/far; // step length as distance increases

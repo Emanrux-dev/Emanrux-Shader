@@ -526,10 +526,6 @@ void main() {
 
 	#if defined DISTANT_HORIZONS || defined VOXY
 		float DH_z0 = texelFetch2D(dhVoxyDepthTex, texcoord,0).x;
-		#ifdef VOXY
-			float DH_z1= texelFetch2D(dhVoxyDepthTex1, texcoord,0).x;
-			DH_z0 = min(DH_z0, DH_z1);
-		#endif
 	#else
 		float DH_z0 = 0.0;
 	#endif

@@ -952,22 +952,16 @@ void main() {
 			float DH_depth0 = texelFetch2D(dhVoxyDepthTex,ivec2(gl_FragCoord.xy), 0).x;
 			float DH_depth1 = texelFetch2D(dhVoxyDepthTex1,ivec2(gl_FragCoord.xy), 0).x;
 
-			#ifdef VOXY
-				DH_depth0 = min(DH_depth0, DH_depth1);
-			#endif
-
 			float depthOpaque = z;
 			float depthOpaqueL = linearizeDepthFast(depthOpaque, near, farPlane);
 			
-			#if defined DISTANT_HORIZONS || defined VOXY
-			    float dhDepthOpaque = DH_depth1;
-			    float dhDepthOpaqueL = linearizeDepthFast(dhDepthOpaque, dhVoxyNearPlane, dhVoxyFarPlane);
+			float dhDepthOpaque = DH_depth1;
+			float dhDepthOpaqueL = linearizeDepthFast(dhDepthOpaque, dhVoxyNearPlane, dhVoxyFarPlane);
 
-				if (depthOpaque >= 1.0 || (dhDepthOpaqueL < depthOpaqueL && dhDepthOpaque > 0.0)){
-			        depthOpaque = dhDepthOpaque;
-			        depthOpaqueL = dhDepthOpaqueL;
-			    }
-			#endif
+			if (depthOpaque >= 1.0 || (dhDepthOpaqueL < depthOpaqueL && dhDepthOpaque > 0.0)){
+				depthOpaque = dhDepthOpaque;
+				depthOpaqueL = dhDepthOpaqueL;
+			}
 
 			swappedDepth = depthOpaque;
 		#else

@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.1.0
+    value.SHADER_VERSION_LABEL.482 = 5.1.1
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -911,6 +911,17 @@ option.EMISSIVE_ORES = Emissive Ores
 option.EMISSIVE_ORES_STRENGTH = Emissive Ores Brightness
 option.PLANET_CURVATURE = Planet Curvature §c(Voxy not supported!)
 option.CURVATURE_AMOUNT = Curvature Amount
+
+screen.selection_box_outline = Selection Box Outline
+option.SELECT_BOX = Selection Box
+option.RAINBOW_SELECT_BOX = Rainbow Selection Box
+    value.RAINBOW_SELECT_BOX.0 = Off
+    value.RAINBOW_SELECT_BOX.1 = Static
+    value.RAINBOW_SELECT_BOX.2 = Animated
+
+option.SELECT_BOX_COL_R = Selection Box Red
+option.SELECT_BOX_COL_G = Selection Box Green
+option.SELECT_BOX_COL_B = Selection Box Blue
 
 option.USE_CUSTOM_DIFFUSE_LIGHTING_COLORS = Custom Diffuse Colors
 option.DIRECTLIGHT_DIFFUSE_R = Sun R

@@ -55,6 +55,12 @@ uniform sampler2D depthtex0;
 
 #ifdef DISTANT_HORIZONS
 	uniform sampler2D dhDepthTex1;
+	#define dhVoxyDepthTex1 dhDepthTex1
+#endif
+
+#ifdef VOXY
+	uniform sampler2D vxDepthTexOpaque;
+	#define dhVoxyDepthTex1 vxDepthTexOpaque
 #endif
 
 uniform sampler2D colortex7;

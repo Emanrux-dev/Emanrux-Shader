@@ -122,7 +122,7 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
     
     gbuffer_data_0 = vec4(encodeVec2(Albedo.x,data1.x),	encodeVec2(Albedo.y,data1.y),	encodeVec2(Albedo.z,data1.z),	encodeVec2(data1.w,Albedo.w));
 
-    gbuffer_data_1 = vec4(0.0, 0.0, SSSAMOUNT, 0.0);
+    gbuffer_data_1 = vec4(0.0, 0.0, SSSAMOUNT, EMISSIVE);
 
     gbuffer_data_2 = vec4(normal * 0.5 + 0.5, 0.0);
 

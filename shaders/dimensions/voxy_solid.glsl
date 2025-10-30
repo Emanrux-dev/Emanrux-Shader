@@ -25,6 +25,16 @@ float encodeVec2(float x,float y){
     return encodeVec2(vec2(x,y));
 }
 
+#if EMISSIVE_TYPE > 0
+	#include "/lib/hsv.glsl"
+
+	float getEmission(vec3 Albedo) {
+		vec3 hsv = RgbToHsv(Albedo);
+		float emissive = smoothstep(0.05, 0.15, hsv.y) * pow(hsv.z, 3.5);
+		return emissive * 0.5;
+	}
+#endif
+
 
 void voxy_emitFragment(VoxyFragmentParameters parameters) {
 
@@ -36,37 +46,72 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 
     float SSSAMOUNT = 0.0;
 
-    /////// ----- SSS ON BLOCKS ----- ///////
-	// strong
-	if (
-		blockID == BLOCK_SSS_STRONG || blockID == BLOCK_SAPLING || blockID == BLOCK_AIR_WAVING
-	) {
-		SSSAMOUNT = 1.0;
-	}
+	#if SSS_TYPE
+		/////// ----- SSS ON BLOCKS ----- ///////
+		// strong
+		if (
+			blockID == BLOCK_SSS_STRONG || blockID == BLOCK_SAPLING || blockID == BLOCK_AIR_WAVING
+		) {
+			SSSAMOUNT = 1.0;
+		}
 
-	// medium
-	if (
-		blockID == BLOCK_GROUND_WAVING || blockID == BLOCK_GROUND_WAVING_VERTICAL
-		|| blockID == BLOCK_GRASS_SHORT || blockID == BLOCK_GRASS_TALL_UPPER || blockID == BLOCK_GRASS_TALL_LOWER
-	) {
-		SSSAMOUNT = 0.5;
-	}
-	if (
-		blockID == BLOCK_SSS_WEAK || blockID == BLOCK_SSS_WEAK_2 ||
-		blockID == BLOCK_GLOW_LICHEN || blockID == BLOCK_SNOW_LAYERS || blockID == BLOCK_CARPET ||
-		blockID == BLOCK_AMETHYST_BUD_MEDIUM || blockID == BLOCK_AMETHYST_BUD_LARGE || blockID == BLOCK_AMETHYST_CLUSTER ||
-		blockID == BLOCK_BAMBOO || blockID == BLOCK_SAPLING || blockID == BLOCK_VINE
-	) {
-		SSSAMOUNT = 0.5;
-	}
-	
-	// low
-	#ifdef MISC_BLOCK_SSS
-		if(
-			blockID == BLOCK_SSS_WEIRD || blockID == BLOCK_GRASS
-		){
+		// medium
+		if (
+			blockID == BLOCK_GROUND_WAVING || blockID == BLOCK_GROUND_WAVING_VERTICAL
+			|| blockID == BLOCK_GRASS_SHORT || blockID == BLOCK_GRASS_TALL_UPPER || blockID == BLOCK_GRASS_TALL_LOWER
+		) {
 			SSSAMOUNT = 0.5;
 		}
+		if (
+			blockID == BLOCK_SSS_WEAK || blockID == BLOCK_SSS_WEAK_2 ||
+			blockID == BLOCK_GLOW_LICHEN || blockID == BLOCK_SNOW_LAYERS || blockID == BLOCK_CARPET ||
+			blockID == BLOCK_AMETHYST_BUD_MEDIUM || blockID == BLOCK_AMETHYST_BUD_LARGE || blockID == BLOCK_AMETHYST_CLUSTER ||
+			blockID == BLOCK_BAMBOO || blockID == BLOCK_SAPLING || blockID == BLOCK_VINE
+		) {
+			SSSAMOUNT = 0.5;
+		}
+		
+		// low
+		#ifdef MISC_BLOCK_SSS
+			if(
+				blockID == BLOCK_SSS_WEIRD || blockID == BLOCK_GRASS
+			){
+				SSSAMOUNT = 0.5;
+			}
+		#endif
+	#endif
+
+	float EMISSIVE = 0.0;
+
+	#if EMISSIVE_TYPE > 0
+		/////// ----- EMISSIVE STUFF ----- ///////
+
+		// if(vNameTags > 0) EMISSIVE = 0.9;
+
+		// normal block lightsources
+		if(blockID >= 100 && blockID < 300) EMISSIVE = 0.5;
+
+		if(blockID == 266 || blockID == 497) EMISSIVE = 0.2; // sculk stuff
+
+		if(blockID == 195) EMISSIVE = 2.3; // glow lichen
+
+		if(blockID == 185) EMISSIVE = 1.5; // crying obsidian
+
+		if(blockID == 105) EMISSIVE = 2.0; // brewing stand
+		
+		if(blockID == 236) EMISSIVE = 1.0; // respawn anchor
+
+		if(blockID == 101) EMISSIVE = 0.7; // large amethyst bud
+
+		if(blockID == 103) EMISSIVE = 1.0; // amethyst cluster
+
+		if(blockID == 244) EMISSIVE = 1.5; // soul fire
+
+		#ifdef EMISSIVE_ORES
+			if(blockID == 502) EMISSIVE = EMISSIVE_ORES_STRENGTH;
+		#endif
+
+		EMISSIVE *= getEmission(Albedo.rgb);
 	#endif
 
     Albedo.a = 1.0;

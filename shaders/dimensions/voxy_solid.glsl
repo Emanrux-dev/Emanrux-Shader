@@ -116,7 +116,7 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 
     Albedo.a = 1.0;
 
-    vec3 normal = vec3(uint((parameters.face>>1)==2), uint((parameters.face>>1)==0), uint((parameters.face>>1)==1)) * (float(int(parameters.face)&1)*2-1);
+    vec3 normal = vec3(uint((parameters.face>>1)==2), uint((parameters.face>>1)==0), uint((parameters.face>>1)==1)) * (float(int(parameters.face)&1));
 
     vec4 data1 = clamp( encode(normal, parameters.lightMap), 0.0, 1.0);
     

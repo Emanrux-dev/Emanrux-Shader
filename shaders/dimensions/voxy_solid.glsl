@@ -115,8 +115,12 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 	#endif
 
     Albedo.a = 1.0;
+	if(blockID == BLOCK_GROUND_WAVING_VERTICAL || blockID == BLOCK_GRASS_SHORT || blockID == BLOCK_GRASS_TALL_LOWER || blockID == BLOCK_GRASS_TALL_UPPER ) Albedo.a = 0.60;
+	if(blockID == BLOCK_AIR_WAVING) Albedo.a = 0.55;
 
-    vec3 normal = vec3(uint((parameters.face>>1)==2), uint((parameters.face>>1)==0), uint((parameters.face>>1)==1)) * (float(int(parameters.face)&1));
+    vec3 normal = vec3(uint((parameters.face>>1)==2), uint((parameters.face>>1)==0), uint((parameters.face>>1)==1)) * (float(int(parameters.face)&1)*2-1);
+
+	if (normal.z<=-0.9) normal.xy = vec2(-0.0000000000001);
 
     vec4 data1 = clamp( encode(normal, parameters.lightMap), 0.0, 1.0);
     

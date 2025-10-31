@@ -272,6 +272,7 @@ void main() {
 	#endif
 
 	if(vblockID == BLOCK_GROUND_WAVING_VERTICAL || vblockID == BLOCK_GRASS_SHORT || vblockID == BLOCK_GRASS_TALL_LOWER || vblockID == BLOCK_GRASS_TALL_UPPER ) vnormalMat.a = 0.60;
+	if(vblockID == BLOCK_AIR_WAVING) vnormalMat.a = 0.55;
 
 	#if defined WORLD && !defined HAND
 
@@ -298,10 +299,8 @@ void main() {
 		#endif
 	#endif
 
-	if(mc_Entity.x == BLOCK_AIR_WAVING) vnormalMat.a = 0.55;
-
 	#if PUDDLE_MODE > 0 || ShaderSnow > 0
-		if (mc_Entity.x == 244 || mc_Entity.x == 189) vlmtexcoord.w = 0.0;
+		if (vblockID == 244 || vblockID == 189) vlmtexcoord.w = 0.0;
 	#endif
 
 	// special cases light lightning and beacon beams...	

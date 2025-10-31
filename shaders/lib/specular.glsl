@@ -1,9 +1,3 @@
-#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
-	float invLinZ_DH (float lindepth){
-		return -((2.0*near/lindepth)-dhVoxyFarPlane-near)/(dhVoxyFarPlane-near);
-	}
-#endif
-
 float invLinZ (float lindepth){
 	return -((2.0*near/lindepth)-far-near)/(far-near);
 }
@@ -153,7 +147,7 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 		spos.xy += TAA_Offset*texelSize*0.5/RENDER_SCALE;
 	#endif
 
-	float minZ = spos.z - 0.00025 / linZ(spos.z);;
+	float minZ = spos.z - 0.00025 / linZ(spos.z);
 	float maxZ = spos.z;
 
 	vec3 hitPos = vec3(1.1);

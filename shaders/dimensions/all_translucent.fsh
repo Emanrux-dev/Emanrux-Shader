@@ -617,7 +617,6 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#endif
 
 	vec3 worldSpaceNormal = viewToWorld(normal).xyz;
-	vec2 TangentNormal = vec2(0); // for refractions
 	
 	#if defined LARGE_WAVE_DISPLACEMENT && !defined PHYSICS_OCEAN
 		if (isWater){
@@ -735,7 +734,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#endif
 
 	// tangent space normals for refraction
-	TangentNormal = NormalTex.xy;
+	vec2 TangentNormal = NormalTex.xy;
 	
 	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
 		rippleBump *= physics_localWaviness;

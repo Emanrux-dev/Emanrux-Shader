@@ -21,7 +21,7 @@
     #ifdef TAA_UPSCALING 
     "renderScale": [SCALE_FACTOR, SCALE_FACTOR],
     #endif
-    "blending": {-1:"ONE ONE_MINUS_SRC_ALPHA ONE ONE_MINUS_SRC_ALPHA"},
+    "blending": {-1:"SRC_ALPHA ONE_MINUS_SRC_ALPHA ONE_MINUS_DST_ALPHA ONE"},
     "ssbos": {0:"{
         mat4 customShadowMatrixSSBO;
 

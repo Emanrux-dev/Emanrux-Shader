@@ -173,6 +173,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
     gbuffer_data_0 = parameters.sampledColour * parameters.tinting;
 
     vec3 Albedo = toLinear(gbuffer_data_0.rgb);
+	float UnchangedAlpha = gbuffer_data_0.a;
     
     int blockID = int(parameters.customId);
     bool isWater = blockID == 8;
@@ -274,25 +275,27 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		}
 	#endif
 
+	vec2 TangentNormal = normal.xy;
+
     vec3 normals = normalize(worldToView(normal));
 
-	if(isWater) {
-    #if defined FORWARD_SPECULAR
+
+	#if defined FORWARD_SPECULAR
 		vec3 Reflections_Final = vec3(0.0);
 		vec4 Reflections = vec4(0.0);
 		vec3 BackgroundReflection = FinalColor; 
 		vec3 SunReflection = vec3(0.0);
 		float SSR_HIT_SKY_MASK = indoors;
 		
-        float roughness = 0.0;
-		float f0 = 0.0002;
+		float roughness = 0.0;
+		float f0 = 0.02;
 
         vec3 reflectedVector = reflect(normalize(viewPos), normals);
 	    float normalDotEye = dot(normals, normalize(viewPos));
 
-	    float fresnel =  pow(clamp(1.0 + normalDotEye, 0.0, 1.0), 25.0);
+		float fresnel =  pow(clamp(1.0 + normalDotEye, 0.0, 1.0), 5.0);
 
-	    fresnel = mix(f0, 1.0, fresnel);
+		fresnel = mix(f0, 1.0, fresnel);
 
         #ifdef SNELLS_WINDOW
 	    	if(isEyeInWater == 1) fresnel = pow(clamp(1.5 + normalDotEye,0.0,1.0), 25.0);
@@ -315,7 +318,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
             BackgroundReflection = skyCloudsFromTex(mat3(gbufferModelViewInverse) * reflectedVector, colortex4).rgb / 1200.0;
         #endif
         #ifdef WATER_SUN_SPECULAR
-            SunReflection = 0.05*(DirectLightColor * Shadows) * GGX(normalize(normals), -normalize(viewPos), normalize(WsunVec2), roughness, f0) * (1.0-Reflections.a);
+            SunReflection = (DirectLightColor * Shadows) * GGX(normalize(normals), -normalize(viewPos), normalize(WsunVec2), roughness, f0) * (1.0-Reflections.a);
         #endif
 
 		Reflections_Final = mix(FinalColor, mix(BackgroundReflection*SSR_HIT_SKY_MASK, Reflections.rgb, Reflections.a), fresnel);
@@ -329,9 +332,6 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#else
 		gbuffer_data_0.rgb = FinalColor*0.1;
 	#endif
-	} else {
-		gbuffer_data_0.rgb = FinalColor*0.1;
-	}
 
     float material = 0.7;
     if(isWater) material = 1.0;

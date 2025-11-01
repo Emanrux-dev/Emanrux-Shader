@@ -1036,11 +1036,16 @@ void main() {
 		// bool isEntity = abs(translucentMasks - 0.9) < 0.01 || isReflectiveEntity;
 
 		bool lightningBolt = abs(opaqueMasks-0.5) <0.01;
-		bool isLeaf = abs(opaqueMasks-0.55) <0.01;
+		// bool isLeaf = abs(opaqueMasks-0.55) <0.01;
 		bool entities = abs(opaqueMasks-0.45) < 0.01;	
 		bool isGrass = abs(opaqueMasks-0.60) < 0.01;
 		bool hand = abs(opaqueMasks-0.75) < 0.01 && z < 1.0;
-		bool isShaderGrass = abs(opaqueMasks-0.4) < 0.01;
+
+		#ifdef SHADER_GRASS
+			bool isShaderGrass = abs(opaqueMasks-0.4) < 0.01;
+		#else
+			const bool isShaderGrass = false;
+		#endif
 		// bool handwater = abs(translucentMasks-0.3) < 0.01 ;
 		// bool blocklights = abs(opaqueMasks-0.8) <0.01;
 
@@ -1220,9 +1225,13 @@ void main() {
 		
 	////////////////////////////////	SHADOWMAP		////////////////////////////////
 		// setup shadow projection
-		
+
 		float shadowMapFalloff = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / (shadowDistance+32.0),0.0)*5.0,1.0));
-		float shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / shadowDistance,0.0)*5.0,1.0));
+		#if defined DISTANT_HORIZONS || defined VOXY
+			float shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / min(shadowDistance, max(far-32.0,32.0)),0.0)*5.0,1.0));
+		#else
+			float shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / shadowDistance,0.0)*5.0,1.0));
+		#endif
 
 		if(eyeInWater){
 			shadowMapFalloff = 1.0;
@@ -1296,9 +1305,6 @@ void main() {
 		float sunSSS_density = LabSSS;
 		float SSS_shadow = ShadowAlpha;
 		
-		#if defined DISTANT_HORIZONS || defined VOXY
-			shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / min(shadowDistance, max(far-32.0,32.0)),0.0)*5.0,1.0));
-		#endif
 
 		#ifndef RENDER_ENTITY_SHADOWS
 			if(entities) sunSSS_density = 0.0;

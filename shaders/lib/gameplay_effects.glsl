@@ -99,7 +99,13 @@ void applyGameplayEffects(inout vec3 color, in vec2 texcoord, float noise){
     //////////////////////// APPLY DISTORTION /////////////////////
     // all of the distortion will be based around zooming the UV in the center
     vec2 zoomUV = 0.5 + (texcoord - 0.5) * (1.0 - distortmask);
-    vec3 distortedColor = texture2D(colortex7, zoomUV).rgb;
+    
+    #ifndef PIXELATED
+        vec3 distortedColor = texture2D(colortex7, zoomUV).rgb;
+    #else
+        vec2 fragCoord = zoomUV*view_res;
+        vec3 distortedColor = texelFetch(colortex7, ivec2(fragCoord)-ivec2(mod(fragCoord, PIXELIZATION_STRENGTH)), 0).rgb;
+    #endif
 
     #if defined WATER_ON_CAMERA_EFFECT || defined ON_FIRE_DISTORT_EFFECT
         // apply the distorted water color to the scene, but revert back to before when it ends

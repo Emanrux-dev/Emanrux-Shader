@@ -64,7 +64,7 @@
         "worldTime",
         "moonElevation",
         "worldTimeSmooth",
-        #if CUMULONIMBUS > 0
+        #if CUMULONIMBUS == 1
         "cumulonimbusStrength",
         #endif
         "framemod4_DH",

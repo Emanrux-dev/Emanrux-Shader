@@ -272,7 +272,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 			
 			#ifdef CloudLayer1
 			case LARGECUMULUS_LAYER: {
-				erosion += (1.0 - densityAtPos(samplePos * CloudLayer1_detail * CloudLayer1_scale / 4.5)) * sqrt(omShape);
+				erosion += (1.0 - densityAtPos(samplePos * CloudLayer1_detail * CloudLayer1_scale / 3.571428)) * sqrt(omShape);
 
 				float falloff = 1.0 - clamp(posToMax/(CloudLayer1_tallness/CloudLayer1_scale),0.0,1.0);
 				erosion += abs(densityAtPos(samplePos * CloudLayer1_detail * CloudLayer1_scale) - falloff) * 0.75 * (omShape*omShape) * (1.0-falloff*0.5);
@@ -525,17 +525,17 @@ float getCloudScattering(
 
 	for (int i = 0; i < samples; i++){
 		if((LayerIndex == ALTOSTRATUS_LAYER) || (LayerIndex == CIRRUS_LAYER)){
-			shadowRayPosition = rayPosition + sunVis * sunVector * (1.0 + i * dither) / (pow(abs(sunVector.y*0.5),3.0) * 0.995 + 0.005) + moonVis * moonVector * (1.0 + i * dither) / (pow(abs(moonVector.y*0.5),3.0) * 0.995 + 0.005);
+			shadowRayPosition = rayPosition + sunVector*sunVis * (0.25 + i * dither) * 200.0 + moonVector*moonVis * (0.25 + i * dither) * 200.0;
 		} else
 		#if CUMULONIMBUS > 0
 		if((LayerIndex == LARGECUMULUS_LAYER) || (LayerIndex == SMALLCUMULUS_LAYER))
 		#endif
 		{
-			shadowRayPosition = rayPosition + lightVec * (1.0 + i + dither)*20.0;
+			shadowRayPosition = rayPosition + lightVec * (0.25 + i + dither)*20.0;
 		}
 		#if CUMULONIMBUS > 0
 		else {
-			shadowRayPosition = rayPosition + lightVec * (1.0 + i + dither)*isLarge;
+			shadowRayPosition = rayPosition + lightVec * (0.5 + i + dither)*isLarge;
 		}
 		#endif
 		
@@ -680,7 +680,7 @@ vec4 raymarchCloud(
 		}
 		if (density == 0.0) return vec4(color, totalAbsorbance);
 
-		bool ifAboveOrBelowPlane = max(mix(-1.0, 1.0, clamp(cameraPosition.y - minHeight,0.0,1.0)) * normalize(rayDirection).y,0.0) > 0.0;
+		bool ifAboveOrBelowPlane = max(mix(-1.0, 1.0, clamp(cameraPosition.y - minHeight,0.0,1.0)) * normalize(rayDirection).y + 0.0001,0.0) > 0.0;
 
 		// check if the ray staring position is going farther than the reference distance, if yes, dont begin marching. this is to check for intersections with the world.
 		// check if the camera is above or below the cloud plane, so it doesnt waste work on the opposite hemisphere
@@ -838,7 +838,7 @@ vec4 raymarchCloud(
 						float skylightOcclusion = 1.0;
 						#if defined CloudLayer1 && defined CloudLayer0
 							if(LayerIndex == SMALLCUMULUS_LAYER) {
-								float upperLayerOcclusion = getCloudShape(LARGECUMULUS_LAYER, 0, rayPosition + vec3(0.0,1.0,0.0) * max((CloudLayer1_height+20) - rayPosition.y,0.0), CloudLayer1_height, CloudLayer1_height+CloudLayer1_height);
+								float upperLayerOcclusion = getCloudShape(LARGECUMULUS_LAYER, 0, rayPosition + vec3(0.0,1.0,0.0) * max((CloudLayer1_height+20) - rayPosition.y,0.0), CloudLayer1_height, CloudLayer1_height+CloudLayer1_height/CloudLayer1_scale);
 								skylightOcclusion = mix(mix(0.0,0.2,densityLarge), 1.0, pow(1.0 - upperLayerOcclusion*densityLarge,5));
 							}
 						#endif
@@ -855,7 +855,7 @@ vec4 raymarchCloud(
 					#if defined CloudLayer0 && defined CloudLayer1
 						if(LayerIndex == SMALLCUMULUS_LAYER){
 							shadowStartPos = rayPosition + mainLightVec / abs(mainLightVec.y) * max((CloudLayer1_height + 20.0) - rayPosition.y, 0.0);
-							sunShadowMask += 3.0 * getCloudShape(LARGECUMULUS_LAYER, 0, shadowStartPos, CloudLayer1_height, CloudLayer1_height+CloudLayer1_tallness)*densityLarge;
+							sunShadowMask += 3.0 * getCloudShape(LARGECUMULUS_LAYER, 0, shadowStartPos, CloudLayer1_height, CloudLayer1_height+CloudLayer1_tallness/CloudLayer1_scale)*densityLarge;
 						}
 					#endif
 					// cumulonimbus layer -> other cumulus layers
@@ -1010,9 +1010,7 @@ vec4 GetVolumetricClouds(
 		NormPlayerPos.y += 0.03 * heightRelativeToClouds;
 	#endif
 
-	const float maxSamples = 20.0*CLOUD_SAMPLE_MULTIPLIER;
-	const float minSamples = 12.0*CLOUD_SAMPLE_MULTIPLIER;
-	int samples = int(clamp(maxSamples / exp2(abs(NormPlayerPos.y)), minSamples, maxSamples));
+	int samples = int(10.0*CLOUD_SAMPLE_MULTIPLIER);
 	// int samples = 30;
    
    	///------- setup the ray
@@ -1138,7 +1136,7 @@ vec4 GetVolumetricClouds(
 				cloudheight = 4000;
 				minHeight = 600;
 				maxHeight = cloudheight + minHeight;
-				int cumulonimbusSamples = int(1.5*samples);
+				int cumulonimbusSamples = 2*samples;
 				
 				cloudDist.xz = vec2(8.0);
 				rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/cumulonimbusSamples);

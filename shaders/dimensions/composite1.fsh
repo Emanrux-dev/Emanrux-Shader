@@ -465,11 +465,13 @@ vec2 SSRT_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, boo
 	float SSS = 0.0;
 
 	float _near = near; float _far = far*4.0;
-
+	
+	#if defined DISTANT_HORIZONS || defined VOXY
 	if (depthCheck) {
 		_near = dhVoxyNearPlane;
 		_far = dhVoxyFarPlane;
 	}
+	#endif
     
     vec3 position = toClipSpace3_DH(viewPos, depthCheck) ;
 	
@@ -492,11 +494,16 @@ vec2 SSRT_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, boo
 
 	for (int i = 0; i < int(samples); i++) { 
 		
-		float sampleDepth = convertHandDepth_2(texelFetch2D(depthtex1, ivec2(newPos.xy/texelSize),0).x,hand);
+		float sampleDepth;
 		
 		#if defined DISTANT_HORIZONS || defined VOXY
-			if(depthCheck) sampleDepth = texelFetch2D(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+		if(depthCheck) {
+			sampleDepth = texelFetch2D(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+		} else
 		#endif
+		{
+			sampleDepth = convertHandDepth_2(texelFetch2D(depthtex1, ivec2(newPos.xy/texelSize),0).x,hand);
+		}
 
 		if(sampleDepth < newPos.z){
 			float linearCurrentPos = swapperlinZ(newPos.z, _near, _far);
@@ -555,12 +562,16 @@ float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, floa
 
 
 	for (int i = 0; i < int(samples); i++) {
-		
-		float samplePos = texelFetch2D(depthtex2, ivec2(newPos.xy/texelSize).xy,0).x;
+		float samplePos;
 		
 		#if defined DISTANT_HORIZONS || defined VOXY
-			if(depthCheck) samplePos = texelFetch2D(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+			if(depthCheck) {
+				samplePos = texelFetch2D(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+			} else
 		#endif
+			{
+				samplePos = texelFetch2D(depthtex2, ivec2(newPos.xy/texelSize),0).x,hand;
+			}
 
 		if(samplePos < newPos.z && samplePos > 0.0){// && (samplePos <= max(minZ,maxZ) && samplePos >= min(minZ,maxZ))){
 			shadows = 0.0;
@@ -882,7 +893,7 @@ uniform float wetness;
 					#endif
 				}
 
-				roughness = mix(roughness, 0.5*(1+snowR), wetnessStages * Puddle_Reflection_Sharpness);
+				roughness = mix(roughness, 0.5*(1.0+snowR), wetnessStages * Puddle_Reflection_Sharpness);
 
 				if(f0 < 229.5/255.0 ) albedo = pow(albedo * (1.0 - 0.08*wetnessStages), vec3(1.0 + 0.7*wetnessStages));
 			}

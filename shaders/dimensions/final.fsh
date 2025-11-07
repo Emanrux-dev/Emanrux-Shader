@@ -32,6 +32,10 @@ uniform float viewWidth;
 uniform float aspectRatio;
 uniform vec3 relativeEyePosition;
 
+#ifdef PIXELATED
+  uniform vec2 view_res;
+#endif
+
 uniform int hideGUI;
 
 uniform vec3 previousCameraPosition;
@@ -95,7 +99,7 @@ void doCameraGridLines(inout vec3 color, vec2 UV){
 
 vec3 doMotionBlur(vec2 texcoord, float depth, float noise, bool hand){
   
-  float samples = 4.0;
+  const float samples = 4.0;
   vec3 color = vec3(0.0);
 
   float blurMult = 1.0;
@@ -151,12 +155,14 @@ void main() {
   
   float noise = blueNoise();
 
-  #ifdef MOTION_BLUR
+  #if defined MOTION_BLUR
     float depth = texture2D(depthtex0, texcoord*RENDER_SCALE).r;
     bool hand = depth < 0.56;
     float depth2 = convertHandDepth_2(depth, hand);
 
     vec3 COLOR = doMotionBlur(texcoord, depth2, noise, hand);
+  #elif defined PIXELATED
+    vec3 COLOR = texelFetch(colortex7, ivec2(gl_FragCoord.xy)-ivec2(mod(gl_FragCoord.xy, PIXELIZATION_STRENGTH)),0).rgb;
   #else
     vec3 COLOR = texture2D(colortex7,texcoord).rgb;
   #endif
@@ -165,6 +171,10 @@ void main() {
     // for making the fun, more fun
     applyGameplayEffects(COLOR, texcoord, noise);
   #endif
+
+  #if MAX_COLORS_PER_CHANNEL > 1
+    COLOR = floor(COLOR*(MAX_COLORS_PER_CHANNEL-1))/(MAX_COLORS_PER_CHANNEL-1);
+  #endif 
 
   #ifdef FILM_GRAIN
     // basic film grain implementation from https://www.shadertoy.com/view/4sXSWs slightly edited

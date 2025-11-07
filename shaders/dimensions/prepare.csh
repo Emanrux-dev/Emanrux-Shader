@@ -31,7 +31,7 @@ void main() {
     if (abs(frameTimeCounter - lastFrameTimeCount) > WATER_SIM_FRAMETIME) {
         float playerTallness = 1.5;
         if(is_sneaking) playerTallness = 1.2;
-        #if !defined IS_LPV_ENABLED
+        #if !defined IS_LPV_ENABLED && !defined SHADER_GRASS
             vec3 rayStart = vec3(0.0);
         #else
             vec3 rayStart = vec3(-relativeEyePosition);

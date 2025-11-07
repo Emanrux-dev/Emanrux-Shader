@@ -47,11 +47,16 @@
 
         for (int i = 0; i < int(samples); i++) {
             
-            float samplePos = texelFetch2D(depthtex2, ivec2(newPos.xy/texelSize).xy,0).x;
-            
+            float samplePos;
+		
             #if defined DISTANT_HORIZONS || defined VOXY
-                if(depthCheck) samplePos = texelFetch2D(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+                if(depthCheck) {
+                    samplePos = texelFetch2D(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+                } else
             #endif
+                {
+                    samplePos = texelFetch2D(depthtex2, ivec2(newPos.xy/texelSize),0).x,hand;
+                }
 
             if(samplePos < newPos.z && samplePos > 0.0){// && (samplePos <= max(minZ,maxZ) && samplePos >= min(minZ,maxZ))){
                 shadows = 0.0;

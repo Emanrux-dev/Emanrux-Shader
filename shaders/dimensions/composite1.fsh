@@ -493,7 +493,7 @@ vec2 SSRT_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, boo
 	float distanceScale2 = 1.0 + length(mat3(gbufferModelViewInverse) * viewPos) / 150.0;
 
 	for (int i = 0; i < int(samples); i++) { 
-		
+		if (newPos.x < 0.0 || newPos.y < 0.0 || newPos.x > 1.0 || newPos.y > 1.0) break;
 		float sampleDepth;
 		
 		#if defined DISTANT_HORIZONS || defined VOXY

@@ -1321,10 +1321,14 @@ void main() {
 			if(entities) sunSSS_density = 0.0;
 		#endif
 		
-		#if defined SCREENSPACE_CONTACT_SHADOWS && !defined END_SHADER
+		#if SCREENSPACE_CONTACT_SHADOWS > 0 && !defined END_SHADER
 			vec2 SS_directLight = SSRT_Shadows(toScreenSpace_DH(texcoord/RENDER_SCALE, z, DH_depth1), isDHrange, normalize(WsunVec*mat3(gbufferModelViewInverse)), interleaved_gradientNoise_temporal(), sunSSS_density > 0.0 && shadowMapFalloff2 < 1.0, hand);
 
 			// combine shadowmap with screenspace shadows.
+			#if SCREENSPACE_CONTACT_SHADOWS == 1
+				SS_directLight.r = mix(1.0, SS_directLight.r, 1.0-shadowMapFalloff);
+			#endif
+
 			shadowColor *= SS_directLight.r;			
 		#else
 			vec2 SS_directLight = vec2(1,0);

@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.2.0
+    value.SHADER_VERSION_LABEL.482 = 5.2.1
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -147,6 +147,9 @@ screen.Direct_Light = Direct Light
     screen.Shadows = Shadows
         option.TRANSLUCENT_COLORED_SHADOWS = Colored Shadows
         option.SCREENSPACE_CONTACT_SHADOWS = Screen-space Shadows
+            value.SCREENSPACE_CONTACT_SHADOWS.0 = Off
+            value.SCREENSPACE_CONTACT_SHADOWS.1 = Outside Shadow Distance
+            value.SCREENSPACE_CONTACT_SHADOWS.2 = On
         option.RENDER_ENTITY_SHADOWS = Shadows for Entities
         option.RENDER_PLAYER_SHADOWS = Shadows for the Player
         option.shadowMapResolution = Shadow Resolution

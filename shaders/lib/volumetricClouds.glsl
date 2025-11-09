@@ -762,6 +762,8 @@ vec4 raymarchCloud(
 
 		float tallness = maxHeight - minHeight;
 
+		bool maxFogDistReached = false;
+
 		for(int i = 0; i < samples; i++) {
 			newPos = rayPosition - cameraPosition;
 
@@ -791,8 +793,9 @@ vec4 raymarchCloud(
 				float shapeWithDensity = shape*density*isLarge;
 				float shapeWithDensityFaded = shape*density * pow(clamp((rayHeightInCloud)/(max(tallness,1.0)*0.25),0.0,1.0),2.0);
 
-				if(shapeWithDensityFaded > densityTresholdCheck){
+				if(shapeWithDensityFaded > densityTresholdCheck && !maxFogDistReached){
 					cloudPlaneDistance.x = length(newPos); cloudPlaneDistance.y = 0.0;
+					maxFogDistReached = true;
 				}
 
 				// check if the pixel has visible clouds before doing work.

@@ -215,9 +215,11 @@ void main() {
     COLOR = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_RESOLUTION*RENDER_SCALE)).rgb;
   #endif
 
+  gl_FragColor.rgb = COLOR;
+
   #if DEBUG_VIEW == debug_WATERSIM && WATER_INTERACTION == 2
     if (hideGUI == 1) {
-    gl_FragColor.rgb = vec3(imageLoad(waveSim2, ivec2(gl_FragCoord.xy)*16).x);
+    gl_FragColor.rgb += vec3(imageLoad(waveSim2, ivec2(gl_FragCoord.xy)*16).x);
 
     vec2 offsetCoords = vec2(gl_FragCoord.x-840.0, gl_FragCoord.y);
     vec2 waveGradients = vec2(imageLoad(waveSim2, ivec2(offsetCoords)*16).zw);
@@ -225,6 +227,4 @@ void main() {
     if (length(waveNormals.xy) > 0.0) gl_FragColor.rgb += waveNormals;
     }
   #endif
-
-  gl_FragColor.rgb += COLOR;
 }

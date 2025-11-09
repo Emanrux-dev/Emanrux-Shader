@@ -832,9 +832,8 @@ vec4 raymarchCloud(
 								sh = vec3(shadow2D(shadow, shadowPos).x);
 							#endif
 						}
-						
-						sunScattering *= sh;
-						moonScattering *= sh;
+					#else
+						const vec3 sh = 1.0;
 					#endif
 					
 					#if AURORA_LOCATION > 0
@@ -876,7 +875,7 @@ vec4 raymarchCloud(
 						sunShadowMask += getCloudShape(ALTOSTRATUS_LAYER, 0, shadowStartPos, CloudLayer2_height, CloudLayer2_height) * SC_parameters.altostratus.y * (1.0-abs(mainLightVec.y));
 					#endif
 					
-					vec3 lighting = getCloudLighting(LayerIndex, shapeWithDensity, shapeWithDensityFaded, sunShadowMask, sunScattering, moonScattering, indirectShadowMask, skyScattering*skylightOcclusion, rayPosition, backScatterPhase, phaseLevels, backScatterPhase2, phaseLevels2);
+					vec3 lighting = getCloudLighting(LayerIndex, shapeWithDensity, shapeWithDensityFaded, sunShadowMask, sunScattering*sh, moonScattering*sh, indirectShadowMask, skyScattering*skylightOcclusion, rayPosition, backScatterPhase, phaseLevels, backScatterPhase2, phaseLevels2);
 
 					float lightningIntensity = 0.0;
 					

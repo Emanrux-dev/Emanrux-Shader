@@ -833,7 +833,7 @@ vec4 raymarchCloud(
 							#endif
 						}
 					#else
-						const vec3 sh = 1.0;
+						const vec3 sh = vec3(1.0);
 					#endif
 					
 					#if AURORA_LOCATION > 0

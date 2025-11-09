@@ -901,12 +901,24 @@ uniform float wetness;
 
 		#if ShaderSnow > 0
 			if (snowAmount > 0.01) {
-				float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(flatNormals.y,0.5,1.0),0.,1.);
+				float minClamp = 0.72;
+
+				#ifdef SHADER_GRASS
+				if(isShaderGrass) minClamp = 0.5;
+				#endif
+
+				float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(flatNormals.y,minClamp,1.0),0.,1.);
 				float snow = clamp(1.0 - 2.*upnormal - (1.0-effectStrength),0.0,1.0);
 
 				if(isWater || f0 > 229.5/255.0 || eyeInWater) snow = 0.0;
 
 				vec3 snowA = pow(texture2D(snowTexA, snowCoords).rgb, vec3(2.0/(ShaderSnowStrength-0.1)));
+				#ifdef SHADER_GRASS
+				if(!isShaderGrass)
+				#endif
+				{
+				snowA = mix(snowA, vec3(0.8, 0.75, 0.85), 1.0-abs(flatNormals.y));
+				}
 				vec3 snowN = 2.*texture2D(snowTexN, snowCoords).rgb - 1.;
 
 				snowN = snowN.xzy;

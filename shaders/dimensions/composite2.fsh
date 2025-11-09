@@ -174,8 +174,6 @@ uniform float nightVision;
 		uniform sampler2DShadow shadowtex1;
 	#endif
 	
-	flat varying vec3 refractedSunVec;
-
 	
 	#include "/lib/scene_controller.glsl"
 

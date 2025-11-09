@@ -46,7 +46,7 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 
     float SSSAMOUNT = 0.0;
 
-	#if SSS_TYPE
+	#if SSS_TYPE > 0 && defined VOXY_SSS
 		/////// ----- SSS ON BLOCKS ----- ///////
 		// strong
 		if (

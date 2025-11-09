@@ -14,12 +14,16 @@ in float vVanillaAO[];
 in vec4 vlmtexcoord[];
 in vec4 vnormalMat[];
 
-in vec4 vtexcoordam[]; // .st for add, .pq for mul
-in vec4 vtexcoord[];
+#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+    in vec4 vtexcoordam[]; // .st for add, .pq for mul
+    in vec2 vtexcoord[];
+
+    out vec4 texcoordam; // .st for add, .pq for mul
+    out vec2 texcoord;
+#endif
 
 #ifdef MC_NORMAL_MAP
 	in vec4 vtangent[];
-	in vec3 vFlatNormals[];
 #endif
 
 flat in float vblockID[];
@@ -36,12 +40,8 @@ out float VanillaAO;
 out vec4 lmtexcoord;
 out vec4 normalMat;
 
-out vec4 texcoordam; // .st for add, .pq for mul
-out vec4 texcoord;
-
 #ifdef MC_NORMAL_MAP
 	out vec4 tangent;
-	out vec3 FlatNormals;
 #endif
 
 flat out float blockID;
@@ -162,12 +162,14 @@ void main() {
         VanillaAO = vVanillaAO[i];
         lmtexcoord = vlmtexcoord[i];
         normalMat = vnormalMat[i];
-        texcoordam = vtexcoordam[i];
-        texcoord = vtexcoord[i];
+
+        #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+            texcoordam = vtexcoordam[i];
+            texcoord = vtexcoord[i];
+        #endif
 
         #ifdef MC_NORMAL_MAP
         tangent = vtangent[i];
-        FlatNormals = vFlatNormals[i];
         #endif
         blockID = vblockID[i];
 
@@ -193,7 +195,7 @@ void main() {
         #endif
 
         #ifdef MC_NORMAL_MAP
-            vec3 normals = viewToWorld(vFlatNormals[1]);
+            vec3 normals = viewToWorld(vnormalMat[1].xyz);
         #else
             const vec3 normals = vec3(0.0, 1.0, 0.0);
         #endif
@@ -363,24 +365,23 @@ void main() {
 
                     float heightfade = smoothstep(-0.35, 1.0, grassHeights[3*j+i]);
 
-                    // vec3 podzolColor = mix(vec3(0.15, 0.26, 0.01), vec3(168, 158, 91)/255., heightfade);
-
                     color = vcolor[i]*heightfade;
 
-                    // if (vcolor[i].rgb == vec3(1.0)) color.rgb = podzolColor;
+                    if (vcolor[i].rgb == vec3(1.0)) color.rgb = vec3(0.22,0.32,0.11)*heightfade;
+
                     VanillaAO = vVanillaAO[i];
                     lmtexcoord = vlmtexcoord[i];
-                    normalMat.xyz = vnormalMat[i].xyz;
                     normalMat.a = 0.4;
 
-                    texcoordam = vtexcoordam[i];
-                    texcoord = vtexcoord[i];
+                    #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+                        texcoordam = vtexcoordam[i];
+                        texcoord = vtexcoord[i];
+                    #endif
 
                     #ifdef MC_NORMAL_MAP
                         tangent = vtangent[i];
-                        // FlatNormals = vFlatNormals[i];
                     
-                        FlatNormals = GrassNormal[j];
+                        normalMat.xyz = GrassNormal[j];
 
                         heightfade = smoothstep(0.1, grassHeights[triangle_count], grassHeights[3*j+i]);
                         GrassNormals = normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade)));

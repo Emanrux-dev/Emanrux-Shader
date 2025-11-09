@@ -1010,7 +1010,7 @@ vec4 GetVolumetricClouds(
 		NormPlayerPos.y += 0.03 * heightRelativeToClouds;
 	#endif
 
-	int samples = int(10.0*CLOUD_SAMPLE_MULTIPLIER);
+	int samples = CLOUD_SAMPLES;
 	// int samples = 30;
    
    	///------- setup the ray
@@ -1024,13 +1024,15 @@ vec4 GetVolumetricClouds(
 	vec3 rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/min(cloudDist, 0.05*lViewPosM))/samples);
 	vec3 rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
 	
-	vec3 sampledSkyCol = skyFromTex(normalize(rayPosition-cameraPosition), colortex4)/1200.0 * Sky_Brightness;
+	vec3 sampledSkyCol = skyFromTex(normalize(rayPosition-cameraPosition), colortex4)/1200.0;
 	#ifdef SKY_GROUND
 		#if CUMULONIMBUS > 1
 			heightRelativeToClouds = clamp(1.0 - max(cameraPosition.y - 6000,0.0) / 100.0 ,0.0,1.0);
 		#endif
 		sampledSkyCol = mix(sampledSkyCol, indirectLightCol, heightRelativeToClouds);
 	#endif
+
+	sampledSkyCol *= Sky_Brightness;
 
 	// setup for getting distance
 	vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos;
@@ -1202,75 +1204,69 @@ vec4 GetVolumetricClouds(
 		}
 	#endif
 
-	#if CUMULONIMBUS > 0 && !defined CloudLayer3 && !defined CloudLayer0 && !defined CloudLayer1 && !defined CloudLayer2
-		cloudPlaneDistance = cloudLayer4_Distance.x;
-	#else
-		#if defined CloudLayer0
-			#if defined CloudLayer1
-				#if defined CloudLayer2
-					#if defined CloudLayer3
-						float temp = mix(cloudLayer3_Distance.x, cloudLayer2_Distance.x, cloudLayer3_Distance.y);
-						temp = mix(cloudLayer1_Distance.x, temp, cloudLayer1_Distance.y);
-						cloudPlaneDistance = mix(cloudLayer0_Distance.x, temp, cloudLayer0_Distance.y);
-					#else
-						float temp = mix(cloudLayer2_Distance.x, cloudLayer1_Distance.x, cloudLayer2_Distance.y);
-						cloudPlaneDistance = mix(cloudLayer0_Distance.x, temp, cloudLayer0_Distance.y);
-					#endif
+	#if defined CloudLayer0
+		#if defined CloudLayer1
+			#if defined CloudLayer2
+				#if defined CloudLayer3
+					float temp = mix(cloudLayer2_Distance.x, cloudLayer3_Distance.x, cloudLayer2_Distance.y);
+					temp = mix(cloudLayer1_Distance.x, temp, cloudLayer1_Distance.y);
+					cloudPlaneDistance = mix(cloudLayer0_Distance.x, temp, cloudLayer0_Distance.y);
 				#else
-					#if defined CloudLayer3
-						float temp = mix(cloudLayer3_Distance.x, cloudLayer1_Distance.x, cloudLayer3_Distance.y);
-						cloudPlaneDistance = mix(cloudLayer0_Distance.x, temp, cloudLayer0_Distance.y);
-					#else
-						cloudPlaneDistance = mix(cloudLayer0_Distance.x, cloudLayer1_Distance.x, cloudLayer0_Distance.y);
-					#endif
+					float temp = mix(cloudLayer1_Distance.x, cloudLayer2_Distance.x, cloudLayer1_Distance.y);
+					cloudPlaneDistance = mix(cloudLayer0_Distance.x, temp, cloudLayer0_Distance.y);
 				#endif
 			#else
-				#if defined CloudLayer2
-					#if defined CloudLayer3
-						float temp = mix(cloudLayer3_Distance.x, cloudLayer2_Distance.x, cloudLayer3_Distance.y);
-						cloudPlaneDistance = mix(cloudLayer0_Distance.x, temp, cloudLayer0_Distance.y);
-					#else
-						float temp = mix(cloudLayer2_Distance.x, cloudLayer0_Distance.x, cloudLayer2_Distance.y);
-						cloudPlaneDistance = mix(cloudLayer0_Distance.x, temp, cloudLayer0_Distance.y);
-					#endif
+				#if defined CloudLayer3
+					float temp = mix(cloudLayer1_Distance.x, cloudLayer3_Distance.x, cloudLayer1_Distance.y);
+					cloudPlaneDistance = mix(cloudLayer0_Distance.x, temp, cloudLayer0_Distance.y);
 				#else
-					#if defined CloudLayer3
-						cloudPlaneDistance = mix(cloudLayer0_Distance.x, cloudLayer3_Distance.x, cloudLayer0_Distance.y);
-					#else
-						cloudPlaneDistance = cloudLayer0_Distance.x;
-					#endif
+					cloudPlaneDistance = mix(cloudLayer0_Distance.x, cloudLayer1_Distance.x, cloudLayer0_Distance.y);
 				#endif
 			#endif
 		#else
-			#if defined CloudLayer1
-				#if defined CloudLayer2
-					#if defined CloudLayer3
-						float temp = mix(cloudLayer3_Distance.x, cloudLayer2_Distance.x, cloudLayer3_Distance.y);
-						cloudPlaneDistance = mix(cloudLayer1_Distance.x, temp, cloudLayer1_Distance.y);
-					#else
-						float temp = mix(cloudLayer2_Distance.x, cloudLayer1_Distance.x, cloudLayer2_Distance.y);
-						cloudPlaneDistance = mix(cloudLayer1_Distance.x, temp, cloudLayer1_Distance.y);
-					#endif
+			#if defined CloudLayer2
+				#if defined CloudLayer3
+					float temp = mix(cloudLayer2_Distance.x, cloudLayer3_Distance.x, cloudLayer2_Distance.y);
+					cloudPlaneDistance = mix(cloudLayer0_Distance.x, temp, cloudLayer0_Distance.y);
 				#else
-					#if defined CloudLayer3
-						cloudPlaneDistance = mix(cloudLayer1_Distance.x, cloudLayer3_Distance.x, cloudLayer1_Distance.y);
-					#else
-						cloudPlaneDistance = cloudLayer1_Distance.x;
-					#endif
+					cloudPlaneDistance = mix(cloudLayer0_Distance.x, cloudLayer2_Distance.x, cloudLayer0_Distance.y);
 				#endif
 			#else
-				#if defined CloudLayer2
-					#if defined CloudLayer3
-						cloudPlaneDistance = mix(cloudLayer2_Distance.x, cloudLayer3_Distance.x, cloudLayer2_Distance.y);
-					#else
-						cloudPlaneDistance = cloudLayer2_Distance.x;
-					#endif
+				#if defined CloudLayer3
+					cloudPlaneDistance = mix(cloudLayer0_Distance.x, cloudLayer3_Distance.x, cloudLayer0_Distance.y);
 				#else
-					#if defined CloudLayer3
-						cloudPlaneDistance = cloudLayer3_Distance.x;
-					#else
-						cloudPlaneDistance = 0.0;
-					#endif
+					cloudPlaneDistance = cloudLayer0_Distance.x;
+				#endif
+			#endif
+		#endif
+	#else
+		#if defined CloudLayer1
+			#if defined CloudLayer2
+				#if defined CloudLayer3
+					float temp = mix(cloudLayer2_Distance.x, cloudLayer3_Distance.x, cloudLayer2_Distance.y);
+					cloudPlaneDistance = mix(cloudLayer1_Distance.x, temp, cloudLayer1_Distance.y);
+				#else
+					cloudPlaneDistance = mix(cloudLayer1_Distance.x, cloudLayer2_Distance.x, cloudLayer1_Distance.y);
+				#endif
+			#else
+				#if defined CloudLayer3
+					cloudPlaneDistance = mix(cloudLayer1_Distance.x, cloudLayer3_Distance.x, cloudLayer1_Distance.y);
+				#else
+					cloudPlaneDistance = cloudLayer1_Distance.x;
+				#endif
+			#endif
+		#else
+			#if defined CloudLayer2
+				#if defined CloudLayer3
+					cloudPlaneDistance = mix(cloudLayer2_Distance.x, cloudLayer3_Distance.x, cloudLayer2_Distance.y);
+				#else
+					cloudPlaneDistance = cloudLayer2_Distance.x;
+				#endif
+			#else
+				#if defined CloudLayer3
+					cloudPlaneDistance = cloudLayer3_Distance.x;
+				#else
+					cloudPlaneDistance = 0.0;
 				#endif
 			#endif
 		#endif

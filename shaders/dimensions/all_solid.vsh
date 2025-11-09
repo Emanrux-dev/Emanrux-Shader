@@ -39,15 +39,14 @@ out float vVanillaAO;
 out vec4 vlmtexcoord;
 out vec4 vnormalMat;
 
-// #ifdef POM
+#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	out vec4 vtexcoordam; // .st for add, .pq for mul
-	out vec4 vtexcoord;
-// #endif
+	out vec2 vtexcoord;
+#endif
 
 #ifdef MC_NORMAL_MAP
 	out vec4 vtangent;
 	attribute vec4 at_tangent;
-	out vec3 vFlatNormals;
 #endif
 
 uniform float frameTimeCounter;
@@ -239,13 +238,13 @@ void main() {
 	// gl_TextureMatrix[0] for animated things like charged creepers
 	vlmtexcoord.xy = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
 
-	// #ifdef POM
-	vec2 midcoord = (gl_TextureMatrix[0] *  mc_midTexCoord).st;
-	vec2 texcoordminusmid = vlmtexcoord.xy-midcoord;
-	vtexcoordam.pq  = abs(texcoordminusmid)*2.;
-	vtexcoordam.st  = min(vlmtexcoord.xy,midcoord-texcoordminusmid);
-	vtexcoord.xy    = sign(texcoordminusmid)*0.5+0.5;
-	// #endif
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+		vec2 midcoord = (gl_TextureMatrix[0] *  mc_midTexCoord).st;
+		vec2 texcoordminusmid = vlmtexcoord.xy-midcoord;
+		vtexcoordam.pq  = abs(texcoordminusmid)*2.;
+		vtexcoordam.st  = min(vlmtexcoord.xy,midcoord-texcoordminusmid);
+		vtexcoord.xy    = sign(texcoordminusmid)*0.5+0.5;
+	#endif
 
 
 	vec2 lmcoord = gl_MultiTexCoord1.xy / 240.0; 
@@ -261,7 +260,7 @@ void main() {
 
 	vnormalMat = vec4(normalize(gl_NormalMatrix * gl_Normal), 1.0);
 	
-	vFlatNormals = vnormalMat.xyz;
+	vec3 vFlatNormals = vnormalMat.xyz;
 
 	#ifdef ENTITIES
 		vblockID = entityId;

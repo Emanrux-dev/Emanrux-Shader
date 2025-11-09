@@ -34,13 +34,16 @@ const int   MAX_OCCLUSION_POINTS   = MAX_ITERATIONS;
 uniform vec2 texelSize;
 uniform int framemod8;
 
-// #ifdef POM
-in vec4 texcoordam; // .st for add, .pq for mul
-in vec4 texcoord;
+#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+	in vec4 texcoordam; // .st for add, .pq for mul
+	in vec2 texcoord;
 
-vec2 dcdx = dFdx(texcoord.st*texcoordam.pq)*exp2(Texture_MipMap_Bias);
-vec2 dcdy = dFdy(texcoord.st*texcoordam.pq)*exp2(Texture_MipMap_Bias);
-// #endif
+	vec2 dcdx = dFdx(texcoord.st*texcoordam.pq)*exp2(Texture_MipMap_Bias);
+	vec2 dcdy = dFdy(texcoord.st*texcoordam.pq)*exp2(Texture_MipMap_Bias);
+#else
+	const vec2 dcdx = vec2(0.0);
+	const vec2 dcdy = vec2(0.0);
+#endif
 
 #include "/lib/res_params.glsl"
 in vec4 lmtexcoord;
@@ -54,7 +57,6 @@ in vec4 normalMat;
 #ifdef MC_NORMAL_MAP
 	uniform sampler2D normals;
 	in vec4 tangent;
-	in vec3 FlatNormals;
 #endif
 
 #if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
@@ -199,7 +201,7 @@ vec3 toClipSpace3(vec3 viewSpacePosition) {
     return projMAD(gbufferProjection, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
 }
 
-#ifdef POM
+#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	vec4 readNormal(in vec2 coord)
 	{
 		return texture2DGradARB(normals,fract(coord)*texcoordam.pq+texcoordam.st,dcdx,dcdy);
@@ -239,10 +241,10 @@ float ld(float dist) {
 }
 
 
-vec4 readNoise(in vec2 coord){
-	// return texture2D(noisetex,coord*texcoordam.pq+texcoord.st);
-		return texture2DGradARB(noisetex,coord*texcoordam.pq + texcoordam.st,dcdx,dcdy);
-}
+// vec4 readNoise(in vec2 coord){
+// 	// return texture2D(noisetex,coord*texcoordam.pq+texcoord);
+// 		return texture2DGradARB(noisetex,coord*texcoordam.pq + texcoordam.st,dcdx,dcdy);
+// }
 // float EndPortalEffect(
 // 	inout vec4 ALBEDO,
 // 	vec3 FragPos,
@@ -294,8 +296,6 @@ vec4 texture2D_POMSwitch(
 	}
 }
 
-uniform vec3 eyePosition;
-
 void convertHandDepth(inout float depth) {
     float ndcDepth = depth * 2.0 - 1.0;
     ndcDepth /= MC_HAND_DEPTH;
@@ -321,7 +321,6 @@ float getEmission(vec3 Albedo) {
 #endif
 
 void main() {
-		
 	vec3 FragCoord = gl_FragCoord.xyz;
 
 	#ifdef HAND
@@ -466,7 +465,7 @@ void main() {
 
 	#if REPLACE_SHORT_GRASS < 2 && !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 		// darken the top of grass blocks a bit
-		if(blockID == 85 && viewToWorld(FlatNormals).y > abs(0.9) && !ShaderGrass) Albedo *= smoothstep(-30.0, 25.0, length(playerpos));
+		if(blockID == 85 && viewToWorld(normalMat.xyz).y > abs(0.9) && !ShaderGrass) Albedo *= smoothstep(-30.0, 25.0, length(playerpos));
 	#endif
 
 	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
@@ -658,7 +657,7 @@ void main() {
 		#if SSS_TYPE == 1 || SSS_TYPE == 2
 			float SSSAMOUNT = 0.0;
 
-			if (ShaderGrass) SSSAMOUNT = 1.0;
+			if (ShaderGrass) SSSAMOUNT = 0.65;
 
 			/////// ----- SSS ON BLOCKS ----- ///////
 			// strong
@@ -822,10 +821,10 @@ void main() {
 
 		normal = viewToWorld(normal);
 
-		vec3 flatNormals = viewToWorld(FlatNormals);
+		vec3 flatNormals = viewToWorld(normalMat.xyz);
 
 		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
-			if (ShaderGrass) {flatNormals = FlatNormals; normal = GrassNormals;}
+			if (ShaderGrass) {flatNormals = normalMat.xyz; normal = GrassNormals;}
 		#endif
 
 		vec4 data1 = clamp( encode(normal, PackLightmaps), 0.0, 1.0);

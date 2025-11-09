@@ -53,9 +53,9 @@ vec4 toClipSpace3(vec3 viewSpacePosition) {
 
 
 
-#ifdef DAMAGE_BLOCK_EFFECT
+#if defined DAMAGE_BLOCK_EFFECT && defined POM
 	varying vec4 vtexcoordam; // .st for add, .pq for mul
-	varying vec4 vtexcoord;
+	varying vec2 vtexcoord;
 
 	attribute vec4 mc_midTexCoord;
 	varying vec4 tangent;
@@ -75,7 +75,7 @@ void main() {
 	vec2 lmcoord = gl_MultiTexCoord1.xy / 240.0;
 	lmtexcoord.zw = lmcoord;
 
-	#ifdef DAMAGE_BLOCK_EFFECT
+	#if defined DAMAGE_BLOCK_EFFECT && defined POM
 		vec2 midcoord = (gl_TextureMatrix[0] *  mc_midTexCoord).st;
 		vec2 texcoordminusmid = lmtexcoord.xy-midcoord;
 		vtexcoordam.pq  = abs(texcoordminusmid)*2;

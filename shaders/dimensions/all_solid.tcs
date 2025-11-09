@@ -8,12 +8,16 @@ in float vVanillaAO[];
 in vec4 vlmtexcoord[];
 in vec4 vnormalMat[];
 
-in vec4 vtexcoordam[]; // .st for add, .pq for mul
-in vec4 vtexcoord[];
+#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+    in vec4 vtexcoordam[]; // .st for add, .pq for mul
+    in vec2 vtexcoord[];
+
+    out vec4 texcoordam[]; // .st for add, .pq for mul
+    out vec2 texcoord[];
+#endif
 
 #ifdef MC_NORMAL_MAP
 	in vec4 vtangent[];
-	in vec3 vFlatNormals[];
 #endif
 
 flat in float vblockID[];
@@ -32,12 +36,8 @@ out float VanillaAO[];
 out vec4 lmtexcoord[];
 out vec4 normalMat[];
 
-out vec4 texcoordam[]; // .st for add, .pq for mul
-out vec4 texcoord[];
-
 #ifdef MC_NORMAL_MAP
 	out vec4 tangent[];
-	out vec3 FlatNormals[];
 #endif
 
 flat out float blockID[];
@@ -61,12 +61,14 @@ void main() {
     VanillaAO[gl_InvocationID] = vVanillaAO[gl_InvocationID];
     lmtexcoord[gl_InvocationID] = vlmtexcoord[gl_InvocationID];
     normalMat[gl_InvocationID] = vnormalMat[gl_InvocationID];
-    texcoordam[gl_InvocationID] = vtexcoordam[gl_InvocationID];
-    texcoord[gl_InvocationID] = vtexcoord[gl_InvocationID];
+
+    #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+        texcoordam[gl_InvocationID] = vtexcoordam[gl_InvocationID];
+        texcoord[gl_InvocationID] = vtexcoord[gl_InvocationID];
+    #endif
 
     #ifdef MC_NORMAL_MAP
         tangent[gl_InvocationID] = vtangent[gl_InvocationID];
-        FlatNormals[gl_InvocationID] = vFlatNormals[gl_InvocationID];
     #endif
 
     blockID[gl_InvocationID] = vblockID[gl_InvocationID];
@@ -79,7 +81,7 @@ void main() {
         centerPosition[gl_InvocationID] = vcenterPosition[gl_InvocationID];
 
         #ifdef MC_NORMAL_MAP
-            vec3 normals = viewToWorld(vFlatNormals[0]);
+            vec3 normals = viewToWorld(vnormalMat[0].xyz);
         #else
             const vec3 normals = vec3(0.0, 1.0, 0.0);
         #endif

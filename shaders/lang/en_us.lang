@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.2.1
+    value.SHADER_VERSION_LABEL.482 = 5.2.2
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -368,8 +368,8 @@ screen.Clouds = Cloud Settings
 
     option.TERRAIN_SHADOW_ON_CLOUDS = Terrain Shadows On Clouds
         option.TERRAIN_SHADOW_ON_CLOUDS.comment = Whether or not terrain can cast shadows onto cumulus clouds. §aPERFORMANCE COST:§r low to medium
-    option.CLOUD_SAMPLE_MULTIPLIER = Cloud Sample Count Multiplier
-        option.CLOUD_SAMPLE_MULTIPLIER.comment = Multiplies the cloud samples with this value. Especially useful to get lower noise in terrain shadows on clouds. §aPERFORMANCE COST:§r low to very high
+    option.CLOUD_SAMPLES = Cloud Samples
+        option.CLOUD_SAMPLES.comment = Changes the amount of samples of the volumetric clouds. Especially useful to get lower noise in terrain shadows on clouds. §aPERFORMANCE COST:§r low to very high
 
     screen.CumulusClouds        = Cumulus Clouds
         option.CloudLayer0          = Small Cumulus Clouds

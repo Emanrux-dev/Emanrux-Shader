@@ -108,8 +108,6 @@ float linearizeDepthFast(const in float depth, const in float near, const in flo
 		uniform sampler2DShadow shadowtex1;
 	#endif
 
-	flat varying vec3 refractedSunVec;
-
 	#include "/lib/scene_controller.glsl"
 	#include "/lib/diffuse_lighting.glsl"
 

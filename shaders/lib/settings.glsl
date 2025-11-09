@@ -466,7 +466,7 @@ uniform vec3 unsigned_WmoonVecSmooth;
 #define CLOUD_PHASE 2 // [0 1 2]
 
 #define TERRAIN_SHADOW_ON_CLOUDS
-#define CLOUD_SAMPLE_MULTIPLIER 1.0 // [0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 15.0]
+#define CLOUD_SAMPLES 10 // [5 10 15 20 25 30 35 40 45 50 60 70 80 90 100 150 200]
 
 #define CloudLayer0
 #define CloudLayer0_coverage 1.0 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0]
@@ -1079,8 +1079,16 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 //////////////////////////////////
 
 #define VOXY_REFLECTIONS
+#define VOXY_SSS
+#define VOXY_AMBIENT_OCCLUSION
 
 #ifdef VOXY_REFLECTIONS
+#endif
+
+#ifdef VOXY_AMBIENT_OCCLUSION
+#endif
+
+#ifdef VOXY_SSS
 #endif
 
 

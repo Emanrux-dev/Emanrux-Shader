@@ -22,7 +22,6 @@ flat varying vec3 averageSkyCol_Clouds;
 flat varying vec3 WsunVec;
 flat varying vec3 WrealSunVec;
 flat varying vec3 WmoonVec;
-flat varying vec3 refractedSunVec;
 
 uniform vec2 texelSize;
 
@@ -105,8 +104,6 @@ void main() {
 
 	WrealSunVec = WsunVec;
 	WsunVec = mix(WmoonVec, WsunVec, clamp(lightCol.a,0,1));
-
-	refractedSunVec = refract(lightCol.a*WsunVec, -vec3(0.0,1.0,0.0), 1.0/1.33333);
 
 	#if LPV_VL_FOG_ILLUMINATION > 0 && defined IS_LPV_ENABLED
 		exposure = texelFetch2D(colortex4,ivec2(10,37),0).r;

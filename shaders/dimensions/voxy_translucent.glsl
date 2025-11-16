@@ -308,7 +308,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
             	previousPosition.xy = projMAD(vxProjPrev, previousPosition).xy / -previousPosition.z * 0.5 + 0.5;
             	if (previousPosition.x > 0.0 && previousPosition.y > 0.0 && previousPosition.x < 1.0 && previousPosition.y < 1.0) {
 					Reflections.a = 1.0;
-					Reflections.rgb = texture2D(colortex5, previousPosition.xy).rgb;
+					Reflections.rgb = texture(colortex5, previousPosition.xy).rgb;
             	}
             }else{
 				if (rtPos.x > 0.0 && rtPos.y > 0.0 && rtPos.x < 1.0 && rtPos.y < 1.0) SSR_HIT_SKY_MASK = 1.0;

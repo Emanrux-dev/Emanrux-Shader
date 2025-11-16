@@ -77,7 +77,7 @@ float densityAtPos(in vec3 pos){
 	vec2 coord =  uv / 512.0;
 	
 	//The y channel has an offset to avoid using two textures fetches
-	vec2 xy = texture2D(noisetex, coord).yx;
+	vec2 xy = texture(noisetex, coord).yx;
 
 	return mix(xy.r,xy.g, f.y);
 }
@@ -148,15 +148,15 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 					+ curl2D(0.00005 * coord) * 0.25
 					+ curl2D(0.00018 * coord) * 0.125;
 
-			largeCloud = texture2D(noisetex, (position.xz + cloud_movement*2.0)/80000. * CloudLayer3_scale).b;
-			smallCloud = texture2D(noisetex, (0.000005 / CloudLayer3_scale) * coord).r;
+			largeCloud = texture(noisetex, (position.xz + cloud_movement*2.0)/80000. * CloudLayer3_scale).b;
+			smallCloud = texture(noisetex, (0.000005 / CloudLayer3_scale) * coord).r;
 		
 			float detail_amplitude = 0.3;
 			float detail_frequency = 0.00002;
 			float curl_strength    = 1.3;
 
 			for (int i = 0; i < 3; ++i) {
-				float detail = texture2D(noisetex, coord * detail_frequency + curl * curl_strength).r;
+				float detail = texture(noisetex, coord * detail_frequency + curl * curl_strength).r;
 
 				smallCloud -= detail * detail_amplitude;
 
@@ -182,8 +182,8 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 			coverage += Rain_coverage * rainStrength;
 			coverage += Thunder_coverage * thunderStrength;
 
-			largeCloud = texture2D(noisetex, (position.xz + cloud_movement*20.0)/100000. * CloudLayer2_scale).b;
-			smallCloud = 1.0 - texture2D(noisetex, ((position.xz + vec2(-cloud_movement,cloud_movement)*20.0)/7500. - vec2(1.0-largeCloud, -largeCloud)/5.0) * CloudLayer2_scale).b;
+			largeCloud = texture(noisetex, (position.xz + cloud_movement*20.0)/100000. * CloudLayer2_scale).b;
+			smallCloud = 1.0 - texture(noisetex, ((position.xz + vec2(-cloud_movement,cloud_movement)*20.0)/7500. - vec2(1.0-largeCloud, -largeCloud)/5.0) * CloudLayer2_scale).b;
 
 			smallCloud = largeCloud + smallCloud * 0.4 * clamp(0.9-largeCloud,0.0,1.0);
 			
@@ -204,8 +204,8 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 			coverage += Thunder_coverage * thunderStrength;
 
 
-			largeCloud = texture2D(noisetex, (samplePos.zx + cloud_movement*3.0)/10000.0 * CloudLayer1_scale).b;
-			smallCloud = texture2D(noisetex, (samplePos.zx - cloud_movement*3.0)/2500.0 * CloudLayer1_scale).b;
+			largeCloud = texture(noisetex, (samplePos.zx + cloud_movement*3.0)/10000.0 * CloudLayer1_scale).b;
+			smallCloud = texture(noisetex, (samplePos.zx - cloud_movement*3.0)/2500.0 * CloudLayer1_scale).b;
 			
 			smallCloud = abs(largeCloud* -0.7) + smallCloud;
 
@@ -221,8 +221,8 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 			coverage += Rain_coverage * rainStrength;
 			coverage += Thunder_coverage * thunderStrength;
 
-			largeCloud = texture2D(noisetex, (samplePos.xz + cloud_movement)/5000.0 * CloudLayer0_scale).b;
-			smallCloud = 1.0-texture2D(noisetex, (samplePos.xz - cloud_movement)/500.0 * CloudLayer0_scale).r;
+			largeCloud = texture(noisetex, (samplePos.xz + cloud_movement)/5000.0 * CloudLayer0_scale).b;
+			smallCloud = 1.0-texture(noisetex, (samplePos.xz - cloud_movement)/500.0 * CloudLayer0_scale).r;
 
 			smallCloud = abs(largeCloud-0.6) + smallCloud*smallCloud;
 
@@ -329,7 +329,7 @@ vec2 getCumulonimbusShape(int LOD, in vec3 position, float minHeight, float maxH
 	float smallTallness = smallMaxHeight - minHeight;
 	float posToMaxSmall = smallMaxHeight - position.y;
 
-	smallCloud = 1-texture2D(noisetex, (samplePos.xz - cloud_movement*4.0) / 1800.0 * cumulonimbusScale * 0.2).r * smoothstep(smallMaxHeight, tallness*0.2+minHeight, position.y);
+	smallCloud = 1.0-texture(noisetex, (samplePos.xz - cloud_movement*4.0) / 1800.0 * cumulonimbusScale * 0.2).r * smoothstep(smallMaxHeight, tallness*0.2+minHeight, position.y);
 	
 	shape2 = min(max(1.1 - smallCloud,0.0)/sqrt(1.1),1.0)  * smoothstep(5000.0, 7000.0, length(position - cameraPosition));
 
@@ -854,7 +854,7 @@ vec4 raymarchCloud(
 								sh = vec3(shadow2D(shadowtex0, shadowPos).x);
 
 								if(shadow2D(shadowtex1, shadowPos).x > shadowPos.z && sh.x < 1.0){
-									vec4 translucentShadow = texture2D(shadowcolor0, shadowPos.xy);
+									vec4 translucentShadow = texture(shadowcolor0, shadowPos.xy);
 									if(translucentShadow.a < 0.9) sh = normalize(translucentShadow.rgb+0.0001);
 								}
 							#else

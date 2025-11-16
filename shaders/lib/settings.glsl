@@ -298,7 +298,7 @@ const float entityShadowDistanceMul = 0.25; // [0.01 0.02 0.03 0.04 0.05 0.10 0.
 // #define POM
 // #define Horrible_slope_normals
 #define Adaptive_Step_length
-#define POM_DEPTH 0.50 // [0.025 0.05 0.075 0.1 0.125 0.15 0.20 0.25 0.30 0.50 0.75 1.0]
+#define POM_DEPTH 0.25 // [0.025 0.05 0.075 0.1 0.125 0.15 0.20 0.25 0.30 0.50 0.75 1.0]
 #define MAX_ITERATIONS 35 // [5 10 15 20 25 30 35 40 45 50 60 70 80 90 100 125 150 200 300 400 500]
 #define MAX_DIST 25.0 // [5.0 10.0 15.0 20.0 25.0 35.0 30.0 40.0 50.0 60.0 70.0 80.0 90.0 100.0 125.0 150.0 200.0 300.0 400.0 500.0]
 
@@ -461,8 +461,7 @@ uniform vec3 unsigned_WmoonVecSmooth;
 	#endif
 #endif
 
-#define CLOUD_SHADOW_STRENGTH 1.0 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
-#define ALTERNATE_POWDER_EFFECT
+#define CLOUD_SHADOW_AMOUNT 100 // [0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 #define CLOUD_PHASE 2 // [0 1 2]
 
 #define TERRAIN_SHADOW_ON_CLOUDS
@@ -1043,7 +1042,7 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #define LPV_ENTITY_LIGHTS
 #define LPV_REDSTONE_LIGHTS
 //#define LPV_COLORED_CANDLES
-#define LPV_VL_FOG_ILLUMINATION 1 // [0 1 2]
+#define LPV_VL_FOG_ILLUMINATION
 #define LPV_VL_FOG_ILLUMINATION_BRIGHTNESS 60 // [0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 105 110 115 120 125 130 135 140 145 150 155 160 165 170 175 180 185 190 195 200]]
 
 // Fix for making nether/end work until next Iris release to fix shadow matrices

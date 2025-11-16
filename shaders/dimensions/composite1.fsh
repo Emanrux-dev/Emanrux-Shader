@@ -666,9 +666,9 @@ vec4 BilateralUpscale_VLFOG(sampler2D tex, sampler2D depth, float referenceDepth
 
 	vec2 coord = gl_FragCoord.xy - 1.5;
 	vec2 UV = coord;
-	const ivec2 SCALE = ivec2(1.0/VL_RENDER_RESOLUTION);
-	ivec2 UV_DEPTH = ivec2(UV*VL_RENDER_RESOLUTION)*SCALE;
-	ivec2 UV_COLOR = ivec2(UV*VL_RENDER_RESOLUTION);
+	const ivec2 SCALE = ivec2(1.0/VL_RENDER_SCALE);
+	ivec2 UV_DEPTH = ivec2(UV*VL_RENDER_SCALE)*SCALE;
+	ivec2 UV_COLOR = ivec2(UV*VL_RENDER_SCALE);
 	ivec2 UV_NOISE = ivec2(gl_FragCoord.xy*texelSize + 1);
 
 	ivec2 OFFSET[9] = ivec2[](
@@ -821,7 +821,7 @@ uniform float wetness;
 
 #ifdef OVERWORLD_SHADER
 	void applyPuddles(
-		in vec3 worldPos, in vec3 flatNormals, in vec2 lightmap, in bool isWater, in bool eyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0, in bool isShaderGrass
+		in vec3 worldPos, in vec3 flatNormals, in float lightmap, in bool isWater, in bool eyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0, in bool isShaderGrass
 	){
 		/* PUDDLE_MODE
 			0 = OFF, NO WETNESS
@@ -830,7 +830,7 @@ uniform float wetness;
 			3 = only full wetness
 		*/
 
-		float effectStrength = smoothstep(0.85, 1.0, lightmap.y);
+		float effectStrength = smoothstep(0.85, 1.0, lightmap);
 		//float effectStrength = smoothstep(0.85, 1.0, max(lightmap.y-step(1.0,lightmap.x), 0.0));
 		vec2 snowCoords = worldPos.xz*0.1;
 
@@ -857,19 +857,23 @@ uniform float wetness;
 				#if PUDDLE_MODE == 1
 					float puddles = max(halfWet - noise,0.0);
 					puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
-					puddles = mix(puddles, 1.0, fullWet);
+
+					float wetnessStages = max(puddles, fullWet) * lightmap;
 				#endif
 
 				#if PUDDLE_MODE == 2
 					float puddles = max(halfWet - noise,0.0);
 					puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
+
+					float wetnessStages = puddles * lightmap;
 				#endif
 
 				#if PUDDLE_MODE == 3
-					float puddles = fullWet;
+					float puddles = 0.0;
+					float wetnessStages = fullWet * lightmap;
 				#endif				
 
-				float wetnessStages = puddles * effectStrength;
+				wetnessStages *= effectStrength;
 				if(isWater) wetnessStages = 0.0;
 
 				#ifdef SHADER_GRASS
@@ -887,7 +891,7 @@ uniform float wetness;
 							rippleNormal = mix(flatNormals, ripple, smoothstep(35., 10., viewDist) * rainStrength);
 						}
 
-						normals = mix(normals, rippleNormal, effectStrength * clamp(flatNormals.y,0.0,1.0));
+						normals = mix(normals, rippleNormal, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
 					#else
 						normals = mix(normals, flatNormals, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
 					#endif
@@ -907,7 +911,7 @@ uniform float wetness;
 				if(isShaderGrass) minClamp = 0.5;
 				#endif
 
-				float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(flatNormals.y,minClamp,1.0),0.,1.);
+				float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(normals.y,minClamp,1.0),0.,1.);
 				float snow = clamp(1.0 - 2.*upnormal - (1.0-effectStrength),0.0,1.0);
 
 				if(isWater || f0 > 229.5/255.0 || eyeInWater) snow = 0.0;
@@ -947,6 +951,7 @@ void main() {
 	
 		float noise_2 = R2_dither();
 		vec2 bnoise = blueNoise(gl_FragCoord.xy).rg;
+		float ig_noise = interleaved_gradientNoise_temporal();
 
 		#ifdef TAA
 			int seed = frameCounter*8%40000;
@@ -1008,7 +1013,10 @@ void main() {
 		vec3 normal = decode(dataUnpacked0.yw);
 		vec2 lightmap = dataUnpacked1.yz;
 
-		lightmap.xy = min(max(lightmap.xy - 0.05,0.0)*1.06,1.0); // small offset to hide flickering from precision error in the encoding/decoding on values close to 1.0 or 0.0
+		// special curve to give more precision on high/low values of the gradient. this curve will be inverted after sampling and decoding.
+		// lightmap = 1.0-pow(1.0-pow(lightmap,vec2(2)),vec2(2));
+		// small offset to hide flickering from precision error in the encoding/decoding on values close to 1.0 or 0.0
+		lightmap.xy = min(max(lightmap.xy - 0.05,0.0)*1.06,1.0);
 		
 		#if MC_VERSION < 12109
 			#if !defined OVERWORLD_SHADER
@@ -1118,7 +1126,7 @@ void main() {
 		float Shadows = 1.0;
 
 		vec3 shadowColor = vec3(1.0);
-		vec3 SSSColor = vec3(1.0);
+		vec3 SSSColor = vec3(0.0);
 		#if defined END_ISLAND_LIGHT && defined END_SHADER
 			vec3 filteredShadow = vec3(Min_Shadow_Filter_Radius_END,1.0,0.0);
 		#else
@@ -1194,23 +1202,42 @@ void main() {
 		// based on the angle of the sun, sunlight will travel through more/less water to reach the same spot. scale absorbtion depth accordingly
 		vec3 sunlightAbsorbtion = exp(-totEpsilon * (estimatedDepth/abs(WsunVec.y)));
 
+		float percievedWaterDepth = estimatedDepth;
+
 		if (eyeInWater){
 			estimatedDepth = 1.0;
 
 			// viewerWaterDepth = max(0.9-lightmap.y,0.0)*3.0;
-	  		float distanceFromWaterSurface = max(-(feetPlayerPos.y + (cameraPosition.y - waterEnteredAltitude)),0.0) ;
+	  		float distanceFromWaterSurface = -(feetPlayerPos.y + (cameraPosition.y - waterEnteredAltitude));//max(-(feetPlayerPos.y + (cameraPosition.y - waterEnteredAltitude)),0.0) ;
+			
+			percievedWaterDepth = distanceFromWaterSurface;
+
+			distanceFromWaterSurface = max(distanceFromWaterSurface,0.0);
 
 			Absorbtion = exp(-totEpsilon * distanceFromWaterSurface);
 			
 			sunlightAbsorbtion = exp(-totEpsilon * (distanceFromWaterSurface/abs(WsunVec.y)));
+		} else {
+			// use hardcoded gradient position if the water surface normal does not face upwards.
+	    	vec3 waterNormal = clamp(normalize(cross(dFdx(playerPos0), dFdy(playerPos0))),0,1); // it uses depth that has POM written to it.
+			percievedWaterDepth = mix(-(feetPlayerPos.y + cameraPosition.y), percievedWaterDepth, waterNormal.y);
 		}
 		
 		DirectLightColor *= sunlightAbsorbtion;
 
 		if( nightVision > 0.0 ) Absorbtion += exp(-totEpsilon * 25.0) * nightVision;
 
+		vec3 pos = feetPlayerPos + cameraPosition;
+		// vec2 causticPos = pos.xz;
+		// causticPos = mix(causticPos, pos.xz, max(FlatNormals.y,0));
+		// causticPos = mix(causticPos, pos.xy, max(-FlatNormals.y,0));
+		// causticPos = mix(causticPos, pos.zy, max(FlatNormals.x,0));
+		// causticPos = mix(causticPos, pos.xy, max(-FlatNormals.z,0));
+		// causticPos = mix(causticPos, pos.xy, max(FlatNormals.x,0));
+		// causticPos = mix(causticPos, pos.xy, max(-FlatNormals.x,0));
+
 		// apply caustics to the lighting, and make sure they dont look weird
-		DirectLightColor *= pow(mix(1.0, waterCaustics(feetPlayerPos + cameraPosition, WsunVec)*WATER_CAUSTICS_BRIGHTNESS, clamp(estimatedDepth,0,1)), WATER_CAUSTICS_POWER);
+		DirectLightColor *= pow(mix(1.0, waterCaustics(pos, WsunVec, percievedWaterDepth)*WATER_CAUSTICS_BRIGHTNESS, clamp(estimatedDepth,0,1)), WATER_CAUSTICS_POWER);
 	}
 
 
@@ -1325,41 +1352,43 @@ void main() {
 		#endif
 		
 	////////////////////////////////	SUN SSS		////////////////////////////////
-		float sunSSS_density = LabSSS;
-		float SSS_shadow = ShadowAlpha;
-		
-
-		#ifndef RENDER_ENTITY_SHADOWS
-			if(entities) sunSSS_density = 0.0;
-		#endif
-		
-		#if SCREENSPACE_CONTACT_SHADOWS > 0 && !defined END_SHADER
-			vec2 SS_directLight = SSRT_Shadows(toScreenSpace_DH(texcoord/RENDER_SCALE, z, DH_depth1), isDHrange, normalize(WsunVec*mat3(gbufferModelViewInverse)), interleaved_gradientNoise_temporal(), sunSSS_density > 0.0 && shadowMapFalloff2 < 1.0, hand);
-
-			// combine shadowmap with screenspace shadows.
-			#if SCREENSPACE_CONTACT_SHADOWS == 1
-				SS_directLight.r = mix(1.0, SS_directLight.r, 1.0-shadowMapFalloff);
-			#endif
-
-			shadowColor *= SS_directLight.r;			
-		#else
-			vec2 SS_directLight = vec2(1,0);
-			ShadowBlockerDepth = max(ShadowBlockerDepth, (1.0-shadowMapFalloff2) * 10.0);
-		#endif
-		
+		#if SSS_TYPE != 0
+			float sunSSS_density = LabSSS;
+			float SSS_shadow = ShadowAlpha;
 			
-		#ifdef TRANSLUCENT_COLORED_SHADOWS
-			SSSColor = tintedSunlight;
-		#else
-			SSSColor = DirectLightColor;
+
+			#ifndef RENDER_ENTITY_SHADOWS
+				if(entities) sunSSS_density = 0.0;
+			#endif
+			
+			#if SCREENSPACE_CONTACT_SHADOWS > 0 && !defined END_SHADER
+				vec2 SS_directLight = SSRT_Shadows(toScreenSpace_DH(texcoord/RENDER_SCALE, z, DH_depth1), isDHrange, normalize(WsunVec*mat3(gbufferModelViewInverse)), ig_noise, sunSSS_density > 0.0 && shadowMapFalloff2 < 1.0, hand);
+
+				// combine shadowmap with screenspace shadows.
+				#if SCREENSPACE_CONTACT_SHADOWS == 1
+					SS_directLight.r = mix(1.0, SS_directLight.r, 1.0-shadowMapFalloff);
+				#endif
+
+				shadowColor *= SS_directLight.r;			
+			#else
+				vec2 SS_directLight = vec2(1,0);
+				ShadowBlockerDepth = max(ShadowBlockerDepth, (1.0-shadowMapFalloff2) * 10.0);
+			#endif
+			
+				
+			#ifdef TRANSLUCENT_COLORED_SHADOWS
+				SSSColor = tintedSunlight;
+			#else
+				SSSColor = DirectLightColor;
+			#endif
+			
+			// TODO CHECK IF *= OR =
+			// *= looks better idk
+			// = is nice too though ???
+			SSSColor = SubsurfaceScattering_sun(albedo, ShadowBlockerDepth, sunSSS_density, clamp(dot(feetPlayerPos_normalized, WsunVec),0.0,1.0), SS_directLight.g, shadowMapFalloff2, hand);
+			
+			if(!eyeInWater) SSSColor *= lightLeakFix;
 		#endif
-		
-		// TODO CHECK IF *= OR =
-		// *= looks better idk
-		// = is nice too though ???
-		SSSColor = SubsurfaceScattering_sun(albedo, ShadowBlockerDepth, sunSSS_density, clamp(dot(feetPlayerPos_normalized, WsunVec),0.0,1.0), SS_directLight.g, shadowMapFalloff2, hand);
-		
-		if(!eyeInWater) SSSColor *= lightLeakFix;
 		
 		#ifndef END_SHADER
 			float cloudShadows = GetCloudShadow(feetPlayerPos.xyz + cameraPosition, WsunVec);
@@ -1408,7 +1437,7 @@ void main() {
 				
 				SkylightDir = clamp(SkylightDir*0.7+0.3, 0.0, pow(1-pow(1-SSAO_SSS.x, 0.5),4.0) * 0.7 + 0.3);
 
-				skylight = mix(0.2 + 2.3*(1.0-lightmap.y), 2.5, SkylightDir)/2.5;
+				skylight = mix(0.08 + 0.92*(1.0-lightmap.y), 1.0, SkylightDir);
 
 				// skylight = 1.0;
 			#endif
@@ -1565,7 +1594,7 @@ void main() {
 		#endif
 
 		#if defined OVERWORLD_SHADER && defined DEFERRED_SPECULAR && (PUDDLE_MODE > 0 || ShaderSnow > 0)
-			if(!hand && !entities && (wetnessAmount > 0.01 || snowAmount > 0.01)) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap, isWater, eyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g, isShaderGrass);
+			if(!hand && !entities && (wetnessAmount > 0.01 || snowAmount > 0.01)) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap.y, isWater, eyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g, isShaderGrass);
 		#endif
 
 		vec3 FINAL_COLOR = (Indirect_lighting + Direct_lighting) * albedo;
@@ -1575,7 +1604,7 @@ void main() {
 		if(lightningBolt) FINAL_COLOR = vec3(77.0, 153.0, 255.0);
 		
 		#if defined DEFERRED_SPECULAR	
-			vec3 specularNoises = vec3(BN.xy, blueNoise());
+			vec3 specularNoises = vec3(vec2(blueNoise(), ig_noise), ig_noise);
     		vec3 specularNormal = normal;
 			if (dot(normal, (feetPlayerPos_normalized)) > 0.0) specularNormal = FlatNormals;
 			
@@ -1747,14 +1776,14 @@ void main() {
 		// water absorbtion will impact ALL light coming up from terrain underwater.
 		gl_FragData[0].rgb *= Absorbtion;
 
-		#if defined DISTANT_HORIZONS || defined VOXY
-	  		float DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy),0).a/65000.0);
-			vec4 vlBehingTranslucents = BilateralUpscale_VLFOG(colortex13, colortex12, DH_mixedLinearZ);
-		#else
-			vec4 vlBehingTranslucents = BilateralUpscale_VLFOG(colortex13, depthtex1, ld(z));
-		#endif
+		// #if defined DISTANT_HORIZONS || defined VOXY
+	  	// 	float DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy),0).a/65000.0);
+		// 	vec4 vlBehingTranslucents = BilateralUpscale_VLFOG(colortex13, colortex12, DH_mixedLinearZ);
+		// #else
+		// 	vec4 vlBehingTranslucents = BilateralUpscale_VLFOG(colortex13, depthtex1, ld(z));
+		// #endif
 
-    	gl_FragData[0].rgb = gl_FragData[0].rgb * vlBehingTranslucents.a + vlBehingTranslucents.rgb;
+    	// gl_FragData[0].rgb = gl_FragData[0].rgb * vlBehingTranslucents.a + vlBehingTranslucents.rgb;
 	}
 
 	

@@ -229,7 +229,10 @@ void main() {
 
 	viewVector = normalize(tbnMatrix * viewVector);
 
-	color = gl_Color;
+	color = vec4(gl_Color.rgb, 1.0);
+	#ifdef LIGHTNING
+		color.a = gl_Color.a;
+	#endif
 
 	#ifdef OVERWORLD_SHADER
 		lightCol.rgb = texelFetch2D(colortex4,ivec2(6,37),0).rgb;

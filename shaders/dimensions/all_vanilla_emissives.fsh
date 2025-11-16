@@ -41,6 +41,10 @@ void main() {
 	    gl_FragData[0] = vec4(Albedo.rgb*Albedo.rgb * 0.1 * 5.0 * Emissive_Brightness, Albedo.a*color.a);
     #endif
 
+    #if defined LIGHTNING_AND_DRAGON_DEATH_BEAMS
+        gl_FragData[0] = vec4(Albedo.rgb * pow(1.0-pow(1.0-color.a,2),2) * 5.0 * 0.1, color.a);
+    #endif
+
     #if defined SPIDER_EYES || defined GLOWING 
 
         if(Albedo.a < 1.0/255.0 || dot(Albedo.rgb, vec3(0.33333)) < 1.0/255.0) { discard; return; }

@@ -806,7 +806,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			float waterdepth = max(-(feetPlayerPos.y + distanceFromWaterSurface),0.0);
 
 			DirectLightColor *= exp(-vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B) * (waterdepth/abs(WsunVec.y)));
-			DirectLightColor *= pow(waterCaustics(worldPos, WsunVec)*WATER_CAUSTICS_BRIGHTNESS, WATER_CAUSTICS_POWER);
+			DirectLightColor *= pow(waterCaustics(worldPos, WsunVec, -(feetPlayerPos.y + distanceFromWaterSurface))*WATER_CAUSTICS_BRIGHTNESS, WATER_CAUSTICS_POWER);
 		}
 
 		float NdotL = clamp((-15 + dot(normal, normalize(WsunVec*mat3(gbufferModelViewInverse)))*255.0) / 240.0  ,0.0,1.0);
@@ -1023,7 +1023,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		gl_FragData[0].rgb = Direct_lighting * 0.1;
 	#endif
 
-	gl_FragData[3] = vec4(encodeVec2(lightmap.x, lightmap.y), 1, 1, 1);
+	gl_FragData[3] = vec4(1, 1, encodeVec2(lightmap.x, lightmap.y), 1);
 
 	#if defined ENTITIES && defined IS_IRIS && !defined COLORWHEEL
 		if(NAMETAG > 0) {

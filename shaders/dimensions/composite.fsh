@@ -372,14 +372,14 @@ void main() {
 
 	float lightLeakFix = clamp(pow(eyeBrightnessSmooth.y/240. + lightmap.y,2.0) ,0.0,1.0);
 
-	gl_FragData[1] = vec4(0.0,0.0,0.0, texelFetch2D(colortex14,ivec2((floor(gl_FragCoord.xy)/VL_RENDER_RESOLUTION*texelSize+0.5*texelSize)/texelSize),0).a);
+	gl_FragData[1] = vec4(0.0,0.0, texelFetch2D(colortex14, ivec2(gl_FragCoord.xy), 0).b, texelFetch2D(colortex14,ivec2((floor(gl_FragCoord.xy)/VL_RENDER_SCALE*texelSize+0.5*texelSize)/texelSize),0).a);
 
 
 	// bool lightningBolt = abs(dataUnpacked1.w-0.5) <0.01;
-	bool isLeaf = abs(dataUnpacked1.w-0.55) <0.01;
+	// bool isLeaf = abs(dataUnpacked1.w-0.55) <0.01;
 	// bool translucent2 = abs(dataUnpacked1.w-0.6) <0.01;	// Weak translucency
 	// bool translucent4 = abs(dataUnpacked1.w-0.65) <0.01;	// Weak translucency
-	bool entities = abs(dataUnpacked1.w-0.45) < 0.01;	
+	// bool entities = abs(dataUnpacked1.w-0.45) < 0.01;	
 	bool hand = abs(dataUnpacked1.w-0.75) < 0.01;
 	// bool blocklights = abs(dataUnpacked1.w-0.8) <0.01;
 
@@ -389,9 +389,7 @@ void main() {
 	#if defined DISTANT_HORIZONS || defined VOXY
 		float DH_depth1 = texelFetch2D(dhVoxyDepthTex1,ivec2(gl_FragCoord.xy),0).x;
 		float DH_depth0 = texelFetch2D(dhVoxyDepthTex,ivec2(gl_FragCoord.xy),0).x;
-		#ifdef VOXY
-			DH_depth0 = min(DH_depth1, DH_depth0);
-		#endif
+
 		float swappedDepth = z >= 1.0 ? DH_depth1 : z;
 	#else
 		float DH_depth1 = 1.0;

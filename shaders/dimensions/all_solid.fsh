@@ -678,7 +678,7 @@ void main() {
 				blockID == BLOCK_SSS_WEAK || blockID == BLOCK_SSS_WEAK_2 ||
 				blockID == BLOCK_GLOW_LICHEN || blockID == BLOCK_SNOW_LAYERS || blockID == BLOCK_CARPET ||
 				blockID == BLOCK_AMETHYST_BUD_MEDIUM || blockID == BLOCK_AMETHYST_BUD_LARGE || blockID == BLOCK_AMETHYST_CLUSTER ||
-				blockID == BLOCK_BAMBOO || blockID == BLOCK_SAPLING || blockID == BLOCK_VINE
+				blockID == BLOCK_BAMBOO || blockID == BLOCK_SAPLING || blockID == BLOCK_VINE || blockID == BLOCK_VINE_OTHER
 			) {
 				SSSAMOUNT = 0.5;
 			}
@@ -818,6 +818,14 @@ void main() {
 	#ifdef WORLD
 		// apply noise to lightmaps to reduce banding.
 		vec2 PackLightmaps = vec2(torchlightmap, lmcoord.y);
+
+		// special curve to give more precision on high/low values of the gradient. this curve will be inverted after sampling and decoding.
+		// PackLightmaps = pow(1.0-pow(1.0-PackLightmaps,vec2(0.5)),vec2(0.5));
+		
+		#if defined WORLD && !defined HAND && !defined ENTITIES
+			// some dither to lightmaps to reduce banding.
+			PackLightmaps = clamp( PackLightmaps + PackLightmaps * (interleaved_gradientNoise()-0.5)*0.005,0,1);
+		#endif
 
 		normal = viewToWorld(normal);
 

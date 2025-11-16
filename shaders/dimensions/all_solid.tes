@@ -51,7 +51,7 @@ void main() {
 
     gl_Position = calcTessellation(gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position);
 
-    vcolor = color[0];
+    vcolor = calcTessellation(color[0], color[1], color[2]);
     vVanillaAO = calcTessellation(VanillaAO[0], VanillaAO[1], VanillaAO[2]);
     vlmtexcoord = calcTessellation(lmtexcoord[0], lmtexcoord[1], lmtexcoord[2]);
     vnormalMat.rgb = calcTessellation(normalMat[0].rgb, normalMat[1].rgb, normalMat[2].rgb);

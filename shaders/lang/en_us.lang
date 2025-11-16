@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.2.3
+    value.SHADER_VERSION_LABEL.482 = 5.3.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -223,7 +223,7 @@ screen.Direct_Light = Direct Light
         option.Max_Shadow_Filter_Radius = Maximum Shadow Filter Radius
         option.Max_Filter_Depth = Sun Size Factor
         
-    screen.LPV = FloodFill (Colored Lights) - §cIRIS REQUIRED§r
+    screen.LPV = FloodFill (Colored Lights)
         option.LPV_ENABLED = Enabled
         option.LPV_SIZE = Size
             value.LPV_SIZE.6 = Small [64]
@@ -304,7 +304,7 @@ screen.Ambient_light = Ambient Light
         
 
 screen.Fog = Fog Settings
-    option.VL_RENDER_RESOLUTION = Volumetric Resolution Scaling
+    option.VL_RENDER_SCALE = Volumetric Resolution Scaling
     option.VL_SAMPLES = Fog Samples
     option.FOG_START_HEIGHT = Fog Start Height
     option.BLOOMY_FOG = Bloomy Fog Multiplier
@@ -354,7 +354,8 @@ screen.Clouds = Cloud Settings
     option.HQ_CLOUD_UPSAMPLE.comment = Lowers light leaking around edges. §aPERFORMANCE COST:§r low
     option.CLOUDS_QUALITY = Cloud Resolution Scaling
     option.CLOUDS_SHADOWS = Cloud Shadows
-    option.CLOUD_SHADOW_STRENGTH = Cloud Shadow Strength
+    option.CLOUD_SHADOW_AMOUNT = Cloud Shadow Strength
+        suffix.CLOUD_SHADOW_AMOUNT = %
     option.CLOUD_MOVEMENT_TYPE = Cloud Movement
         value.CLOUD_MOVEMENT_TYPE.0 = World Time based
         value.CLOUD_MOVEMENT_TYPE.1 = Real Time based
@@ -1056,7 +1057,8 @@ option.FAKE_DISPERSION_AMOUNT.comment = Configure the amount of dispersion withi
 option.REFRACTION_SMUDGE_AMOUNT.comment = Configure the amount of smudge within the refraction. §bWhat is this?§r when refraction happens, the parts that get really distorted will get smudged. §cWill cause visaul noise within refraction. §aPERFORMANCE COST:§r very low
 
 screen.Fog.comment = Configure settings related to the raymarched volumetric fog, or distance based fog.
-    option.VL_RENDER_RESOLUTION.comment = Configure the resolution of volumetric fog and clouds. §aPERFORMANCE COST:§r high
+    option.VL_RENDER_SCALE.comment = Configure the resolution of volumetric fog and clouds. §aPERFORMANCE COST:§r high
+        suffix.VL_RENDER_SCALE = x
     option.VL_SAMPLES.comment = Configure the quality of the volumetric fog. §aPERFORMANCE COST:§r high
     option.BLOOMY_FOG.comment = Configure the strength of bloom that is applied to fog. §bWhat is this?§r This effect makes the fog look soft, it helps hide a little noise too. can cause some visible flickering on detailed edges. §aPERFORMANCE COST:§r very low
     option.Haze_amount.comment = Configure how dense the atmosphere around you is. §bWhat is this?§r This is the blue haze you see in the distance.
@@ -1186,7 +1188,7 @@ option.entityShadowDistanceMul.comment = §bWhat is this?§r Configure how far s
 screen.PHYSICS_MOD_OCEAN = Physics Mod - §cREAD BUTTON DESCRIPTION§r
 screen.PHYSICS_MOD_OCEAN.comment = The ocean of physics mod is supported. The mod has its own settings for it located in §bgame options -> physics settings -> ocean§r
 
-screen.DISTANT_HORIZONS_SETTINGS = Distant Horizons - §cIRIS REQUIRED§r
+screen.DISTANT_HORIZONS_SETTINGS = Distant Horizons
 option.DH_OVERDRAW_PREVENTION = Overdraw prevention
 option.OVERDRAW_MAX_DISTANCE = Max distance for overdraw prevention 
     value.OVERDRAW_MAX_DISTANCE.0 = Unlimited
@@ -1210,14 +1212,19 @@ option.DH_CHUNK_FADING = Chunk Fading
     value.DH_CHUNK_FADING.1 = Terrain
     value.DH_CHUNK_FADING.2 = Terrain + Shadows
 
-option.DH_AMBIENT_OCCLUSION = ambient occlusion on LOD chunks
-option.DH_SUBSURFACE_SCATTERING = sub-surface scattering on LOD chunks
-option.DH_SCREENSPACE_REFLECTIONS = screen-space reflections on LOD chunks
+option.DH_AMBIENT_OCCLUSION = Ambient Occlusion on LOD Chunks
+option.DH_SUBSURFACE_SCATTERING = Sub-Surface Scattering on LOD Chunks
+option.DH_SCREENSPACE_REFLECTIONS = Screen-Space Reflections on LOD Chunks
 
 option.DISTANT_HORIZONS_SHADOWMAP = §c(DO NOT USE IF YOU DO NOT KNOW WHAT THIS IS)§r DH shadowmap support
 option.DISTANT_HORIZONS_SHADOWMAP.comment =  §cTHIS SETTING WILL DESTROY PERFORMANCE THIS WILL MAKE SHADOWS LOOK BLOCKY, FLICKERY, AND LOW DETAIL§r. set shadow distance to 32 chunks (or more). set shadow resolution to 4096 (or more)
 option.TOGGLE_VL_FOG = Toggle Volumetric Fog
 option.TOGGLE_VL_FOG.comment = one big button to just turn all the fog off.
+
+screen.VOXY_SETTINGS = Voxy Settings
+    option.VOXY_AMBIENT_OCCLUSION = Ambient Occlusion on LOD Chunks
+    option.VOXY_SSS = Sub-Surface Scattering on LOD Chunks
+    option.VOXY_REFLECTIONS = Screen-Space Reflections on LOD Chunks
 
 option.TRANSLUCENT_COLORED_SHADOWS.comment = §bWhat is this?§r This effect allows translucent things like stained glass to color the sunlight as it passes through it. §aPERFORMANCE COST:§r medium
 option.MINIMUM_WATER_ABSORBANCE.comment = §bWhat is this?§r This controls how "clear" the water is in shallow areas. AUTO allows water to be clear outdoors, but adjust to be at a minimum value of 7 when indoors, to make it clearly visible. §dTHIS SETTING DOES NOT IMPACT UNDER-WATER VISUALS.        

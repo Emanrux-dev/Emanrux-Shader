@@ -16,12 +16,16 @@ uniform sampler2D depthtex1;
 
 #ifdef DISTANT_HORIZONS
 	uniform sampler2D dhDepthTex;
+  uniform sampler2D dhDepthTex1;
 	#define dhVoxyDepthTex dhDepthTex
+  #define dhVoxyDepthTex1 dhDepthTex1
 #endif
 
 #ifdef VOXY
+  uniform sampler2D vxDepthTexOpaque;
 	uniform sampler2D vxDepthTexTrans;
 	#define dhVoxyDepthTex vxDepthTexTrans
+  #define dhVoxyDepthTex1 vxDepthTexOpaque
 #endif
 
 uniform sampler2D colortex0;
@@ -327,7 +331,7 @@ vec3 toClipSpace3Prev_DH( vec3 viewSpacePosition, bool depthCheck ) {
 	#endif
 }
 
-vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler2D depth, bool hand){
+vec4 bilateralUpsample(vec2 fragcoord, sampler2D colortex, out float outerEdgeResults, float referenceDepth, sampler2D depth, bool hand, bool behindTranslucents){
 
   vec4 colorSum = vec4(0.0);
   float edgeSum = 0.0;
@@ -343,12 +347,12 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
     const int samples = 5;
   #endif
   
-  vec2 coord = gl_FragCoord.xy - 1.5;
+  vec2 coord = fragcoord - 1.5;
 
   vec2 UV = coord;
-  const ivec2 SCALE = ivec2(1.0/VL_RENDER_RESOLUTION);
-  ivec2 UV_DEPTH = ivec2(UV*VL_RENDER_RESOLUTION)*SCALE;
-  ivec2 UV_COLOR = ivec2(UV*VL_RENDER_RESOLUTION);
+  const ivec2 SCALE = ivec2(1.0/VL_RENDER_SCALE);
+  ivec2 UV_DEPTH = ivec2(UV*VL_RENDER_SCALE)*SCALE;
+  ivec2 UV_COLOR = ivec2(UV*VL_RENDER_SCALE);
   ivec2 UV_NOISE = ivec2(gl_FragCoord.xy*texelSize + 1);
 
 	ivec2 OFFSET[9] = ivec2[](
@@ -366,7 +370,12 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
   for(int i = 0; i < samples; i++) {
 
 		#if defined DISTANT_HORIZONS || defined VOXY
-		  float offsetDepth = sqrt(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).z/65000.0);
+		  float offsetDepth;
+      if(!behindTranslucents) {
+        offsetDepth = sqrt(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).z/65000.0);
+      } else {
+        offsetDepth = sqrt(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).a/65000.0);
+      }
     #else
       float offsetDepth = linearize(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE, 0).r);
     #endif
@@ -374,7 +383,7 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
     float edgeDiff = abs(offsetDepth - referenceDepth) < threshold ? 1.0 : 0.0;
     outerEdgeResults = max(outerEdgeResults, abs(referenceDepth - offsetDepth));
 
-    vec4 offsetColor = texelFetch2D(colortex0, UV_COLOR + OFFSET[i] + UV_NOISE, 0).rgba;
+    vec4 offsetColor = texelFetch2D(colortex, UV_COLOR + OFFSET[i] + UV_NOISE, 0).rgba;
     colorSum += offsetColor*edgeDiff;
     edgeSum += edgeDiff;
 
@@ -387,8 +396,9 @@ vec4 bilateralUpsample(out float outerEdgeResults, float referenceDepth, sampler
 }
 
 vec4 VLTemporalFiltering(vec3 viewPos, in float referenceDepth, sampler2D depth, bool hand){
-  vec2 offsetTexcoord = gl_FragCoord.xy*texelSize;
-  vec2 VLtexCoord = offsetTexcoord * VL_RENDER_RESOLUTION;
+  vec2 screenEdges = 2.0/vec2(viewWidth, viewHeight);
+  vec2 offsetTexcoord = clamp(gl_FragCoord.xy*texelSize, screenEdges, 1.0-screenEdges);
+  vec2 VLtexCoord = offsetTexcoord * VL_RENDER_SCALE;
   
 	// get previous frames position stuff for UV
 	vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
@@ -403,7 +413,7 @@ vec4 VLTemporalFiltering(vec3 viewPos, in float referenceDepth, sampler2D depth,
   // to fill pixel gaps in geometry edges, do a bilateral upsample.
   // pass a mask to only show upsampled color around the edges of blocks. this is so it doesnt blur reprojected results.
   float outerEdgeResults = 0.0;
-  vec4 upsampledCurrentFrame = bilateralUpsample(outerEdgeResults, referenceDepth, depth, hand);
+  vec4 upsampledCurrentFrame = bilateralUpsample(gl_FragCoord.xy , colortex0, outerEdgeResults, referenceDepth, depth, hand, false);
   // vec4 upsampledCurrentFrame = BilateralUpscale(colortex0, depth, gl_FragCoord.xy - 1.5, referenceDepth);
 
   // return vec4(outerEdgeResults,0,0,1);
@@ -482,7 +492,7 @@ void blendAllFogTypes( inout vec3 color, inout float bloomyFogMult, vec4 volumet
     float fogfade = 1.0 - max((1.0 - linearDistance / min(far, 16.0*7.0) ),0);
     color.rgb += (transmittance2 * scatterCoef) * fogfade;
     
-    bloomyFogMult *= dot(transmittance,vec3(0.3333))*0.5;
+    bloomyFogMult *= dot(transmittance,vec3(0.3333))*0.75 + 0.25;
   }
 
   /// blend volumetrics
@@ -491,7 +501,7 @@ void blendAllFogTypes( inout vec3 color, inout float bloomyFogMult, vec4 volumet
   
   // make bloomy fog only work outside of the overworld (unless underwater)
   #if !defined OVERWORLD_SHADER
-    bloomyFogMult *= volumetrics.a;
+    bloomyFogMult = min(bloomyFogMult, volumetrics.a);
   #endif
 
   // blend vanilla fogs (blindness, darkness, lava, powdered snow)
@@ -568,6 +578,19 @@ void main() {
 
   bool isSky = swappedDepth >= 1.0;
 
+  #if !defined DISTANT_HORIZONS && !defined VOXY || (AURORA_LOCATION > 0 && defined OVERWORLD_SHADER)
+    float z2 = texelFetch2D(depthtex1, ivec2(gl_FragCoord.xy),0).x;
+  #endif
+
+  #if AURORA_LOCATION > 0 && defined OVERWORLD_SHADER
+    #if defined DISTANT_HORIZONS || defined VOXY
+      float DH_depth1 = texelFetch2D(dhVoxyDepthTex, ivec2(gl_FragCoord.xy),0).x;
+      bool isSkyTranslucent = z2 >= 1.0 && DH_depth1 >= 1.0;
+    #else
+      bool isSkyTranslucent = z2 >= 1.0;
+    #endif
+  #endif
+
 	vec3 viewPos = toScreenSpace_DH(texcoord/RENDER_SCALE, z, DH_depth0);
 	vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
 
@@ -576,7 +599,6 @@ void main() {
 	vec3 playerPos_normalized = normalize(playerPos);
 
   #if !defined DISTANT_HORIZONS && !defined VOXY
-    float z2 = texelFetch2D(depthtex1, ivec2(gl_FragCoord.xy),0).x;
     vec3 viewPos_alt = toScreenSpace(vec3(texcoord/RENDER_SCALE, z2));
     vec3 playerPos_alt = mat3(gbufferModelViewInverse) * viewPos_alt + gbufferModelViewInverse[3].xyz;
     float linearDistance_cylinder_alt = length(playerPos_alt.xz);
@@ -607,7 +629,7 @@ void main() {
 	// 0.9 = entity mask
 	// 0.8 = reflective entities
 	// 0.7 = reflective blocks
-  float translucentMasks = texture2D(colortex7, texcoord).a;
+  float translucentMasks = texelFetch2D(colortex7, ivec2(gl_FragCoord.xy),0).a;
 
 	bool isWater = translucentMasks > 0.99;
 	bool isReflectiveEntity = abs(translucentMasks - 0.8) < 0.01;
@@ -640,7 +662,7 @@ void main() {
 
   #if defined OVERWORLD_SHADER && defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0 && defined VOLUMETRIC_CLOUDS
 
-    vec2 cloudDepth = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_RESOLUTION*RENDER_SCALE)).rg;
+    vec2 cloudDepth = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_SCALE*RENDER_SCALE)).rg;
 
     vec3 lightningpos = vec3(getLightningPosition(600, 4680));
     //lightningpos =  vec3(0,0,1);
@@ -765,7 +787,7 @@ void main() {
         if (length(lightningTex.rgb) == 0.0) lightningTex.a = 0.0;
       }
 
-      bool isSky = z0 == 1.0 && DH_z0 == 1.0;
+      // bool isSky = z0 == 1.0 && DH_z0 == 1.0;
       bool oneTexOnly = u > 0 && v > 0 && u*uvScalar < 1 && v*uvScalar < 1;
       
       if (lightningTex.a > 0.01 && oneTexOnly && isSky) {
@@ -775,8 +797,45 @@ void main() {
     }
   #endif
 
+  ////// --------------- get volumetrics behind translucents
+  float blank = 0.0;
+  #if defined DISTANT_HORIZONS || defined VOXY
+    DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy),0).a/65000.0);
+    vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, DH_mixedLinearZ, colortex12, hand, true);
+  #else
+    vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, linearize(texelFetch2D(depthtex1, ivec2(refractedCoord/texelSize),0).x), depthtex1, hand, true);
+  #endif
+
   ////// --------------- START BLENDING FOGS AND FORWARD RENDERED COLOR
   vec4 TranslucentShader = texture2D(colortex2, texcoord);
+
+  bool translucentCheck = TranslucentShader.a > 0.0 &&  TranslucentShader.a < 1.0;
+
+  ////// --------------- AURORA
+
+  #if AURORA_LOCATION > 0 && defined OVERWORLD_SHADER
+    if (WsunVec.y < 0.0 && temporallyFilteredVL.a > 0.001 && VLBehindTranslucents.a > 0.001 && isSkyTranslucent
+      #if AURORA_LOCATION < 2
+        && auroraAmount > 0.001
+      #endif
+      #ifdef AURORA_MOON
+        && WmoonVec.y < 0.1
+      #endif
+      #if AURORA_CHANCE < 100
+        && hash_aurora(float(worldDay)) <= 0.01 * float(AURORA_CHANCE)
+      #endif
+      )
+      {
+      vec3 aurora = 0.0875*aurora(playerPos_normalized, 21, blueNoise(), WmoonVec.y, WsunVec.y);
+
+      color += aurora;
+    }
+  #endif
+
+  // ensure that bloomy fog mask in this VLBehindTranslucents.a does not darken outside of glass areas.
+  if(translucentCheck) color.rgb = color.rgb * VLBehindTranslucents.a + VLBehindTranslucents.rgb;
+  // to avoid bloomy fog applying to the surface of water, and the clouds, swap between high and low quality VL buffers.
+  bloomyFogMult *= isWater ? temporallyFilteredVL.a * 0.75 + 0.25 : (TranslucentShader.a < 0.9995 ? VLBehindTranslucents.a * 0.75 + 0.25 : 1.0);
 
   // blend border fog. be sure to blend before and after forward rendered color blends.
   #if defined BorderFog && defined OVERWORLD_SHADER
@@ -805,7 +864,7 @@ void main() {
   blendForwardRendering(color, TranslucentShader);
 
   #if defined BorderFog && defined OVERWORLD_SHADER
-    color = mix(color, borderFog.rgb, getBorderFogDensity(linearDistance_cylinder, playerPos_normalized, swappedDepth >= 1.0));
+    color = mix(color, borderFog.rgb, getBorderFogDensity(linearDistance_cylinder, playerPos_normalized, isSky));
   #endif
   
   // tweaks to VL for nametag rendering
@@ -816,9 +875,12 @@ void main() {
 
   // bloomy rain effect
   #ifdef OVERWORLD_SHADER
-    float rainDrops =  clamp(texture2D(colortex9,texcoord).a,  0.0,1.0);
+    float rainDrops = texelFetch2D(colortex9,ivec2(texcoord/texelSize),0).a;
     if(hand) rainDrops *= (1.0-TranslucentShader.a);
-    if(rainDrops > 0.0) bloomyFogMult *= clamp(1.0 - pow(rainDrops*5.0,2),0.0,1.0);
+    if(rainDrops > 0.0) {
+      bloomyFogMult *= clamp(1.0 - pow(rainDrops*5.0,2),0.0,1.0);
+      color.rgb += color.rgb * 0.25 * rainDrops;
+    }
   #endif
 
   // blend all fog types. volumetric fog, volumetric clouds, distance based fogs for lava, powdered snow, blindness, and darkness.
@@ -862,30 +924,9 @@ void main() {
     } 
   #endif
 
-  ////// --------------- AURORA
-
-  #if AURORA_LOCATION > 0 && defined OVERWORLD_SHADER
-    if (WsunVec.y < 0.0 && temporallyFilteredVL.a > 0.001 && isSky
-      #if AURORA_LOCATION < 2
-        && auroraAmount > 0.001
-      #endif
-      #ifdef AURORA_MOON
-        && WmoonVec.y < 0.1
-      #endif
-      #if AURORA_CHANCE < 100
-        && hash_aurora(float(worldDay)) <= 0.01 * float(AURORA_CHANCE)
-      #endif
-      )
-      {
-      vec3 aurora = 0.0875*aurora(playerPos_normalized, 21, blueNoise(), WmoonVec.y, WsunVec.y);
-
-      color += aurora * temporallyFilteredVL.a;
-    }
-  #endif
-
 ////// --------------- FINALIZE
   #ifdef display_LUT
-      float zoomLevel = 1.0;
+      float zoomLevel = 2.0;
       vec3 thingy = texelFetch2D(colortex4,ivec2(gl_FragCoord.xy/zoomLevel),0).rgb /1200.0;
 
       if(luma(thingy) > 0.0){

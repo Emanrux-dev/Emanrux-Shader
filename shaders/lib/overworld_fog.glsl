@@ -75,24 +75,21 @@ vec4 GetVolumetricFog(
 	in vec3 LightColor,
 	in vec3 AmbientColor,
 	in vec3 AveragedAmbientColor,
-	inout float atmosphereAlpha,
-	inout vec3 sceneColor,
 	in float cloudPlaneDistance
 ){
 	#ifndef TOGGLE_VL_FOG
 		return vec4(0.0,0.0,0.0,1.0);
 	#endif
 	
-	/// -------------  RAYMARCHING STUFF ------------- \\\
-
 	int SAMPLECOUNT = VL_SAMPLES;
 
 	//project pixel position into projected shadowmap space
-	vec3 wpos = mat3(gbufferModelViewInverse) * viewPosition + gbufferModelViewInverse[3].xyz;
+	vec3 playerPos = mat3(gbufferModelViewInverse) * viewPosition + gbufferModelViewInverse[3].xyz;
+	vec3 rayStartPos = playerPos - gbufferModelViewInverse[3].xyz;
 	#ifdef CUSTOM_MOON_ROTATION
-		vec3 fragposition = mat3(customShadowMatrixSSBO) * wpos  + customShadowMatrixSSBO[3].xyz;
+		vec3 fragposition = mat3(customShadowMatrixSSBO) * playerPos  + customShadowMatrixSSBO[3].xyz;
 	#else
-		vec3 fragposition = mat3(shadowModelView) * wpos + shadowModelView[3].xyz;
+		vec3 fragposition = mat3(shadowModelView) * playerPos + shadowModelView[3].xyz;
 	#endif
 	fragposition = diagonal3(shadowProjection) * fragposition + shadowProjection[3].xyz;
 
@@ -103,12 +100,12 @@ vec4 GetVolumetricFog(
 	//we can use a projected vector because its orthographic projection
 	//however we still have to send it to curved shadow map space every step
 	vec3 dV = fragposition - start;
-	vec3 dVWorld = wpos - gbufferModelViewInverse[3].xyz;
+	vec3 dVWorld = playerPos - gbufferModelViewInverse[3].xyz;
 
 	#if defined DISTANT_HORIZONS || defined VOXY
-		float maxLength = min(length(dVWorld), max(far, dhVoxyRenderDistance))/length(dVWorld);
+		float maxLength = min(min(length(dVWorld), cloudPlaneDistance), max(far, dhVoxyRenderDistance))/length(dVWorld);
 	#else
-		float maxLength = min(length(dVWorld), far)/length(dVWorld);
+		float maxLength = min(min(length(dVWorld), cloudPlaneDistance), far)/length(dVWorld);
 	#endif
 	
 	dV *= maxLength;
@@ -138,7 +135,7 @@ vec4 GetVolumetricFog(
 	//Mie phase + somewhat simulates multiple scattering (Horizon zero down cloud approx)
 	float sunPhase = fogPhase(SdotV)*5.0;//  phaseCloudFog(SdotV, 0.9) + phaseCloudFog(SdotV, 0.85) + phaseCloudFog(SdotV, 0.5) * 5.0;
 	// float sunPhase2 = (phaseCloudFog(SdotV, 0.85) + phaseCloudFog(SdotV, 0.5)) * 5.0;
-	float skyPhase = 2.0 + pow(1.0-pow(1.0-clamp(normalize(wpos).y*0.5+0.5,0.0,1.0),2.0),5.0)*2.0 ;//pow(clamp(normalize(wpos).y*0.5+0.5,0.0,1.0),4.0)*5.0;
+	float skyPhase = 2.0 + pow(1.0-pow(1.0-clamp(normalize(playerPos).y*0.5+0.5,0.0,1.0),2.0),5.0)*2.0 ;//pow(clamp(normalize(wpos).y*0.5+0.5,0.0,1.0),4.0)*5.0;
 	float rayL = phaseRayleigh(SdotV);
 
 	vec3 rC = vec3(sky_coefficientRayleighR*1e-6, sky_coefficientRayleighG*1e-5, sky_coefficientRayleighB*1e-5) ;
@@ -165,10 +162,6 @@ vec4 GetVolumetricFog(
 		float inBiome = BiomeVLFogColors(biomeDirect, biomeIndirect);
 	#endif
 
-	#if LPV_VL_FOG_ILLUMINATION > 0 && defined EXCLUDE_WRITE_TO_LUT
-    	float TorchBrightness_autoAdjust = mix(1.0, 30.0,  clamp(exp(-10.0*exposure),0.0,1.0)) / 5.0;
-	#endif
-
 	float inACave = 1.0 - caveDetection;
 	float lightLevelZero = pow(clamp(eyeBrightnessSmooth.y/240.0 ,0.0,1.0),3.0);
 
@@ -177,14 +170,9 @@ vec4 GetVolumetricFog(
 
 
 	for (int i = 0; i < SAMPLECOUNT; i++) {
-		if(totalAbsorbance.r < 0.01 && totalAbsorbance.g < 0.01 && totalAbsorbance.b < 0.01) break;
+		// if(totalAbsorbance.r < 0.01 && totalAbsorbance.g < 0.01 && totalAbsorbance.b < 0.01) break;
 		float d = (pow(expFactor, float(i+dither.x)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);
 		float dd = pow(expFactor, float(i+dither.y)/float(SAMPLECOUNT)) * log(expFactor) / float(SAMPLECOUNT)/(expFactor-1.0);
-
-		#ifdef VOLUMETRIC_CLOUDS
-			// check if the fog intersects clouds
-			if(length(d*dVWorld) > cloudPlaneDistance) break;
-		#endif
 
 		progress = start.xyz + d*dV;
 		progressW = gbufferModelViewInverse[3].xyz + cameraPosition + d*dVWorld;
@@ -287,7 +275,7 @@ vec4 GetVolumetricFog(
 			float planetVolume = smoothstep(1.0 - exp(clamp(1.0 - length(progressW-cameraPosition) / (16.0*150.0), 0.0,1.0) * -10.0), 0.0, progressW.y-cameraPosition.y-500.0);
 
 			// just air
-			vec2 airCoef = (exp2(-max(progressW.y-SEA_LEVEL,0.0)/vec2(8.0e3, 1.2e3)*vec2(6.0,7.0)) * 192.0 * Haze_amount) * planetVolume;
+			vec2 airCoef = exp2(-max(progressW.y-SEA_LEVEL,0.0)/vec2(8.0e3, 1.2e3)*vec2(6.0,7.0)) * 192.0 * Haze_amount * planetVolume;
 
 			// Pbr for air, yolo mix between mie and rayleigh for water droplets
 			vec3 rL = rC*airCoef.x;
@@ -302,19 +290,6 @@ vec4 GetVolumetricFog(
 			atmosphereAbsorbance *= atmosphereVolumeCoeff*fogVolumeCoeff;
 
 			// totalAbsorbance *= dot(atmosphereVolumeCoeff,vec3(0.33333));
-
-		//------------------------------------
-		//------ LPV FOG EFFECT
-		//------------------------------------
-			#if LPV_VL_FOG_ILLUMINATION > 0 && defined EXCLUDE_WRITE_TO_LUT 
-				vec3 lpvIllumination = LPV_FOG_ILLUMINATION(progressW-cameraPosition, dd, dL) * totalAbsorbance;
-
-				#if LPV_VL_FOG_ILLUMINATION == 1
-					lpvIllumination *= caveDetection;
-				#endif
-
-				color += lpvIllumination;
-			#endif
 	}
 
 	// sceneColor = finalsceneColor;

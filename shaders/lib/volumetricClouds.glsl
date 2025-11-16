@@ -49,6 +49,12 @@ float lightningFlash = mix(0.1, 2.5, randomSeed);
 	float lightningMid = smoothstep(0.0, 0.05, timeInLightning) * smoothstep(0.15, 0.066, timeInLightning);
 #endif
 
+#if defined DISTANT_HORIZONS || defined VOXY
+	const float distanceFogScale = -min((1.66/dhVoxyRenderDistance), 0.0006);
+#else
+	const float distanceFogScale = -min((1.66/far), 0.0006);
+#endif
+
 float rand(float co){
 	vec2 co2 = vec2(co, co*2.0);
 
@@ -176,8 +182,8 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 			coverage += Rain_coverage * rainStrength;
 			coverage += Thunder_coverage * thunderStrength;
 
-			largeCloud = texture2D(noisetex, (position.xz + cloud_movement)/100000. * CloudLayer2_scale).b;
-			smallCloud = 1.0 - texture2D(noisetex, ((position.xz - cloud_movement)/7500. - vec2(1.0-largeCloud, -largeCloud)/7.0) * CloudLayer2_scale).b;
+			largeCloud = texture2D(noisetex, (position.xz + cloud_movement*20.0)/100000. * CloudLayer2_scale).b;
+			smallCloud = 1.0 - texture2D(noisetex, ((position.xz + vec2(-cloud_movement,cloud_movement)*20.0)/7500. - vec2(1.0-largeCloud, -largeCloud)/5.0) * CloudLayer2_scale).b;
 
 			smallCloud = largeCloud + smallCloud * 0.4 * clamp(0.9-largeCloud,0.0,1.0);
 			
@@ -198,8 +204,8 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 			coverage += Thunder_coverage * thunderStrength;
 
 
-			largeCloud = texture2D(noisetex, (samplePos.zx + cloud_movement*2.0)/10000.0 * CloudLayer1_scale).b;
-			smallCloud = texture2D(noisetex, (samplePos.zx - cloud_movement*2.0)/2500.0 * CloudLayer1_scale).b;
+			largeCloud = texture2D(noisetex, (samplePos.zx + cloud_movement*3.0)/10000.0 * CloudLayer1_scale).b;
+			smallCloud = texture2D(noisetex, (samplePos.zx - cloud_movement*3.0)/2500.0 * CloudLayer1_scale).b;
 			
 			smallCloud = abs(largeCloud* -0.7) + smallCloud;
 
@@ -247,7 +253,7 @@ float getCloudShape(int LayerIndex, int LOD, in vec3 position, float minHeight, 
 		// shrink the coverage slightly so it is a similar shape to clouds with erosion. this helps cloud lighting and cloud shadows.
 		if (LOD < 1) return max(shape - 0.27*erodeAmount,0.0);
 
-		samplePos.xz -= cloud_movement/4.0;
+		samplePos.xz += cloud_movement/4.0;
 
 		// da wind
 		// if(LayerIndex == SMALLCUMULUS_LAYER) 
@@ -431,7 +437,7 @@ float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 	vec3 startPosition = playerPos;
 	vec3 startOffset = sunVector / abs(sunVector.y);
 	
-	#ifdef CLOUDS_SHADOWS
+	#if CLOUD_SHADOW_AMOUNT > 0
 		float cloudShadows = 0.0;
 
 		#ifdef CloudLayer0
@@ -453,7 +459,7 @@ float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 			cloudShadows += getCumulonimbusShape(0, startPosition, 600, 4600 + startPosition.y).x;
 		#endif
 
-		cloudShadows *= CLOUD_SHADOW_STRENGTH;
+		cloudShadows *= float(CLOUD_SHADOW_AMOUNT)/100.0;
 
 		#if defined CloudLayer0 || defined CloudLayer1 || defined CloudLayer2 || CUMULONIMBUS > 0
 			totalShadow *= exp((cloudShadows*cloudShadows) * -200.0);
@@ -464,6 +470,29 @@ float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 }
 
 #ifndef CLOUDSHADOWSONLY
+	vec3 getRayOrigin(
+		vec3 rayStartPos,
+		vec3 cameraPos,
+		float dither,
+		
+		float minHeight,
+		float maxHeight
+	){
+
+		vec3 cloudDist = vec3(1.0); 
+		cloudDist.xz = mix(vec2(255.0), vec2(5.0), clamp(cameraPos.y - minHeight ,0.0,clamp((maxHeight-15)-cameraPos.y ,0.0,1.0)));
+		// allow passing through/above/below the plane without limits
+		float flip = mix(max(cameraPos.y - maxHeight,0.0), max(minHeight - cameraPos.y,0.0), clamp(rayStartPos.y,0.0,1.0));
+
+		// orient the ray to be a flat plane facing up/down
+		// vec3 position = rayStartPos*dither + cameraPos + (rayStartPos/abs(rayStartPos.y)) * flip;
+		vec3 position = rayStartPos*dither + cameraPos + (rayStartPos/length(rayStartPos/cloudDist)) * flip;
+		
+		return position;
+	}
+#endif
+
+#if !defined CLOUDSHADOWSONLY && !defined CLOUD_SHADOW_PASS
 uniform sampler2D colortex4;
 
 #if CLOUD_PHASE == 0
@@ -711,9 +740,9 @@ vec4 raymarchCloud(
 			#endif
 			
 			newPos.xz /= max(newPos.y,0.0)*0.0025 + 1.0;
-			newPos.y = min(newPos.y,0.0);
+			// newPos.y = min(newPos.y,0.0);
 
-			float distancefog = exp(-0.00025*length(newPos));
+			float distancefog = exp2(0.4*distanceFogScale*length(newPos.xz));
 			vec3 atmosphereHaze = (sampledSkyCol - sampledSkyCol * distancefog);
 			lighting = lighting * distancefog + atmosphereHaze;
 
@@ -911,9 +940,9 @@ vec4 raymarchCloud(
 
 					
 					newPos.xz /= max(newPos.y,0.0)*0.0025 + 1.0;
-					newPos.y = min(newPos.y,0.0);
+					// newPos.y = min(newPos.y,0.0);
 
-					float distancefog = exp2(-0.0006*length(newPos));	
+					float distancefog = exp2((distanceFogScale)*length(newPos.xz));
 
 					vec3 atmosphereHaze = (sampledSkyCol - sampledSkyCol * distancefog);
 					lighting = lighting * distancefog + atmosphereHaze;
@@ -937,27 +966,6 @@ vec4 raymarchCloud(
 
 }
 
-vec3 getRayOrigin(
-	vec3 rayStartPos,
-	vec3 cameraPos,
-	float dither,
-	
-	float minHeight,
-	float maxHeight
-){
-
-	vec3 cloudDist = vec3(1.0); 
-	cloudDist.xz = mix(vec2(255.0), vec2(5.0), clamp(cameraPos.y - minHeight ,0.0,clamp((maxHeight-15)-cameraPosition.y ,0.0,1.0)));
-	// allow passing through/above/below the plane without limits
-	float flip = mix(max(cameraPos.y - maxHeight,0.0), max(minHeight - cameraPos.y,0.0), clamp(rayStartPos.y,0.0,1.0));
-
-	// orient the ray to be a flat plane facing up/down
-	// vec3 position = rayStartPos*dither + cameraPos + (rayStartPos/abs(rayStartPos.y)) * flip;
-	vec3 position = rayStartPos*dither + cameraPos + (rayStartPos/length(rayStartPos/cloudDist)) * flip;
-	
-	return position;
-}
-
 vec4 GetVolumetricClouds(
 	vec3 viewPos,
 	vec2 dither,
@@ -979,6 +987,7 @@ vec4 GetVolumetricClouds(
 	vec3 color = vec3(0.0);
 	float totalAbsorbance = 1.0;
 	vec4 cloudColor = vec4(color, totalAbsorbance);
+	vec4 cloudColorOriginal = cloudColor;
 
 	float cloudheight = CloudLayer0_tallness / CloudLayer0_scale;
 	float minHeight = CloudLayer0_height;
@@ -1102,21 +1111,30 @@ vec4 GetVolumetricClouds(
 	// vec3 moonScattering2 = moonScattering * moonVis;
 	// vec3 moonMultiScattering2 = moonMultiScattering * moonVis;
 
+	bool mixBelowLayer0 = cameraPosition.y < CloudLayer0_height + CloudLayer0_tallness;
+	bool mixBelowLayer1 = cameraPosition.y < CloudLayer1_height;
+
+	
+
    	////-------  RENDER SMALL CUMULUS CLOUDS
-		vec4 smallCumulusClouds = cloudColor;
+		vec4 smallCumulusClouds = cloudColorOriginal;
 
 		vec2 cloudLayer0_Distance = vec2(startDistance, 1.0);
 		#ifdef CloudLayer0
-			float smallCumulusDistance = length(rayPosition - cameraPosition);
+			#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
+				float smallCumulusDistance = length(rayPosition - cameraPosition);
+			#endif
+
 			smallCumulusClouds = raymarchCloud(SMALLCUMULUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unsignedSunVec, unsignedMoonVec, sunScattering, moonScattering, skyScattering, lViewPosM, sampledSkyCol, cloudLayer0_Distance, backScatterPhase, phaseLevels, backScatterPhase2, phaseLevels2);
+			cloudColor.a *= smallCumulusClouds.a;
 		#endif
 
 	////------- RENDER LARGE CUMULUS CLOUDS
-		vec4 largeCumulusClouds = cloudColor;
+		vec4 largeCumulusClouds = cloudColorOriginal;
 
 		#ifdef CloudLayer1
 			vec2 cloudLayer1_Distance = vec2(startDistance, 1.0);
-			if(smallCumulusClouds.a > 1e-5 || cameraPosition.y > CloudLayer1_height) {
+			if(cloudColor.a > 1e-5 || !mixBelowLayer1) {
 				cloudheight = CloudLayer1_tallness;
 				minHeight = CloudLayer1_height;
 				maxHeight = cloudheight + minHeight;
@@ -1127,16 +1145,19 @@ vec4 GetVolumetricClouds(
 				rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
 
 				largeCumulusClouds = raymarchCloud(LARGECUMULUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unsignedSunVec, unsignedMoonVec, sunScattering, moonScattering, skyScattering, lViewPosM, sampledSkyCol, cloudLayer1_Distance, backScatterPhase, phaseLevels, backScatterPhase2, phaseLevels2);
+				cloudColor.a *= largeCumulusClouds.a;
 			}
-			float largeCumulusDistance = length(rayPosition - cameraPosition);
+			#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
+				float largeCumulusDistance = length(rayPosition - cameraPosition);
+			#endif
 		#endif
 
 	////------- RENDER CUMULONIMBUS CLOUDS
-		vec4 cumulonimbusClouds = cloudColor;
+		vec4 cumulonimbusClouds = cloudColorOriginal;
 
 		#if CUMULONIMBUS > 0
 			vec2 cloudLayer4_Distance = vec2(startDistance, 1.0);
-			if((smallCumulusClouds.a > 1e-5 && largeCumulusClouds.a > 1e-5) || cameraPosition.y > CloudLayer0_height + CloudLayer0_tallness) {
+			if((cloudColor.a > 1e-5) || !mixBelowLayer0) {
 				cloudheight = 4000;
 				minHeight = 600;
 				maxHeight = cloudheight + minHeight;
@@ -1147,8 +1168,11 @@ vec4 GetVolumetricClouds(
 				rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
 
 				cumulonimbusClouds = raymarchCloud(CUMULONIMBUS_LAYER, cumulonimbusSamples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unsignedSunVec, unsignedMoonVec, sunScattering, moonScattering, skyScattering, lViewPosM, sampledSkyCol, cloudLayer4_Distance, backScatterPhase, phaseLevels, backScatterPhase2, phaseLevels2);
+				cloudColor.a *= cumulonimbusClouds.a;
 			}
-			float cumulonimbusDistance = length(rayPosition - cameraPosition);
+			#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
+				float cumulonimbusDistance = length(rayPosition - cameraPosition);
+			#endif
 		#endif
 
 	// #if defined CAELUM_SUPPORT || !defined CUSTOM_MOON_ROTATION
@@ -1161,11 +1185,11 @@ vec4 GetVolumetricClouds(
 	// moonMultiScattering2 = moonMultiScattering * moonVis;
 	
    	////------- RENDER ALTOSTRATUS CLOUDS
-		vec4 altoStratusClouds = cloudColor;
+		vec4 altoStratusClouds = cloudColorOriginal;
 		
 		#ifdef CloudLayer2
 			vec2 cloudLayer2_Distance = vec2(startDistance, 1.0);
-			if(smallCumulusClouds.a > 1e-5 && largeCumulusClouds.a > 1e-5 && cumulonimbusClouds.a > 1e-5) {
+			if(cloudColor.a > 1e-5) {
 				cloudheight = 5.0;
 				minHeight = CloudLayer2_height;
 				maxHeight = cloudheight + minHeight;
@@ -1175,15 +1199,16 @@ vec4 GetVolumetricClouds(
 				rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
 
 				altoStratusClouds = raymarchCloud(ALTOSTRATUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unsignedSunVec, unsignedMoonVec, sunScattering, moonScattering, skyScattering, lViewPosM, sampledSkyCol, cloudLayer2_Distance, backScatterPhase, phaseLevels, backScatterPhase2, phaseLevels2);
+				cloudColor.a *= altoStratusClouds.a;
 			}
 		#endif
 
 	////------- RENDER CIRRUS CLOUDS
-		vec4 cirrusClouds = cloudColor;
+		vec4 cirrusClouds = cloudColorOriginal;
 		
 		#ifdef CloudLayer3
 			vec2 cloudLayer3_Distance = vec2(startDistance, 1.0);
-			if(smallCumulusClouds.a > 1e-5 && largeCumulusClouds.a > 1e-5 && cumulonimbusClouds.a > 1e-5 && altoStratusClouds.a > 1e-5) {
+			if(cloudColor.a > 1e-5) {
 				cloudheight = 5.0;
 				minHeight = CloudLayer3_height;
 				maxHeight = cloudheight + minHeight;
@@ -1193,6 +1218,7 @@ vec4 GetVolumetricClouds(
 				rayPosition = getRayOrigin(rayDirection, cameraPosition, dither.y, minHeight, maxHeight);
 
 				cirrusClouds = raymarchCloud(CIRRUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, unsignedSunVec, unsignedMoonVec, sunScattering, moonScattering, skyScattering, lViewPosM, sampledSkyCol, cloudLayer3_Distance, backScatterPhase, phaseLevels, backScatterPhase2, phaseLevels2);
+				cloudColor.a *= cirrusClouds.a;
 			}
 		#endif
 
@@ -1302,61 +1328,51 @@ vec4 GetVolumetricClouds(
 	#endif
 
 	#ifdef CloudLayer3
-		cloudColor = cirrusClouds;
+		cloudColor.rgb = cirrusClouds;
 	#endif
 	#ifdef CloudLayer2
 		cloudColor.rgb *= altoStratusClouds.a;
 		cloudColor.rgb += altoStratusClouds.rgb;
-		cloudColor.a *= altoStratusClouds.a;
 	#endif
 
-	if(cameraPosition.y < CloudLayer0_height + CloudLayer0_tallness) {
+	if(mixBelowLayer0) {
 		#if CUMULONIMBUS > 0
 			cloudColor.rgb *= cumulonimbusClouds.a;
 			cloudColor.rgb += cumulonimbusClouds.rgb;
-			cloudColor.a *= cumulonimbusClouds.a;
 		#endif
 		#ifdef CloudLayer1
 			cloudColor.rgb *= largeCumulusClouds.a;
 			cloudColor.rgb += largeCumulusClouds.rgb;
-			cloudColor.a *= largeCumulusClouds.a;
 		#endif
 		#ifdef CloudLayer0
 			cloudColor.rgb *= smallCumulusClouds.a;
 			cloudColor.rgb += smallCumulusClouds.rgb;
-			cloudColor.a *= smallCumulusClouds.a;
 		#endif
-	} else if(cameraPosition.y < CloudLayer1_height + CloudLayer1_tallness) {
+	} else if(mixBelowLayer1) {
 		#ifdef CloudLayer0
 			cloudColor.rgb *= smallCumulusClouds.a;
 			cloudColor.rgb += smallCumulusClouds.rgb;
-			cloudColor.a *= smallCumulusClouds.a;
 		#endif	
 		#if CUMULONIMBUS > 0
 			cloudColor.rgb *= cumulonimbusClouds.a;
 			cloudColor.rgb += cumulonimbusClouds.rgb;
-			cloudColor.a *= cumulonimbusClouds.a;
 		#endif
 		#ifdef CloudLayer1
 			cloudColor.rgb *= largeCumulusClouds.a;
 			cloudColor.rgb += largeCumulusClouds.rgb;
-			cloudColor.a *= largeCumulusClouds.a;
 		#endif
 	} else {
 		#ifdef CloudLayer0
 			cloudColor.rgb *= smallCumulusClouds.a;
 			cloudColor.rgb += smallCumulusClouds.rgb;
-			cloudColor.a *= smallCumulusClouds.a;
 		#endif	
 		#ifdef CloudLayer1
 			cloudColor.rgb *= largeCumulusClouds.a;
 			cloudColor.rgb += largeCumulusClouds.rgb;
-			cloudColor.a *= largeCumulusClouds.a;
 		#endif
 		#if CUMULONIMBUS > 0
 			cloudColor.rgb *= cumulonimbusClouds.a;
 			cloudColor.rgb += cumulonimbusClouds.rgb;
-			cloudColor.a *= cumulonimbusClouds.a;
 		#endif
 	}
 	color = cloudColor.rgb;

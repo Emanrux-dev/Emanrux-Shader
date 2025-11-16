@@ -66,7 +66,7 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 			blockID == BLOCK_SSS_WEAK || blockID == BLOCK_SSS_WEAK_2 ||
 			blockID == BLOCK_GLOW_LICHEN || blockID == BLOCK_SNOW_LAYERS || blockID == BLOCK_CARPET ||
 			blockID == BLOCK_AMETHYST_BUD_MEDIUM || blockID == BLOCK_AMETHYST_BUD_LARGE || blockID == BLOCK_AMETHYST_CLUSTER ||
-			blockID == BLOCK_BAMBOO || blockID == BLOCK_SAPLING || blockID == BLOCK_VINE
+			blockID == BLOCK_BAMBOO || blockID == BLOCK_SAPLING || blockID == BLOCK_VINE || blockID == BLOCK_VINE_OTHER
 		) {
 			SSSAMOUNT = 0.5;
 		}

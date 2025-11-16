@@ -12,7 +12,7 @@ flat varying vec3 moonlightCol;
 flat varying vec3 averageSkyCol;
 flat varying vec3 averageSkyCol_Clouds;
 
-#if LPV_VL_FOG_ILLUMINATION > 0 && defined IS_LPV_ENABLED
+#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
 	flat varying float exposure;
 #endif
 
@@ -52,7 +52,7 @@ uniform float frameTimeCounter;
 void main() {
 	gl_Position = ftransform();
 
-	gl_Position.xy = (gl_Position.xy*0.5+0.5)*(0.01+VL_RENDER_RESOLUTION)*2.0-1.0;
+	gl_Position.xy = (gl_Position.xy*0.5+0.5)*(0.01+VL_RENDER_SCALE)*2.0-1.0;
 
 	
 	#ifdef OVERWORLD_SHADER
@@ -77,35 +77,41 @@ void main() {
 		averageSkyCol_Clouds = vec3(5.0);
 	#endif
 
-	lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
-	#ifdef SMOOTH_SUN_ROTATION
-		WsunVec = WsunVecSmooth;
-	#else
-		WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
-	#endif
-	
-	#ifdef CUSTOM_MOON_ROTATION
-		#if LIGHTNING_SHADOWS > 0
-			vec3 moonVec = customMoonVec2SSBO;
-		#else	
-			vec3 moonVec = customMoonVecSSBO;
-		#endif
-		sunlightCol *= smoothstep(0.005, 0.09, length(moonVec - WsunVec));
-	#else
-		#ifdef SMOOTH_MOON_ROTATION
-			vec3 moonVec = WmoonVecSmooth;
+	#ifdef OVERWORLD_SHADER
+		lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
+		#ifdef SMOOTH_SUN_ROTATION
+			WsunVec = WsunVecSmooth;
 		#else
-			vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+			WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
 		#endif
-		if(dot(-moonVec, WsunVec) < 0.9999) moonVec = -moonVec;
+	
+		#ifdef CUSTOM_MOON_ROTATION
+			#if LIGHTNING_SHADOWS > 0
+				vec3 moonVec = customMoonVec2SSBO;
+			#else	
+				vec3 moonVec = customMoonVecSSBO;
+			#endif
+			sunlightCol *= smoothstep(0.005, 0.09, length(moonVec - WsunVec));
+		#else
+			#ifdef SMOOTH_MOON_ROTATION
+				vec3 moonVec = WmoonVecSmooth;
+			#else
+				vec3 moonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+			#endif
+			if(dot(-moonVec, WsunVec) < 0.9999) moonVec = -moonVec;
+		#endif
+
+		WmoonVec = moonVec;
+
+		WrealSunVec = WsunVec;
+		WsunVec = mix(WmoonVec, WsunVec, clamp(lightCol.a,0,1));
+	#else
+		WmoonVec = vec3(0.0, 1.0, 0.0);
+		WsunVec = vec3(0.0, 1.0, 0.0);
+		WrealSunVec = vec3(0.0, 1.0, 0.0);
 	#endif
 
-	WmoonVec = moonVec;
-
-	WrealSunVec = WsunVec;
-	WsunVec = mix(WmoonVec, WsunVec, clamp(lightCol.a,0,1));
-
-	#if LPV_VL_FOG_ILLUMINATION > 0 && defined IS_LPV_ENABLED
+	#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
 		exposure = texelFetch2D(colortex4,ivec2(10,37),0).r;
 	#endif
 

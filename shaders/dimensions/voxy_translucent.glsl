@@ -340,7 +340,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
     gbuffer_data_1 = vec4(Albedo, material);
 
-    gbuffer_data_2 = vec4(encodeVec2(parameters.lightMap), 1, 1, 1);
+    gbuffer_data_2 = vec4(1, 1, encodeVec2(parameters.lightMap), 1);
 
 }
 }

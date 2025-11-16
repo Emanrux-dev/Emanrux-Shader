@@ -212,7 +212,7 @@ void main() {
     COLOR = vec3(ld(texture2D(depthtex1, texcoord*RENDER_SCALE).r));
   #endif
   #if DEBUG_VIEW == debug_CLOUDDEPTHTEX && defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
-    COLOR = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_RESOLUTION*RENDER_SCALE)).rgb;
+    COLOR = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_SCALE*RENDER_SCALE)).rgb;
   #endif
 
   gl_FragColor.rgb = COLOR;

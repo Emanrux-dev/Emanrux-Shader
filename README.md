@@ -16,7 +16,6 @@ Notable changes/additions compared to Bliss unstable:
  + Better mod support
  + Better shader-side (hardcoded) emissives
  + Lightsource with shadows on the main end island
- + Rain & thunder cloud coverage and daily weather
  + Better lightning strikes with clouds lighting up and shadows
  + Voxy, Colorwheel, Caelum (Arda Craft) support
  + Emissive Ores

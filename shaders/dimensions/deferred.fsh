@@ -338,11 +338,11 @@ if (gl_FragCoord.x > 18. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257){
 		if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
 	#endif
 	
-	sky = calculateAtmosphere((averageSkyCol*4000./2.0), viewVector, vec3(0.0,1.0,0.0), WsunVec, WmoonVec, planetSphere, skyAbsorb, 10, blueNoise());
+	sky = calculateAtmosphere((averageSkyCol*2000.0), viewVector, vec3(0.0,1.0,0.0), WsunVec, WmoonVec, planetSphere, skyAbsorb, 10, blueNoise());
 
 	// fade atmosphere conditions for rain away when you pass above the cloud plane.
-	// float heightRelativeToClouds = clamp(1.0 - max(eyeAltitude - CloudLayer0_height,0.0) / 200.0 ,0.0,1.0);
-	// if(rainStrength > 0.0) sky = mix(sky, 3.0 + averageSkyCol*4000 * (skyAbsorb*0.7+0.3), clamp(1.0 - exp(pow(clamp(-viewVector.y+0.9,0.0,1.0),2) * -5.0),0.0,1.0) * heightRelativeToClouds * rainStrength);
+	float heightRelativeToClouds = clamp(1.0 - max(eyeAltitude - CloudLayer0_height,0.0) / 200.0 ,0.0,1.0);
+	if(rainStrength > 0.0) sky = mix(sky, averageSkyCol*2000.0 * (skyAbsorb*0.7+0.3), clamp(1.0 - exp(pow(clamp(-viewVector.y+0.9,0.0,1.0),2) * -5.0),0.0,1.0) * heightRelativeToClouds * rainStrength);
 	
 	#ifdef AEROCHROME_MODE
 		sky *= vec3(0.0, 0.18, 0.35);
@@ -404,9 +404,8 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 	
 	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, WmoonVec, sunColor2*2.5, moonColor2*2.5, skyGroundCol/30.0, cloudPlaneDistance, cloudDistance);
 
-	float atmosphereAlpha = 1.0;
 	WsunVec = mix(WmoonVec, WsunVec, clamp(float(sunElevation > 1e-5)*2.0-1.0 ,0,1));
-	vec4 volumetricFog = GetVolumetricFog(viewPos, WsunVec, vec2(noise, 1.0-noise), suncol*2.5, skyGroundCol/30.0, averageSkyCol_Clouds*5.0, atmosphereAlpha, volumetricClouds.rgb, cloudPlaneDistance);
+	vec4 volumetricFog = GetVolumetricFog(viewPos, WsunVec, vec2(noise, 1.0-noise), suncol*2.5, skyGroundCol/30.0, averageSkyCol_Clouds*5.0, cloudPlaneDistance);
 
 	#if AURORA_LOCATION > 0
 		if (WsunVec.y < 0.0 && volumetricClouds.a > 0.01

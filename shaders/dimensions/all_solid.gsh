@@ -111,6 +111,10 @@ void main() {
     
     int i;
 
+    #if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+        GrassNormals = vec3(0.0, 1.0, 0.0);
+    #endif
+
     for (i = 0; i < 3; i++)
 	{
 		vec4 vertex = gl_in[i].gl_Position;
@@ -384,8 +388,9 @@ void main() {
                         normalMat.xyz = GrassNormal[j];
 
                         heightfade = smoothstep(0.1, grassHeights[triangle_count], grassHeights[3*j+i]);
-                        GrassNormals = normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade)));
                     #endif
+
+                    GrassNormals = normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade)));
 
                     blockID = -15.0;
 

@@ -60,6 +60,7 @@
     }"},
     "useViewportDims": true,
     "uniforms": [
+        "dhVoxyRenderDistance",
         "worldDay",
         "worldTime",
         "moonElevation",

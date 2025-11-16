@@ -1,7 +1,7 @@
 #version 430 compatibility
 
 
-// #define WORLD
+#define WORLD
 #define ENTITIES
 
 #define NETHER_SHADER

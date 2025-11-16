@@ -120,7 +120,7 @@ screen.Ambient_light = Luz Ambiente
     
 
 screen.Fog = Ajustes da Névoa
-    option.VL_RENDER_RESOLUTION = Dimensionamento da Resolução da Névoa
+    option.VL_RENDER_SCALE = Dimensionamento da Resolução da Névoa
     option.VL_SAMPLES = Amostragem de Névoa
     option.BLOOMY_FOG = Quantidade de Névoa Difusa
     option.Haze_amount = Densidade da Névoa Atmosférica
@@ -409,7 +409,7 @@ screen.Porosity.comment = Ajustes relacionados à umidade e poças
     option.Puddle_Size.comment = Ajusta o tamanho das poças.
 
 screen.Fog.comment = Ajustes relacionados à névoa volumétrica ou névoa distante.
-    option.VL_RENDER_RESOLUTION.comment = Ajuste a resolução da névoa volumétrica. §aCUSTO DE PERFORMANCE:§r Alto
+    option.VL_RENDER_SCALE.comment = Ajuste a resolução da névoa volumétrica. §aCUSTO DE PERFORMANCE:§r Alto
     option.VL_SAMPLES.comment = Ajuste a qualidade da névoa volumétrica. §aCUSTO DE PERFORMANCE:§r Alto
     option.BLOOMY_FOG.comment = Ajuste à força do bloom que é aplicada a névoa. §bO Que é Isso?§r Esse efeito faz a névoa ter um aspecto suave, isso ajuda a diminuir o ruído. Pode causar flick em bordas detalhadas. §aCUSTO DE PERFORMANCE:§r Muito Baixo
     option.Haze_amount.comment = Ajuste a densidade da atmosféra ao seu redor. §bO Que é Isso?§r É aquela névoa azul que você vê na distância. 

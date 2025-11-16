@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - Bliss 编辑版
     prefix.SHADER_VERSION_LABEL = 版本
-    value.SHADER_VERSION_LABEL.482 = 5.2.3
+    value.SHADER_VERSION_LABEL.482 = 5.3.0
 
 # 如果你是来翻译的，这不是玩笑，这些选项的功能正如其名
 profile.POTATO=§4土豆 (极低配置)
@@ -331,7 +331,7 @@ screen.Ambient_light = 环境光
         
 
 screen.Fog = 雾设置
-    option.VL_RENDER_RESOLUTION = 体积雾渲染分辨率
+    option.VL_RENDER_SCALE = 体积雾渲染分辨率
     option.VL_SAMPLES = 雾采样数
     option.FOG_START_HEIGHT = 雾起始高度
     option.BLOOMY_FOG = 雾气泛化值
@@ -382,7 +382,7 @@ screen.Clouds = 云设置
     option.HQ_CLOUD_UPSAMPLE.comment = 减少边缘的光泄漏。 §a性能消耗：§r 低
     option.CLOUDS_QUALITY = 云分辨率缩放
     option.CLOUDS_SHADOWS = 云阴影
-    option.CLOUD_SHADOW_STRENGTH = 云阴影强度
+    option.CLOUD_SHADOW_AMOUNT = 云阴影强度
     option.CLOUD_MOVEMENT_TYPE = 云层移动类型
         value.CLOUD_MOVEMENT_TYPE.0 = 基于世界时间
         value.CLOUD_MOVEMENT_TYPE.1 = 基于真实时间
@@ -1104,7 +1104,7 @@ option.FAKE_DISPERSION_AMOUNT.comment = 配置折射内的色散量。 §b这是
 option.REFRACTION_SMUDGE_AMOUNT.comment = 配置折射内的模糊量。 §b这是什么？§r 当发生折射时，真正扭曲的部分会变得模糊。 §c会导致折射内的视觉噪点。 §a性能消耗：§r 非常低
 
 screen.Fog.comment = 配置与光线行进体积雾或基于距离的雾相关的设置。
-    option.VL_RENDER_RESOLUTION.comment = 配置体积雾和云的分辨率。 §a性能消耗：§r 高
+    option.VL_RENDER_SCALE.comment = 配置体积雾和云的分辨率。 §a性能消耗：§r 高
     option.VL_SAMPLES.comment = 配置体积雾的质量。 §a性能消耗：§r 高
     option.BLOOMY_FOG.comment = 配置应用于雾的泛光强度。 §b这是什么？§r 这种效果使雾看起来柔和，它也有助于隐藏一点噪点。可能导致详细边缘上出现一些可见的闪烁。 §a性能消耗：§r 非常低
     option.Haze_amount.comment = 配置您周围大气的密度。 §b这是什么？§r 这是您在远处看到的蓝色雾霾。

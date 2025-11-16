@@ -190,7 +190,7 @@ void applySceneControllerParameters(
 // fog = (uniform fog density, cloudy fog density)
 // ... and more, eventually
 
-#ifndef VOXY_PROGRAM
+#if !defined VOXY_PROGRAM && !defined CLOUD_SHADOW_PASS
     flat varying struct sceneController {
       vec2 smallCumulus;
       vec2 largeCumulus;

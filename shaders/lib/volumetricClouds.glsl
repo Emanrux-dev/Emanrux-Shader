@@ -1383,3 +1383,203 @@ vec4 GetVolumetricClouds(
 #endif
 
 #endif
+
+#ifdef CLOUD_SHADOW_PASS
+
+float raymarchCloudSimple(
+	int LayerIndex,
+	int samples,
+	vec3 rayPosition,
+	vec3 rayDirection,
+	float dither,
+
+	float minHeight,
+	float maxHeight,
+
+	vec3 startPos
+){
+	float totalAbsorbance = 1.0;
+	float distanceFactor = length(rayDirection);
+
+	float densityTresholdCheck = 0.0;
+
+	if(LayerIndex == SMALLCUMULUS_LAYER) densityTresholdCheck = 0.06;
+	if(LayerIndex == LARGECUMULUS_LAYER || LayerIndex == CUMULONIMBUS_LAYER) densityTresholdCheck = 0.02;
+	if(LayerIndex == ALTOSTRATUS_LAYER) densityTresholdCheck = 0.01;
+
+	densityTresholdCheck = mix(1e-5, densityTresholdCheck, dither);
+
+	if(LayerIndex == ALTOSTRATUS_LAYER){
+		vec3 newPos = rayPosition - startPos;
+
+		float density = SC_parameters.altostratus.y;
+		density *= smoothstep(CloudLayer2_distance, CloudLayer2_distance*0.5, length(newPos));
+
+		if (density == 0.0) return totalAbsorbance;
+
+		bool ifAboveOrBelowPlane = max(mix(-1.0, 1.0, clamp(startPos.y - minHeight,0.0,1.0)) * normalize(rayDirection).y + 0.0001,0.0) > 0.0;
+
+		if(ifAboveOrBelowPlane) return totalAbsorbance;
+
+		float shape = getCloudShape(LayerIndex, 1, rayPosition, minHeight, maxHeight);
+		float shapeWithDensity = shape*density;
+
+		// check if the pixel has visible clouds before doing work.
+		if(shapeWithDensity > 1e-5){
+			float densityCoeff = exp(-distanceFactor*shapeWithDensity);			
+			totalAbsorbance *= densityCoeff;
+		}
+
+		return totalAbsorbance;
+	}
+
+
+	if(LayerIndex < ALTOSTRATUS_LAYER){
+
+		vec3 newPos = rayPosition - startPos;
+
+		float densityLarge = getRainDensity(SC_parameters.largeCumulus.y);
+
+		float density = 0.0;
+
+		if(LayerIndex == SMALLCUMULUS_LAYER) density = getRainDensity(SC_parameters.smallCumulus.y) * smoothstep(CloudLayer0_distance, CloudLayer0_distance*0.5, length(newPos));
+		if(LayerIndex == LARGECUMULUS_LAYER) density = getRainDensity(SC_parameters.largeCumulus.y) * smoothstep(CloudLayer1_distance, CloudLayer1_distance*0.5, length(newPos));
+		if(LayerIndex == CUMULONIMBUS_LAYER) density = 0.8;
+
+		if (density < 0.01) return totalAbsorbance;
+
+		float tallness = maxHeight - minHeight;
+
+		for(int i = 0; i < samples; i++) {
+			newPos = rayPosition - startPos;
+
+			float rayHeightInCloud = rayPosition.y - minHeight;
+
+			// check if the pixel is in the bounding box before doing work.
+			if(clamp(rayPosition.y - maxHeight,0.0,1.0) < 1.0 && clamp(rayHeightInCloud,0.0,1.0) > 0.0){
+				
+				float shape = 0.0;
+				float isLarge = 1.0;
+				#if CUMULONIMBUS > 0
+				if (LayerIndex != CUMULONIMBUS_LAYER) {
+				#endif
+					shape = getCloudShape(LayerIndex, 1, rayPosition, minHeight, maxHeight);
+				#if CUMULONIMBUS > 0
+				} else {
+					vec2 cumulonimbusCloud = getCumulonimbusShape(1, rayPosition, minHeight, maxHeight);
+					shape = cumulonimbusCloud.x;
+					isLarge = 1.0 + 4.0 * cumulonimbusCloud.y;
+				}
+				#endif
+				float shapeWithDensity = shape*density*isLarge;
+				float shapeWithDensityFaded = shape*density * pow(clamp((rayHeightInCloud)/(max(tallness,1.0)*0.25),0.0,1.0),2.0);
+
+				// check if the pixel has visible clouds before doing work.
+				if(shapeWithDensityFaded > 1e-5){
+					float densityCoeff = exp(-distanceFactor*shapeWithDensityFaded);					
+					totalAbsorbance *= densityCoeff;
+					
+					// check if you can see through the cloud on the pixel before doing the next iteration
+					if (totalAbsorbance < 1e-5) break;
+					
+				}
+			}
+			
+			rayPosition += rayDirection;
+			
+		}
+	}
+	
+
+	return totalAbsorbance;
+}
+
+vec4 GetVolumetricCloudsSimple(
+	vec2 dither,
+	vec3 lightDir,
+	vec2 offset,
+	vec3 startPos
+){
+	float totalAbsorbance = 1.0;
+
+	float heightRelativeToClouds = clamp(1.0 - max(cameraPosition.y - CloudLayer0_height,0.0) / 100.0 ,0.0,1.0);
+
+	vec3 NormPlayerPos = lightDir;
+
+	#ifdef SKY_GROUND
+		NormPlayerPos.y += 0.03 * heightRelativeToClouds;
+	#endif
+
+	int samples = 5;
+	vec3 cloudDist = vec3(1.0);
+
+	vec3 rayDirection;
+	vec3 rayPosition;
+
+	float cloudheight;
+	float minHeight;
+	float maxHeight;
+
+	float altoStratusClouds = 1.0;
+	#ifdef CloudLayer2
+		cloudheight = 5.0;
+		minHeight = CloudLayer2_height;
+		maxHeight = cloudheight + minHeight;
+		
+		cloudDist.xz = vec2(255.0);
+		rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist));
+		rayPosition = getRayOrigin(rayDirection, startPos, dither.y, minHeight, maxHeight);
+
+		rayPosition.xz += offset;
+
+		altoStratusClouds = raymarchCloudSimple(ALTOSTRATUS_LAYER, 1, rayPosition, rayDirection, dither.x, minHeight, maxHeight, startPos);
+		totalAbsorbance *= altoStratusClouds;
+	#endif
+
+	float largeCumulusClouds = 1.0;
+	#ifdef CloudLayer1
+		if(totalAbsorbance > 1e-5) {
+			cloudheight = CloudLayer1_tallness;
+			minHeight = CloudLayer1_height;
+			maxHeight = cloudheight + minHeight;
+
+			cloudDist.xz = vec2(255.0);
+			rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/samples);
+			rayPosition = getRayOrigin(rayDirection, startPos, dither.y, minHeight, maxHeight);
+
+			rayPosition.xz += offset;
+
+			largeCumulusClouds = raymarchCloudSimple(LARGECUMULUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, startPos);
+			totalAbsorbance *= largeCumulusClouds;
+		}
+	#endif
+
+	float smallCumulusClouds = 1.0;
+	#ifdef CloudLayer0
+		if(totalAbsorbance > 1e-5) {
+			cloudheight = CloudLayer0_tallness / CloudLayer0_scale;
+			minHeight = CloudLayer0_height;
+			maxHeight = cloudheight + minHeight;
+
+			#if defined OVERWORLD_SHADER && defined AETHER_FLAG
+				minHeight = CloudLayer0_height - 350.0;
+				maxHeight = cloudheight + minHeight;
+			#endif
+
+			cloudDist.xz = vec2(255.0);
+			rayDirection = NormPlayerPos.xyz * (cloudheight/length(NormPlayerPos.xyz/cloudDist)/samples);
+			rayPosition = getRayOrigin(rayDirection, startPos, dither.y, minHeight, maxHeight);
+
+			rayPosition.xz += offset;
+
+			smallCumulusClouds = raymarchCloudSimple(SMALLCUMULUS_LAYER, samples, rayPosition, rayDirection, dither.x, minHeight, maxHeight, startPos);
+			totalAbsorbance *= smallCumulusClouds;
+		}
+	#endif
+
+
+
+	return vec4(smallCumulusClouds, largeCumulusClouds, altoStratusClouds, totalAbsorbance);
+}
+
+#endif

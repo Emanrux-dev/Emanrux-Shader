@@ -1094,6 +1094,8 @@ void main() {
 		vec3 feetPlayerPos = mat3(gbufferModelViewInverse) * viewPos;
 		vec3 feetPlayerPos_normalized = normalize(feetPlayerPos);
 
+		vec3 worldPos = feetPlayerPos + cameraPosition;
+
 		#ifdef POM
 			#ifdef Horrible_slope_normals
     			vec3 ApproximatedFlatNormal = normalize(cross(dFdx(feetPlayerPos), dFdy(feetPlayerPos))); // it uses depth that has POM written to it.
@@ -1102,7 +1104,7 @@ void main() {
 		#endif
 
 		#if defined END_SHADER && defined END_ISLAND_LIGHT
-			vec3 WsunVec = normalize(END_LIGHT_POS-(feetPlayerPos+cameraPosition));
+			vec3 WsunVec = normalize(END_LIGHT_POS-worldPos);
 		#endif
 
 	////// --------------- COLORS --------------- //////
@@ -1208,7 +1210,7 @@ void main() {
 			estimatedDepth = 1.0;
 
 			// viewerWaterDepth = max(0.9-lightmap.y,0.0)*3.0;
-	  		float distanceFromWaterSurface = -(feetPlayerPos.y + (cameraPosition.y - waterEnteredAltitude));//max(-(feetPlayerPos.y + (cameraPosition.y - waterEnteredAltitude)),0.0) ;
+	  		float distanceFromWaterSurface = -(worldPos.y - waterEnteredAltitude);//max(-(feetPlayerPos.y + (cameraPosition.y - waterEnteredAltitude)),0.0) ;
 			
 			percievedWaterDepth = distanceFromWaterSurface;
 
@@ -1227,7 +1229,6 @@ void main() {
 
 		if( nightVision > 0.0 ) Absorbtion += exp(-totEpsilon * 25.0) * nightVision;
 
-		vec3 pos = feetPlayerPos + cameraPosition;
 		// vec2 causticPos = pos.xz;
 		// causticPos = mix(causticPos, pos.xz, max(FlatNormals.y,0));
 		// causticPos = mix(causticPos, pos.xy, max(-FlatNormals.y,0));
@@ -1237,7 +1238,7 @@ void main() {
 		// causticPos = mix(causticPos, pos.xy, max(-FlatNormals.x,0));
 
 		// apply caustics to the lighting, and make sure they dont look weird
-		DirectLightColor *= pow(mix(1.0, waterCaustics(pos, WsunVec, percievedWaterDepth)*WATER_CAUSTICS_BRIGHTNESS, clamp(estimatedDepth,0,1)), WATER_CAUSTICS_POWER);
+		DirectLightColor *= pow(mix(1.0, waterCaustics(worldPos, WsunVec, percievedWaterDepth)*WATER_CAUSTICS_BRIGHTNESS, clamp(estimatedDepth,0,1)), WATER_CAUSTICS_POWER);
 	}
 
 
@@ -1391,7 +1392,7 @@ void main() {
 		#endif
 		
 		#ifndef END_SHADER
-			float cloudShadows = GetCloudShadow(feetPlayerPos.xyz + cameraPosition, WsunVec);
+			float cloudShadows = GetCloudShadow(worldPos, WsunVec);
 			shadowColor *= cloudShadows;
 			SSSColor *= cloudShadow*cloudShadows;
 		#endif
@@ -1400,12 +1401,12 @@ void main() {
 
 	#ifdef END_SHADER
 		#ifdef END_LIGHTNING
-			float vortexBounds = clamp(vortexBoundRange - length(feetPlayerPos+cameraPosition), 0.0,1.0);
+			float vortexBounds = clamp(vortexBoundRange - length(worldPos), 0.0,1.0);
 		#else
 			float vortexBounds = 1.0;
 		#endif
 
-        vec3 lightPos = LightSourcePosition(feetPlayerPos+cameraPosition, cameraPosition,vortexBounds);
+        vec3 lightPos = LightSourcePosition(worldPos, cameraPosition,vortexBounds);
 
 		float lightningflash = texelFetch2D(colortex4,ivec2(1,1),0).x/150.0;
 		vec3 lightColors = pow(lightmap.y,8) * LightSourceColors(vortexBounds, lightningflash);
@@ -1413,7 +1414,7 @@ void main() {
 		float end_NdotL = clamp(dot(slopednormal, normalize(-lightPos))*0.5+0.5,0.0,1.0);
 		end_NdotL *= end_NdotL;
 
-		float fogShadow = GetEndFogShadow(feetPlayerPos+cameraPosition, lightPos);
+		float fogShadow = GetEndFogShadow(worldPos, lightPos);
 		float endPhase = endFogPhase(lightPos);
 
 		Direct_lighting += lightColors * endPhase * end_NdotL * fogShadow;
@@ -1594,7 +1595,7 @@ void main() {
 		#endif
 
 		#if defined OVERWORLD_SHADER && defined DEFERRED_SPECULAR && (PUDDLE_MODE > 0 || ShaderSnow > 0)
-			if(!hand && !entities && (wetnessAmount > 0.01 || snowAmount > 0.01)) applyPuddles(feetPlayerPos + cameraPosition, FlatNormals, lightmap.y, isWater, eyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g, isShaderGrass);
+			if(!hand && !entities) applyPuddles(worldPos, FlatNormals, lightmap.y, isWater, eyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g, isShaderGrass);
 		#endif
 
 		vec3 FINAL_COLOR = (Indirect_lighting + Direct_lighting) * albedo;

@@ -50,9 +50,9 @@ float lightningFlash = mix(0.1, 2.5, randomSeed);
 #endif
 
 #if defined DISTANT_HORIZONS || defined VOXY
-	const float distanceFogScale = -min((1.66/dhVoxyRenderDistance), 0.0006);
+	float distanceFogScale = -min((1.66/dhVoxyRenderDistance), 0.0006);
 #else
-	const float distanceFogScale = -min((1.66/far), 0.0006);
+	float distanceFogScale = -min((1.66/far), 0.0006);
 #endif
 
 float rand(float co){

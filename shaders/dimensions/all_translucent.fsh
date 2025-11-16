@@ -72,7 +72,7 @@ uniform sampler2D colortex3;
 uniform sampler2D colortex4;
 uniform sampler2D colortex6;
 
-uniform sampler2D texture;
+uniform sampler2D gtexture;
 uniform sampler2D specular;
 uniform sampler2D normals;
 
@@ -521,9 +521,9 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec2 lightmap = lmtexcoord.zw;
 	
 	#ifndef COLORWHEEL
-		gl_FragData[0] = texture2D(texture, lmtexcoord.xy, Texture_MipMap_Bias) * color;
+		gl_FragData[0] = texture2D(gtexture, lmtexcoord.xy, Texture_MipMap_Bias) * color;
 	#else
-		vec4 _color = texture2D(texture, lmtexcoord.xy, Texture_MipMap_Bias);
+		vec4 _color = texture2D(gtexture, lmtexcoord.xy, Texture_MipMap_Bias);
 		float ao;
 		vec4 overlayColor;
 

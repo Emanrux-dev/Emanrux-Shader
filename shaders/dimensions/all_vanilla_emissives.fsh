@@ -3,7 +3,7 @@
 varying vec4 color;
 varying vec2 texcoord;
 
-uniform sampler2D texture;
+uniform sampler2D gtexture;
 
 //faster and actually more precise than pow 2.2
 vec3 toLinear(vec3 sRGB){
@@ -21,7 +21,7 @@ vec3 toLinear(vec3 sRGB){
 
 void main() {
 
-	vec4 Albedo = texture2D(texture, texcoord);
+	vec4 Albedo = texture2D(gtexture, texcoord);
 
     #ifndef COLORWHEEL
 	    Albedo.rgb = toLinear(Albedo.rgb * color.rgb);

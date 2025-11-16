@@ -4,7 +4,7 @@
 varying vec4 lmtexcoord;
 varying vec4 color;
 
-uniform sampler2D texture;
+uniform sampler2D gtexture;
 uniform sampler2D gaux1;
 uniform vec4 lightCol;
 uniform vec3 sunVec;
@@ -37,7 +37,7 @@ vec3 toScreenSpaceVector(vec3 p) {
 
 void main() {
 /* DRAWBUFFERS:2 */
-	gl_FragData[0] = texture2D(texture, lmtexcoord.xy)*color;
+	gl_FragData[0] = texture2D(gtexture, lmtexcoord.xy)*color;
 		gl_FragData[0].a = clamp(gl_FragData[0].a -0.1,0.0,1.0)*0.5;
 		vec3 albedo = toLinear(gl_FragData[0].rgb*color.rgb);
 		vec3 ambient = texture2D(gaux1,(lmtexcoord.zw*15.+0.5)*texelSize).rgb;

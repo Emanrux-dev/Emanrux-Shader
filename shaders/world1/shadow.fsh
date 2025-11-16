@@ -6,7 +6,7 @@ varying vec4 color;
 
 varying vec2 texcoord;
 uniform sampler2D tex;
-uniform sampler2D texture;
+uniform sampler2D gtexture;
 uniform sampler2D noisetex;
 
 #if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 1

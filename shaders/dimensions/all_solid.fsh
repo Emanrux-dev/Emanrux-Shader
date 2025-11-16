@@ -64,7 +64,7 @@ in vec4 normalMat;
 #endif
 
 uniform sampler2D specular;
-uniform sampler2D texture;
+uniform sampler2D gtexture;
 uniform sampler2D colortex1;//albedo(rgb),material(alpha) RGBA16
 uniform float frameTimeCounter;
 uniform int frameCounter;
@@ -208,7 +208,7 @@ vec3 toClipSpace3(vec3 viewSpacePosition) {
 	}
 	vec4 readTexture(in vec2 coord)
 	{
-		return texture2DGradARB(texture,fract(coord)*texcoordam.pq+texcoordam.st,dcdx,dcdy);
+		return texture2DGradARB(gtexture,fract(coord)*texcoordam.pq+texcoordam.st,dcdx,dcdy);
 	}
 #endif
 
@@ -451,10 +451,10 @@ void main() {
 		if (!ShaderGrass)
 		#endif
 		{
-		 Albedo *= texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
+		 Albedo *= texture2D_POMSwitch(gtexture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
 		}
 	#else
-		vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
+		vec4 Albedo = texture2D_POMSwitch(gtexture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
 		vec4 overlayColor;
 		float VanillaAO;
 

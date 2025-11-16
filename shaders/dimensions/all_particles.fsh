@@ -52,7 +52,7 @@ uniform int renderStage;
 uniform int isEyeInWater;
 uniform vec3 sunPosition;
 
-uniform sampler2D texture;
+uniform sampler2D gtexture;
 uniform sampler2D noisetex;
 uniform sampler2D colortex4;
 
@@ -263,7 +263,7 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 	}
 	vec4 readTexture(in vec2 coord)
 	{
-		return texture2DGradARB(texture,fract(coord)*vtexcoordam.pq+vtexcoordam.st,dcdx,dcdy);
+		return texture2DGradARB(gtexture,fract(coord)*vtexcoordam.pq+vtexcoordam.st,dcdx,dcdy);
 	}
 	vec4 texture2D_POMSwitch(
 	sampler2D sampler, 
@@ -366,9 +366,9 @@ void main() {
 			}
 		}
 
-		vec4 Albedo = texture2D_POMSwitch(texture, adjustedTexCoord.xy, vec4(dcdx,dcdy));
+		vec4 Albedo = texture2D_POMSwitch(gtexture, adjustedTexCoord.xy, vec4(dcdx,dcdy));
 	#else
-		vec4 Albedo = texture2D(texture, adjustedTexCoord.xy);
+		vec4 Albedo = texture2D(gtexture, adjustedTexCoord.xy);
 	#endif
 
 	#ifdef COLORWHEEL
@@ -405,7 +405,7 @@ void main() {
 	vec3 feetPlayerPos = mat3(gbufferModelViewInverse) * viewPos;
 	vec3 feetPlayerPos_normalized = normalize(feetPlayerPos);
 
-	vec4 TEXTURE = texture2D(texture, lmtexcoord.xy)*color;
+	vec4 TEXTURE = texture2D(gtexture, lmtexcoord.xy)*color;
 	
 	#ifdef WhiteWorld
 		TEXTURE.rgb = vec3(0.5);

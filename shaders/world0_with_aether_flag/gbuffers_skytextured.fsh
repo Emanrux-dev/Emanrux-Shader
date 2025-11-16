@@ -4,7 +4,7 @@
 #if RESOURCEPACK_SKY != 0
 	varying vec4 color;
 	varying vec2 texcoord;
-	uniform sampler2D texture;
+	uniform sampler2D gtexture;
 	uniform sampler2D depthtex0;
 	
 	uniform int renderStage;
@@ -30,7 +30,7 @@ void main() {
 	#if RESOURCEPACK_SKY != 0
 		/* RENDERTARGETS:2 */
 
-		vec4 COLOR = texture2D(texture, texcoord.xy) * color;
+		vec4 COLOR = texture2D(gtexture, texcoord.xy) * color;
 
 		bool isSun = renderStage == MC_RENDER_STAGE_SUN || renderStage == 4;
 		bool isMoon = renderStage == MC_RENDER_STAGE_MOON || renderStage == 5;

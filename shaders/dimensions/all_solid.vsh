@@ -27,25 +27,33 @@ Read the terms of modification and sharing before changing something below pleas
 #define MC_NORMAL_MAP
 #endif
 
-#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES
-out vec4 vgrassSideCheck;
-out vec3 vcenterPosition;
-flat out int vdiscardGrass;
-#endif
 
-out vec4 vcolor;
-out float vVanillaAO;
 
-out vec4 vlmtexcoord;
-out vec4 vnormalMat;
+out DATA {
+	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES
+		vec4 grassSideCheck;
+		vec3 centerPosition;
+		int discardGrass;
+	#endif
 
-#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-	out vec4 vtexcoordam; // .st for add, .pq for mul
-	out vec2 vtexcoord;
-#endif
+	vec4 color;
+
+	vec4 lmtexcoord;
+	vec4 normalMat;
+
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+		vec4 texcoordam; // .st for add, .pq for mul
+		vec2 texcoord;
+	#endif
+
+	#ifdef MC_NORMAL_MAP
+		vec4 tangent;
+	#endif
+
+	flat int blockID;
+} data_out;
 
 #ifdef MC_NORMAL_MAP
-	out vec4 vtangent;
 	attribute vec4 at_tangent;
 #endif
 
@@ -58,7 +66,7 @@ attribute vec4 mc_midTexCoord;
 
 uniform int blockEntityId;
 uniform int entityId;
-flat out float vblockID;
+
 
 uniform int heldItemId;
 uniform int heldItemId2;
@@ -89,18 +97,18 @@ uniform vec3 cameraPosition;
 uniform vec2 texelSize;
 
 #if defined HAND
-uniform mat4 gbufferPreviousModelView;
-uniform vec3 previousCameraPosition;
+	uniform mat4 gbufferPreviousModelView;
+	uniform vec3 previousCameraPosition;
 
-float detectCameraMovement(){
-	// simply get the difference of modelview matrices and cameraPosition across a frame.
-	vec3 fakePos = vec3(0.5,0.5,0.0);
-	vec3 hand_playerPos = mat3(gbufferModelViewInverse) * fakePos + (cameraPosition - previousCameraPosition);
-	vec3 previousPosition = mat3(gbufferPreviousModelView) * hand_playerPos;
-	float detectMovement = 1.0 - clamp(distance(previousPosition, fakePos)/texelSize.x,0.0,1.0);
+	float detectCameraMovement(){
+		// simply get the difference of modelview matrices and cameraPosition across a frame.
+		vec3 fakePos = vec3(0.5,0.5,0.0);
+		vec3 hand_playerPos = mat3(gbufferModelViewInverse) * fakePos + (cameraPosition - previousCameraPosition);
+		vec3 previousPosition = mat3(gbufferPreviousModelView) * hand_playerPos;
+		float detectMovement = 1.0 - clamp(distance(previousPosition, fakePos)/texelSize.x,0.0,1.0);
 
-	return detectMovement;
-}
+		return detectMovement;
+	}
 #endif
 
 //#ifndef IS_LPV_ENABLED
@@ -108,18 +116,18 @@ float detectCameraMovement(){
 //#endif
 
 #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && (defined GRASS_DETECT_FALLOFF || defined GRASS_DETECT_INV_FALLOFF || REPLACE_SHORT_GRASS > 0)
-uniform usampler1D texBlockData;
-#include "/lib/lpv_common.glsl"
-#include "/lib/lpv_blocks.glsl"
-#include "/lib/lpv_buffer.glsl"
-#include "/lib/voxel_common.glsl"
+	uniform usampler1D texBlockData;
+	#include "/lib/lpv_common.glsl"
+	#include "/lib/lpv_blocks.glsl"
+	#include "/lib/lpv_buffer.glsl"
+	#include "/lib/voxel_common.glsl"
 
-uint GetVoxelBlock(const in ivec3 voxelPos) {
-    if (clamp(voxelPos, ivec3(0), ivec3(VoxelSize3-1u)) != voxelPos)
-        return BLOCK_EMPTY;
-    
-    return imageLoad(imgVoxelMask, voxelPos).r;
-}
+	uint GetVoxelBlock(const in ivec3 voxelPos) {
+		if (clamp(voxelPos, ivec3(0), ivec3(VoxelSize3-1u)) != voxelPos)
+			return BLOCK_EMPTY;
+		
+		return imageLoad(imgVoxelMask, voxelPos).r;
+	}
 #endif
 
 							
@@ -184,6 +192,11 @@ vec3 blackbody2(float Temp)
 #define SEASONS_VSH
 #include "/lib/climate_settings.glsl"
 
+uniform int framemod8;
+
+
+#include "/lib/TAA_jitter.glsl"
+
 
 uniform sampler2D noisetex;//depth
 float densityAtPos(in vec3 pos){
@@ -227,62 +240,58 @@ void main() {
 	vec3 position = mat3(gl_ModelViewMatrix) * vec3(gl_Vertex) + gl_ModelViewMatrix[3].xyz;
 
     /////// ----- COLOR STUFF ----- ///////
-	vcolor = gl_Color;
-
-	vVanillaAO = 1.0 - clamp(vcolor.a,0,1);
-	if (vcolor.a < 0.3) vcolor.a = 1.0; // fix vanilla ao on some custom block models.
-	
+	data_out.color = gl_Color;
 
 
     /////// ----- RANDOM STUFF ----- ///////
 	// gl_TextureMatrix[0] for animated things like charged creepers
-	vlmtexcoord.xy = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
+	data_out.lmtexcoord.xy = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
 
 	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec2 midcoord = (gl_TextureMatrix[0] *  mc_midTexCoord).st;
-		vec2 texcoordminusmid = vlmtexcoord.xy-midcoord;
-		vtexcoordam.pq  = abs(texcoordminusmid)*2.;
-		vtexcoordam.st  = min(vlmtexcoord.xy,midcoord-texcoordminusmid);
-		vtexcoord.xy    = sign(texcoordminusmid)*0.5+0.5;
+		vec2 texcoordminusmid = data_out.lmtexcoord.xy-midcoord;
+		data_out.texcoordam.pq  = abs(texcoordminusmid)*2.;
+		data_out.texcoordam.st  = min(data_out.lmtexcoord.xy,midcoord-texcoordminusmid);
+		data_out.texcoord.xy    = sign(texcoordminusmid)*0.5+0.5;
 	#endif
 
 
 	vec2 lmcoord = gl_MultiTexCoord1.xy / 240.0; 
-	vlmtexcoord.zw = lmcoord;
+	data_out.lmtexcoord.zw = lmcoord;
 
 
 
 	#ifdef MC_NORMAL_MAP
 		vec3 alterTangent = at_tangent.rgb;
 
-		vtangent = vec4(normalize(gl_NormalMatrix * alterTangent.rgb), at_tangent.w);
+		data_out.tangent = vec4(normalize(gl_NormalMatrix * alterTangent.rgb), at_tangent.w);
 	#endif
 
-	vnormalMat = vec4(normalize(gl_NormalMatrix * gl_Normal), 1.0);
+	data_out.normalMat = vec4(normalize(gl_NormalMatrix * gl_Normal), 1.0);
 	
-	vec3 vFlatNormals = vnormalMat.xyz;
+	vec3 vFlatNormals = data_out.normalMat.xyz;
 
 	#ifdef ENTITIES
-		vblockID = entityId;
+		data_out.blockID = int(entityId);
 	#elif defined BLOCKENTITIES
-		vblockID = blockEntityId;
+		data_out.blockID = int(blockEntityId);
 	#else
-		vblockID = mc_Entity.x;
+		data_out.blockID = int(mc_Entity.x);
 	#endif
 
-	if(vblockID == BLOCK_GROUND_WAVING_VERTICAL || vblockID == BLOCK_GRASS_SHORT || vblockID == BLOCK_GRASS_TALL_LOWER || vblockID == BLOCK_GRASS_TALL_UPPER ) vnormalMat.a = 0.60;
-	if(vblockID == BLOCK_AIR_WAVING) vnormalMat.a = 0.55;
+	if(data_out.blockID == BLOCK_GROUND_WAVING_VERTICAL || data_out.blockID == BLOCK_GRASS_SHORT || data_out.blockID == BLOCK_GRASS_TALL_LOWER || data_out.blockID == BLOCK_GRASS_TALL_UPPER ) data_out.normalMat.a = 0.60;
+	if(data_out.blockID == BLOCK_AIR_WAVING) data_out.normalMat.a = 0.55;
 
 	#if defined WORLD && !defined HAND
 
 		#ifdef BLOCKENTITIES
 			if(blockEntityId == BLOCK_END_PORTAL || blockEntityId == 187) {
-				vlmtexcoord.w = 0.0;
+				data_out.lmtexcoord.w = 0.0;
 			}
 		#endif
 
 		#if PUDDLE_MODE > 0 || ShaderSnow > 0
-			if(vblockID == 215) vlmtexcoord.w = 0.0;
+			if(data_out.blockID == 215) data_out.lmtexcoord.w = 0.0;
 		#endif
 	#endif
 	
@@ -292,20 +301,20 @@ void main() {
 		// if(gl_Color.a < 1.0) vNameTags = 1;
 		// if(gl_Color.a >= 0.24 && gl_Color.a <= 0.25 ) gl_Position = vec4(10,10,10,1);
 		#ifdef INCLUDE_UNLISTED_ENTITIES
-			vnormalMat.a = 0.45;
+			data_out.normalMat.a = 0.45;
 		#else
-			if(entityId == ENTITY_BOAT || entityId == ENTITY_SMALLSHIPS || entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468) vnormalMat.a = 0.45;
+			if(entityId == ENTITY_BOAT || entityId == ENTITY_SMALLSHIPS || entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468) data_out.normalMat.a = 0.45;
 		#endif
 	#endif
 
 	#if PUDDLE_MODE > 0 || ShaderSnow > 0
-		if (vblockID == 244 || vblockID == 189) vlmtexcoord.w = 0.0;
+		if (data_out.blockID == 244 || data_out.blockID == 189) data_out.lmtexcoord.w = 0.0;
 	#endif
 
 	// special cases light lightning and beacon beams...	
 	#ifdef ENTITIES
 		if(entityId == ENTITY_LIGHTNING){
-			vnormalMat.a = 0.50;
+			data_out.normalMat.a = 0.50;
 		}
 	#endif
 
@@ -318,16 +327,16 @@ void main() {
 
 	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && (defined GRASS_DETECT_FALLOFF || defined GRASS_DETECT_INV_FALLOFF || REPLACE_SHORT_GRASS > 0) && !defined BLOCKENTITIES
 
-		vgrassSideCheck = vec4(0.0);
+		data_out.grassSideCheck = vec4(0.0);
 	
-		if(length(worldpos) < min(GRASS_RANGE, 0.5*float(LpvSize)) && vblockID == 85 && worldNormals.y > 0.9) {
+		if(length(worldpos) < min(GRASS_RANGE, 0.5*float(LpvSize)) && data_out.blockID == 85 && worldNormals.y > 0.9) {
 
 			float fractYPos = fract(worldpos.y+cameraPosition.y);
 			if(fractYPos > 0.9999 || fractYPos < 0.0001 || abs(fractYPos - 0.5) < 0.0001) {
 
-				vcenterPosition = worldpos + at_midBlock.xyz / 64.0;
+				data_out.centerPosition = worldpos + at_midBlock.xyz / 64.0;
 
-				vec3 LPVpos = GetLpvPosition(vcenterPosition);
+				vec3 LPVpos = GetLpvPosition(data_out.centerPosition);
 
 				#if REPLACE_SHORT_GRASS > 0
 					uint blockTop = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y + 0.6, LPVpos.z));
@@ -336,7 +345,7 @@ void main() {
 				#endif
 
 				if(blockTop == 12 || blockTop > 4000) {
-					vgrassSideCheck = vec4(2.0);
+					data_out.grassSideCheck = vec4(2.0);
 				}
 				#if REPLACE_SHORT_GRASS < 2
 				else {
@@ -345,39 +354,39 @@ void main() {
 					uint blockSouth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y + 0.6, LPVpos.z + 1.0));
 					uint blockNorth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y + 0.6, LPVpos.z - 1.0));
 
-					if(blockEast > 4000 || blockEast == 12 || (blockEast > 80 && blockEast < 86) || blockEast == 503 || (blockEast > 406 && blockEast < 440)) {vgrassSideCheck.x = 1.0;} else {
+					if(blockEast > 4000 || blockEast == 12 || (blockEast > 80 && blockEast < 86) || blockEast == 503 || (blockEast > 406 && blockEast < 440)) {data_out.grassSideCheck.x = 1.0;} else {
 						#ifdef GRASS_DETECT_FALLOFF
 							blockEast = GetVoxelBlock(ivec3(LPVpos.x + 1.0, LPVpos.y, LPVpos.z));
-							if(blockEast != 85) {vgrassSideCheck.x = -1.0;}
+							if(blockEast != 85) {data_out.grassSideCheck.x = -1.0;}
 						#endif
 					}
-					if(blockWest > 4000 || blockWest == 12 || (blockWest > 80 && blockWest < 86) || blockWest == 503 || (blockWest > 406 && blockWest < 440)) {vgrassSideCheck.y = 1.0;} else {
+					if(blockWest > 4000 || blockWest == 12 || (blockWest > 80 && blockWest < 86) || blockWest == 503 || (blockWest > 406 && blockWest < 440)) {data_out.grassSideCheck.y = 1.0;} else {
 						#ifdef GRASS_DETECT_FALLOFF
 							blockWest = GetVoxelBlock(ivec3(LPVpos.x - 1.0, LPVpos.y, LPVpos.z));
-							if(blockWest != 85) {vgrassSideCheck.y = -1.0;}
+							if(blockWest != 85) {data_out.grassSideCheck.y = -1.0;}
 						#endif
 					}
-					if(blockSouth > 4000 || blockSouth == 12 || (blockSouth > 80 && blockSouth < 86) || blockSouth == 503 || (blockSouth > 406 && blockSouth < 440)) {vgrassSideCheck.z = 1.0;} else {
+					if(blockSouth > 4000 || blockSouth == 12 || (blockSouth > 80 && blockSouth < 86) || blockSouth == 503 || (blockSouth > 406 && blockSouth < 440)) {data_out.grassSideCheck.z = 1.0;} else {
 						#ifdef GRASS_DETECT_FALLOFF
 							blockSouth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y, LPVpos.z+ 1.0));
-							if(blockSouth != 85) {vgrassSideCheck.z = -1.0;}
+							if(blockSouth != 85) {data_out.grassSideCheck.z = -1.0;}
 						#endif
 					}
-					if(blockNorth > 4000 || blockNorth == 12 || (blockNorth > 80 && blockNorth < 86) || blockNorth == 503 || (blockNorth > 406 && blockNorth < 440)) {vgrassSideCheck.w = 1.0;} else {
+					if(blockNorth > 4000 || blockNorth == 12 || (blockNorth > 80 && blockNorth < 86) || blockNorth == 503 || (blockNorth > 406 && blockNorth < 440)) {data_out.grassSideCheck.w = 1.0;} else {
 						#ifdef GRASS_DETECT_FALLOFF
 							blockNorth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y, LPVpos.z - 1.0));
-							if(blockNorth != 85) {vgrassSideCheck.w = -1.0;}
+							if(blockNorth != 85) {data_out.grassSideCheck.w = -1.0;}
 						#endif
 					}
 					#ifndef GRASS_DETECT_INV_FALLOFF
-						vgrassSideCheck = clamp(vgrassSideCheck, -1.0, 0.0);
+						data_out.grassSideCheck = clamp(data_out.grassSideCheck, -1.0, 0.0);
 					#endif
 				}
 				#endif
 			}
 		}
 
-		vdiscardGrass = 0;
+		data_out.discardGrass = 0;
 		#if REPLACE_SHORT_GRASS > 0
 			#if GRASS_DENSITY == 3
 				float maxShortGrassRange = 28.0;
@@ -389,11 +398,11 @@ void main() {
 				float maxShortGrassRange = 16.0;
 			#endif
 
-			if(length(worldpos) < maxShortGrassRange && vblockID == 12) {
-				vcenterPosition = worldpos + at_midBlock.xyz / 64.0;
-				vec3 LPVpos = GetLpvPosition(vcenterPosition);
+			if(length(worldpos) < maxShortGrassRange && data_out.blockID == 12) {
+				data_out.centerPosition = worldpos + at_midBlock.xyz / 64.0;
+				vec3 LPVpos = GetLpvPosition(data_out.centerPosition);
 				uint blockBelow = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y - 0.6, LPVpos.z));
-				if(blockBelow == 85) vdiscardGrass = 1;
+				if(blockBelow == 85) data_out.discardGrass = 1;
 			}
 		#endif
 	#endif
@@ -422,25 +431,74 @@ void main() {
             // vec2 dir2 = normalize(UnalteredWorldpos.xz+relativeEyePosition.xz);
 
 			// apply displacement for waving plant blocks
-			worldpos += calcMovePlants(worldpos + cameraPosition) * max(vlmtexcoord.w,0.5);
+			worldpos += calcMovePlants(worldpos + cameraPosition) * max(data_out.lmtexcoord.w,0.5);
 			// worldpos.xz += playerDist*dir2;
 
 
 			// apply displacement for waving leaf blocks specifically, overwriting the other waving mode. these wave off of the air. they wave uniformly
-			if(mc_Entity.x == BLOCK_AIR_WAVING) worldpos = UnalteredWorldpos + calcMoveLeaves(worldpos + cameraPosition, 0.0040, 0.0064, 0.0043, 0.0035, 0.0037, 0.0041, vec3(1.0,0.2,1.0), vec3(0.5,0.1,0.5))*vlmtexcoord.w;
+			if(mc_Entity.x == BLOCK_AIR_WAVING) worldpos = UnalteredWorldpos + calcMoveLeaves(worldpos + cameraPosition, 0.0040, 0.0064, 0.0043, 0.0035, 0.0037, 0.0041, vec3(1.0,0.2,1.0), vec3(0.5,0.1,0.5))*data_out.lmtexcoord.w;
 		
 		}
 	#endif
 
 	// position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;
-	
-	// ensure hand/entities have the same transformations as the spidereyes and enchant glint programs.
-	#if !defined ENTITIES && !defined HAND
-		gl_Position = vec4(worldpos, 0.0);
+
+	#ifdef SHADER_GRASS
+		#if !defined ENTITIES && !defined HAND
+			gl_Position = vec4(worldpos, 0.0);
+		#endif
+
+		#ifdef BLOCKENTITIES
+			gl_Position = toClipSpace3(mat3(gbufferModelView) * vec3(worldpos) + gbufferModelView[3].xyz);
+		#endif
+	#else
+		#if defined PLANET_CURVATURE && !defined HAND
+			float curvature = length(worldpos.xyz) / (16.0*8.0);
+			worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
+		#endif
+
+		// ensure hand/entities have the same transformations as the spidereyes and enchant glint programs.
+		#if !defined ENTITIES && !defined HAND
+			gl_Position = toClipSpace3(mat3(gbufferModelView) * vec3(worldpos) + gbufferModelView[3].xyz);
+		#endif
 	#endif
 #endif
 
+	#if !defined SHADER_GRASS || defined ENTITIES || defined HAND || defined BLOCKENTITIES
+		#ifdef TAA_UPSCALING
+			gl_Position.xy = gl_Position.xy * RENDER_SCALE + RENDER_SCALE * gl_Position.w - gl_Position.w;
+		#endif
+		#ifdef TAA
+			vec2 TAA_offsets = offsets[framemod8];
+			// #ifdef HAND
+				// turn off jitter when camera moves.
+				// this is to hide the jitter when the same happens for TAA blend factor and the jitter becomes visible during camera movement
+				// gl_Position.xy += (offsets[framemod8] * gl_Position.w*texelSize) * detectCameraMovement();
+			// #else	
+				gl_Position.xy += TAA_offsets * gl_Position.w*texelSize;
+			// #endif
+		#endif
+	#endif
+
 	#if defined Seasons && defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES && !defined HAND
-		YearCycleColor(vcolor.rgb, gl_Color.rgb, mc_Entity.x == BLOCK_AIR_WAVING, true);
+		YearCycleColor(data_out.color.rgb, gl_Color.rgb, mc_Entity.x == BLOCK_AIR_WAVING, true);
+	#endif
+
+	#if DOF_QUALITY == 5 && !defined SHADER_GRASS && (defined ENTITIES || defined HAND)
+		vec2 jitter = clamp(jitter_offsets[frameCounter % 64], -1.0, 1.0);
+		jitter = rotate(radians(float(frameCounter))) * jitter;
+		jitter.y *= aspectRatio;
+		jitter.x *= DOF_ANAMORPHIC_RATIO;
+
+		#if MANUAL_FOCUS == -2
+		float focusMul = 0;
+		#elif MANUAL_FOCUS == -1
+		float focusMul = gl_Position.z - mix(pow(512.0, screenBrightness), 512.0 * screenBrightness, 0.25);
+		#else
+		float focusMul = gl_Position.z - MANUAL_FOCUS;
+		#endif
+
+		vec2 totalOffset = (jitter * JITTER_STRENGTH) * focusMul * 1e-2;
+		gl_Position.xy += hideGUI >= 1 ? totalOffset : vec2(0);
 	#endif
 }

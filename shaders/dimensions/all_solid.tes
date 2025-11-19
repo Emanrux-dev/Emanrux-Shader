@@ -2,48 +2,52 @@ layout (triangles, fractional_odd_spacing, ccw) in;
 
 #include "/lib/settings.glsl"
 
-in vec4 color[];
-in float VanillaAO[];
+in DATA {
+	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES
+		vec4 grassSideCheck;
+		vec3 centerPosition;
+	#endif
 
-in vec4 lmtexcoord[];
-in vec4 normalMat[];
+	vec4 color;
 
-#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-    in vec4 texcoordam[]; // .st for add, .pq for mul
-    in vec2 texcoord[];
+	vec4 lmtexcoord;
+	vec4 normalMat;
 
-    out vec4 vtexcoordam; // .st for add, .pq for mul
-    out vec2 vtexcoord;
-#endif
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+		vec4 texcoordam; // .st for add, .pq for mul
+		vec2 texcoord;
+	#endif
 
-#ifdef MC_NORMAL_MAP
-	in vec4 tangent[];
-#endif
+	#ifdef MC_NORMAL_MAP
+		vec4 tangent;
+	#endif
 
-flat in float blockID[];
+	flat int blockID;
+} data_in[];
 
+out DATA {
+	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES
+		vec4 grassSideCheck;
+		vec3 centerPosition;
+	#endif
 
-#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && defined WORLD
-in vec4 grassSideCheck[];
-out vec4 vgrassSideCheck;
+	vec4 color;
 
-in vec3 centerPosition[];
-out vec3 vcenterPosition;
-#endif
+	vec4 lmtexcoord;
+	vec4 normalMat;
 
-out vec4 vcolor;
-out float vVanillaAO;
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+		vec4 texcoordam; // .st for add, .pq for mul
+		vec2 texcoord;
+	#endif
 
-out vec4 vlmtexcoord;
-out vec4 vnormalMat;
+	#ifdef MC_NORMAL_MAP
+		vec4 tangent;
+	#endif
 
+	flat int blockID;
+} data_out;
 
-
-#ifdef MC_NORMAL_MAP
-	out vec4 vtangent;
-#endif
-
-flat out float vblockID;
 
 #define calcTessellation(u, v, w) (gl_TessCoord.x * u + gl_TessCoord.y * v + gl_TessCoord.z * w)
 
@@ -51,26 +55,25 @@ void main() {
 
     gl_Position = calcTessellation(gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position);
 
-    vcolor = calcTessellation(color[0], color[1], color[2]);
-    vVanillaAO = calcTessellation(VanillaAO[0], VanillaAO[1], VanillaAO[2]);
-    vlmtexcoord = calcTessellation(lmtexcoord[0], lmtexcoord[1], lmtexcoord[2]);
-    vnormalMat.rgb = calcTessellation(normalMat[0].rgb, normalMat[1].rgb, normalMat[2].rgb);
+    data_out.color = calcTessellation(data_in[0].color, data_in[1].color, data_in[2].color);
+    data_out.lmtexcoord = calcTessellation(data_in[0].lmtexcoord, data_in[1].lmtexcoord, data_in[2].lmtexcoord);
+    data_out.normalMat.rgb = calcTessellation(data_in[0].normalMat.rgb, data_in[1].normalMat.rgb, data_in[2].normalMat.rgb);
 
     #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-        vtexcoordam = calcTessellation(texcoordam[0], texcoordam[1], texcoordam[2]);
-        vtexcoord = calcTessellation(texcoord[0], texcoord[1], texcoord[2]);
+        data_out.texcoordam = calcTessellation(data_in[0].texcoordam, data_in[1].texcoordam, data_in[2].texcoordam);
+        data_out.texcoord = calcTessellation(data_in[0].texcoord, data_in[1].texcoord, data_in[2].texcoord);
     #endif
 
     #ifdef MC_NORMAL_MAP
-        vtangent = calcTessellation(tangent[0], tangent[1], tangent[2]);
+        data_out.tangent = calcTessellation(data_in[0].tangent, data_in[1].tangent, data_in[2].tangent);
     #endif
 
-    vnormalMat.a = normalMat[0].a;
-    vblockID = blockID[0];
+    data_out.normalMat.a = data_in[0].normalMat.a;
+    data_out.blockID = data_in[0].blockID;
 
     #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && defined WORLD
-        vgrassSideCheck = grassSideCheck[0];
-        vcenterPosition = centerPosition[0];
+        data_out.grassSideCheck = data_in[0].grassSideCheck;
+        data_out.centerPosition = data_in[0].centerPosition;
     #endif
 
 }

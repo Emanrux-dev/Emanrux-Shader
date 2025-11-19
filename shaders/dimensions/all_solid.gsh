@@ -3,48 +3,61 @@ layout(triangles) in;
 #include "/lib/settings.glsl"
 
 #if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+#if GRASS_QUALITY == 2
 layout(triangle_strip, max_vertices = 24) out;
+#elif GRASS_QUALITY == 1
+layout(triangle_strip, max_vertices = 18) out;
+#else
+layout(triangle_strip, max_vertices = 12) out;
+#endif
 #else
 layout(triangle_strip, max_vertices = 3) out;
 #endif
 
-in vec4 vcolor[];
-in float vVanillaAO[];
+in DATA {
+	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES
+		vec4 grassSideCheck;
+		vec3 centerPosition;
+	#endif
 
-in vec4 vlmtexcoord[];
-in vec4 vnormalMat[];
+	vec4 color;
 
-#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-    in vec4 vtexcoordam[]; // .st for add, .pq for mul
-    in vec2 vtexcoord[];
+	vec4 lmtexcoord;
+	vec4 normalMat;
 
-    out vec4 texcoordam; // .st for add, .pq for mul
-    out vec2 texcoord;
-#endif
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+		vec4 texcoordam; // .st for add, .pq for mul
+		vec2 texcoord;
+	#endif
 
-#ifdef MC_NORMAL_MAP
-	in vec4 vtangent[];
-#endif
+	#ifdef MC_NORMAL_MAP
+		vec4 tangent;
+	#endif
 
-flat in float vblockID[];
+	flat int blockID;
+} data_in[];
 
-#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
-    in vec4 vgrassSideCheck[];
-    in vec3 vcenterPosition[];
-    out vec3 GrassNormals;
-#endif
+out DATA {
+	vec4 color;
 
-out vec4 color;
-out float VanillaAO;
+	vec4 lmtexcoord;
+	vec4 normalMat;
 
-out vec4 lmtexcoord;
-out vec4 normalMat;
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+		vec4 texcoordam; // .st for add, .pq for mul
+		vec2 texcoord;
+	#endif
 
-#ifdef MC_NORMAL_MAP
-	out vec4 tangent;
-#endif
+    #if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+        vec3 GrassNormals;
+    #endif
 
-flat out float blockID;
+	#ifdef MC_NORMAL_MAP
+		vec4 tangent;
+	#endif
+
+	flat int blockID;
+} data_out;
 
 
 #define diagonal3(m) vec3((m)[0].x, (m)[1].y, m[2].z)
@@ -67,6 +80,8 @@ uniform float screenBrightness;
 uniform mat4 gbufferModelView;
 uniform mat4 gbufferModelViewInverse;
 uniform vec3 cameraPosition;
+uniform ivec3 cameraPositionInt;
+uniform vec3 cameraPositionFract;
 uniform int framemod8;
 uniform vec2 texelSize;
 uniform float frameTimeCounter;
@@ -107,75 +122,77 @@ vec3 calculateNormal(vec3 v0, vec3 v1, vec3 v2) {
 
 void main() {
 
-    vec2 TAA_offsets = offsets[framemod8];
+    #ifdef SHADER_GRASS
+        vec2 TAA_offsets = offsets[framemod8];
+    #endif
     
     int i;
 
     #if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
-        GrassNormals = vec3(0.0, 1.0, 0.0);
+        data_out.GrassNormals = vec3(0.0, 1.0, 0.0);
     #endif
 
     for (i = 0; i < 3; i++)
 	{
 		vec4 vertex = gl_in[i].gl_Position;
 
-        #if defined PLANET_CURVATURE && !defined HAND
-            float curvature = length(vertex.xyz) / (16.0*8.0);
-            vertex.y -= curvature*curvature * CURVATURE_AMOUNT;
-        #endif
+        #ifdef SHADER_GRASS
+            #if defined PLANET_CURVATURE && !defined HAND
+                float curvature = length(vertex.xyz) / (16.0*8.0);
+                vertex.y -= curvature*curvature * CURVATURE_AMOUNT;
+            #endif
 
-        #if !defined ENTITIES && !defined HAND
-        vertex = toClipSpace3(mat3(gbufferModelView) * vec3(vertex) + gbufferModelView[3].xyz);
+            #if !defined ENTITIES && !defined HAND
+                vertex = toClipSpace3(mat3(gbufferModelView) * vec3(vertex) + gbufferModelView[3].xyz);
+            #endif
+
+            #ifdef TAA_UPSCALING
+                vertex.xy = vertex.xy * RENDER_SCALE + RENDER_SCALE * vertex.w - vertex.w;
+            #endif
+            #ifdef TAA
+                // #ifdef HAND
+                    // turn off jitter when camera moves.
+                    // this is to hide the jitter when the same happens for TAA blend factor and the jitter becomes visible during camera movement
+                    // gl_Position.xy += (offsets[framemod8] * gl_Position.w*texelSize) * detectCameraMovement();
+                // #else	
+                    vertex.xy += TAA_offsets * vertex.w*texelSize;
+                // #endif
+            #endif
+
+            #if DOF_QUALITY == 5
+                vec2 jitter = clamp(jitter_offsets[frameCounter % 64], -1.0, 1.0);
+                jitter = rotate(radians(float(frameCounter))) * jitter;
+                jitter.y *= aspectRatio;
+                jitter.x *= DOF_ANAMORPHIC_RATIO;
+
+                #if MANUAL_FOCUS == -2
+                float focusMul = 0;
+                #elif MANUAL_FOCUS == -1
+                float focusMul = vertex.z - mix(pow(512.0, screenBrightness), 512.0 * screenBrightness, 0.25);
+                #else
+                float focusMul = vertex.z - MANUAL_FOCUS;
+                #endif
+
+                vec2 totalOffset = (jitter * JITTER_STRENGTH) * focusMul * 1e-2;
+                vertex.xy += hideGUI >= 1 ? totalOffset : vec2(0);
+            #endif
         #endif
 
         gl_Position = vertex;
 
-        #ifdef TAA_UPSCALING
-            gl_Position.xy = gl_Position.xy * RENDER_SCALE + RENDER_SCALE * gl_Position.w - gl_Position.w;
-        #endif
-        #ifdef TAA
-            // #ifdef HAND
-                // turn off jitter when camera moves.
-                // this is to hide the jitter when the same happens for TAA blend factor and the jitter becomes visible during camera movement
-                // gl_Position.xy += (offsets[framemod8] * gl_Position.w*texelSize) * detectCameraMovement();
-            // #else	
-                gl_Position.xy += TAA_offsets * gl_Position.w*texelSize;
-            // #endif
-        #endif
-
-
-        #if DOF_QUALITY == 5
-            vec2 jitter = clamp(jitter_offsets[frameCounter % 64], -1.0, 1.0);
-            jitter = rotate(radians(float(frameCounter))) * jitter;
-            jitter.y *= aspectRatio;
-            jitter.x *= DOF_ANAMORPHIC_RATIO;
-
-            #if MANUAL_FOCUS == -2
-            float focusMul = 0;
-            #elif MANUAL_FOCUS == -1
-            float focusMul = gl_Position.z - mix(pow(512.0, screenBrightness), 512.0 * screenBrightness, 0.25);
-            #else
-            float focusMul = gl_Position.z - MANUAL_FOCUS;
-            #endif
-
-            vec2 totalOffset = (jitter * JITTER_STRENGTH) * focusMul * 1e-2;
-            gl_Position.xy += hideGUI >= 1 ? totalOffset : vec2(0);
-        #endif
-
-        color = vcolor[i];
-        VanillaAO = vVanillaAO[i];
-        lmtexcoord = vlmtexcoord[i];
-        normalMat = vnormalMat[i];
+        data_out.color = data_in[i].color;
+        data_out.lmtexcoord = data_in[i].lmtexcoord;
+        data_out.normalMat = data_in[i].normalMat;
 
         #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-            texcoordam = vtexcoordam[i];
-            texcoord = vtexcoord[i];
+            data_out.texcoordam = data_in[i].texcoordam;
+            data_out.texcoord = data_in[i].texcoord;
         #endif
 
         #ifdef MC_NORMAL_MAP
-        tangent = vtangent[i];
+            data_out.tangent = data_in[i].tangent;
         #endif
-        blockID = vblockID[i];
+        data_out.blockID = data_in[i].blockID;
 
         #ifdef COLORWHEEL
             clrwl_setVertexOut(i);
@@ -199,15 +216,15 @@ void main() {
         #endif
 
         #ifdef MC_NORMAL_MAP
-            vec3 normals = viewToWorld(vnormalMat[1].xyz);
+            vec3 normals = viewToWorld(data_in[1].normalMat.xyz);
         #else
             const vec3 normals = vec3(0.0, 1.0, 0.0);
         #endif
 
         #if REPLACE_SHORT_GRASS == 2
-            if (vblockID[1] == 85 && normals.y > 0.9 && vertexDist < GRASS_RANGE && vgrassSideCheck[0].x > 1.5)
+            if (data_in[1].blockID == 85 && normals.y > 0.9 && vertexDist < GRASS_RANGE && data_in[0].grassSideCheck.x > 1.5)
         #else
-            if (vblockID[1] == 85 && normals.y > 0.9 && vertexDist < GRASS_RANGE)
+            if (data_in[1].blockID == 85 && normals.y > 0.9 && vertexDist < GRASS_RANGE)
         #endif
         {
             #if GRASS_QUALITY == 2
@@ -228,20 +245,20 @@ void main() {
             #endif
 
 
-            float eastHeightMult = pow(clamp(abs(vgrassSideCheck[0].x) * abs(vertex.x-(vcenterPosition[0].x-0.5)), 0.0, 1.0), 2.0);
-            float westHeightMult = pow(clamp(abs(vgrassSideCheck[0].y) * abs(vertex.x-(vcenterPosition[0].x+0.5)), 0.0, 1.0), 2.0);
-            float southHeightMult = pow(clamp(abs(vgrassSideCheck[0].z) * abs(vertex.z-(vcenterPosition[0].z-0.5)), 0.0, 1.0), 2.0);
-            float northHeightMult = pow(clamp(abs(vgrassSideCheck[0].w) * abs(vertex.z-(vcenterPosition[0].z+0.5)), 0.0, 1.0), 2.0);
+            float eastHeightMult = pow(clamp(abs(data_in[0].grassSideCheck.x) * abs(vertex.x-(data_in[0].centerPosition.x-0.5)), 0.0, 1.0), 2.0);
+            float westHeightMult = pow(clamp(abs(data_in[0].grassSideCheck.y) * abs(vertex.x-(data_in[0].centerPosition.x+0.5)), 0.0, 1.0), 2.0);
+            float southHeightMult = pow(clamp(abs(data_in[0].grassSideCheck.z) * abs(vertex.z-(data_in[0].centerPosition.z-0.5)), 0.0, 1.0), 2.0);
+            float northHeightMult = pow(clamp(abs(data_in[0].grassSideCheck.w) * abs(vertex.z-(data_in[0].centerPosition.z+0.5)), 0.0, 1.0), 2.0);
 
-            eastHeightMult *= normalize(vgrassSideCheck[0].x);
-            westHeightMult *= normalize(vgrassSideCheck[0].y);
-            southHeightMult *= normalize(vgrassSideCheck[0].z);
-            northHeightMult *= normalize(vgrassSideCheck[0].w);
+            eastHeightMult *= normalize(data_in[0].grassSideCheck.x);
+            westHeightMult *= normalize(data_in[0].grassSideCheck.y);
+            southHeightMult *= normalize(data_in[0].grassSideCheck.z);
+            northHeightMult *= normalize(data_in[0].grassSideCheck.w);
 
             float totalHeightMult = 0.5*clamp(eastHeightMult + westHeightMult + southHeightMult + northHeightMult, -1.0*BASE_GRASS_HEIGHT*BASE_GRASS_HEIGHT, 1.0*SHORT_GRASS_HEIGHT) + 1.0*BASE_GRASS_HEIGHT;
             heightMult *= totalHeightMult;
 
-            if(abs(vgrassSideCheck[0].x) > 1.5) { 
+            if(abs(data_in[0].grassSideCheck.x) > 1.5) { 
                 eastHeightMult = 0.0;
                 westHeightMult = 0.0;
                 southHeightMult = 0.0;
@@ -255,9 +272,9 @@ void main() {
             float playerDist = smoothstep(0.5, 0.05, length(offsetPos.xz)) * smoothstep(1.0, 0.2, abs(offsetPos.y));
             vec2 dir2 = normalize(vertex.xz+relativeEyePosition.xz);
 
-            vec2 Wvertex = vertex.xz+cameraPosition.xz;
+            vec2 Wvertex = vertex.xz+cameraPositionFract.xz+mod(vec2(cameraPositionInt.xz), vec2(20.0));
 
-            vec2 randomDir = 2.0*(texture2D(noisetex, fract(GRASS_NOISE1_SCALE*Wvertex)).xy+texture2D(noisetex, fract(GRASS_NOISE2_SCALE*Wvertex.yx)).xy)-1.0;
+            vec2 randomDir = 2.0*(texture2D(noisetex, 0.75*Wvertex).xy+texture2D(noisetex, 0.35*Wvertex.yx).xy)-1.0;
             // vertex.xz -= 0.05*randomDir;
 
 
@@ -369,30 +386,29 @@ void main() {
 
                     float heightfade = smoothstep(-0.35, 1.0, grassHeights[3*j+i]);
 
-                    color = vcolor[i]*heightfade;
+                    data_out.color = data_in[i].color*heightfade;
 
-                    if (vcolor[i].rgb == vec3(1.0)) color.rgb = vec3(0.22,0.32,0.11)*heightfade;
+                    if (data_in[i].color.rgb == vec3(1.0)) data_out.color.rgb = vec3(0.22,0.32,0.11)*heightfade;
 
-                    VanillaAO = vVanillaAO[i];
-                    lmtexcoord = vlmtexcoord[i];
-                    normalMat.a = 0.4;
+                    data_out.lmtexcoord = data_in[i].lmtexcoord;
+                    data_out.normalMat.a = 0.4;
 
                     #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-                        texcoordam = vtexcoordam[i];
-                        texcoord = vtexcoord[i];
+                        data_out.texcoordam = data_in[i].texcoordam;
+                        data_out.texcoord = data_in[i].texcoord;
                     #endif
 
                     #ifdef MC_NORMAL_MAP
-                        tangent = vtangent[i];
+                        data_out.tangent = data_in[i].tangent;
                     
-                        normalMat.xyz = GrassNormal[j];
+                        data_out.normalMat.xyz = GrassNormal[j];
 
                         heightfade = smoothstep(0.1, grassHeights[triangle_count], grassHeights[3*j+i]);
                     #endif
 
-                    GrassNormals = normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade)));
+                    data_out.GrassNormals = normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade)));
 
-                    blockID = -15.0;
+                    data_out.blockID = -15;
 
                     EmitVertex();
                 }

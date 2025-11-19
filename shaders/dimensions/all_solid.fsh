@@ -20,9 +20,28 @@
 #define MC_NORMAL_MAP
 #endif
 
-#ifndef COLORWHEEL
-	in float VanillaAO;
-#endif
+
+in DATA {
+	vec4 color;
+
+	vec4 lmtexcoord;
+	vec4 normalMat;
+
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+		vec4 texcoordam; // .st for add, .pq for mul
+		vec2 texcoord;
+	#endif
+
+    #if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+        vec3 GrassNormals;
+    #endif
+
+	#ifdef MC_NORMAL_MAP
+		vec4 tangent;
+	#endif
+
+	flat int blockID;
+} data_in;
 
 const float mincoord = 1.0/4096.0;
 const float maxcoord = 1.0-mincoord;
@@ -35,33 +54,23 @@ uniform vec2 texelSize;
 uniform int framemod8;
 
 #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-	in vec4 texcoordam; // .st for add, .pq for mul
-	in vec2 texcoord;
-
-	vec2 dcdx = dFdx(texcoord.st*texcoordam.pq)*exp2(Texture_MipMap_Bias);
-	vec2 dcdy = dFdy(texcoord.st*texcoordam.pq)*exp2(Texture_MipMap_Bias);
+	vec2 dcdx = dFdx(data_in.texcoord.st*data_in.texcoordam.pq)*exp2(Texture_MipMap_Bias);
+	vec2 dcdy = dFdy(data_in.texcoord.st*data_in.texcoordam.pq)*exp2(Texture_MipMap_Bias);
 #else
 	const vec2 dcdx = vec2(0.0);
 	const vec2 dcdy = vec2(0.0);
 #endif
 
 #include "/lib/res_params.glsl"
-in vec4 lmtexcoord;
 
-in vec4 color;
 
 uniform float far;
 
-in vec4 normalMat;
 
 #ifdef MC_NORMAL_MAP
 	uniform sampler2D normals;
-	in vec4 tangent;
 #endif
 
-#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
-	in vec3 GrassNormals;
-#endif
 
 uniform sampler2D specular;
 uniform sampler2D gtexture;
@@ -88,8 +97,6 @@ uniform sampler2D depthtex0;
 uniform vec4 entityColor;
 
 // in vec3 velocity;
-
-flat in float blockID;
 
 uniform int heldItemId;
 uniform int heldItemId2;
@@ -204,11 +211,11 @@ vec3 toClipSpace3(vec3 viewSpacePosition) {
 #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	vec4 readNormal(in vec2 coord)
 	{
-		return texture2DGradARB(normals,fract(coord)*texcoordam.pq+texcoordam.st,dcdx,dcdy);
+		return texture2DGradARB(normals,fract(coord)*data_in.texcoordam.pq+data_in.texcoordam.st,dcdx,dcdy);
 	}
 	vec4 readTexture(in vec2 coord)
 	{
-		return texture2DGradARB(gtexture,fract(coord)*texcoordam.pq+texcoordam.st,dcdx,dcdy);
+		return texture2DGradARB(gtexture,fract(coord)*data_in.texcoordam.pq+data_in.texcoordam.st,dcdx,dcdy);
 	}
 #endif
 
@@ -327,39 +334,37 @@ void main() {
 		convertHandDepth(FragCoord.z);
 	#endif
 	
-	bool ifPOM = false;
-
 	#ifdef POM
-		ifPOM = true;
+		bool ifPOM = true;
+	#else
+		bool ifPOM = false;
 	#endif
 
 	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
-		bool ShaderGrass = blockID == -15.0;
-		if(ShaderGrass) ifPOM = false;
+		bool ShaderGrass = data_in.blockID == -15;
+		ifPOM = !ShaderGrass;
 	#else
 		bool ShaderGrass = false;
 	#endif
 
-	bool SIGN = false;
-
-	if(blockID == BLOCK_SIGN) SIGN = true;
+	bool SIGN = data_in.blockID == BLOCK_SIGN;
 
 	#ifdef ENTITIES
 		// disallow POM to work on item frames.
-		if(blockID == ENTITY_ITEM_FRAME) SIGN = true;
+		SIGN = data_in.blockID == ENTITY_ITEM_FRAME;
 	#else
-		if(blockID == BLOCK_SIGN) SIGN = true;
+		SIGN = data_in.blockID == BLOCK_SIGN;
 	#endif
 
-	if(SIGN) ifPOM = false;
+	ifPOM = !SIGN;
 
-	vec3 normal = normalMat.xyz;
+	vec3 normal = data_in.normalMat.xyz;
 
 	#ifdef MC_NORMAL_MAP
-		vec3 binormal = normalize(cross(tangent.rgb,normal)*tangent.w);
-		mat3 tbnMatrix = mat3(tangent.x, binormal.x, normal.x,
-							  tangent.y, binormal.y, normal.y,
-							  tangent.z, binormal.z, normal.z);
+		vec3 binormal = normalize(cross(data_in.tangent.rgb,normal)*data_in.tangent.w);
+		mat3 tbnMatrix = mat3(data_in.tangent.x, binormal.x, normal.x,
+							  data_in.tangent.y, binormal.y, normal.y,
+							  data_in.tangent.z, binormal.z, normal.z);
 	#endif
 
 	vec2 tempOffset = offsets[framemod8];
@@ -368,13 +373,13 @@ void main() {
 	vec3 playerpos = mat3(gbufferModelViewInverse) * fragpos  + gbufferModelViewInverse[3].xyz;
 	vec3 worldpos = playerpos + cameraPosition;
 
-	vec2 adjustedTexCoord = lmtexcoord.xy;
+	vec2 adjustedTexCoord = data_in.lmtexcoord.xy;
 
 #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	// vec2 tempOffset=offsets[framemod8];
 	
 	#ifndef COLORWHEEL
-		adjustedTexCoord = fract(texcoord.st)*texcoordam.pq+texcoordam.st;
+		adjustedTexCoord = fract(data_in.texcoord.st)*data_in.texcoordam.pq+data_in.texcoordam.st;
 	#endif
 
 	// vec3 fragpos = toScreenSpace(gl_FragCoord.xyz*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize*0.5,0.0));
@@ -397,7 +402,7 @@ void main() {
 	 if (falloff > 0.0)
 	#endif
 	{
-		float depthmap = readNormal(texcoord.st).a;
+		float depthmap = readNormal(data_in.texcoord.st).a;
 		float used_POM_DEPTH = 1.0;
 		float pomdepth = POM_DEPTH*falloff;
 
@@ -409,7 +414,7 @@ void main() {
 			#else
 				vec3 interval = viewVector.xyz /-viewVector.z/MAX_OCCLUSION_POINTS*pomdepth;
 			#endif
-			vec3 coord = vec3(texcoord.st , 1.0);
+			vec3 coord = vec3(data_in.texcoord.st , 1.0);
 
 			coord += interval * noise * used_POM_DEPTH;
 
@@ -426,7 +431,7 @@ void main() {
 				}
 			}
 			
-			adjustedTexCoord = mix(fract(coord.st)*texcoordam.pq+texcoordam.st, adjustedTexCoord, max(dist-MIX_OCCLUSION_DISTANCE,0.0)/(MAX_OCCLUSION_DISTANCE-MIX_OCCLUSION_DISTANCE));
+			adjustedTexCoord = mix(fract(coord.st)*data_in.texcoordam.pq+data_in.texcoordam.st, adjustedTexCoord, max(dist-MIX_OCCLUSION_DISTANCE,0.0)/(MAX_OCCLUSION_DISTANCE-MIX_OCCLUSION_DISTANCE));
 
 			vec3 truePos = fragpos + sumVec*inverseMatrix(tbnMatrix)*interval;
 
@@ -434,7 +439,7 @@ void main() {
 		}
 	}
 #endif
-	if(!ifPOM) adjustedTexCoord = lmtexcoord.xy;
+	if(!ifPOM) adjustedTexCoord = data_in.lmtexcoord.xy;
 	
 
 	//////////////////////////////// 				////////////////////////////////
@@ -443,10 +448,15 @@ void main() {
 
 	float textureLOD = bias();
 
-	vec2 lmcoord = lmtexcoord.zw;
+	vec2 lmcoord = data_in.lmtexcoord.zw;
 
 	#ifndef COLORWHEEL
-		vec4 Albedo = color;
+		vec4 Color = data_in.color;
+		float vanillaAO = 1.0 - clamp(Color.a,0,1);
+		if (Color.a < 0.3) Color.a = 1.0; // fix vanilla ao on some custom block models.
+
+		vec4 Albedo = Color;
+		
 		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && defined WORLD
 		if (!ShaderGrass)
 		#endif
@@ -456,16 +466,20 @@ void main() {
 	#else
 		vec4 Albedo = texture2D_POMSwitch(gtexture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
 		vec4 overlayColor;
-		float VanillaAO;
+		float vanillaAO;
 
-		clrwl_computeFragment(Albedo, Albedo, lmcoord, VanillaAO, overlayColor);
+		clrwl_computeFragment(Albedo, Albedo, lmcoord, vanillaAO, overlayColor);
 		lmcoord = clamp((lmcoord - 1.0 / 32.0) * 32.0 / 30.0, 0.0, 1.0);
-		VanillaAO = 1.0 - clamp(VanillaAO, 0,1);
+		vanillaAO = 1.0 - clamp(vanillaAO, 0,1);
+	#endif
+
+	#ifdef WORLD
+		vec3 flatNormals = viewToWorld(normal);
 	#endif
 
 	#if REPLACE_SHORT_GRASS < 2 && !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 		// darken the top of grass blocks a bit
-		if(blockID == 85 && viewToWorld(normalMat.xyz).y > abs(0.9) && !ShaderGrass) Albedo *= smoothstep(-30.0, 25.0, length(playerpos));
+		if(data_in.blockID == 85 && flatNormals.y > abs(0.9) && !ShaderGrass) Albedo *= smoothstep(-30.0, 25.0, length(playerpos));
 	#endif
 
 	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
@@ -509,8 +523,7 @@ void main() {
 	#endif
 	
 	#if defined WORLD && !defined ENTITIES && !defined HAND && defined BLOCKENTITIES && !defined COLORWHEEL
-		bool PORTAL = false;
-		if(blockID == BLOCK_END_PORTAL || blockID == 187) PORTAL = true;
+		bool PORTAL = data_in.blockID == BLOCK_END_PORTAL || data_in.blockID == 187;
 
 		float endPortalEmission = 0.0;
 		if(PORTAL) {
@@ -519,7 +532,7 @@ void main() {
 			vec3 color = vec3(0.0);
 			float absorbance = 1.0;
 
-			vec3 worldSpaceNormal = viewToWorld(normal);
+			vec3 worldSpaceNormal = flatNormals;
 
 			vec3 viewVec = normalize(tbnMatrix*fragpos);
 			vec3 correctedViewVec = viewVec;
@@ -576,26 +589,26 @@ void main() {
 	#ifdef AEROCHROME_MODE
 		float gray = dot(Albedo.rgb, vec3(0.2, 1.0, 0.07));
 		if (
-			blockID == BLOCK_AMETHYST_BUD_MEDIUM || blockID == BLOCK_AMETHYST_BUD_LARGE || blockID == BLOCK_AMETHYST_CLUSTER 
-			|| blockID == BLOCK_SSS_STRONG || blockID == BLOCK_SSS_WEAK
-			|| blockID == BLOCK_GLOW_LICHEN || blockID == BLOCK_SNOW_LAYERS
-			|| blockID >= 10 && blockID < 80
+			data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER 
+			|| data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_SSS_WEAK
+			|| data_in.blockID == BLOCK_GLOW_LICHEN || data_in.blockID == BLOCK_SNOW_LAYERS
+			|| data_in.blockID >= 10 && data_in.blockID < 80
 		) {
 			// IR Reflective (Pink-red)
 			Albedo.rgb = mix(vec3(gray), aerochrome_color, 0.7);
 		}
-		else if(blockID == BLOCK_GRASS) {
+		else if(data_in.blockID == BLOCK_GRASS) {
 		// Special handling for grass block
-			float strength = 1.0 - color.b;
+			float strength = 1.0 - Color.b;
 			Albedo.rgb = mix(Albedo.rgb, aerochrome_color, strength);
 		}
 		#ifdef AEROCHROME_WOOL_ENABLED
-			else if (blockID == BLOCK_SSS_WEAK_2 || blockID == BLOCK_CARPET) {
+			else if (data_in.blockID == BLOCK_SSS_WEAK_2 || data_in.blockID == BLOCK_CARPET) {
 			// Wool
 				Albedo.rgb = mix(Albedo.rgb, aerochrome_color, 0.3);
 			}
 		#endif
-		else if(blockID == BLOCK_WATER || (blockID >= 300 && blockID < 400))
+		else if(data_in.blockID == BLOCK_WATER || (data_in.blockID >= 300 && data_in.blockID < 400))
 		{
 		// IR Absorbsive? Dark.
 			Albedo.rgb = mix(Albedo.rgb, vec3(0.01, 0.08, 0.15), 0.5);
@@ -603,7 +616,7 @@ void main() {
 	#endif
 
 	#ifdef WORLD
-		if (Albedo.a > 0.1) Albedo.a = normalMat.a;
+		if (Albedo.a > 0.1) Albedo.a = data_in.normalMat.a;
 		else Albedo.a = 0.0;
 	#endif
 
@@ -662,23 +675,23 @@ void main() {
 			/////// ----- SSS ON BLOCKS ----- ///////
 			// strong
 			if (
-				blockID == BLOCK_SSS_STRONG || blockID == BLOCK_SAPLING || blockID == BLOCK_AIR_WAVING
+				data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_SAPLING || data_in.blockID == BLOCK_AIR_WAVING
 			) {
 				SSSAMOUNT = 1.0;
 			}
 
 			// medium
 			if (
-				blockID == BLOCK_GROUND_WAVING || blockID == BLOCK_GROUND_WAVING_VERTICAL
-				|| blockID == BLOCK_GRASS_SHORT || blockID == BLOCK_GRASS_TALL_UPPER || blockID == BLOCK_GRASS_TALL_LOWER
+				data_in.blockID == BLOCK_GROUND_WAVING || data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL
+				|| data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_UPPER || data_in.blockID == BLOCK_GRASS_TALL_LOWER
 			) {
 				SSSAMOUNT = 0.5;
 			}
 			if (
-				blockID == BLOCK_SSS_WEAK || blockID == BLOCK_SSS_WEAK_2 ||
-				blockID == BLOCK_GLOW_LICHEN || blockID == BLOCK_SNOW_LAYERS || blockID == BLOCK_CARPET ||
-				blockID == BLOCK_AMETHYST_BUD_MEDIUM || blockID == BLOCK_AMETHYST_BUD_LARGE || blockID == BLOCK_AMETHYST_CLUSTER ||
-				blockID == BLOCK_BAMBOO || blockID == BLOCK_SAPLING || blockID == BLOCK_VINE || blockID == BLOCK_VINE_OTHER
+				data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_SSS_WEAK_2 ||
+				data_in.blockID == BLOCK_GLOW_LICHEN || data_in.blockID == BLOCK_SNOW_LAYERS || data_in.blockID == BLOCK_CARPET ||
+				data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER ||
+				data_in.blockID == BLOCK_BAMBOO || data_in.blockID == BLOCK_SAPLING || data_in.blockID == BLOCK_VINE || data_in.blockID == BLOCK_VINE_OTHER
 			) {
 				SSSAMOUNT = 0.5;
 			}
@@ -686,7 +699,7 @@ void main() {
 			// low
 			#ifdef MISC_BLOCK_SSS
 				if(
-					blockID == BLOCK_SSS_WEIRD || blockID == BLOCK_GRASS
+					data_in.blockID == BLOCK_SSS_WEIRD || data_in.blockID == BLOCK_GRASS
 				){
 					SSSAMOUNT = 0.5;
 				}
@@ -696,12 +709,12 @@ void main() {
 				#ifdef MOB_SSS
 					/////// ----- SSS ON MOBS----- ///////
 					// strong
-					if(blockID == ENTITY_SSS_MEDIUM) SSSAMOUNT = 0.75;
+					if(data_in.blockID == ENTITY_SSS_MEDIUM) SSSAMOUNT = 0.75;
 			
 					// medium
 			
 					// low
-					if(blockID == ENTITY_SSS_WEAK || blockID == ENTITY_PLAYER) SSSAMOUNT = 0.4;
+					if(data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER) SSSAMOUNT = 0.4;
 				#endif
 			#endif
 
@@ -710,7 +723,7 @@ void main() {
 				// strong
 
 				// medium
-				if(blockID == BLOCK_SSS_WEAK_3) SSSAMOUNT = 0.4;
+				if(data_in.blockID == BLOCK_SSS_WEAK_3) SSSAMOUNT = 0.4;
 
 				// low
 
@@ -724,26 +737,26 @@ void main() {
 			// if(vNameTags > 0) EMISSIVE = 0.9;
 
 			// normal block lightsources
-			if(blockID >= 100 && blockID < 300) EMISSIVE = 0.5;
+			if(data_in.blockID >= 100 && data_in.blockID < 300) EMISSIVE = 0.5;
 
-			if(blockID == 266 || blockID == 497) EMISSIVE = 0.2; // sculk stuff
+			if(data_in.blockID == 266 || data_in.blockID == 497) EMISSIVE = 0.2; // sculk stuff
 
-			if(blockID == 195) EMISSIVE = 2.3; // glow lichen
+			if(data_in.blockID == 195) EMISSIVE = 2.3; // glow lichen
 
-			if(blockID == 185) EMISSIVE = 1.5; // crying obsidian
+			if(data_in.blockID == 185) EMISSIVE = 1.5; // crying obsidian
 
-			if(blockID == 105) EMISSIVE = 2.0; // brewing stand
+			if(data_in.blockID == 105) EMISSIVE = 2.0; // brewing stand
 			
-			if(blockID == 236) EMISSIVE = 1.0; // respawn anchor
+			if(data_in.blockID == 236) EMISSIVE = 1.0; // respawn anchor
 
-			if(blockID == 101) EMISSIVE = 0.7; // large amethyst bud
+			if(data_in.blockID == 101) EMISSIVE = 0.7; // large amethyst bud
 
-			if(blockID == 103) EMISSIVE = 1.0; // amethyst cluster
+			if(data_in.blockID == 103) EMISSIVE = 1.0; // amethyst cluster
 
-			if(blockID == 244) EMISSIVE = 1.5; // soul fire
+			if(data_in.blockID == 244) EMISSIVE = 1.5; // soul fire
 
 			#ifdef EMISSIVE_ORES
-				if(blockID == 502) EMISSIVE = EMISSIVE_ORES_STRENGTH;
+				if(data_in.blockID == 502) EMISSIVE = EMISSIVE_ORES_STRENGTH;
 			#endif
 		#endif
 
@@ -829,17 +842,15 @@ void main() {
 
 		normal = viewToWorld(normal);
 
-		vec3 flatNormals = viewToWorld(normalMat.xyz);
-
 		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
-			if (ShaderGrass) {flatNormals = normalMat.xyz; normal = GrassNormals;}
+			if (ShaderGrass) {flatNormals = data_in.normalMat.xyz; normal = data_in.GrassNormals;}
 		#endif
 
 		vec4 data1 = clamp( encode(normal, PackLightmaps), 0.0, 1.0);
 
 		gl_FragData[0] = vec4(encodeVec2(Albedo.x,data1.x),	encodeVec2(Albedo.y,data1.y),	encodeVec2(Albedo.z,data1.z),	encodeVec2(data1.w,Albedo.w));
 
-		gl_FragData[2] = vec4(flatNormals * 0.5 + 0.5, VanillaAO);	
+		gl_FragData[2] = vec4(flatNormals * 0.5 + 0.5, vanillaAO);
 	#endif
 	
 }

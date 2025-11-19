@@ -71,3 +71,8 @@ Note: With default settings there is at least one guaranteed eclipse per ingame 
  - locate the `green "code" button` on this page. this button is NOT in the `releases` page.
  - click the `green "code" button` and select `"download zip"`.
  - once the zip file finishes downloading, install it like a normal shader. you do NOT need to unzip/extract/decompress.
+
+# You want MOAR performance?
+ Delete the gbuffers_terrain.tcs and gbuffers_terrain.tes files for all world folders in the shaders.
+ This will make the shader grass setting non functional BUT will increase performance, especially with high vanilla render distances!
+ (If you're wondering why, Iris does NOT allow me to disable these files once they're there. So even when Shader Grass is disabled these execute and harm performance!)

@@ -2,45 +2,52 @@ layout (vertices=3) out;
 
 #include "/lib/settings.glsl"
 
-in vec4 vcolor[];
-in float vVanillaAO[];
+in DATA {
+	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES
+		vec4 grassSideCheck;
+		vec3 centerPosition;
+		int discardGrass;
+	#endif
 
-in vec4 vlmtexcoord[];
-in vec4 vnormalMat[];
+	vec4 color;
 
-#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-    in vec4 vtexcoordam[]; // .st for add, .pq for mul
-    in vec2 vtexcoord[];
+	vec4 lmtexcoord;
+	vec4 normalMat;
 
-    out vec4 texcoordam[]; // .st for add, .pq for mul
-    out vec2 texcoord[];
-#endif
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+		vec4 texcoordam; // .st for add, .pq for mul
+		vec2 texcoord;
+	#endif
 
-#ifdef MC_NORMAL_MAP
-	in vec4 vtangent[];
-#endif
+	#ifdef MC_NORMAL_MAP
+		vec4 tangent;
+	#endif
 
-flat in float vblockID[];
+	flat int blockID;
+} data_in[];
 
-#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && defined WORLD
-    flat in int vdiscardGrass[];
-    in vec4 vgrassSideCheck[];
-    out vec4 grassSideCheck[];
-    in vec3 vcenterPosition[];
-    out vec3 centerPosition[];
-#endif
+out DATA {
+	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES
+		vec4 grassSideCheck;
+		vec3 centerPosition;
+	#endif
 
-out vec4 color[];
-out float VanillaAO[];
+	vec4 color;
 
-out vec4 lmtexcoord[];
-out vec4 normalMat[];
+	vec4 lmtexcoord;
+	vec4 normalMat;
 
-#ifdef MC_NORMAL_MAP
-	out vec4 tangent[];
-#endif
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+		vec4 texcoordam; // .st for add, .pq for mul
+		vec2 texcoord;
+	#endif
 
-flat out float blockID[];
+	#ifdef MC_NORMAL_MAP
+		vec4 tangent;
+	#endif
+
+	flat int blockID;
+} data_out[];
 
 uniform mat4 gbufferModelViewInverse;
 uniform vec3 cameraPosition;
@@ -57,31 +64,30 @@ void main() {
 
     gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 
-    color[gl_InvocationID] = vcolor[gl_InvocationID];
-    VanillaAO[gl_InvocationID] = vVanillaAO[gl_InvocationID];
-    lmtexcoord[gl_InvocationID] = vlmtexcoord[gl_InvocationID];
-    normalMat[gl_InvocationID] = vnormalMat[gl_InvocationID];
+    data_out[gl_InvocationID].color = data_in[gl_InvocationID].color;
+    data_out[gl_InvocationID].lmtexcoord = data_in[gl_InvocationID].lmtexcoord;
+    data_out[gl_InvocationID].normalMat = data_in[gl_InvocationID].normalMat;
 
     #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-        texcoordam[gl_InvocationID] = vtexcoordam[gl_InvocationID];
-        texcoord[gl_InvocationID] = vtexcoord[gl_InvocationID];
+        data_out[gl_InvocationID].texcoordam = data_in[gl_InvocationID].texcoordam;
+        data_out[gl_InvocationID].texcoord = data_in[gl_InvocationID].texcoord;
     #endif
 
     #ifdef MC_NORMAL_MAP
-        tangent[gl_InvocationID] = vtangent[gl_InvocationID];
+        data_out[gl_InvocationID].tangent = data_in[gl_InvocationID].tangent;
     #endif
 
-    blockID[gl_InvocationID] = vblockID[gl_InvocationID];
+    data_out[gl_InvocationID].blockID = data_in[gl_InvocationID].blockID;
 
     if(gl_InvocationID == 0) {
     #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && defined WORLD
 
-        grassSideCheck[gl_InvocationID] = vgrassSideCheck[gl_InvocationID];
+        data_out[gl_InvocationID].grassSideCheck = data_in[gl_InvocationID].grassSideCheck;
 
-        centerPosition[gl_InvocationID] = vcenterPosition[gl_InvocationID];
+        data_out[gl_InvocationID].centerPosition = data_in[gl_InvocationID].centerPosition;
 
         #ifdef MC_NORMAL_MAP
-            vec3 normals = viewToWorld(vnormalMat[0].xyz);
+            vec3 normals = viewToWorld(data_in[0].normalMat.xyz);
         #else
             const vec3 normals = vec3(0.0, 1.0, 0.0);
         #endif
@@ -89,9 +95,9 @@ void main() {
         float vDist = length(gl_out[gl_InvocationID].gl_Position.xyz);
 
         #if REPLACE_SHORT_GRASS == 2
-        if (vblockID[0] == 85 && normals.y > 0.9 && vDist < GRASS_RANGE && vgrassSideCheck[gl_InvocationID].x > 1.5)
+        if (data_in[0].blockID == 85 && normals.y > 0.9 && vDist < GRASS_RANGE && data_in[gl_InvocationID].grassSideCheck.x > 1.5)
         #else
-        if (vblockID[0] == 85 && normals.y > 0.9 && vDist < GRASS_RANGE)
+        if (data_in[0].blockID == 85 && normals.y > 0.9 && vDist < GRASS_RANGE)
         #endif
         {
             // This removes the second layer of some texture packs like patrix, otherwise the grass is duplicated
@@ -142,7 +148,7 @@ void main() {
         }
 
         #if REPLACE_SHORT_GRASS > 0
-        if(vdiscardGrass[gl_InvocationID] == 1){
+        if(data_in[gl_InvocationID].discardGrass == 1){
             gl_TessLevelOuter[0] = 0;
             gl_TessLevelOuter[1] = 0;
             gl_TessLevelOuter[2] = 0;

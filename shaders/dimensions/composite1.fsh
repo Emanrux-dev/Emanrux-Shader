@@ -1180,6 +1180,7 @@ void main() {
  	if ((isEyeInWater == 0 && isWater) || (eyeInWater && !isWater)){
 		
 		feetPlayerPos += gbufferModelViewInverse[3].xyz;
+		worldPos = feetPlayerPos + cameraPosition;
 		
 		#if defined DISTANT_HORIZONS || defined VOXY
 			vec3 playerPos0 = mat3(gbufferModelViewInverse) *  toScreenSpace_DH(texcoord/RENDER_SCALE-TAA_Offset*texelSize*0.5, z0, DH_depth0) + gbufferModelViewInverse[3].xyz;
@@ -1245,7 +1246,10 @@ void main() {
 	if (swappedDepth < 1.0) {
 
 		// idk why this do
+
+		// this seems to be compensating view bobbing, but why not do this when calculating feetPlayerPos? hmmm
 		feetPlayerPos += gbufferModelViewInverse[3].xyz;
+		worldPos = feetPlayerPos + cameraPosition;
 	////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////	    FILTER STUFF      //////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////

@@ -594,7 +594,7 @@ vec4 waterVolumetrics_alt( vec3 rayStart, vec3 rayEnd, float estEndDepth, float 
 
 					if(shadow2D(shadowtex1, pos).x > pos.z && sh2.x < 1.0){
 						vec4 translucentShadow = texture2D(shadowcolor0, pos.xy);
-						if(translucentShadow.a < 0.9) sh2 *= normalize(translucentShadow.rgb+0.0001);
+						if(translucentShadow.a < 0.9) sh2 = normalize(translucentShadow.rgb+0.0001);
 					}
 				#else
 					sh2 *= vec3(shadow2D(shadow, pos).x);

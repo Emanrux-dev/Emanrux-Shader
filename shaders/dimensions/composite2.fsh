@@ -588,11 +588,11 @@ vec4 waterVolumetrics_alt( vec3 rayStart, vec3 rayEnd, float estEndDepth, float 
 				// sh = shadow2D( shadow, pos).x;
 
 				#ifdef TRANSLUCENT_COLORED_SHADOWS
-					sh = vec3(shadow2D(shadowtex0, pos).x);
+					sh *= vec3(shadow2D(shadowtex0, pos).x);
 
 					if(shadow2D(shadowtex1, pos).x > pos.z && sh.x < 1.0){
 						vec4 translucentShadow = texture2D(shadowcolor0, pos.xy);
-						if(translucentShadow.a < 0.9) sh = normalize(translucentShadow.rgb+0.0001);
+						if(translucentShadow.a < 0.9) sh *= normalize(translucentShadow.rgb+0.0001);
 					}
 				#else
 					sh *= vec3(shadow2D(shadow, pos).x);

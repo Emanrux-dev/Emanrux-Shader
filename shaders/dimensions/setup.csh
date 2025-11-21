@@ -498,8 +498,8 @@ void main() {
         }
 
         if (blockId == BLOCK_END_ROD || blockId == ITEM_END_ROD) {
-            // lightColor = vec3(0.957, 0.929, 0.875);
-            lightColor = vec3(0.8, 0.3, 1.0);
+            lightColor = vec3(0.957, 0.929, 0.875);
+            // lightColor = vec3(0.8, 0.3, 1.0);
             lightRange = 14.0;
         }
 

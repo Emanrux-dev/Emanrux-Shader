@@ -752,6 +752,10 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #ifdef INCLUDE_UNLISTED_ENTITIES
 #endif
 
+#define HARDCODED_EMISSIVES_APPROX
+
+#ifdef HARDCODED_EMISSIVES_APPROX
+#endif
 
 // #define MOTION_BLUR
 #ifdef MOTION_BLUR

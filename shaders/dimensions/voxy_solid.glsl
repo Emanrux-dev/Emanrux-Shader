@@ -111,7 +111,9 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 			if(blockID == 502) EMISSIVE = EMISSIVE_ORES_STRENGTH;
 		#endif
 
-		EMISSIVE *= getEmission(Albedo.rgb);
+		#ifdef HARDCODED_EMISSIVES_APPROX
+			EMISSIVE *= getEmission(Albedo.rgb);
+		#endif
 	#endif
 
     Albedo.a = 1.0;

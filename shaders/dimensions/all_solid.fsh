@@ -776,17 +776,30 @@ void main() {
 
 		gl_FragData[1].rg = SpecularTex.rg;
 
+		#if EMISSIVE_TYPE == 2
+		bool emissionCheck = SpecularTex.a <= 0.0;
+		#endif
+
+		#if defined HARDCODED_EMISSIVES_APPROX && (EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2)
+			#if EMISSIVE_TYPE == 2
+			if(emissionCheck)
+			#endif
+			{
+			EMISSIVE *= getEmission(Albedo.rgb);
+			}
+		#endif
+
 		#if EMISSIVE_TYPE == 0
 			gl_FragData[1].a = 0.0;
 		#endif
 
 		#if EMISSIVE_TYPE == 1
-			gl_FragData[1].a = getEmission(Albedo.rgb) * EMISSIVE;
+			gl_FragData[1].a = EMISSIVE;
 		#endif
 
 		#if EMISSIVE_TYPE == 2
 			gl_FragData[1].a = SpecularTex.a;
-			if(SpecularTex.a <= 0.0) gl_FragData[1].a = getEmission(Albedo.rgb) * EMISSIVE;
+			if(emissionCheck) gl_FragData[1].a = EMISSIVE;
 		#endif
 
 		#if EMISSIVE_TYPE == 3		

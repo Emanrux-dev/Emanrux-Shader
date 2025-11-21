@@ -437,7 +437,7 @@ float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 	vec3 startPosition = playerPos;
 	vec3 startOffset = sunVector / abs(sunVector.y);
 	
-	#if CLOUD_SHADOW_AMOUNT > 0
+	#if CLOUD_SHADOW_AMOUNT > 0 && defined VOLUMETRIC_CLOUDS
 		float cloudShadows = 0.0;
 
 		#ifdef CloudLayer0
@@ -979,6 +979,11 @@ vec4 GetVolumetricClouds(
 	inout vec2 cloudDistance
 ){	
 	#ifndef VOLUMETRIC_CLOUDS
+		#if defined VOXY || defined DISTANT_HORIZONS
+			cloudPlaneDistance = max(far*8.0, dhVoxyFarPlane*2.0);
+		#else
+			cloudPlaneDistance = far*8.0;
+		#endif
 		return vec4(0.0,0.0,0.0,1.0);
 	#endif
 

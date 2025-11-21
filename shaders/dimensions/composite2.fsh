@@ -572,6 +572,8 @@ vec4 waterVolumetrics_alt( vec3 rayStart, vec3 rayEnd, float estEndDepth, float 
 		
 		vec3 progressW = gbufferModelViewInverse[3].xyz + cameraPosition + d*dVWorld;
 
+		vec3 sh2 = sh;
+
 		#ifdef OVERWORLD_SHADER
 			vec3 spPos = start.xyz + dV*d;
 
@@ -588,14 +590,14 @@ vec4 waterVolumetrics_alt( vec3 rayStart, vec3 rayEnd, float estEndDepth, float 
 				// sh = shadow2D( shadow, pos).x;
 
 				#ifdef TRANSLUCENT_COLORED_SHADOWS
-					sh *= vec3(shadow2D(shadowtex0, pos).x);
+					sh2 *= vec3(shadow2D(shadowtex0, pos).x);
 
-					if(shadow2D(shadowtex1, pos).x > pos.z && sh.x < 1.0){
+					if(shadow2D(shadowtex1, pos).x > pos.z && sh2.x < 1.0){
 						vec4 translucentShadow = texture2D(shadowcolor0, pos.xy);
-						if(translucentShadow.a < 0.9) sh *= normalize(translucentShadow.rgb+0.0001);
+						if(translucentShadow.a < 0.9) sh2 *= normalize(translucentShadow.rgb+0.0001);
 					}
 				#else
-					sh *= vec3(shadow2D(shadow, pos).x);
+					sh2 *= vec3(shadow2D(shadow, pos).x);
 				#endif
 			}
 		#endif
@@ -603,7 +605,7 @@ vec4 waterVolumetrics_alt( vec3 rayStart, vec3 rayEnd, float estEndDepth, float 
 		vec3 sunAbsorbance = exp(-waterCoefs * estSunDepth * d);
 		vec3 ambientAbsorbance = exp(-waterCoefs * (estEndDepth * d + thing));
 
-		vec3 Directlight = lightSource * sh * phase * sunAbsorbance;
+		vec3 Directlight = lightSource * sh2 * phase * sunAbsorbance;
 		vec3 Indirectlight = ambient * ambientAbsorbance;
 
 		vec3 light = (Indirectlight + Directlight) * scatterCoef;
@@ -745,7 +747,7 @@ void main() {
 				VolumetricClouds.a = mix(VolumetricClouds.a, 1.0, skyhole);
 			#endif
 
-			vec3 sceneColor = texelFetch2D(colortex3,texcoord,0).rgb * VolumetricClouds.a + VolumetricClouds.rgb;
+			// vec3 sceneColor = texelFetch2D(colortex3,texcoord,0).rgb * VolumetricClouds.a + VolumetricClouds.rgb;
 			VolumetricFog = GetVolumetricFog(viewPos0, WsunVec, BN, directLightColor, indirectLight_fog, indirectLightColor_dynamic, cloudPlaneDistance);
 
 			#if defined LPV_VL_FOG_ILLUMINATION

@@ -1333,7 +1333,7 @@ vec4 GetVolumetricClouds(
 	#endif
 
 	#ifdef CloudLayer3
-		cloudColor.rgb = cirrusClouds;
+		cloudColor.rgb = cirrusClouds.rgb;
 	#endif
 	#ifdef CloudLayer2
 		cloudColor.rgb *= altoStratusClouds.a;

@@ -156,12 +156,7 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 	vec3 clipPosition2 = toClipSpace3_DH(position, true);
 	float rayLength2 = ((position.z + dir.z * _far*sqrt(3.)) > -_near) ? (-_near -position.z) / dir.z : _far*sqrt(3.);
 
-	vec3 direction2 = toClipSpace3_DH(position + dir*rayLength, true) - clipPosition2;  //convert to clip space
-	vec3 reflectedTC2 = vec3((direction2.xy + clipPosition2.xy) * RENDER_SCALE, 0.999999);
-
-	#if FORWARD_SSR_QUALITY == 1
-		return reflectedTC2;
-	#endif
+	vec3 direction2 = toClipSpace3_DH(position + dir*rayLength2, true) - clipPosition2;  //convert to clip space
 
 	//get at which length the ray intersects with the edge of the screen
 	vec3 maxLengths2 = (step(0.0, direction2) - clipPosition2) / direction2;

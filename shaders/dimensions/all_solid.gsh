@@ -43,14 +43,13 @@ out DATA {
 	vec4 lmtexcoord;
 	vec3 normalMat;
 
-	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+	#if (defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)) || (!defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD)
 		vec4 texcoordam; // .st for add, .pq for mul
+    #endif
+    
+    #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec2 texcoord;
 	#endif
-
-    #if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
-        vec3 GrassNormals;
-    #endif
 
 	#ifdef MC_NORMAL_MAP
 		vec4 tangent;
@@ -128,10 +127,6 @@ void main() {
     
     int i;
 
-    #if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
-        data_out.GrassNormals = vec3(0.0, 1.0, 0.0);
-    #endif
-
     for (i = 0; i < 3; i++)
 	{
 		vec4 vertex = gl_in[i].gl_Position;
@@ -187,6 +182,8 @@ void main() {
         #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
             data_out.texcoordam = data_in[i].texcoordam;
             data_out.texcoord = data_in[i].texcoord;
+        #elif !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+            data_out.texcoordam = vec4(0.0);
         #endif
 
         #ifdef MC_NORMAL_MAP
@@ -392,11 +389,6 @@ void main() {
 
                     data_out.lmtexcoord = data_in[i].lmtexcoord;
 
-                    #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-                        data_out.texcoordam = data_in[i].texcoordam;
-                        data_out.texcoord = data_in[i].texcoord;
-                    #endif
-
                     #ifdef MC_NORMAL_MAP
                         data_out.tangent = data_in[i].tangent;
                     
@@ -405,7 +397,12 @@ void main() {
                         heightfade = smoothstep(0.1, grassHeights[triangle_count], grassHeights[3*j+i]);
                     #endif
 
-                    data_out.GrassNormals = normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade)));
+                    #if (defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)) || (!defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD)
+                        data_out.texcoordam = vec4(normalize(mix(GrassNormal[0], GrassNormal[triangle_count-1], vec3(heightfade))), 0.0);
+                    #endif
+                    #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+                        data_out.texcoord = data_in[i].texcoord;
+                    #endif
 
                     data_out.blockID = -15;
 

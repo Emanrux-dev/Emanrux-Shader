@@ -27,14 +27,13 @@ in DATA {
 	vec4 lmtexcoord;
 	vec3 normalMat;
 
-	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+	#if (defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)) || (!defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD)
 		vec4 texcoordam; // .st for add, .pq for mul
-		vec2 texcoord;
 	#endif
 
-    #if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
-        vec3 GrassNormals;
-    #endif
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+		vec2 texcoord;
+	#endif
 
 	#ifdef MC_NORMAL_MAP
 		vec4 tangent;
@@ -346,7 +345,7 @@ void main() {
 
 	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 		bool ShaderGrass = data_in.blockID == -15;
-		ifPOM = !ShaderGrass;
+		if(ShaderGrass) ifPOM = false;
 	#else
 		bool ShaderGrass = false;
 	#endif
@@ -360,7 +359,7 @@ void main() {
 		SIGN = data_in.blockID == BLOCK_SIGN;
 	#endif
 
-	ifPOM = !SIGN;
+	if(SIGN) ifPOM = false;
 
 	vec3 normal = data_in.normalMat;
 
@@ -901,7 +900,7 @@ void main() {
 		normal = viewToWorld(normal);
 
 		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
-			if (ShaderGrass) {flatNormals = data_in.normalMat; normal = data_in.GrassNormals;}
+			if (ShaderGrass) {flatNormals = data_in.normalMat; normal = data_in.texcoordam.xyz;}
 		#endif
 
 		vec4 data1 = clamp( encode(normal, PackLightmaps), 0.0, 1.0);

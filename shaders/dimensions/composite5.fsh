@@ -430,7 +430,7 @@ vec4 computeTAA(vec2 texcoord, bool hand){
 
 
 void main() {
-/* DRAWBUFFERS:5 */
+/* RENDERTARGETS:5 */
 	#ifdef TAA
 		vec2 taauTC = clamp(texcoord*RENDER_SCALE, vec2(0.0), RENDER_SCALE - texelSize*2.0);
 		

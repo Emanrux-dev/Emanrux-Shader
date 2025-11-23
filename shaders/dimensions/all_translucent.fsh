@@ -1,12 +1,11 @@
 #ifdef IS_LPV_ENABLED
-	#extension GL_EXT_shader_image_load_store: enable
+	#extension GL_ARB_shader_image_load_store: enable
 	#extension GL_ARB_shading_language_packing: enable
 #endif
 
 #if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0 && defined OVERWORLD_SHADER && defined COLORWHEEL
 	#extension GL_NV_gpu_shader5 : enable
 	#extension GL_ARB_shader_image_load_store : enable
-	#extension GL_EXT_shader_image_load_store : enable
 #endif
 
 #include "/lib/settings.glsl"
@@ -466,6 +465,15 @@ void Emission(
 	if( Emission < 254.5/255.0) Lighting = mix(Lighting, Albedo * 5.0 * Emissive_Brightness, pow(Emission, Emissive_Curve));
 }
 
+float bias(){
+	// bias mipmapping as window resolution and / or render scale changes.
+	#ifdef TAA_UPSCALING
+		return (1.0 - texelSize.x * 2560.0) + (0.0 - (1.0-RENDER_SCALE.x) * 2.0);
+	#else
+		return 1.0 - texelSize.x * 2560.0;
+	#endif
+}
+
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -479,6 +487,7 @@ void main() {
 if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	{
 	
 	vec3 FragCoord = gl_FragCoord.xyz;
+	float mipmapBias = bias();
 
 	#ifdef TAA
 		vec2 tempOffset = offsets[framemod8];
@@ -521,9 +530,9 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec2 lightmap = lmtexcoord.zw;
 	
 	#ifndef COLORWHEEL
-		gl_FragData[0] = texture2D(gtexture, lmtexcoord.xy, Texture_MipMap_Bias) * color;
+		gl_FragData[0] = texture2D(gtexture, lmtexcoord.xy, mipmapBias) * color;
 	#else
-		vec4 _color = texture2D(gtexture, lmtexcoord.xy, Texture_MipMap_Bias);
+		vec4 _color = texture2D(gtexture, lmtexcoord.xy, mipmapBias);
 		float ao;
 		vec4 overlayColor;
 
@@ -628,7 +637,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 						  tangent.z, tangent2.z, normal.z);
 
 
-	vec3 NormalTex = vec3(texture2D(normals, lmtexcoord.xy, Texture_MipMap_Bias).xy,0.0);
+	vec3 NormalTex = vec3(texture2D(normals, lmtexcoord.xy, mipmapBias).xy,0.0);
 	NormalTex.xy = NormalTex.xy*2.0-1.0;
 	NormalTex.z = clamp(sqrt(1.0 - dot(NormalTex.xy, NormalTex.xy)),0.0,1.0);
 
@@ -762,7 +771,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 ////////////////////////////////////////////////////////////////////////////////
 
 
-	vec3 SpecularTex = texture2D(specular, lmtexcoord.xy, Texture_MipMap_Bias).rga;
+	vec3 SpecularTex = texture2D(specular, lmtexcoord.xy, mipmapBias).rga;
 ////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// DIFFUSE LIGHTING //////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

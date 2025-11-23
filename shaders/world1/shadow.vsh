@@ -57,12 +57,12 @@ varying vec2 texcoord;
 
 
 void main() {
-	#if defined END_ISLAND_LIGHT || (defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store)
+	#if defined END_ISLAND_LIGHT || (defined IS_LPV_ENABLED && defined MC_GL_ARB_shader_image_load_store)
 		vec3 shadowViewPos = mat3(gl_ModelViewMatrix) * vec3(gl_Vertex) + gl_ModelViewMatrix[3].xyz;
 		vec3 feetPlayerPos = mat3(shadowModelViewInverse) * shadowViewPos + shadowModelViewInverse[3].xyz;
 	#endif
 
-	#if defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store || WATER_INTERACTION == 2  || defined SHADER_GRASS
+	#if defined IS_LPV_ENABLED && defined MC_GL_ARB_shader_image_load_store || WATER_INTERACTION == 2  || defined SHADER_GRASS
 		#ifdef LPV_NOSHADOW_HACK
 			vec3 playerpos = gl_Vertex.xyz;
 		#else

@@ -54,8 +54,8 @@ uniform vec2 texelSize;
 uniform int framemod8;
 
 #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-	vec2 dcdx = dFdx(data_in.texcoord.st*data_in.texcoordam.pq)*exp2(Texture_MipMap_Bias);
-	vec2 dcdy = dFdy(data_in.texcoord.st*data_in.texcoordam.pq)*exp2(Texture_MipMap_Bias);
+	vec2 dcdx = dFdx(data_in.texcoord.st*data_in.texcoordam.pq);
+	vec2 dcdy = dFdy(data_in.texcoord.st*data_in.texcoordam.pq);
 #else
 	const vec2 dcdx = vec2(0.0);
 	const vec2 dcdy = vec2(0.0);
@@ -283,8 +283,12 @@ float ld(float dist) {
 // }
 
 float bias(){
-	// return (Texture_MipMap_Bias + (blueNoise-0.5)*0.5) - (1.0-RENDER_SCALE.x) * 2.0;
-	return Texture_MipMap_Bias - (1.0-RENDER_SCALE.x) * 2.0;
+	// bias mipmapping as window resolution and / or render scale changes.
+	#ifdef TAA_UPSCALING
+		return (1.0 - texelSize.x * 2560.0) + (0.0 - (1.0-RENDER_SCALE.x) * 2.0);
+	#else
+		return 1.0 - texelSize.x * 2560.0;
+	#endif
 }
 vec4 texture2D_POMSwitch(
 	sampler2D sampler, 
@@ -774,6 +778,7 @@ void main() {
 		// SpecularTex.r = max(SpecularTex.r, rainfall);
 		// SpecularTex.g = max(SpecularTex.g, max(Puddle_shape*0.02,0.02));
 
+		gl_FragData[1] = vec4(0.0,0.0,0.0,0.0);
 		gl_FragData[1].rg = SpecularTex.rg;
 
 		#if EMISSIVE_TYPE == 2

@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - Bliss 编辑版
     prefix.SHADER_VERSION_LABEL = 版本
-    value.SHADER_VERSION_LABEL.482 = 5.3.2
+    value.SHADER_VERSION_LABEL.482 = 5.4.0
 
 # 如果你是来翻译的，这不是玩笑，这些选项的功能正如其名
 profile.POTATO=§4土豆 (极低配置)
@@ -113,7 +113,6 @@ screen.LEGACY_STUFF = 旧版设置
 option.ORIGINAL_CHOCAPIC_SKY = Chocapic天空
 option.OLD_BLOOM = 旧版泛光
 option.OLD_CAVE_DETECTION = 旧版洞穴检测
-option.OLD_INDIRECT_SSS = 旧版间接屏幕光照
 option.CLOUD_PHASE = 云相
 option.OLD_STARS = 旧版星星
 

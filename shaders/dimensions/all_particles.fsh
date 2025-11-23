@@ -1,5 +1,5 @@
 #ifdef IS_LPV_ENABLED
-	#extension GL_EXT_shader_image_load_store: enable
+	#extension GL_ARB_shader_image_load_store: enable
 	#extension GL_ARB_shading_language_packing: enable
 #endif
 
@@ -10,7 +10,6 @@
 #if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0 && defined OVERWORLD_SHADER && defined COLORWHEEL
 	#extension GL_NV_gpu_shader5 : enable
 	#extension GL_ARB_shader_image_load_store : enable
-	#extension GL_EXT_shader_image_load_store : enable
 #endif
 
 #include "/lib/settings.glsl"
@@ -244,8 +243,8 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 	varying vec4 vtexcoordam; // .st for add, .pq for mul
 	varying vec2 vtexcoord;
 	
-	vec2 dcdx = dFdx(vtexcoord.st*vtexcoordam.pq)*exp2(Texture_MipMap_Bias);
-	vec2 dcdy = dFdy(vtexcoord.st*vtexcoordam.pq)*exp2(Texture_MipMap_Bias);
+	vec2 dcdx = dFdx(vtexcoord.st*vtexcoordam.pq);
+	vec2 dcdy = dFdy(vtexcoord.st*vtexcoordam.pq);
 	
 	#define diagonal3(m) vec3((m)[0].x, (m)[1].y, m[2].z)
 	#define  projMAD(m, v) (diagonal3(m) * (v) + (m)[3].xyz)

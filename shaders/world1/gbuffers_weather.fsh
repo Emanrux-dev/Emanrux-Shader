@@ -36,7 +36,7 @@ vec3 toScreenSpaceVector(vec3 p) {
 //////////////////////////////VOID MAIN//////////////////////////////
 
 void main() {
-/* DRAWBUFFERS:2 */
+/* RENDERTARGETS:2 */
 	gl_FragData[0] = texture2D(gtexture, lmtexcoord.xy)*color;
 		gl_FragData[0].a = clamp(gl_FragData[0].a -0.1,0.0,1.0)*0.5;
 		vec3 albedo = toLinear(gl_FragData[0].rgb*color.rgb);

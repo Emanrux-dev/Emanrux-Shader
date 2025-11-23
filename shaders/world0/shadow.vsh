@@ -211,7 +211,7 @@ void main() {
 	playerpos = mat3(shadowModelViewInverse) * position + shadowModelViewInverse[3].xyz;
 	// #endif
 
-	#if defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store || WATER_INTERACTION == 2 || defined SHADER_GRASS
+	#if defined IS_LPV_ENABLED && defined MC_GL_ARB_shader_image_load_store || WATER_INTERACTION == 2 || defined SHADER_GRASS
 		PopulateShadowVoxel(playerpos);
 	#endif
 

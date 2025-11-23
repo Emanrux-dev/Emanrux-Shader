@@ -110,7 +110,7 @@ vec3 doBlockLightLighting(
     float lightmapCurve = mix(lightmapLight, 2.5, lightmapBrightspot);
     vec3 blockLight = lightmapCurve * lightColor;
     
-    #if defined IS_LPV_ENABLED && defined MC_GL_EXT_shader_image_load_store
+    #if defined IS_LPV_ENABLED && defined MC_GL_ARB_shader_image_load_store
         vec4 lpvSample = SampleLpvLinear(lpvPos);
         #ifdef VANILLA_LIGHTMAP_MASK
             lpvSample.rgb *= lightmapCurve;

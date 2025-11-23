@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.3.2
+    value.SHADER_VERSION_LABEL.482 = 5.4.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -818,6 +818,7 @@ screen.Resource_Pack_Support = Materials / Resource Pack Support
             suffix.SUN_SPECULAR_MULT =x brighter
         option.ROUGHNESS_THRESHOLD = Reflection Visibilty Threshold
             value.ROUGHNESS_THRESHOLD.0.0 = no threshold
+        option.QUARTER_RES_SSR = Sample 1/4 resolution depth
 
     screen.Emissives = Emissives / Glowing Textures
         option.Emissive_Brightness = Emission Multiplier

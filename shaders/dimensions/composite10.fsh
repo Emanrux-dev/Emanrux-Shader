@@ -211,7 +211,7 @@ vec3 blackbody(float Temp)
 }
 
 void main() {
-  /* DRAWBUFFERS:7 */
+  /* RENDERTARGETS:7 */
 	float vignette = (1.5-dot(texcoord-0.5,texcoord-0.5)*2.);
 	vec3 col = texture2D(colortex5,texcoord).rgb;
 

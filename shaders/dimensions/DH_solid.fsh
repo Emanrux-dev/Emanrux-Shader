@@ -222,6 +222,8 @@ void main() {
     gl_FragData[0] = vec4(encodeVec2(Albedo.x,data1.x),	encodeVec2(Albedo.y,data1.y),	encodeVec2(Albedo.z,data1.z),	encodeVec2(data1.w, materials));
     
 	gl_FragData[1].a = 0.0;
+
+    gl_FragData[2] = vec4(0.0,0.0,0.0,0.0);
     
 	#if EMISSIVE_TYPE == 0
 		gl_FragData[2].a = 0.0;

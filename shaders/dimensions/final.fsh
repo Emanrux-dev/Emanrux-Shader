@@ -17,7 +17,6 @@ uniform sampler2D shadowcolor1;
 #if DEBUG_VIEW == debug_CLOUDDEPTHTEX && defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
   #extension GL_NV_gpu_shader5 : enable
   #extension GL_ARB_shader_image_load_store : enable
-  #extension GL_EXT_shader_image_load_store : enable
 
   layout (rgba16f) uniform image2D cloudDepthTex;
 #endif

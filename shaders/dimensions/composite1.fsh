@@ -798,17 +798,12 @@ vec3 SubsurfaceScattering_sun(vec3 albedo, float Scattering, float Density, floa
 
 vec3 SubsurfaceScattering_sky(vec3 albedo, float Scattering, float Density){
 	// Density = 1.0;
-	#ifdef OLD_INDIRECT_SSS
-		float scatterDepth = 1.0 - pow(1.0-Scattering, 0.5 + Density * 2.5);
-		vec3 absorbColor = vec3(1.0) * exp(-(15.0 - 10.0*scatterDepth)  * sss_absorbance_multiplier * 0.01);
-		vec3 scatter =  scatterDepth *  absorbColor * pow(Density, LabSSS_Curve);
-	#else
-		float scatterDepth = pow(Scattering,3.5);
-		scatterDepth = 1.0-pow(1.0-scatterDepth,5.0);
 
-		vec3 absorbColor = exp(max(luma(albedo) - albedo*vec3(1.0,1.1,1.2), 0.0) * -20.0 * sss_absorbance_multiplier);
-		vec3 scatter = scatterDepth * mix(absorbColor, vec3(1.0), scatterDepth) * pow(Density, LabSSS_Curve);
-	#endif
+	float scatterDepth = pow(Scattering,3.5);
+	scatterDepth = 1.0-pow(1.0-scatterDepth,5.0);
+
+	vec3 absorbColor = exp(max(luma(albedo) - albedo*vec3(1.0,1.1,1.2), 0.0) * -20.0 * sss_absorbance_multiplier);
+	vec3 scatter = scatterDepth * mix(absorbColor, vec3(1.0), scatterDepth) * pow(Density, LabSSS_Curve);
 
 	// scatter *= 1.0 + exp(-7.0*(-playerPosNormalized.y*0.5+0.5));
 

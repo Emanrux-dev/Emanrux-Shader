@@ -38,7 +38,6 @@ float lightningFlash = mix(0.1, 2.5, randomSeed);
 	#if !defined COLORWHEEL && !defined VOXY_PROGRAM
 		#extension GL_NV_gpu_shader5 : enable
 		#extension GL_ARB_shader_image_load_store : enable
-		#extension GL_EXT_shader_image_load_store : enable
 	#endif
 
 	#ifndef VOXY_PROGRAM

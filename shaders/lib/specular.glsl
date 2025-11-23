@@ -2,7 +2,15 @@ float invLinZ (float lindepth){
 	return -((2.0*near/lindepth)-far-near)/(far-near);
 }
 
+float DH_invLinZ (float lindepth){
+	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
+}
+
 float linZ(float depth) {
+	return (2.0 * near) / (far + near - depth * (far - near));
+}
+
+float linZ2(float depth, float near, float far) {
 	return (2.0 * near) / (far + near - depth * (far - near));
 }
 
@@ -97,35 +105,21 @@ float shlickFresnelRoughness(float XdotN, float roughness){
 	return shlickFresnel;
 }
 
-#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS
-	uniform vec4 combined_projection_matrix_0;
-	uniform vec4 combined_projection_matrix_1;
-	uniform vec4 combined_projection_matrix_2;
-	uniform vec4 combined_projection_matrix_3;
-	#define combined_projection_matrix mat4(combined_projection_matrix_0, combined_projection_matrix_1, combined_projection_matrix_2, combined_projection_matrix_3)
-
-	float invertLinearizeDepthFast(const in float z) {
-		return (dhVoxyFarPlane * (z - near)) / (z * (dhVoxyFarPlane - near));
-	}
-#endif
-
-vec3 toClipSpace3_DH(vec3 viewSpacePosition) {
-	#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS 
-		mat4 matrix = combined_projection_matrix;
-	#else
-		mat4 matrix = gbufferProjection;
-	#endif
-	return projMAD(matrix, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
+float invertLinearizeDepthFast(const in float z) {
+	return (far * (z - near)) / (z * (far - near));
 }
 
-vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, bool hand, inout float reflectionLength){
 
-	float biasAmount = 0.00003;
+vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, bool hand, inout float reflectionLength, inout bool depthCheck){
 
-	vec3 clipPosition = toClipSpace3_DH(position);
-	float rayLength = ((position.z + dir.z * far*sqrt(3.)) > -near) ? (-near -position.z) / dir.z : far*sqrt(3.);
+	const float biasAmount = 0.00003;
 
-	vec3 direction = toClipSpace3_DH(position + dir*rayLength) - clipPosition;  //convert to clip space
+	float _near = near; float _far = far;
+
+	vec3 clipPosition = toClipSpace3_DH(position, false);
+	float rayLength = ((position.z + dir.z * _far*sqrt(3.)) > -_near) ? (-_near -position.z) / dir.z : _far*sqrt(3.);
+
+	vec3 direction = toClipSpace3_DH(position + dir*rayLength, false) - clipPosition;  //convert to clip space
 	vec3 reflectedTC = vec3((direction.xy + clipPosition.xy) * RENDER_SCALE, 0.999999);
 
 	#if FORWARD_SSR_QUALITY == 1
@@ -147,39 +141,112 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 		spos.xy += TAA_Offset*texelSize*0.5/RENDER_SCALE;
 	#endif
 
-	float minZ = spos.z - 0.00025 / linZ(spos.z);
+	float minZ = spos.z - 0.00025 / linZ2(spos.z, _near, _far);
 	float maxZ = spos.z;
+
+	#if (defined VOXY && defined VOXY_REFLECTIONS) || (defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS)
+
+	const float biasAmount2 = 0.000015;
+
+
+	_near = dhVoxyNearPlane;
+	_far = dhVoxyFarPlane;
+
+
+	vec3 clipPosition2 = toClipSpace3_DH(position, true);
+	float rayLength2 = ((position.z + dir.z * _far*sqrt(3.)) > -_near) ? (-_near -position.z) / dir.z : _far*sqrt(3.);
+
+	vec3 direction2 = toClipSpace3_DH(position + dir*rayLength, true) - clipPosition2;  //convert to clip space
+	vec3 reflectedTC2 = vec3((direction2.xy + clipPosition2.xy) * RENDER_SCALE, 0.999999);
+
+	#if FORWARD_SSR_QUALITY == 1
+		return reflectedTC2;
+	#endif
+
+	//get at which length the ray intersects with the edge of the screen
+	vec3 maxLengths2 = (step(0.0, direction2) - clipPosition2) / direction2;
+	float mult2 = min(min(maxLengths2.x, maxLengths2.y), maxLengths2.z);
+	vec3 stepv2 = direction2 * mult2 / quality;
+
+	clipPosition2.xy *= RENDER_SCALE;
+	stepv2.xy *= RENDER_SCALE;
+
+	vec3 spos2 = clipPosition2 + stepv2*dither;
+	spos2 += stepv2*0.5 + vec3(0.5*texelSize,0.0); // small offsets to reduce artifacts from precision differences.
+	
+	#if defined DEFERRED_SPECULAR && defined TAA
+		spos2.xy += TAA_Offset*texelSize*0.5/RENDER_SCALE;
+	#endif
+
+	float minZ2 = spos2.z - 0.00025 / linZ2(spos2.z, _near, _far);
+	float maxZ2 = spos2.z;
+	#endif
 
 	vec3 hitPos = vec3(1.1);
 	
   	for (int i = 0; i <= int(quality); i++) {
 		#if DEFERRED_SSR_QUALITY != 1
+			#if (defined VOXY && defined VOXY_REFLECTIONS) || (defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS)
+			if(!hand && (spos.x < 0 || spos.x > 1 || spos.y < 0 || spos.y > 1) && (spos2.x < 0 || spos2.x > 1 || spos2.y < 0 || spos2.y > 1)) return vec3(1.1);
+			#else
 			if(!hand && (spos.x < 0 || spos.x > 1 || spos.y < 0 || spos.y > 1)) return vec3(1.1);
+			#endif
 		#endif
 
-		#if defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS 
-			#ifdef FULLRESDEPTH
-				// buffer is full res after first composite pass
-				float sampleDepth = texelFetch2D(colortex12, ivec2(spos.xy/texelSize),0).b/65000.0;
-			#else
-				float sampleDepth = texelFetch2D(colortex12, ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
-			#endif
-			
-			float sp = invertLinearizeDepthFast(sqrt(sampleDepth)*dhVoxyFarPlane);
-		#else
-			float sampleDepth = texelFetch2D(colortex4, ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
+		#ifdef QUARTER_RES_SSR
+			float sampleDepth = texelFetch(colortex4, ivec2(spos.xy/texelSize/4.0),0).a/65000.0;
 			float sp = invLinZ(sqrt(sampleDepth));
+		#else
+			#ifdef FULLRESDEPTH
+			float sp = texelFetch(depthtex0, ivec2(spos.xy/texelSize),0).r;
+			#else
+			float sp = texelFetch(depthtex1, ivec2(spos.xy/texelSize),0).r;
+			#endif
 		#endif
-	
-		if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {
-			hitPos = vec3(spos.xy/RENDER_SCALE, sp);
-			break;
+		
+		#if (defined VOXY && defined VOXY_REFLECTIONS) || (defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS)
+		bool DHrange = sp >= 1.0;
+		if (DHrange){
+			#ifdef QUARTER_RES_SSR
+				#ifdef FULLRESDEPTH
+				sp = texelFetch(dhVoxyDepthTex, ivec2(spos2.xy/texelSize),0).r;
+				#else
+				sampleDepth = texelFetch(colortex12, ivec2(spos2.xy/texelSize/4.0),0).a/65000.0;
+				sp = DH_invLinZ(sqrt(sampleDepth));
+				#endif
+			#else
+				#ifdef FULLRESDEPTH
+				sp = texelFetch(dhVoxyDepthTex, ivec2(spos2.xy/texelSize),0).r;
+				#else
+				sp = texelFetch(dhVoxyDepthTex1, ivec2(spos2.xy/texelSize),0).r;
+				#endif
+			#endif
+
+			if(sp < max(minZ2, maxZ2) && sp > min(minZ2, maxZ2)) {
+				hitPos = vec3(spos2.xy/RENDER_SCALE, sp);
+				depthCheck = true;
+				break;
+			}
+		} else
+		#endif
+		{
+			if(sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {
+				hitPos = vec3(spos.xy/RENDER_SCALE, sp);
+				break;
+			}
 		}
 
-		minZ = maxZ - biasAmount / linZ(spos.z);
+		minZ = maxZ - biasAmount / linZ2(spos.z, near, far);
 		maxZ += stepv.z;
 
 		spos += stepv;
+
+		#if (defined VOXY && defined VOXY_REFLECTIONS) || (defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS)
+		minZ2 = maxZ2 - biasAmount2 / linZ2(spos2.z, dhVoxyNearPlane, dhVoxyFarPlane);
+		maxZ2 += stepv2.z;
+
+		spos2 += stepv2;
+		#endif
 
 		reflectionLength += 1.0 / quality;
   	}
@@ -190,6 +257,19 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 
 	if(hand) return reflectedTC;
 	return hitPos;
+}
+
+vec3 toScreenSpace2(vec3 p, bool depthCheck) {
+	#if (defined VOXY && defined VOXY_REFLECTIONS) || (defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS)
+		mat4 matrix = gbufferProjectionInverse;
+		if(depthCheck) matrix = dhVoxyProjectionInverse;
+	#else
+		mat4 matrix = gbufferProjectionInverse;
+	#endif
+	vec4 iProjDiag = vec4(matrix[0].x, matrix[1].y, matrix[2].zw);
+    vec3 p3 = p * 2. - 1.;
+    vec4 fragposition = iProjDiag * p3.xyzz + matrix[3];
+    return fragposition.xyz / fragposition.w;
 }
 
 vec4 screenSpaceReflections(
@@ -215,7 +295,9 @@ vec4 screenSpaceReflections(
 		quality = float(DEFERRED_SSR_QUALITY);
 	#endif
 
-	vec3 raytracePos = rayTraceSpeculars(reflectedVector, viewPos, noise, quality, isHand, reflectionLength);
+	bool depthCheck = false;
+
+	vec3 raytracePos = rayTraceSpeculars(reflectedVector, viewPos, noise, quality, isHand, reflectionLength, depthCheck);
 	if (raytracePos.z > 1.0) return reflection;
 	
 	// use higher LOD as the reflection goes on, to blur it. this helps denoise a little.
@@ -224,9 +306,16 @@ vec4 screenSpaceReflections(
 
 	float LOD = mix(0.0, 6.0*(1.0-exp(-15.0*sqrt(roughness))), 1.0-pow(1.0-reflectionLength,5.0));
 
-	vec3 previousPosition = mat3(gbufferModelViewInverse) * toScreenSpace(raytracePos) + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
+	#if (defined VOXY && defined VOXY_REFLECTIONS) || (defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS)
+		mat4 projMatrix = gbufferPreviousProjection;
+		if(depthCheck) projMatrix = dhVoxyProjectionPrev;
+	#else
+		mat4 projMatrix = gbufferPreviousProjection;
+	#endif
+
+	vec3 previousPosition = mat3(gbufferModelViewInverse) * toScreenSpace2(raytracePos, depthCheck) + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
 	previousPosition = mat3(gbufferPreviousModelView) * previousPosition + gbufferPreviousModelView[3].xyz;
-	previousPosition.xy = projMAD(gbufferPreviousProjection, previousPosition).xy / -previousPosition.z * 0.5 + 0.5;
+	previousPosition.xy = projMAD(projMatrix, previousPosition).xy / -previousPosition.z * 0.5 + 0.5;
 	
 	if (previousPosition.x > 0.0 && previousPosition.y > 0.0 && previousPosition.x < 1.0 && previousPosition.y < 1.0) {
 		if(raytracePos.z > 0.9999999) backgroundReflectMask = 1.0;

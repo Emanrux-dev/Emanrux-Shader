@@ -39,7 +39,7 @@ out DATA {
 	vec4 color;
 
 	vec4 lmtexcoord;
-	vec4 normalMat;
+	vec3 normalMat;
 
 	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec4 texcoordam; // .st for add, .pq for mul
@@ -267,9 +267,9 @@ void main() {
 		data_out.tangent = vec4(normalize(gl_NormalMatrix * alterTangent.rgb), at_tangent.w);
 	#endif
 
-	data_out.normalMat = vec4(normalize(gl_NormalMatrix * gl_Normal), 1.0);
+	data_out.normalMat = normalize(gl_NormalMatrix * gl_Normal);
 	
-	vec3 vFlatNormals = data_out.normalMat.xyz;
+	vec3 vFlatNormals = data_out.normalMat;
 
 	#ifdef ENTITIES
 		data_out.blockID = int(entityId);
@@ -279,11 +279,7 @@ void main() {
 		data_out.blockID = int(mc_Entity.x);
 	#endif
 
-	if(data_out.blockID == BLOCK_GROUND_WAVING_VERTICAL || data_out.blockID == BLOCK_GRASS_SHORT || data_out.blockID == BLOCK_GRASS_TALL_LOWER || data_out.blockID == BLOCK_GRASS_TALL_UPPER ) data_out.normalMat.a = 0.60;
-	if(data_out.blockID == BLOCK_AIR_WAVING) data_out.normalMat.a = 0.55;
-
 	#if defined WORLD && !defined HAND
-
 		#ifdef BLOCKENTITIES
 			if(blockEntityId == BLOCK_END_PORTAL || blockEntityId == 187) {
 				data_out.lmtexcoord.w = 0.0;
@@ -294,30 +290,10 @@ void main() {
 			if(data_out.blockID == 215) data_out.lmtexcoord.w = 0.0;
 		#endif
 	#endif
-	
-	#ifdef ENTITIES
-		// try and single out nametag text and then discard nametag background
-		// if( dot(gl_Color.rgb, vec3(1.0/3.0)) < 1.0) vNameTags = 1;
-		// if(gl_Color.a < 1.0) vNameTags = 1;
-		// if(gl_Color.a >= 0.24 && gl_Color.a <= 0.25 ) gl_Position = vec4(10,10,10,1);
-		#ifdef INCLUDE_UNLISTED_ENTITIES
-			data_out.normalMat.a = 0.45;
-		#else
-			if(entityId == ENTITY_BOAT || entityId == ENTITY_SMALLSHIPS || entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468) data_out.normalMat.a = 0.45;
-		#endif
-	#endif
 
 	#if PUDDLE_MODE > 0 || ShaderSnow > 0
 		if (data_out.blockID == 244 || data_out.blockID == 189) data_out.lmtexcoord.w = 0.0;
 	#endif
-
-	// special cases light lightning and beacon beams...	
-	#ifdef ENTITIES
-		if(entityId == ENTITY_LIGHTNING){
-			data_out.normalMat.a = 0.50;
-		}
-	#endif
-
 
 #ifdef WORLD
 

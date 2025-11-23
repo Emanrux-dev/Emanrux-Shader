@@ -12,7 +12,7 @@ in DATA {
 	vec4 color;
 
 	vec4 lmtexcoord;
-	vec4 normalMat;
+	vec3 normalMat;
 
 	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec4 texcoordam; // .st for add, .pq for mul
@@ -35,7 +35,7 @@ out DATA {
 	vec4 color;
 
 	vec4 lmtexcoord;
-	vec4 normalMat;
+	vec3 normalMat;
 
 	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec4 texcoordam; // .st for add, .pq for mul
@@ -87,7 +87,7 @@ void main() {
         data_out[gl_InvocationID].centerPosition = data_in[gl_InvocationID].centerPosition;
 
         #ifdef MC_NORMAL_MAP
-            vec3 normals = viewToWorld(data_in[0].normalMat.xyz);
+            vec3 normals = viewToWorld(data_in[0].normalMat);
         #else
             const vec3 normals = vec3(0.0, 1.0, 0.0);
         #endif

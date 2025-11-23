@@ -1068,9 +1068,15 @@ void main() {
 		bool hand = abs(opaqueMasks-0.75) < 0.01 && z < 1.0;
 
 		#ifdef SHADER_GRASS
-			bool isShaderGrass = abs(opaqueMasks-0.4) < 0.01;
+			bool isShaderGrass = abs(opaqueMasks-0.80) < 0.01;
 		#else
 			const bool isShaderGrass = false;
+		#endif
+
+		#if defined POM_OFFSET_SHADOW_BIAS
+			float POM_DEEPNESS = opaqueMasks < 0.43 ? 1.0 - min(max(0.4-opaqueMasks,0.0)/0.4,1.0) : 0.0;
+		#else
+			float POM_DEEPNESS = 0.0;
 		#endif
 		// bool handwater = abs(translucentMasks-0.3) < 0.01 ;
 		// bool blocklights = abs(opaqueMasks-0.8) <0.01;
@@ -1301,7 +1307,7 @@ void main() {
 				vec3 projectedShadowPosition = mat3(shadowModelView) * shadowPlayerPos + shadowModelView[3].xyz;
 			#endif
 
-			applyShadowBias(projectedShadowPosition, shadowPlayerPos, FlatNormals);
+			applyShadowBias(projectedShadowPosition, shadowPlayerPos, FlatNormals, POM_DEEPNESS);
 			projectedShadowPosition = diagonal3_old(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 
 			// Calclulate distortion factor before bias application

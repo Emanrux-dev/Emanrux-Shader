@@ -11,7 +11,7 @@ in DATA {
 	vec4 color;
 
 	vec4 lmtexcoord;
-	vec4 normalMat;
+	vec3 normalMat;
 
 	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec4 texcoordam; // .st for add, .pq for mul
@@ -34,7 +34,7 @@ out DATA {
 	vec4 color;
 
 	vec4 lmtexcoord;
-	vec4 normalMat;
+	vec3 normalMat;
 
 	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec4 texcoordam; // .st for add, .pq for mul
@@ -57,7 +57,7 @@ void main() {
 
     data_out.color = calcTessellation(data_in[0].color, data_in[1].color, data_in[2].color);
     data_out.lmtexcoord = calcTessellation(data_in[0].lmtexcoord, data_in[1].lmtexcoord, data_in[2].lmtexcoord);
-    data_out.normalMat.rgb = calcTessellation(data_in[0].normalMat.rgb, data_in[1].normalMat.rgb, data_in[2].normalMat.rgb);
+    data_out.normalMat = calcTessellation(data_in[0].normalMat, data_in[1].normalMat, data_in[2].normalMat);
 
     #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
         data_out.texcoordam = calcTessellation(data_in[0].texcoordam, data_in[1].texcoordam, data_in[2].texcoordam);
@@ -68,7 +68,6 @@ void main() {
         data_out.tangent = calcTessellation(data_in[0].tangent, data_in[1].tangent, data_in[2].tangent);
     #endif
 
-    data_out.normalMat.a = data_in[0].normalMat.a;
     data_out.blockID = data_in[0].blockID;
 
     #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && defined WORLD

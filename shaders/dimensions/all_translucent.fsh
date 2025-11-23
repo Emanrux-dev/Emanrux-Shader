@@ -352,7 +352,7 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 			vec3 projectedShadowPosition = mat3(shadowModelView) * playerPos + shadowModelView[3].xyz;
 		#endif
 
-		applyShadowBias(projectedShadowPosition, playerPos, geoNormals);
+		applyShadowBias(projectedShadowPosition, playerPos, geoNormals, 0.0);
 
 		projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 

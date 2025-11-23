@@ -25,7 +25,7 @@ in DATA {
 	vec4 color;
 
 	vec4 lmtexcoord;
-	vec4 normalMat;
+	vec3 normalMat;
 
 	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec4 texcoordam; // .st for add, .pq for mul
@@ -362,7 +362,7 @@ void main() {
 
 	ifPOM = !SIGN;
 
-	vec3 normal = data_in.normalMat.xyz;
+	vec3 normal = data_in.normalMat;
 
 	#ifdef MC_NORMAL_MAP
 		vec3 binormal = normalize(cross(data_in.tangent.rgb,normal)*data_in.tangent.w);
@@ -379,9 +379,11 @@ void main() {
 
 	vec2 adjustedTexCoord = data_in.lmtexcoord.xy;
 
+	float saveDepth = 0.0;
 #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	// vec2 tempOffset=offsets[framemod8];
 	
+	// this fixes create multiblock entity thingies like train wheels (but probably breaks something else, didn't notice anything tho)
 	#ifndef COLORWHEEL
 		adjustedTexCoord = fract(data_in.texcoord.st)*data_in.texcoordam.pq+data_in.texcoordam.st;
 	#endif
@@ -413,7 +415,7 @@ void main() {
  		if ( viewVector.z < 0.0 && depthmap < 0.9999 && depthmap > 0.00001) {	
 			float noise = blueNoise;
 			#ifdef Adaptive_Step_length
-				vec3 interval = (viewVector.xyz /-viewVector.z/MAX_OCCLUSION_POINTS * pomdepth) * clamp(1.0-pow(depthmap,2),0.1,1.0);
+				vec3 interval = (viewVector.xyz / -viewVector.z / MAX_OCCLUSION_POINTS * pomdepth) * clamp(1.0-pow(depthmap,2),0.1,1.0);
 				used_POM_DEPTH = 1.0;
 			#else
 				vec3 interval = viewVector.xyz /-viewVector.z/MAX_OCCLUSION_POINTS*pomdepth;
@@ -426,6 +428,15 @@ void main() {
 			for (int loopCount = 0; (loopCount < MAX_OCCLUSION_POINTS) && (1.0 - pomdepth + pomdepth * readNormal(coord.st).a  ) < coord.p  && coord.p >= 0.0; ++loopCount) {
 				coord = coord + interval  * used_POM_DEPTH; 
 				sumVec += used_POM_DEPTH; 
+
+				#if defined POM_OFFSET_SHADOW_BIAS
+					// absolutely disgusting but works for now
+					if(loopCount > MAX_OCCLUSION_POINTS*0.01 * POM_DEPTH * 30.0) saveDepth = max(0.20,saveDepth);
+					if(loopCount > MAX_OCCLUSION_POINTS*0.02 * POM_DEPTH * 30.0) saveDepth = max(0.25,saveDepth);
+					if(loopCount > MAX_OCCLUSION_POINTS*0.03 * POM_DEPTH * 30.0) saveDepth = max(0.30,saveDepth);
+					if(loopCount > MAX_OCCLUSION_POINTS*0.05 * POM_DEPTH * 30.0) saveDepth = max(0.35,saveDepth);
+					if(loopCount > MAX_OCCLUSION_POINTS*0.06 * POM_DEPTH * 30.0) saveDepth = max(0.40,saveDepth);
+				#endif
 			}
 	
 			if (coord.t < mincoord) {
@@ -444,6 +455,31 @@ void main() {
 	}
 #endif
 	if(!ifPOM) adjustedTexCoord = data_in.lmtexcoord.xy;
+
+	float opaqueMasks = 1.0;
+
+	#ifndef HAND
+		#ifdef WORLD
+			if(data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL || data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_LOWER || data_in.blockID == BLOCK_GRASS_TALL_UPPER ) opaqueMasks = 0.60;
+			if(data_in.blockID == BLOCK_AIR_WAVING) opaqueMasks = 0.55;
+		#endif
+
+		#if defined ENTITIES
+			// try and single out nametag text and then discard nametag background
+			// if( dot(gl_Color.rgb, vec3(1.0/3.0)) < 1.0) vNameTags = 1;
+			// if(gl_Color.a < 1.0) vNameTags = 1;
+			// if(gl_Color.a >= 0.24 && gl_Color.a <= 0.25 ) gl_Position = vec4(10,10,10,1);
+			#ifdef INCLUDE_UNLISTED_ENTITIES
+				opaqueMasks = 0.45;
+			#else
+				if(entityId == ENTITY_BOAT || entityId == ENTITY_SMALLSHIPS || entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468) opaqueMasks = 0.45;
+			#endif
+		#endif
+
+		#if !defined BLOCKENTITIES && !defined ENTITIES && defined SHADER_GRASS && !defined COLORWHEEL
+			if(ShaderGrass) opaqueMasks = 0.8;
+		#endif
+	#endif
 	
 
 	//////////////////////////////// 				////////////////////////////////
@@ -620,8 +656,12 @@ void main() {
 	#endif
 
 	#ifdef WORLD
-		if (Albedo.a > 0.1) Albedo.a = data_in.normalMat.a;
+		if (Albedo.a > 0.1) Albedo.a = opaqueMasks;
 		else Albedo.a = 0.0;
+
+		#if defined POM_OFFSET_SHADOW_BIAS && defined POM && (!defined ENTITIES && !defined HAND || defined COLORWHEEL)
+			if(saveDepth > 0) Albedo.a = saveDepth;
+		#endif
 	#endif
 
 	#ifdef HAND
@@ -636,9 +676,9 @@ void main() {
 		gl_FragData[3] = vec4(0.0);
 	#endif
 
-	#ifdef COLORWHEEL
-		Albedo.a = 0.4;
-	#endif
+	// #ifdef COLORWHEEL
+	// 	Albedo.a = 0.4;
+	// #endif
 
 	
 	//////////////////////////////// 				////////////////////////////////
@@ -861,7 +901,7 @@ void main() {
 		normal = viewToWorld(normal);
 
 		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
-			if (ShaderGrass) {flatNormals = data_in.normalMat.xyz; normal = data_in.GrassNormals;}
+			if (ShaderGrass) {flatNormals = data_in.normalMat; normal = data_in.GrassNormals;}
 		#endif
 
 		vec4 data1 = clamp( encode(normal, PackLightmaps), 0.0, 1.0);

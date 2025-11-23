@@ -23,7 +23,7 @@ in DATA {
 	vec4 color;
 
 	vec4 lmtexcoord;
-	vec4 normalMat;
+	vec3 normalMat;
 
 	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec4 texcoordam; // .st for add, .pq for mul
@@ -41,7 +41,7 @@ out DATA {
 	vec4 color;
 
 	vec4 lmtexcoord;
-	vec4 normalMat;
+	vec3 normalMat;
 
 	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec4 texcoordam; // .st for add, .pq for mul
@@ -216,7 +216,7 @@ void main() {
         #endif
 
         #ifdef MC_NORMAL_MAP
-            vec3 normals = viewToWorld(data_in[1].normalMat.xyz);
+            vec3 normals = viewToWorld(data_in[1].normalMat);
         #else
             const vec3 normals = vec3(0.0, 1.0, 0.0);
         #endif
@@ -391,7 +391,6 @@ void main() {
                     if (data_in[i].color.rgb == vec3(1.0)) data_out.color.rgb = vec3(0.22,0.32,0.11)*heightfade;
 
                     data_out.lmtexcoord = data_in[i].lmtexcoord;
-                    data_out.normalMat.a = 0.4;
 
                     #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
                         data_out.texcoordam = data_in[i].texcoordam;
@@ -401,7 +400,7 @@ void main() {
                     #ifdef MC_NORMAL_MAP
                         data_out.tangent = data_in[i].tangent;
                     
-                        data_out.normalMat.xyz = GrassNormal[j];
+                        data_out.normalMat = GrassNormal[j];
 
                         heightfade = smoothstep(0.1, grassHeights[triangle_count], grassHeights[3*j+i]);
                     #endif

@@ -400,7 +400,10 @@ void main() {
 	float maxdist = MAX_OCCLUSION_DISTANCE;
 	if(!ifPOM) maxdist = 0.0;
 
-	gl_FragDepth = gl_FragCoord.z;
+	#if defined DEPTH_WRITE_POM
+		gl_FragDepth = gl_FragCoord.z;
+	#endif
+
 	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 	 if (falloff > 0.0 && !ShaderGrass)
 	#else
@@ -447,9 +450,10 @@ void main() {
 			
 			adjustedTexCoord = mix(fract(coord.st)*data_in.texcoordam.pq+data_in.texcoordam.st, adjustedTexCoord, max(dist-MIX_OCCLUSION_DISTANCE,0.0)/(MAX_OCCLUSION_DISTANCE-MIX_OCCLUSION_DISTANCE));
 
-			vec3 truePos = fragpos + sumVec*inverseMatrix(tbnMatrix)*interval;
-
-			gl_FragDepth = toClipSpace3(truePos).z;
+			#if defined DEPTH_WRITE_POM
+				vec3 truePos = fragpos + sumVec*inverseMatrix(tbnMatrix)*interval;
+				gl_FragDepth = toClipSpace3(truePos).z;
+			#endif
 		}
 	}
 #endif
@@ -471,7 +475,7 @@ void main() {
 			#ifdef INCLUDE_UNLISTED_ENTITIES
 				opaqueMasks = 0.45;
 			#else
-				if(entityId == ENTITY_BOAT || entityId == ENTITY_SMALLSHIPS || entityId == ENTITY_SSS_MEDIUM || entityId == ENTITY_SSS_WEAK || entityId == ENTITY_PLAYER || entityId == 2468) opaqueMasks = 0.45;
+				if(data_in.blockID == ENTITY_BOAT || data_in.blockID == ENTITY_SMALLSHIPS || data_in.blockID == ENTITY_SSS_MEDIUM || data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER || data_in.blockID == 2468) opaqueMasks = 0.45;
 			#endif
 		#endif
 

@@ -1325,7 +1325,7 @@ void main() {
 
 		#if defined END_ISLAND_LIGHT && defined END_SHADER
 			vec4 shadowPos = customShadowMatrixSSBO * (gbufferModelViewInverse * vec4(viewPos, 1.0));
-			applyShadowBias(shadowPos.xyz, shadowPlayerPos, FlatNormals);
+			applyShadowBias(shadowPos.xyz, shadowPlayerPos, FlatNormals, POM_DEEPNESS);
 			shadowPos = customShadowPerspectiveSSBO * shadowPos;
 			vec3 projectedShadowPosition = shadowPos.xyz / shadowPos.w;
 		#endif

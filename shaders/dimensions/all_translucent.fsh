@@ -371,7 +371,7 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 
 	#if defined END_ISLAND_LIGHT && defined END_SHADER
 		vec4 shadowPos = customShadowMatrixSSBO * vec4(playerPos, 1.0);
-		applyShadowBias(shadowPos.xyz, playerPos, geoNormals);
+		applyShadowBias(shadowPos.xyz, playerPos, geoNormals, 0.0);
 		shadowPos =  customShadowPerspectiveSSBO * shadowPos;
 		vec3 projectedShadowPosition = shadowPos.xyz / shadowPos.w;
 	#endif

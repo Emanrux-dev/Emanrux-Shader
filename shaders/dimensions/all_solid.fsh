@@ -318,6 +318,10 @@ float getEmission(vec3 Albedo) {
     return emissive * 0.5;
 }
 
+#if defined HAND || (defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES)
+	uniform float alphaTestRef;
+#endif
+
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -532,8 +536,8 @@ void main() {
 			if(step(ditherFade, R2_dither()) == 0.0) discard;
 	#endif
 	
-	#if defined HAND
-		if (Albedo.a < 0.1) discard;
+	#if defined HAND || (defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES)
+		if (Albedo.a < alphaTestRef) discard;
 	#endif
 
 	float torchlightmap = lmcoord.x;

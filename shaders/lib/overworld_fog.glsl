@@ -85,7 +85,7 @@ vec4 GetVolumetricFog(
 
 	//project pixel position into projected shadowmap space
 	vec3 playerPos = mat3(gbufferModelViewInverse) * viewPosition + gbufferModelViewInverse[3].xyz;
-	vec3 rayStartPos = playerPos - gbufferModelViewInverse[3].xyz;
+	// vec3 rayStartPos = playerPos - gbufferModelViewInverse[3].xyz;
 	#ifdef CUSTOM_MOON_ROTATION
 		vec3 fragposition = mat3(customShadowMatrixSSBO) * playerPos  + customShadowMatrixSSBO[3].xyz;
 	#else

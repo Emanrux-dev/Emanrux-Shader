@@ -526,7 +526,7 @@ void main() {
 
 	#if REPLACE_SHORT_GRASS < 2 && !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
 		// darken the top of grass blocks a bit
-		if(data_in.blockID == 85 && flatNormals.y > abs(0.9) && !ShaderGrass) Albedo *= smoothstep(-30.0, 25.0, length(playerpos));
+		if(data_in.blockID == 85 && flatNormals.y > abs(0.9) && !ShaderGrass) Albedo.rgb *= smoothstep(-30.0, 25.0, length(playerpos));
 	#endif
 
 	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0

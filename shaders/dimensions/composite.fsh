@@ -262,6 +262,35 @@ float convertHandDepth_2(in float depth, bool hand) {
     ndcDepth /= MC_HAND_DEPTH;
     return ndcDepth * 0.5 + 0.5;
 }
+#if defined DISTANT_HORIZONS || defined VOXY
+
+	vec4 iProjDiag = vec4(gbufferProjectionInverse[0].x, gbufferProjectionInverse[1].y, gbufferProjectionInverse[2].zw);
+
+	vec4 iProjDiag_DH = vec4(dhVoxyProjectionInverse[0].x, dhVoxyProjectionInverse[1].y, dhVoxyProjectionInverse[2].zw);
+
+	vec3 toScreenSpace_DH_SSAO(vec2 texcoord, ivec2 samplecoord, bool hand) {
+
+		vec4 viewPos = vec4(0.0);
+		vec3 feetPlayerPos = vec3(0.0);
+
+		float depth = convertHandDepth_2(texelFetch2D(depthtex1, samplecoord, 0).x, hand);
+
+		if (depth < 1.0) {
+			feetPlayerPos = vec3(texcoord, depth) * 2.0 - 1.0;
+			viewPos = iProjDiag * feetPlayerPos.xyzz + gbufferProjectionInverse[3];
+			viewPos.xyz /= viewPos.w;
+	
+		} else {
+			depth = texelFetch2D(dhVoxyDepthTex1, samplecoord, 0).x;
+
+			feetPlayerPos = vec3(texcoord, depth) * 2.0 - 1.0;
+			viewPos = iProjDiag_DH * feetPlayerPos.xyzz + dhVoxyProjectionInverse[3];
+			viewPos.xyz /= viewPos.w;
+		}
+
+		return viewPos.xyz;
+	}
+#endif
 
 vec2 SSAO(
 	vec3 viewPos, vec3 normal, vec3 flatnormal, bool hand, float noise
@@ -292,13 +321,11 @@ vec2 SSAO(
 		ivec2 offsetUV = ivec2(clamp((gl_FragCoord.xy + offsets*vec2(viewWidth, viewHeight*aspectRatio)*RENDER_SCALE)*texelSize,screenEdges,1.0-screenEdges)/texelSize);
 
 		if (offsetUV.x >= 0 && offsetUV.y >= 0 && offsetUV.x < viewWidth*RENDER_SCALE.x && offsetUV.y < viewHeight*RENDER_SCALE.y ) {
-			
-			float sampleDepth = convertHandDepth_2(texelFetch2D(depthtex1, offsetUV, 0).x, hand);
 
 			#if defined DISTANT_HORIZONS || defined VOXY
-				float sampleDHDepth = texelFetch2D(dhVoxyDepthTex1, offsetUV, 0).x;
-				vec3 offsetViewPos = toScreenSpace_DH((offsetUV*texelSize - jitterOffsets) * (1.0/RENDER_SCALE), sampleDepth, sampleDHDepth);
+				vec3 offsetViewPos = toScreenSpace_DH_SSAO((offsetUV*texelSize - jitterOffsets) * (1.0/RENDER_SCALE), offsetUV, hand);
 			#else
+				float sampleDepth = convertHandDepth_2(texelFetch2D(depthtex1, offsetUV, 0).x, hand);
 				vec3 offsetViewPos = toScreenSpace(vec3((offsetUV*texelSize - jitterOffsets) * (1.0/RENDER_SCALE), sampleDepth));
 			#endif
 

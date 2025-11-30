@@ -380,7 +380,7 @@ vec4 bilateralUpsample(vec2 fragcoord, sampler2D colortex, out float outerEdgeRe
       float offsetDepth = linearize(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE, 0).r);
     #endif
 
-    float edgeDiff = abs(offsetDepth - referenceDepth) < threshold ? 1.0 : 0.0;
+    float edgeDiff = abs(offsetDepth - referenceDepth) < threshold ? 1.0 : 1e-7;
     outerEdgeResults = max(outerEdgeResults, abs(referenceDepth - offsetDepth));
 
     vec4 offsetColor = texelFetch2D(colortex, UV_COLOR + OFFSET[i] + UV_NOISE, 0).rgba;
@@ -388,7 +388,6 @@ vec4 bilateralUpsample(vec2 fragcoord, sampler2D colortex, out float outerEdgeRe
     edgeSum += edgeDiff;
 
   }
-  if (edgeSum == 0.0) return vec4(0.0);
 
   outerEdgeResults = outerEdgeResults > (hand ? 0.005 : referenceDepth*0.05 + 0.1) ? 1.0 : 0.0;
   

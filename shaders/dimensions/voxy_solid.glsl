@@ -107,7 +107,7 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 
 		if(blockID == 244) EMISSIVE = 1.5; // soul fire
 
-		#ifdef EMISSIVE_ORES
+		#if EMISSIVE_ORES > 0
 			if(blockID == 502) EMISSIVE = EMISSIVE_ORES_STRENGTH;
 		#endif
 

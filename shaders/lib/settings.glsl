@@ -757,7 +757,7 @@ const vec3 HIGHLIGHTS_TARGET = length(vec3(HIGHLIGHTS_GRADE_R, HIGHLIGHTS_GRADE_
 #define AEROCHROME_PINKNESS 0.3 // How pink it is from red [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
 const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631), AEROCHROME_PINKNESS);
 // #define CAMERA_GRIDLINES
-// #define EMISSIVE_ORES
+#define EMISSIVE_ORES 0 // [0 1 2]
 #define EMISSIVE_ORES_STRENGTH 0.9 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
 
 // #define INCLUDE_UNLISTED_ENTITIES
@@ -1173,8 +1173,6 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #ifdef USE_CUSTOM_FOG_LIGHTING_COLORS
 #endif
 #ifdef USE_CUSTOM_SKY_GROUND_LIGHTING_COLORS
-#endif
-#ifdef EMISSIVE_ORES
 #endif
 #ifdef CUMULONIMBUS_LIGHTNING
 #endif

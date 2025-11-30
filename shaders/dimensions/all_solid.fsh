@@ -806,8 +806,14 @@ void main() {
 
 			if(data_in.blockID == 244) EMISSIVE = 1.5; // soul fire
 
-			#ifdef EMISSIVE_ORES
-				if(data_in.blockID == 502) EMISSIVE = EMISSIVE_ORES_STRENGTH;
+			#if EMISSIVE_ORES > 0
+				if(data_in.blockID == 502) {
+					EMISSIVE = EMISSIVE_ORES_STRENGTH;
+
+					#ifndef HARDCODED_EMISSIVES_APPROX
+						EMISSIVE *= getEmission(Albedo.rgb);
+					#endif
+				}
 			#endif
 		#endif
 
@@ -827,6 +833,14 @@ void main() {
 
 		gl_FragData[1] = vec4(0.0,0.0,0.0,0.0);
 		gl_FragData[1].rg = SpecularTex.rg;
+
+		#if EMISSIVE_ORES > 1
+			if(data_in.blockID == 502) {
+				SpecularTex.a = EMISSIVE_ORES_STRENGTH;
+				
+				SpecularTex.a *= getEmission(Albedo.rgb);
+			}
+		#endif
 
 		#if EMISSIVE_TYPE == 2
 		bool emissionCheck = SpecularTex.a <= 0.0;

@@ -247,9 +247,9 @@ vec3 ApplySSRT(
 		vec3 rayDir = TangentToWorld(normal, normalize(cosineHemisphereSample(ij)));
 
 		#ifdef HQ_SSGI
-			vec3 rayHit = rayTrace_GI( mat3(gbufferModelView) * rayDir, viewPos, noise.z, 50.); // ssr rt
+			vec3 rayHit = rayTrace_GI( mat3(gbufferModelView) * rayDir, viewPos, noise.z, 5.0*RAY_STEPS); // ssr rt
 		#else
-			vec3 rayHit = RT_alternate(mat3(gbufferModelView)*rayDir, viewPos, noise.z, 10., isLOD, CURVE);  // choc sspt 
+			vec3 rayHit = RT_alternate(mat3(gbufferModelView)*rayDir, viewPos, noise.z, RAY_STEPS, isLOD, CURVE);  // choc sspt 
 
 
 			/// RAAAAAAAAAAAAAAAAAAAAAAAAGHH

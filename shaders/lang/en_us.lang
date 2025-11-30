@@ -274,6 +274,7 @@ screen.Ambient_light = Ambient Light
             value.indirect_effect.SSRT_AO_GI = SSRT (AO + GI) - §cVISUAL NOISE§r
     option.RAY_COUNT = Ray Count
         option.RAY_COUNT.comment = Helps reduce visual noise of SSRT. §aPERFORMANCE COST:§r High
+    option.RAY_STEPS = Ray Steps
 	option.HANDHELD_LIGHT_RANGE = Handheld Light Range
 
     screen.SSRT_SETTINGS = SSRT Settings

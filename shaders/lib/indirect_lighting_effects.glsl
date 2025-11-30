@@ -160,7 +160,7 @@ vec3 RT_alternate(vec3 dir, vec3 position, float noise, float stepsizes, bool ha
 	float dist = 1.0 + length(worldpos)/far; // step length as distance increases
 	float stepSize = stepsizes / dist;
 
-	int maxSteps = 10;
+	int maxSteps = RAY_STEPS;
 	vec3 clipPosition = toClipSpace3(position);
 	float rayLength = ((position.z + dir.z * sqrt(3.0)*far) > -sqrt(3.0)*near) ?
 	   								(-sqrt(3.0)*near -position.z) / dir.z : sqrt(3.0)*far;

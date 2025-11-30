@@ -494,7 +494,7 @@ vec2 SSRT_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, boo
 
 	for (int i = 0; i < int(samples); i++) { 
 		if (newPos.x < 0.0 || newPos.y < 0.0 || newPos.x > 1.0 || newPos.y > 1.0) break;
-		float sampleDepth;
+		float sampleDepth = 0.0;
 		
 		#if defined DISTANT_HORIZONS || defined VOXY
 		if(depthCheck) {
@@ -1505,7 +1505,7 @@ void main() {
 				vec3 newViewPos = viewPos + vec3(-0.25, 0.2, 0.0);
 				float flashlightshadows = SSRT_FlashLight_Shadows(toScreenSpace_DH(texcoord/RENDER_SCALE, z, DH_depth1), isDHrange, -newViewPos, blueNoise(), FlatNormals, hand);
 			#else
-				float flashlightshadows = 1.0;
+				const float flashlightshadows = 1.0;
 			#endif
 			
 			Indirect_lighting += flashlightshadows*calculateFlashlight(texcoord, viewPos, albedoSmooth, slopednormal, flashLightSpecularData, hand);

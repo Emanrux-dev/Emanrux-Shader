@@ -163,7 +163,20 @@ void main() {
   #elif defined PIXELATED
     vec3 COLOR = texelFetch(colortex7, ivec2(gl_FragCoord.xy)-ivec2(mod(gl_FragCoord.xy, PIXELIZATION_STRENGTH)),0).rgb;
   #else
-    vec3 COLOR = texture2D(colortex7,texcoord).rgb;
+    #ifdef FISHEYE_EFFECT
+      vec2 _texcoord = texcoord - vec2(0.5);
+      
+      float dist = length(_texcoord);
+      float dist2 = dist * (1.0 - FISHEYE_STRENGTH * dist * dist);
+      
+      _texcoord = _texcoord * dist2 / dist;
+      
+      _texcoord += vec2(0.5);
+
+      vec3 COLOR = texture2D(colortex7, _texcoord).rgb;
+    #else
+      vec3 COLOR = texture2D(colortex7, texcoord).rgb;
+    #endif
   #endif
   
   #if defined LOW_HEALTH_EFFECT || defined DAMAGE_TAKEN_EFFECT || defined WATER_ON_CAMERA_EFFECT  

@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.4.2
+    value.SHADER_VERSION_LABEL.482 = 5.4.3
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -924,6 +924,9 @@ option.EMISSIVE_ORES = Emissive Ores
 option.EMISSIVE_ORES_STRENGTH = Emissive Ores Brightness
 option.PLANET_CURVATURE = Planet Curvature §c(VOXY NOT SUPPORTED!)
 option.CURVATURE_AMOUNT = Curvature Amount
+
+option.FISHEYE_EFFECT = Fisheye Effect
+option.FISHEYE_STRENGTH = Fisheye Strength
 
 screen.selection_box_outline = Selection Box Outline
 option.SELECT_BOX = Selection Box

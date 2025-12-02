@@ -16,6 +16,8 @@ uniform sampler2D noisetex;
 varying float LIGHTNING;
 uniform float frameTimeCounter;
 
+uniform int renderStage;
+
 
 //////////////////////////////VOID MAIN//////////////////////////////
 
@@ -40,7 +42,7 @@ void main() {
 		// gl_FragData[0] = vec4(texture2D(tex,texcoord.xy).rgb * color.rgb,  texture2DLod(tex, texcoord.xy, 0).a);
 
 		#ifdef Stochastic_Transparent_Shadows
-			if(gl_FragData[0].a < blueNoise()) { discard; return;}
+			if(gl_FragData[0].a < blueNoise() && (renderStage == MC_RENDER_STAGE_TERRAIN_TRANSLUCENT || renderStage == MC_RENDER_STAGE_ENTITIES || renderStage == MC_RENDER_STAGE_BLOCK_ENTITIES)) { discard; return;}
 		#endif
 	#else
 		gl_FragData[0] = vec4(0.0);

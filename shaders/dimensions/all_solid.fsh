@@ -133,9 +133,13 @@ float R2_dither(){
 }
 
 #ifdef TAA
-	#define blueNoise fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter)
+	float blueNoise() {
+		return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
+	} 
 #else
-	#define blueNoise fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887)
+	float blueNoise() {
+		return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887);
+	}
 #endif
 
 
@@ -374,6 +378,8 @@ void main() {
 							  data_in.tangent.z, binormal.z, normal.z);
 	#endif
 
+	float BN = blueNoise();
+
 	vec2 tempOffset = offsets[framemod8];
 
 	vec3 fragpos = toScreenSpace(FragCoord*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize*0.5, 0.0));
@@ -419,7 +425,7 @@ void main() {
 		float pomdepth = POM_DEPTH*falloff;
 
  		if ( viewVector.z < 0.0 && depthmap < 0.9999 && depthmap > 0.00001) {	
-			float noise = blueNoise;
+			float noise = BN;
 			#ifdef Adaptive_Step_length
 				vec3 interval = (viewVector.xyz / -viewVector.z / MAX_OCCLUSION_POINTS * pomdepth) * clamp(1.0-pow(depthmap,2),0.1,1.0);
 				used_POM_DEPTH = 1.0;
@@ -540,6 +546,14 @@ void main() {
 		if (Albedo.a < alphaTestRef) discard;
 	#endif
 
+	#if (defined BLOCKENTITIES || defined ENTITIES) && !defined TRANSLUCENT_ENTITIES && defined TRANSLUCENT_ENTITIES_DITHER_FALLBACK
+		#ifdef TAA
+			if(step(1.0-Albedo.a, BN) == 0.0) discard;
+		#else
+			if(step(1.0-Albedo.a, R2_dither()) == 0.0) discard;
+		#endif
+	#endif
+
 	float torchlightmap = lmcoord.x;
 
 	#if defined Hand_Held_lights && !defined LPV_ENABLED
@@ -600,14 +614,14 @@ void main() {
 
 			vec2 rayDir = ((correctedViewVec.xy) / -correctedViewVec.z) / steps * 5.0 ;
 		
-			vec2 uv = correctedWorldPos + rayDir * blueNoise;
+			vec2 uv = correctedWorldPos + rayDir * BN;
 			uv += rayDir * 10.0;
 
 			vec2 animation = vec2(frameTimeCounter, -frameTimeCounter)*0.01;
 			
 			for (int i = 0; i < int(steps); i++) {
 				
-				float verticalGradient = (i + blueNoise)/steps ;
+				float verticalGradient = (i + BN)/steps ;
 				float verticalGradient2 = exp(-7*(1-verticalGradient*verticalGradient));
 			
 				float density = max(max(verticalGradient - texture2D(noisetex, uv/256.0 + animation.xy).b*0.5,0.0) - (1.0-texture2D(noisetex, uv/32.0 + animation.xx).r) * (0.4 + 0.1 * (texture2D(noisetex, uv/10.0 - animation.yy).b)),0.0);

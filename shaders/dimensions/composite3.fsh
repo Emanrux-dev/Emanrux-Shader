@@ -409,16 +409,16 @@ vec4 VLTemporalFiltering(vec3 viewPos, in float referenceDepth, sampler2D depth,
 
   vec4 currentFrame = texture2D(colortex0, VLtexCoord);
 
+  // return vec4(outerEdgeResults,0,0,1);
+  // return upsampledCurrentFrame;
+
+  if (previousPosition.x < 0.0 || previousPosition.y < 0.0 || previousPosition.x > 1.0 || previousPosition.y > 1.0) return currentFrame;
+
   // to fill pixel gaps in geometry edges, do a bilateral upsample.
   // pass a mask to only show upsampled color around the edges of blocks. this is so it doesnt blur reprojected results.
   float outerEdgeResults = 0.0;
   vec4 upsampledCurrentFrame = bilateralUpsample(gl_FragCoord.xy , colortex0, outerEdgeResults, referenceDepth, depth, hand, false);
   // vec4 upsampledCurrentFrame = BilateralUpscale(colortex0, depth, gl_FragCoord.xy - 1.5, referenceDepth);
-
-  // return vec4(outerEdgeResults,0,0,1);
-  // return upsampledCurrentFrame;
-
-  if (previousPosition.x < 0.0 || previousPosition.y < 0.0 || previousPosition.x > 1.0 || previousPosition.y > 1.0) return currentFrame;
   
 	vec4 col1 = texture2D(colortex0, VLtexCoord + vec2( texelSize.x,  texelSize.y));
 	vec4 col2 = texture2D(colortex0, VLtexCoord + vec2( texelSize.x, -texelSize.y));
@@ -838,7 +838,8 @@ void main() {
 
   // blend border fog. be sure to blend before and after forward rendered color blends.
   #if defined BorderFog && defined OVERWORLD_SHADER
-    vec4 borderFog = vec4(skyGroundColor, getBorderFogDensity(linearDistance_cylinder, playerPos_normalized, swappedDepth >= 1.0));
+    float borderFogDensity = getBorderFogDensity(linearDistance_cylinder, playerPos_normalized, isSky);
+    vec4 borderFog = vec4(skyGroundColor, borderFogDensity);
 
     #if !defined SKY_GROUND
       borderFog.rgb = skyFromTex(playerPos_normalized, colortex4)/1200.0 * Sky_Brightness;
@@ -863,7 +864,7 @@ void main() {
   blendForwardRendering(color, TranslucentShader);
 
   #if defined BorderFog && defined OVERWORLD_SHADER
-    color = mix(color, borderFog.rgb, getBorderFogDensity(linearDistance_cylinder, playerPos_normalized, isSky));
+    color = mix(color, borderFog.rgb, borderFogDensity);
   #endif
   
   // tweaks to VL for nametag rendering

@@ -789,7 +789,7 @@ void main() {
 		#ifdef OVERWORLD_SHADER
 			vec2 lightmap = decodeVec2(texelFetch2D(colortex14,texcoord,0).z);
 		#else
-			vec2 lightmap = decodeVec2(texelFetch2D(colortex14,texcoord,0).a);
+			vec2 lightmap = decodeVec2(texelFetch2D(colortex14,texcoord,0).z);
 			lightmap.y = 1.0;
 		#endif
 

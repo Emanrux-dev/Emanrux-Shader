@@ -128,7 +128,7 @@ vec3 calculateAtmosphere(vec3 background, vec3 viewVector, vec3 upVector, vec3 s
 	vec2 phaseMoon = sky_phase(dot(viewVector, moonVector), 0.8);
 
 	#ifdef CUSTOM_MOON_ROTATION
-		float eclipseDarkeness = smoothstep(0.005, 0.09, length(sunVector-moonVector));
+		float eclipseDarkeness = smoothstep(0.005, 0.08, length(sunVector-moonVector));
 		phaseSun *= mix(1.0, eclipseDarkeness, smoothstep(-1.0, 0.175, viewVector.y));
 	#endif
 

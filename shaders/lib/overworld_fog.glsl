@@ -113,8 +113,6 @@ vec4 GetVolumetricFog(
 
 	float dL = length(dVWorld)/8.0;
 
-	vec3 progress = start.xyz;
-	vec3 progressW = vec3(0.0);
 	const float expFactor = 11.0;
 
 	/// -------------  COLOR/LIGHTING STUFF ------------- \\\
@@ -122,8 +120,7 @@ vec4 GetVolumetricFog(
 	vec3 color = vec3(0.0);
 	vec3 finalAbsorbance = vec3(1.0);
 
-	// float totalAbsorbance = 1.0;
-	vec3 totalAbsorbance = vec3(1.0);
+	float totalAbsorbance = 1.0;
 
 	// float fogAbsorbance = 1.0;
 	// float atmosphereAbsorbance = 1.0;
@@ -170,17 +167,22 @@ vec4 GetVolumetricFog(
 
 
 	for (int i = 0; i < SAMPLECOUNT; i++) {
-		// if(totalAbsorbance.r < 0.01 && totalAbsorbance.g < 0.01 && totalAbsorbance.b < 0.01) break;
 		float d = (pow(expFactor, float(i+dither.x)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);
 		float dd = pow(expFactor, float(i+dither.y)/float(SAMPLECOUNT)) * log(expFactor) / float(SAMPLECOUNT)/(expFactor-1.0);
 
-		progress = start.xyz + d*dV;
-		progressW = gbufferModelViewInverse[3].xyz + cameraPosition + d*dVWorld;
+		// #ifdef VOLUMETRIC_CLOUDS
+		// 	// check if the fog intersects clouds
+		// 	if(length(d*dVWorld) > cloudPlaneDistance) break;
+		// #endif
+
+		vec3 progress = start.xyz + d*dV;
+		vec3 progressP = gbufferModelViewInverse[3].xyz + d*dVWorld;
+		vec3 progressW = progressP + cameraPosition;
 
 		//------------------------------------
 		//------ SAMPLE SHADOWS FOR FOG EFFECTS
 		//------------------------------------
-			#if defined DISTORT_SHADOWMAP && defined OVERWORLD_SHADER
+			#if defined DISTORT_SHADOWMAP
 				float distortFactor = calcDistort(progress.xy);
 			#else
 				float distortFactor = 1.0;
@@ -227,7 +229,7 @@ vec4 GetVolumetricFog(
 				vec3 DirectLight = LightSourcePhased * sh;
 			#endif
 
-			vec3 Lightning = Iris_Lightningflash_VLfog(progressW-cameraPosition);
+			vec3 Lightning = Iris_Lightningflash_VLfog(progressP);
 			vec3 lighting = DirectLight + indirectLight + 0.1 * Lightning;
 			
 			color += (lighting - lighting * fogVolumeCoeff) * totalAbsorbance;
@@ -242,13 +244,13 @@ vec4 GetVolumetricFog(
     				#ifdef VIVECRAFT
     				    if (vivecraftIsVR) {
 							forwardOffset = 0.0;
-    				        shiftedPlayerPos = (progressW - cameraPosition) + ( vivecraftRelativeMainHandPos);
+    				        shiftedPlayerPos = (progressP) + ( vivecraftRelativeMainHandPos);
     				        shiftedViewPos = shiftedPlayerPos * mat3(vivecraftRelativeMainHandRot);
     				    } else
     				#endif
     				{
 						forwardOffset = 0.5;
-						shiftedViewPos = mat3(gbufferModelView)*(progressW-cameraPosition) + vec3(-0.25, 0.2, 0.0);
+						shiftedViewPos = mat3(gbufferModelView)*(progressP) + vec3(-0.25, 0.2, 0.0);
 						shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos;
     				}
 
@@ -267,12 +269,14 @@ vec4 GetVolumetricFog(
 
 			// kill fog absorbance when in caves.
 			totalAbsorbance *= mix(1.0, fogVolumeCoeff, lightLevelZero);
+			if(totalAbsorbance < 0.01) break;
+
 		//------------------------------------
 		//------ ATMOSPHERE HAZE EFFECT
 		//------------------------------------
 
 			// maximum range for atmosphere haze, basically.
-			float planetVolume = smoothstep(1.0 - exp(clamp(1.0 - length(progressW-cameraPosition) / (16.0*150.0), 0.0,1.0) * -10.0), 0.0, progressW.y-cameraPosition.y-500.0);
+			float planetVolume = smoothstep(1.0 - exp(clamp(1.0 - length(progressP) / (16.0*150.0), 0.0,1.0) * -10.0), 0.0, progressP.y-500.0);
 
 			// just air
 			vec2 airCoef = exp2(-max(progressW.y-SEA_LEVEL,0.0)/vec2(8.0e3, 1.2e3)*vec2(6.0,7.0)) * 192.0 * Haze_amount * planetVolume;

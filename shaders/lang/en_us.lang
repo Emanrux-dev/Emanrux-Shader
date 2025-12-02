@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.4.4
+    value.SHADER_VERSION_LABEL.482 = 5.5.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 

@@ -547,10 +547,11 @@ void main() {
 	#endif
 
 	#if (defined BLOCKENTITIES || defined ENTITIES) && !defined TRANSLUCENT_ENTITIES && defined TRANSLUCENT_ENTITIES_DITHER_FALLBACK
+		float entitiyAlbedo = clamp((Albedo.a - 0.1) * 10.0 / 9.0, 0.0, 1.0);
 		#ifdef TAA
-			if(step(1.0-Albedo.a, BN) == 0.0) discard;
+			if(step(1.0-entitiyAlbedo, BN) == 0.0) discard;
 		#else
-			if(step(1.0-Albedo.a, R2_dither()) == 0.0) discard;
+			if(step(1.0-entitiyAlbedo, R2_dither()) == 0.0) discard;
 		#endif
 	#endif
 

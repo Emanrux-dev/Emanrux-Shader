@@ -703,7 +703,7 @@ void main() {
 	#endif
 
 	vec3 indirectLight = indirectLightColor_dynamic * skyLightLevelSmooth * ambient_brightness; 
-    float minimumLightAmount = 0.02*nightVision + 0.005 * mix(MIN_LIGHT_AMOUNT_INSIDE, MIN_LIGHT_AMOUNT, skyLightLevelSmooth);
+    float minimumLightAmount = 0.02*nightVision + 0.001 * mix(MIN_LIGHT_AMOUNT_INSIDE, MIN_LIGHT_AMOUNT, clamp(skyLightLevelSmooth, 0.0, 1.0));
     indirectLight += vec3(1.0) * minimumLightAmount;
 	
     vec3 indirectLight_fog = indirectLightColor * skyLightLevelSmooth * ambient_brightness; 

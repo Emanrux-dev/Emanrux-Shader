@@ -24,6 +24,8 @@ flat varying float avgBrightness;
 flat varying float rodExposure;
 flat varying float avgL2;
 flat varying float centerDepth;
+uniform float skyLightLevelSmooth;
+uniform float nightVision;
 
 uniform sampler2D noisetex;
 
@@ -405,7 +407,12 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, WmoonVec, sunColor2*2.5, moonColor2*2.5, skyGroundCol/30.0, cloudPlaneDistance, cloudDistance);
 
 	WsunVec = mix(WmoonVec, WsunVec, clamp(float(sunElevation > 1e-5)*2.0-1.0 ,0,1));
-	vec4 volumetricFog = GetVolumetricFog(viewPos, WsunVec, vec2(noise, 1.0-noise), suncol*2.5, skyGroundCol/30.0, averageSkyCol_Clouds*5.0, cloudPlaneDistance);
+
+	float minimumLightAmount = 0.8*nightVision + 0.05 * mix(MIN_LIGHT_AMOUNT_INSIDE, MIN_LIGHT_AMOUNT, clamp(skyLightLevelSmooth, 0.0, 1.0));
+	vec3 indirectLight_fog = skyGroundCol/30.0 + vec3(1.0) * minimumLightAmount;
+
+
+	vec4 volumetricFog = GetVolumetricFog(viewPos, WsunVec, vec2(noise, 1.0-noise), suncol*2.5, indirectLight_fog, averageSkyCol_Clouds*5.0, cloudPlaneDistance);
 
 	#if AURORA_LOCATION > 0
 		if (WsunVec.y < 0.0 && volumetricClouds.a > 0.01

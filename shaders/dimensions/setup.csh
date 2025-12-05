@@ -809,6 +809,14 @@ void main() {
             mixWeight = 0.8;
         }
 
+        if (
+            blockId == WISPJELLY
+        ) {
+            lightColor = vec3(0.1, 0.1, 0.1);
+            lightRange = 2.0;
+            mixWeight = 0.2;
+        }
+
         if (blockId >= BLOCK_LAMP_LIT_BLACK && blockId <= BLOCK_LAMP_LIT_YELLOW) {
             lightRange = 15.0;
             mixWeight = 0.25;
@@ -948,6 +956,10 @@ void main() {
                 break;
             case BLOCK_SLIME:
                 tintColor = vec3(0.408, 0.725, 0.329);
+                mixWeight = 1.0;
+                break;
+            case WISPJELLY:
+                tintColor = vec3(0.27, 0.32, 0.39);
                 mixWeight = 1.0;
                 break;
 

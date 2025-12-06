@@ -142,6 +142,8 @@ float R2_dither(){
 	}
 #endif
 
+uniform int currentRenderedItemId;
+
 
 mat3 inverseMatrix(mat3 m) {
   float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];
@@ -322,6 +324,11 @@ float getEmission(vec3 Albedo) {
     return emissive * 0.5;
 }
 
+float getTrimEmission(vec3 Albedo) {
+	vec3 hsv = RgbToHsv(Albedo);
+    return sqrt(hsv.z);
+}
+
 #if defined HAND || (defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES)
 	uniform float alphaTestRef;
 #endif
@@ -485,7 +492,7 @@ void main() {
 			#ifdef INCLUDE_UNLISTED_ENTITIES
 				opaqueMasks = 0.45;
 			#else
-				if(data_in.blockID == ENTITY_BOAT || data_in.blockID == ENTITY_SMALLSHIPS || data_in.blockID == ENTITY_SSS_MEDIUM || data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER || data_in.blockID == 2468) opaqueMasks = 0.45;
+				if(data_in.blockID == ENTITY_BOAT || data_in.blockID == ENTITY_SMALLSHIPS || data_in.blockID == ENTITY_SSS_MEDIUM || data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER || data_in.blockID == ENTITY_CURRENT_PLAYER || data_in.blockID == 2468) opaqueMasks = 0.45;
 			#endif
 		#endif
 
@@ -780,7 +787,7 @@ void main() {
 					// medium
 			
 					// low
-					if(data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER) SSSAMOUNT = 0.4;
+					if(data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER || data_in.blockID == ENTITY_CURRENT_PLAYER) SSSAMOUNT = 0.4;
 				#endif
 			#endif
 
@@ -794,6 +801,11 @@ void main() {
 				// low
 
 			#endif
+		#endif
+
+		#if EMISSIVE_TRIMS > 0
+			bool isBrightTrim = currentRenderedItemId == 1026;
+			bool isTrim = isBrightTrim || currentRenderedItemId == 1027;
 		#endif
 
 		#if EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2
@@ -830,6 +842,12 @@ void main() {
 					#endif
 				}
 			#endif
+
+			#if EMISSIVE_TRIMS > 0
+				if(isTrim) EMISSIVE = EMISSIVE_TRIMS_STRENGTH*getTrimEmission(Albedo.rgb);
+
+				if(isBrightTrim) EMISSIVE *= 0.4;
+			#endif
 		#endif
 
 
@@ -849,7 +867,7 @@ void main() {
 		gl_FragData[1] = vec4(0.0,0.0,0.0,0.0);
 		gl_FragData[1].rg = SpecularTex.rg;
 
-		#if EMISSIVE_ORES > 1
+		#if EMISSIVE_ORES > 1 && EMISSIVE_TYPE > 1
 			if(data_in.blockID == 502) {
 				SpecularTex.a = EMISSIVE_ORES_STRENGTH;
 				
@@ -857,12 +875,22 @@ void main() {
 			}
 		#endif
 
+		#if EMISSIVE_TRIMS > 1 && EMISSIVE_TYPE > 1
+			if(isTrim) SpecularTex.a = EMISSIVE_TRIMS_STRENGTH*getTrimEmission(Albedo.rgb);
+
+			if(isBrightTrim) SpecularTex.a *= 0.4;
+		#endif
+
 		#if EMISSIVE_TYPE == 2
 		bool emissionCheck = SpecularTex.a <= 0.0;
 		#endif
 
 		#if defined HARDCODED_EMISSIVES_APPROX && (EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2)
-			#if EMISSIVE_TYPE == 2
+			#if EMISSIVE_TYPE == 2 && EMISSIVE_TRIMS > 0
+			if(emissionCheck && !isTrim)
+			#elif EMISSIVE_TRIMS > 0
+			if(!isTrim)
+			#elif EMISSIVE_TYPE == 2
 			if(emissionCheck)
 			#endif
 			{
@@ -875,11 +903,13 @@ void main() {
 		#endif
 
 		#if EMISSIVE_TYPE == 1
+			EMISSIVE = clamp(EMISSIVE, 0.0, 1.0);
 			gl_FragData[1].a = EMISSIVE;
 		#endif
 
 		#if EMISSIVE_TYPE == 2
 			gl_FragData[1].a = SpecularTex.a;
+			EMISSIVE = clamp(EMISSIVE, 0.0, 1.0);
 			if(emissionCheck) gl_FragData[1].a = EMISSIVE;
 		#endif
 
@@ -911,11 +941,11 @@ void main() {
 
 	// hit glow effect...
 	#if defined ENTITIES && !defined COLORWHEEL
-		Albedo.rgb = mix(Albedo.rgb, entityColor.rgb, clamp(entityColor.a*1.5,0,1));
+		Albedo.rgb = mix(Albedo.rgb, entityColor.rgb, pow(entityColor.a, 0.8));
 	#endif
 
 	#ifdef COLORWHEEL
-		Albedo.rgb = mix(Albedo.rgb, overlayColor.rgb, clamp(overlayColor.a*1.5,0,1));
+		Albedo.rgb = mix(Albedo.rgb, overlayColor.rgb, overlayColor.a);
 	#endif
 
 	//////////////////////////////// 				////////////////////////////////

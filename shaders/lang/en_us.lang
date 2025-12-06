@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.5.1
+    value.SHADER_VERSION_LABEL.482 = 5.6.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -926,6 +926,13 @@ option.EMISSIVE_ORES = Emissive Ores
     value.EMISSIVE_ORES.1 = On (Don't override labPBR emission)
     value.EMISSIVE_ORES.2 = On (Override labPBR emission)
 option.EMISSIVE_ORES_STRENGTH = Emissive Ores Brightness
+
+option.EMISSIVE_TRIMS = Emissive Trims
+    value.EMISSIVE_TRIMS.0 = Off
+    value.EMISSIVE_TRIMS.1 = On (Don't override labPBR emission)
+    value.EMISSIVE_TRIMS.2 = On (Override labPBR emission)
+option.EMISSIVE_TRIMS_STRENGTH = Emissive Trims Brightness
+
 option.PLANET_CURVATURE = Planet Curvature §c(VOXY NOT SUPPORTED!)
 option.CURVATURE_AMOUNT = Curvature Amount
 

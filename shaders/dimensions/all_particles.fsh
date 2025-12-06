@@ -376,7 +376,7 @@ void main() {
 		vec2 lmcoord = lmtexcoord.zw;
 
 		clrwl_computeFragment(Albedo, Albedo, lmcoord, ao, overlayColor);
-		Albedo.rgb = mix(Albedo.rgb, overlayColor.rgb, clamp(overlayColor.a*1.5,0,1));
+		Albedo.rgb = mix(Albedo.rgb, overlayColor.rgb, overlayColor.a);
 	#endif
 	
 	if(Albedo.a < 0.01 ) { discard; return; }

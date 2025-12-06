@@ -583,11 +583,11 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#endif
 
 	#if defined ENTITIES && !defined COLORWHEEL
-		Albedo.rgb = mix(Albedo.rgb, entityColor.rgb, clamp(entityColor.a*1.5,0,1));
+		Albedo.rgb = mix(Albedo.rgb, entityColor.rgb, pow(entityColor.a, 0.8));
 	#endif
 
 	#ifdef COLORWHEEL
-		Albedo.rgb = mix(Albedo.rgb, overlayColor.rgb, clamp(overlayColor.a*1.5,0,1));
+		Albedo.rgb = mix(Albedo.rgb, overlayColor.rgb, overlayColor.a);
 	#endif
 
 	vec4 GLASS_TINT_COLORS = vec4(Albedo, UnchangedAlpha);

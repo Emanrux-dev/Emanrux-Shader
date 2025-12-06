@@ -58,7 +58,12 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 					voxelId = uint(blockEntityId);
 			}
 			else if (currentRenderedItemId > 100 && currentRenderedItemId < 300) {
-				if (entityId != ENTITY_ITEM_FRAME && entityId != ENTITY_PLAYER) {
+				#if MC_VERSION > 12100 && MC_VERSION != 12109 && MC_VERSION != 12110 
+				if (entityId != ENTITY_ITEM_FRAME && entityId != ENTITY_CURRENT_PLAYER)
+				#else
+				if (entityId != ENTITY_ITEM_FRAME && entityId != ENTITY_PLAYER)
+				#endif
+				{
 					voxelId = uint(currentRenderedItemId);
 
 					// offset by a random number that came into my head to make entities and items not interact with grass

@@ -203,7 +203,7 @@ void main() {
 
 	if (mc_Entity.x == 320) mat = 0.6;
 
-	if (mc_Entity.x == 322) mat = lmtexcoord.z = 0.0;
+	if (mc_Entity.x == 322) lmtexcoord.z = 0.0;
 
 	#if defined ENTITIES && defined IS_IRIS
 		NAMETAG = 0;

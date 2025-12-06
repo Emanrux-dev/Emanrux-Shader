@@ -26,6 +26,17 @@ uint GetVoxelBlock(const in ivec3 voxelPos) {
 uniform bool is_sneaking;
 uniform float frameTimeCounter;
 
+vec2 getPlayerMovementOffset() {
+    vec2 currentPos = cameraPosition.xz-relativeEyePosition.xz;
+    vec2 previousPos = previousCameraPositionWave2.xz;
+    vec2 movement = currentPos - previousPos;
+    #if WATER_SIM_SCALE == 0
+        return -20.0 * movement;
+    #else
+        return -40.0 * movement * WATER_SIM_SCALE;
+    #endif
+}
+
 void main() {
     #if WATER_INTERACTION == 2
     if (abs(frameTimeCounter - lastFrameTimeCount) > WATER_SIM_FRAMETIME) {
@@ -69,6 +80,16 @@ void main() {
         if(inBoatCurrentFrame || inBoatLastFrame || inBoat2Frames) inBoat = true;
 
         if(inShipCurrentFrame || inShipLastFrame || inShip2Frames) inShip = true;
+
+        vec2 playerMovement = getPlayerMovementOffset();
+        water_move_ompensation_counter_SSBO += playerMovement;
+
+        water_move_compensationSSBO = ivec2(0);
+        ivec2 offset = ivec2(trunc(water_move_ompensation_counter_SSBO));
+        if (any(notEqual(offset, ivec2(0)))) {
+            water_move_compensationSSBO = offset;
+            water_move_ompensation_counter_SSBO -= vec2(offset);
+        }
     }
     #endif
 }

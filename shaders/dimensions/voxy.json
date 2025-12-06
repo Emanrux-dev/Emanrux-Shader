@@ -56,6 +56,10 @@
         bool noSimOngoing;
 
         bool noSimOngoingCheck;
+
+        ivec2 water_move_compensationSSBO;
+
+        vec2 water_move_ompensation_counter_SSBO;
     
     }"},
     "useViewportDims": true,

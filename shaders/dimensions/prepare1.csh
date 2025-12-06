@@ -51,17 +51,6 @@ uniform vec3 relativeEyePosition;
 
 #include "/lib/SSBOs.glsl"
 
-vec2 getPlayerMovementOffset() {
-    vec2 currentPos = cameraPosition.xz-relativeEyePosition.xz;
-    vec2 previousPos = previousCameraPositionWave2.xz;
-    vec2 movement = currentPos - previousPos;
-    #if WATER_SIM_SCALE == 0
-        return -20.0 * movement;
-    #else
-        return -40.0 * movement * WATER_SIM_SCALE;
-    #endif
-}
-
 // Make this a smaller number for a smaller timestep.
 // Don't make it bigger than 1.4 or the universe will explode.
 #if WATER_SIM_SCALE == 0
@@ -80,7 +69,7 @@ void main() {
         float dist = length(imgCoord-0.5*resolution);
         if (dist >= resolution.x) return;
 
-        ivec2 movementOffset = ivec2(round(getPlayerMovementOffset()));
+        ivec2 movementOffset = water_move_compensationSSBO;
 
         ivec2 sampledCoord = imgCoord - movementOffset;
         sampledCoord = clamp(sampledCoord, ivec2(1), resolution - ivec2(1));

@@ -33,7 +33,7 @@ layout(binding = 0) buffer SSBO1 {
 
     bool noSimOngoingCheck; // 1 byte
 
-    ivec2 water_move_compensationSSBO; // idk
+    ivec2 water_move_compensationSSBO; // 8 bytes
 
     vec2 water_move_ompensation_counter_SSBO; // 8 bytes
 };

@@ -513,7 +513,9 @@ void main() {
 	#ifndef COLORWHEEL
 		vec4 Color = data_in.color;
 		float vanillaAO = 1.0 - clamp(Color.a,0,1);
-		if (Color.a < 0.3) Color.a = 1.0; // fix vanilla ao on some custom block models.
+
+		// don't fix vanilla ao on some custom block models.
+		// if (Color.a < 0.3) Color.a = 1.0; // fix vanilla ao on some custom block models.
 
 		vec4 Albedo = Color;
 		

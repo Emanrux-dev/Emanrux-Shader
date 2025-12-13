@@ -2,28 +2,8 @@
 
 #define ReflectedFog
 
-#ifdef CUSTOM_MOON_ROTATION
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
-flat varying vec3 averageSkyCol_Clouds;
-flat varying vec3 averageSkyCol;
-
-flat varying vec3 lightSourceColor;
-flat varying vec3 sunColor;
-flat varying vec3 moonColor;
-// flat varying vec3 zenithColor;
-// flat varying vec3 rayleighAborbance; 
-
-// flat varying vec3 WsunVec;
-
-flat varying vec2 tempOffsets;
-
-flat varying float exposure;
-flat varying float avgBrightness;
-flat varying float rodExposure;
-flat varying float avgL2;
-flat varying float centerDepth;
 uniform float skyLightLevelSmooth;
 uniform float nightVision;
 
@@ -234,89 +214,13 @@ float mixhistory = 0.06;
 
 
 #ifdef OVERWORLD_SHADER
-
-	//////////////////////////////////////////////
-	/// --- STORE DAILY WEATHER PARAMETERS --- ///
-	//////////////////////////////////////////////
-
-	// the idea is to store the 8 values, coverage + density of 3 cloud layers and 2 fog density values.
-	if (gl_FragCoord.x > 1 && gl_FragCoord.x < 4 && gl_FragCoord.y > 1 && gl_FragCoord.y < 4){
-		mixhistory = 10.0 * frameTime;
-
-		gl_FragData[0].rgb = writeSceneControllerParameters(gl_FragCoord.xy, SC_parameters.smallCumulus, SC_parameters.largeCumulus, SC_parameters.altostratus, SC_parameters.cirrus, SC_parameters.fog);
-	}
-
-	///////////////////////////////
-	/// --- STORE COLOR LUT --- ///
-	///////////////////////////////
-	#ifdef SeparateAmbientColorRain
-		vec3 AmbientLightTint = mix(vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B), mix(vec3(AmbientLightRain_R, AmbientLightRain_G, AmbientLightRain_B), vec3(AmbientLightThunder_R, AmbientLightThunder_G, AmbientLightThunder_B), thunderStrength), rainStrength*noPuddleAreas);
-	#else
-		vec3 AmbientLightTint = vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B);
-	#endif
-	// --- the color of the atmosphere + the average color of the atmosphere.
-	vec3 skyGroundCol = skyFromTex(vec3(0, -1 ,0), colortex4).rgb * AmbientLightTint;
-
-
-	/// --- Save light values
-	if (gl_FragCoord.x < 1. && gl_FragCoord.y > 19.+18. && gl_FragCoord.y < 19.+18.+1 ){
-		gl_FragData[0] = vec4(averageSkyCol_Clouds * AmbientLightTint,1.0);
-		if(worldTimeChangeCheck) mixhistory = 1.0;
-	}
-
-	if (gl_FragCoord.x > 1. && gl_FragCoord.x < 2.  && gl_FragCoord.y > 19.+18. && gl_FragCoord.y < 19.+18.+1 ){
-		gl_FragData[0] = vec4(skyGroundCol/150.0,1.0);
-		if(worldTimeChangeCheck) mixhistory = 1.0;
-	}
-
-	#ifdef ambientLight_only
-		if (gl_FragCoord.x > 6. && gl_FragCoord.x < 7.  && gl_FragCoord.y > 19.+18. && gl_FragCoord.y < 19.+18.+1 )
-		gl_FragData[0] = vec4(0.0,0.0,0.0,1.0);
-
-		if (gl_FragCoord.x > 8. && gl_FragCoord.x < 9.  && gl_FragCoord.y > 19.+18. && gl_FragCoord.y < 19.+18.+1 )
-		gl_FragData[0] = vec4(0.0,0.0,0.0,1.0);
-
-		if (gl_FragCoord.x > 13. && gl_FragCoord.x < 14.  && gl_FragCoord.y > 19.+18. && gl_FragCoord.y < 19.+18.+1 )
-		gl_FragData[0] = vec4(0.0,0.0,0.0,1.0);
-	#else
-		if (gl_FragCoord.x > 6. && gl_FragCoord.x < 7.  && gl_FragCoord.y > 19.+18. && gl_FragCoord.y < 19.+18.+1 ){
-			gl_FragData[0] = vec4(lightSourceColor,1.0);
-			if(worldTimeChangeCheck) mixhistory = 1.0;
-		}
-
-		if (gl_FragCoord.x > 8. && gl_FragCoord.x < 9.  && gl_FragCoord.y > 19.+18. && gl_FragCoord.y < 19.+18.+1 ){
-			gl_FragData[0] = vec4(sunColor,1.0);
-			if(worldTimeChangeCheck) mixhistory = 1.0;
-		}
-
-		if (gl_FragCoord.x > 9. && gl_FragCoord.x < 10.  && gl_FragCoord.y > 19.+18. && gl_FragCoord.y < 19.+18.+1 ){
-			gl_FragData[0] = vec4(moonColor,1.0);
-			if(worldTimeChangeCheck) mixhistory = 1.0;
-		}
-	#endif
-
-	#if defined FLASHLIGHT && defined FLASHLIGHT_BOUNCED_INDIRECT
-		// sample center pixel of albedo color, and interpolate it overtime.
-		if (gl_FragCoord.x > 15 && gl_FragCoord.x < 16 && gl_FragCoord.y > 2 && gl_FragCoord.y < 3){
-			
-			mixhistory = 0.01;
-
-			vec3 data = texelFetch2D(colortex1, ivec2(0.5/texelSize), 0).rgb;
-			vec3 decodeAlbedo = vec3(decodeVec2(data.x).x,decodeVec2(data.y).x, decodeVec2(data.z).x);
-			vec3 albedo = toLinear(decodeAlbedo);
-			
-			albedo = normalize(albedo + 1e-7) * (dot(albedo,vec3(0.21, 0.72, 0.07))*0.5+0.5);
-			
-			gl_FragData[0] = vec4(albedo,1.0);
-		}
-	#endif
 ////////////////////////////////
 /// --- ATMOSPHERE IMAGE --- ///
 ////////////////////////////////
 
 /// --- Sky only
 if (gl_FragCoord.x > 18. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257){
-	vec2 p = clamp(floor(gl_FragCoord.xy-vec2(18.,1.))/256.+tempOffsets/256.,0.0,1.0);
+	vec2 p = clamp(floor(gl_FragCoord.xy-vec2(18.,1.))/256.,0.0,1.0);
 	vec3 viewVector = cartToSphere(p);
 
 	vec2 planetSphere = vec2(0.0);
@@ -340,11 +244,11 @@ if (gl_FragCoord.x > 18. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257){
 		if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
 	#endif
 	
-	sky = calculateAtmosphere((averageSkyCol*2000.0), viewVector, vec3(0.0,1.0,0.0), WsunVec, WmoonVec, planetSphere, skyAbsorb, 10, blueNoise());
+	sky = calculateAtmosphere((averageSkyColSSBO*2000.0), viewVector, vec3(0.0,1.0,0.0), WsunVec, WmoonVec, planetSphere, skyAbsorb, 10, blueNoise());
 
 	// fade atmosphere conditions for rain away when you pass above the cloud plane.
 	float heightRelativeToClouds = clamp(1.0 - max(eyeAltitude - CloudLayer0_height,0.0) / 200.0 ,0.0,1.0);
-	if(rainStrength > 0.0) sky = mix(sky, averageSkyCol*2000.0 * (skyAbsorb*0.7+0.3), clamp(1.0 - exp(pow(clamp(-viewVector.y+0.9,0.0,1.0),2) * -5.0),0.0,1.0) * heightRelativeToClouds * rainStrength);
+	if(rainStrength > 0.0) sky = mix(sky, averageSkyColSSBO*2000.0 * (skyAbsorb*0.7+0.3), clamp(1.0 - exp(pow(clamp(-viewVector.y+0.9,0.0,1.0),2) * -5.0),0.0,1.0) * heightRelativeToClouds * rainStrength);
 	
 	#ifdef AEROCHROME_MODE
 		sky *= vec3(0.0, 0.18, 0.35);
@@ -357,7 +261,7 @@ if (gl_FragCoord.x > 18. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257){
 
 /// --- Sky + clouds + fog 
 if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+257.){
-	vec2 p = clamp(floor(gl_FragCoord.xy-vec2(18.+257,1.))/256.+tempOffsets/256.,0.0,1.0);
+	vec2 p = clamp(floor(gl_FragCoord.xy-vec2(18.+257,1.))/256.,0.0,1.0);
 	vec3 viewVector = cartToSphere(p);
 
 	vec3 viewPos = mat3(gbufferModelView)*viewVector*1024.0;
@@ -375,7 +279,7 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 		#else
 			WmoonVec = customMoonVecSSBO;
 		#endif
-		vec3 moonColor2 = moonColor * mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
+		vec3 moonColor2 = moonColorSSBO * mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
 		//suncol *= mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
 	#else
 		#ifdef SMOOTH_MOON_ROTATION
@@ -384,12 +288,12 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 			WmoonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition + gbufferModelViewInverse[3].xyz);
 		#endif
 		if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
-		vec3 moonColor2 = moonColor;
+		vec3 moonColor2 = moonColorSSBO;
 	#endif
 
 	vec3 sky = texelFetch2D(colortex4,ivec2(gl_FragCoord.xy)-ivec2(257,0),0).rgb/150.0;	
-	sky = mix(averageSkyCol_Clouds * AmbientLightTint * 0.25, sky,  pow(clamp(viewVector.y+1.0,0.0,1.0),5.0));
-	vec3 suncol = lightSourceColor;
+	sky = mix(averageSkyCol_CloudsSSBO / 600.0, sky,  pow(clamp(viewVector.y+1.0,0.0,1.0),5.0));
+	vec3 suncol = lightSourceColorSSBO;
 
 	#ifdef ambientLight_only
 		suncol = vec3(0.0);
@@ -399,20 +303,20 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 	vec2 cloudDistance = vec2(0.0);
 
 	#ifdef CUSTOM_MOON_ROTATION
-		vec3 sunColor2 = sunColor * smoothstep(0.005, 0.09, length(WmoonVec - WsunVec));
+		vec3 sunColor2 = sunColorSSBO * smoothstep(0.005, 0.09, length(WmoonVec - WsunVec));
 	#else
-		vec3 sunColor2 = sunColor;
+		vec3 sunColor2 = sunColorSSBO;
 	#endif
 	
-	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, WmoonVec, sunColor2*2.5, moonColor2*2.5, skyGroundCol/30.0, cloudPlaneDistance, cloudDistance);
+	vec4 volumetricClouds = GetVolumetricClouds(viewPos, vec2(noise, 1.0-noise), WsunVec, WmoonVec, sunColor2*2.5/150.0, moonColor2*2.5/150.0, skyGroundColSSBO/30.0, cloudPlaneDistance, cloudDistance);
 
 	WsunVec = mix(WmoonVec, WsunVec, clamp(float(sunElevation > 1e-5)*2.0-1.0 ,0,1));
 
 	float minimumLightAmount = 0.8*nightVision + 0.05 * mix(MIN_LIGHT_AMOUNT_INSIDE, MIN_LIGHT_AMOUNT, clamp(skyLightLevelSmooth, 0.0, 1.0));
-	vec3 indirectLight_fog = skyGroundCol/30.0 + vec3(1.0) * minimumLightAmount;
+	vec3 indirectLight_fog = skyGroundColSSBO/30.0 + vec3(1.0) * minimumLightAmount;
 
 
-	vec4 volumetricFog = GetVolumetricFog(viewPos, WsunVec, vec2(noise, 1.0-noise), suncol*2.5, indirectLight_fog, averageSkyCol_Clouds*5.0, cloudPlaneDistance);
+	vec4 volumetricFog = GetVolumetricFog(viewPos, WsunVec, vec2(noise, 1.0-noise), suncol*2.5/150.0, indirectLight_fog, averageSkyCol_CloudsSSBO/30.0, cloudPlaneDistance);
 
 	#if AURORA_LOCATION > 0
 		if (WsunVec.y < 0.0 && volumetricClouds.a > 0.01
@@ -447,7 +351,7 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 
 	//Sky gradient with clouds
 	if (gl_FragCoord.x > (fogPos.x - fogPos.x*0.22) && gl_FragCoord.y > 0.4 && gl_FragCoord.x < 535){
-		vec2 p = clamp(floor(gl_FragCoord.xy-fogPos)/256.+tempOffsets/256.,-0.2,1.2);
+		vec2 p = clamp(floor(gl_FragCoord.xy-fogPos)/256.,-0.2,1.2);
 		vec3 viewVector = cartToSphere(p);
 		float noise = interleaved_gradientNoise_temporal();
 
@@ -517,10 +421,4 @@ vec3 currentFrame = gl_FragData[0].rgb*150.;
 
 
 gl_FragData[0].rgb = clamp(mix(frameHistory, currentFrame, clamp(mixhistory,0.0,1.0)),0.0,65000.);
-
-//Exposure values
-if (gl_FragCoord.x > 10. && gl_FragCoord.x < 11.  && gl_FragCoord.y > 19.+18. && gl_FragCoord.y < 19.+18.+1 )
-gl_FragData[0] = vec4(exposure, avgBrightness, avgL2,1.0);
-if (gl_FragCoord.x > 14. && gl_FragCoord.x < 15.  && gl_FragCoord.y > 19.+18. && gl_FragCoord.y < 19.+18.+1 )
-gl_FragData[0] = vec4(rodExposure, centerDepth,0.0, 1.0);
 }

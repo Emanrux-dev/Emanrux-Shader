@@ -1,16 +1,8 @@
 #include "/lib/settings.glsl"
 
-#if defined CUSTOM_MOON_ROTATION || (defined END_SHADER && defined END_ISLAND_LIGHT)
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
 #define EXCLUDE_WRITE_TO_LUT
-
-flat varying vec4 lightCol;
-flat varying vec3 sunlightCol;
-flat varying vec3 moonlightCol;
-flat varying vec3 averageSkyCol;
-flat varying vec3 averageSkyCol_Clouds;
 
 uniform float skyLightLevelSmooth;
 
@@ -107,9 +99,6 @@ float linearizeDepthFast(const in float depth, const in float near, const in flo
 #define IS_LPV_ENABLED
 
 #if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
-	
-	flat varying float exposure;
-
 	#ifdef IS_LPV_ENABLED
 		#extension GL_ARB_shader_image_load_store: enable
 		#extension GL_ARB_shading_language_packing: enable
@@ -140,7 +129,10 @@ float linearizeDepthFast(const in float depth, const in float near, const in flo
 			return vec3(0.0);
 		#endif
 
-		int SAMPLECOUNT = 8;
+		const int SAMPLECOUNT = 8;
+		const float density = 0.0001;
+		const float fadeLength = 10.0; // in blocks
+
 		vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
 		vec3 LPVrayStartPos = playerPos - gbufferModelViewInverse[3].xyz;
 		
@@ -157,18 +149,17 @@ float linearizeDepthFast(const in float depth, const in float near, const in flo
 
 		vec3 LPVrayProgress = vec3(0.0);
 		vec4 color = vec4(0.0,0.0,0.0,1.0);
-		float expFactor = 11.0;
+		const float expFactor = 11.0;
 
 		for (int i = 0; i < SAMPLECOUNT; i++) {
-			float d = (pow(expFactor, float(i+dither)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);
+			float d = (pow(expFactor, float(i+dither)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1.0-1.0/expFactor);
 			float dd = pow(expFactor, float(i+dither)/float(SAMPLECOUNT)) * log(expFactor) / float(SAMPLECOUNT)/(expFactor-1.0);
 
 			LPVrayProgress = gbufferModelViewInverse[3].xyz + d*LPVrayStartPos;
 
 			vec3 lpvPos = GetLpvPosition(LPVrayProgress);
 
-        	float fadeLength = 10.0; // in blocks
-        	vec3 cubicRadius = clamp(	min(((LpvSize3-1.0) - lpvPos)/fadeLength,      lpvPos/fadeLength) ,0.0,1.0);
+        	vec3 cubicRadius = clamp(	min(((LpvSize3-1.0) - lpvPos)/fadeLength, lpvPos/fadeLength) ,0.0,1.0);
         	float LpvFadeF = cubicRadius.x*cubicRadius.y*cubicRadius.z;
 
 			if(LpvFadeF < 0.01) break;
@@ -180,13 +171,12 @@ float linearizeDepthFast(const in float depth, const in float near, const in flo
 				vec3 lighting = sampleColor * LPV_VL_FOG_ILLUMINATION_BRIGHTNESS * 25. * exp(-5 * (1.0-luma(sampleColor)));
 			#endif
 
-			float density = 0.0001;
 			float volumeCoeff = exp(-dd*density*LPVRayLength);
 
 			color.rgb += (lighting - lighting * volumeCoeff) * color.a;
 			color.a *= volumeCoeff;
 		}
-		return color.rgba;
+		return color;
 	}
 
 #endif
@@ -312,6 +302,7 @@ void waterVolumetrics_notoverworld(inout vec3 inColor, vec3 rayStart, vec3 rayEn
 }
 
 uniform float waterEnteredAltitude;
+float lightSourceCheck = float(sunElevation > 1e-5)*2.0 - 1.0;
 
 vec4 waterVolumetrics(vec3 rayStart, vec3 rayEnd, float rayLength, vec2 dither, vec3 waterCoefs, vec3 scatterCoef, vec3 ambient, vec3 lightSource, float VdotL, vec3 LPV){
 	int spCount = 8;
@@ -382,7 +373,7 @@ vec4 waterVolumetrics(vec3 rayStart, vec3 rayEnd, float rayLength, vec2 dither, 
 				#endif
 			}
 
-			sh *= GetCloudShadow(progressW, WsunVec * lightCol.a);
+			sh *= GetCloudShadow(progressW, WsunVec * lightSourceCheck);
 
 		#endif
 
@@ -679,16 +670,19 @@ void main() {
 	vec3 totEpsilon = vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B);
 	vec3 scatterCoef = dirtAmount * vec3(Dirt_Scatter_R, Dirt_Scatter_G, Dirt_Scatter_B) / 3.14;
 
-	vec3 directLightColor = lightCol.rgb / 2400.0;
-	vec3 directSunlightColor = sunlightCol / 2400.0;
-	vec3 directMoonlightColor = moonlightCol / 2400.0;
+	vec3 directLightColor = lightSourceColorSSBO / 2400.0;
+	vec3 directSunlightColor = sunColorSSBO / 2400.0;
+	#ifdef CUSTOM_MOON_ROTATION
+		directSunlightColor *= smoothstep(0.005, 0.09, length(WmoonVec - WrealSunVec));
+	#endif
+	vec3 directMoonlightColor = moonColorSSBO / 2400.0;
 
 	#ifdef CUSTOM_MOON_ROTATION
 		directMoonlightColor *= mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
 	#endif
 
-	vec3 indirectLightColor = averageSkyCol / 1200.0;
-	vec3 indirectLightColor_dynamic = averageSkyCol_Clouds / 1200.0;
+	vec3 indirectLightColor = skyGroundColSSBO / 1200.0;
+	vec3 indirectLightColor_dynamic = averageSkyCol_CloudsSSBO / 1200.0;
 
 	// #if defined DISTANT_HORIZONS || defined VOXY
 	//  	float godrays = godrayTest(viewPos0, normalize(WsunVec*mat3(gbufferModelViewInverse)),BN.x, z0);
@@ -696,7 +690,7 @@ void main() {
 	// 	float godrays = 1.0;
 	// #endif
 
-	#if defined LPV_VL_FOG_ILLUMINATION
+	#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
 		vec4 LPV_ILLUMINATION = raymarchLPV(viewPos0, R2_dither());
 	#else
 		vec4 LPV_ILLUMINATION = vec4(0.0,0.0,0.0,1.0);
@@ -721,7 +715,7 @@ void main() {
 	bool eyeInWater = isEyeInWater == 1;
 	
 	if (eyeInWater){
-		vec4 underWaterFog =  waterVolumetrics(vec3(0.0), viewPos0, length(viewPos0), vec2(noise_1), totEpsilon, scatterCoef, indirectLightColor_dynamic, directLightColor, dot(normalize(viewPos0), normalize(sunVec * lightCol.a)), LPV_ILLUMINATION.rgb);
+		vec4 underWaterFog =  waterVolumetrics(vec3(0.0), viewPos0, length(viewPos0), vec2(noise_1), totEpsilon, scatterCoef, indirectLightColor_dynamic, directLightColor, dot(normalize(viewPos0), normalize(sunVec * lightSourceCheck)), LPV_ILLUMINATION.rgb);
 		VolumetricFog = vec4(underWaterFog.rgb, 1.0);
 	} else {
 		#ifdef OVERWORLD_SHADER
@@ -750,7 +744,7 @@ void main() {
 			// vec3 sceneColor = texelFetch2D(colortex3,texcoord,0).rgb * VolumetricClouds.a + VolumetricClouds.rgb;
 			VolumetricFog = GetVolumetricFog(viewPos0, WsunVec, BN, directLightColor, indirectLight_fog, indirectLightColor_dynamic, cloudPlaneDistance);
 
-			#if defined LPV_VL_FOG_ILLUMINATION
+			#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
 				VolumetricFog.a *= LPV_ILLUMINATION.a;
 				VolumetricFog.rgb = VolumetricFog.rgb * LPV_ILLUMINATION.a + LPV_ILLUMINATION.rgb;
 			#endif
@@ -764,7 +758,7 @@ void main() {
 		#if defined NETHER_SHADER || defined END_SHADER
 			VolumetricFog = GetVolumetricFog(viewPos0, noise_1, noise_1);
 
-			#if defined LPV_VL_FOG_ILLUMINATION
+			#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
 				VolumetricFog.a *= LPV_ILLUMINATION.a;
 				VolumetricFog.rgb = VolumetricFog.rgb * LPV_ILLUMINATION.a + LPV_ILLUMINATION.rgb;
 			#endif
@@ -819,7 +813,7 @@ void main() {
 
 			directLightColor *= lightleakfix;
 
-			VolumetricFog = waterVolumetrics_alt(viewPos0, viewPos1, estimatedDepth, estimatedSunDepth, Vdiff, noise_1, totEpsilon, scatterCoef, indirectLight, directLightColor, dot(normalize(viewPos0), normalize(sunVec*lightCol.a)));
+			VolumetricFog = waterVolumetrics_alt(viewPos0, viewPos1, estimatedDepth, estimatedSunDepth, Vdiff, noise_1, totEpsilon, scatterCoef, indirectLight, directLightColor, dot(normalize(viewPos0), normalize(sunVec*lightSourceCheck)));
 		} else {
 			#if defined OVERWORLD_SHADER
 				VolumetricClouds = GetVolumetricClouds(viewPos1, vec2(noise_1), WrealSunVec, WmoonVec, directSunlightColor, directMoonlightColor, indirectLightColor, cloudPlaneDistance, cloudDistance);

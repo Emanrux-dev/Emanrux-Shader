@@ -1,11 +1,9 @@
 #include "/lib/settings.glsl"
 
-#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
-	#include "/lib/SSBOs.glsl
+#include "/lib/SSBOs.glsl
 
-	#ifdef CUSTOM_MOON_ROTATION
-		uniform sampler2D CoronaTex;
-	#endif
+#ifdef CUSTOM_MOON_ROTATION
+	uniform sampler2D CoronaTex;
 #endif
 
 // #if defined END_SHADER || defined NETHER_SHADER
@@ -38,9 +36,6 @@ uniform float rainStrength;
 		uniform sampler2DShadow shadowtex1;
 	#endif
 
-	flat varying vec3 averageSkyCol_Clouds;
-	flat varying vec4 lightCol;
-
 	#if ShaderSnow > 0
 		uniform sampler2D snowTexA;
 		uniform sampler2D snowTexN;
@@ -51,8 +46,7 @@ uniform float rainStrength;
 
 	#if defined RIPPLE_PUDDLES && PUDDLE_MODE > 0
 		#include "/lib/ripples.glsl"
-
-		uniform int biome_precipitation;
+		uniform float rippleAmount;
 	#endif
 
 	#include "/lib/stars.glsl"
@@ -62,11 +56,7 @@ uniform float rainStrength;
 		#ifdef MOON_NORMALS
 			uniform sampler2D moonN;
 		#endif
-	#else
-		flat varying vec3 moonCol;
 	#endif
-
-	flat varying vec3 sunCol;
 
 	#if SUN_SPECULAR_MULT != 0
 		#define LIGHTSOURCE_REFLECTION
@@ -174,7 +164,6 @@ uniform vec3 sunVec;
 flat varying vec3 unsigned_WsunVec;
 flat varying vec3 WmoonVec;
 flat varying float exposure;
-flat varying vec3 albedoSmooth;
 
 #ifdef IS_LPV_ENABLED
 	uniform int heldItemId;
@@ -879,11 +868,11 @@ uniform float wetness;
 						float viewDist = length(worldPos - cameraPosition);
 						vec3 rippleNormal = flatNormals;
 
-						if(viewDist < 35 && rainStrength > 0.0 && biome_precipitation == 1 && snowAmount < 0.01) {
+						if(viewDist < 35 && rainStrength > 0.0 && rippleAmount > 0.01 && snowAmount < 0.01) {
 							vec3 ripple = ripples(1.2 * worldPos.xz);
 							
 							ripple = ripple.xzy;
-							rippleNormal = mix(flatNormals, ripple, smoothstep(35., 10., viewDist) * rainStrength);
+							rippleNormal = mix(flatNormals, ripple, smoothstep(35., 10., viewDist) * rainStrength * smoothstep(0.0, 1.0, rippleAmount));
 						}
 
 						normals = mix(normals, rippleNormal, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
@@ -1140,8 +1129,8 @@ void main() {
 		float lightLeakFix = clamp(pow(eyeBrightnessSmooth.y/240. + lightmap.y,2.0) ,0.0,1.0);
 
 		#ifdef OVERWORLD_SHADER
-			DirectLightColor = lightCol.rgb / 2400.0;
-			AmbientLightColor = averageSkyCol_Clouds / 900.0;
+			DirectLightColor = lightSourceColorSSBO / 2400.0;
+			AmbientLightColor = averageSkyCol_CloudsSSBO / 900.0;
 
 			#if defined CUSTOM_MOON_ROTATION && LIGHTNING_SHADOWS > 0
 				#if LIGHTNING_SHADOWS < 2
@@ -1508,7 +1497,7 @@ void main() {
 				const float flashlightshadows = 1.0;
 			#endif
 			
-			Indirect_lighting += flashlightshadows*calculateFlashlight(texcoord, viewPos, albedoSmooth, slopednormal, flashLightSpecularData, hand);
+			Indirect_lighting += flashlightshadows*calculateFlashlight(texcoord, viewPos, albedoSmoothSSBO, slopednormal, flashLightSpecularData, hand);
 		#endif
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -1672,7 +1661,7 @@ void main() {
 						vec3 sunVec = unsigned_WsunVec;
 					#endif
 
-					Background += drawSun(dot(sunVec, feetPlayerPos_normalized), sunCol / 2400.0);
+					Background += drawSun(dot(sunVec, feetPlayerPos_normalized), sunColorSSBO / 2400.0);
 
 					#ifdef REALMOON
 						vec3 tangent = normalize(cross(WmoonVec, vec3(0.0, 1.0, 0.0)));
@@ -1744,7 +1733,7 @@ void main() {
 						vec3 moonLightCol = moonColorBase2;
 						Background += pow(moonTex, vec3(3.2)) * 20.0 * drawRealMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background, moonSize);
 					#else
-						vec3 moonLightCol = moonCol / 2400.0;
+						vec3 moonLightCol = moonColorSSBO / 2400.0;
 						Background += drawMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background); 
 					#endif
 				#endif

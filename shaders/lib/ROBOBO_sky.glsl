@@ -109,7 +109,7 @@ vec3 calculateAtmosphere(vec3 background, vec3 viewVector, vec3 upVector, vec3 s
 	
 	float GroundDarkening = max(planetGround * 0.7+0.3,clamp(sunVector.y*2.0,0.0,1.0));
 
-	vec3 viewPos = (sky_planetRadius + 1.0 + max(eyeAltitude-300.0,0.0)*1.0) * upVector;
+	vec3 viewPos = (sky_planetRadius + 1.0 + max(eyeAltitude-300.0,0.0)) * upVector;
 
 	vec2 aid = rsi(viewPos, viewVector, sky_atmosphereRadius);
 	if (aid.y < 0.0) {transmittance = vec3(1.0); return vec3(0.0);}

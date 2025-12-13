@@ -33,10 +33,13 @@ out DATA {
 	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES
 		vec4 grassSideCheck;
 		vec3 centerPosition;
-		int discardGrass;
 	#endif
 
 	vec4 color;
+
+	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		float chunkFade;
+	#endif
 
 	vec4 lmtexcoord;
 	vec3 normalMat;
@@ -222,6 +225,10 @@ vec3 viewToWorld(vec3 viewPos) {
     pos = gbufferModelViewInverse * pos;
     return pos.xyz;
 }
+#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND
+	uniform float caveDetection;
+#endif
+
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -242,6 +249,10 @@ void main() {
     /////// ----- COLOR STUFF ----- ///////
 	data_out.color = gl_Color;
 
+	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		data_out.chunkFade = abs(mc_chunkFade);
+	#endif
+
 
     /////// ----- RANDOM STUFF ----- ///////
 	// gl_TextureMatrix[0] for animated things like charged creepers
@@ -255,22 +266,14 @@ void main() {
 		data_out.texcoord.xy    = sign(texcoordminusmid)*0.5+0.5;
 	#endif
 
-
-	vec2 lmcoord = gl_MultiTexCoord1.xy / 240.0; 
-	data_out.lmtexcoord.zw = lmcoord;
-
-
+	data_out.lmtexcoord.zw = gl_MultiTexCoord1.xy / 240.0; 
 
 	#ifdef MC_NORMAL_MAP
-		vec3 alterTangent = at_tangent.rgb;
-
-		data_out.tangent = vec4(normalize(gl_NormalMatrix * alterTangent.rgb), at_tangent.w);
+		data_out.tangent = vec4(normalize(gl_NormalMatrix * at_tangent.rgb), at_tangent.w);
 	#endif
 
 	data_out.normalMat = normalize(gl_NormalMatrix * gl_Normal);
 	
-	vec3 vFlatNormals = data_out.normalMat;
-
 	#ifdef ENTITIES
 		data_out.blockID = int(entityId);
 	#elif defined BLOCKENTITIES
@@ -299,7 +302,7 @@ void main() {
 
    	vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
 
-	vec3 worldNormals = viewToWorld(vFlatNormals);
+	vec3 worldNormals = viewToWorld(data_out.normalMat);
 
 	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && (defined GRASS_DETECT_FALLOFF || defined GRASS_DETECT_INV_FALLOFF || REPLACE_SHORT_GRASS > 0) && !defined BLOCKENTITIES
 
@@ -362,7 +365,6 @@ void main() {
 			}
 		}
 
-		data_out.discardGrass = 0;
 		#if REPLACE_SHORT_GRASS > 0
 			#if GRASS_DENSITY == 3
 				float maxShortGrassRange = 28.0;
@@ -378,7 +380,7 @@ void main() {
 				data_out.centerPosition = worldpos + at_midBlock.xyz / 64.0;
 				vec3 LPVpos = GetLpvPosition(data_out.centerPosition);
 				uint blockBelow = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y - 0.6, LPVpos.z));
-				if(blockBelow == 85) data_out.discardGrass = 1;
+				if(blockBelow == 85) data_out.blockID = -10;
 			}
 		#endif
 	#endif
@@ -400,21 +402,24 @@ void main() {
 
 			) && abs(position.z) < 64.0
 		){
-			vec3 UnalteredWorldpos = worldpos;
-
 			// vec3 offsetPos = UnalteredWorldpos+vec3(0.0, 1.0, 0.0)+relativeEyePosition;
             // float playerDist = smoothstep(0.5, 0.05, length(offsetPos.xz)) * smoothstep(1.0, 0.2, abs(offsetPos.y));
             // vec2 dir2 = normalize(UnalteredWorldpos.xz+relativeEyePosition.xz);
 
-			// apply displacement for waving plant blocks
-			worldpos += calcMovePlants(worldpos + cameraPosition) * max(data_out.lmtexcoord.w,0.5);
-			// worldpos.xz += playerDist*dir2;
-
-
 			// apply displacement for waving leaf blocks specifically, overwriting the other waving mode. these wave off of the air. they wave uniformly
-			if(mc_Entity.x == BLOCK_AIR_WAVING) worldpos = UnalteredWorldpos + calcMoveLeaves(worldpos + cameraPosition, 0.0040, 0.0064, 0.0043, 0.0035, 0.0037, 0.0041, vec3(1.0,0.2,1.0), vec3(0.5,0.1,0.5))*data_out.lmtexcoord.w;
+			if(mc_Entity.x == BLOCK_AIR_WAVING) {
+				worldpos += calcMoveLeaves(worldpos + cameraPosition, 0.0040, 0.0064, 0.0043, 0.0035, 0.0037, 0.0041, vec3(1.0,0.2,1.0), vec3(0.5,0.1,0.5))*data_out.lmtexcoord.w;
+			} else {
+				// apply displacement for waving plant blocks
+				worldpos += calcMovePlants(worldpos + cameraPosition) * max(data_out.lmtexcoord.w,0.5);
+				// worldpos.xz += playerDist*dir2;
+			}
 		
 		}
+	#endif
+
+	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND
+	worldpos.y += -45.0*(1.0-data_out.chunkFade)*(1.0-caveDetection)*smoothstep(25.0, far, length(worldpos));
 	#endif
 
 	// position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;

@@ -3,4 +3,4 @@
 #define OVERWORLD_SHADER
 #define AETHER_FLAG
 
-#include "/dimensions/deferred.vsh"
+#include "/dimensions/prepare4.vsh"

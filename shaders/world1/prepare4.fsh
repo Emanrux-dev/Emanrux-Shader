@@ -2,4 +2,4 @@
 
 #define END_SHADER
 
-#include "/dimensions/deferred.fsh"
+#include "/dimensions/prepare4.fsh"

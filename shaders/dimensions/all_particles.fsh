@@ -14,9 +14,7 @@
 
 #include "/lib/settings.glsl"
 
-#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
 // #if defined END_SHADER || defined NETHER_SHADER
 // 	#undef IS_LPV_ENABLED
@@ -42,9 +40,6 @@ varying vec4 color;
 	#endif
 
 	flat varying vec3 WsunVec;
-
-	flat varying vec3 averageSkyCol_Clouds;
-	flat varying vec4 lightCol;
 #endif
 
 uniform int renderStage;
@@ -402,7 +397,8 @@ void main() {
 	vec2 tempOffset = offsets[framemod8];
 	vec3 viewPos = toScreenSpace(gl_FragCoord.xyz*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize*0.5,0.0));
 	vec3 feetPlayerPos = mat3(gbufferModelViewInverse) * viewPos;
-	vec3 feetPlayerPos_normalized = normalize(feetPlayerPos);
+	vec3 worldPos = feetPlayerPos + cameraPosition;
+	// vec3 feetPlayerPos_normalized = normalize(feetPlayerPos);
 
 	vec4 TEXTURE = texture2D(gtexture, lmtexcoord.xy)*color;
 	
@@ -421,13 +417,13 @@ void main() {
 
 	#if defined Hand_Held_lights && !defined LPV_ENABLED
 		#ifdef IS_IRIS
-			vec3 playerCamPos = cameraPosition - relativeEyePosition;
+			vec3 playerCamPos = relativeEyePosition;
 		#else
-			vec3 playerCamPos = cameraPosition;
+			vec3 playerCamPos = vec3(0.0);
 		#endif
 		// lightmap.x = max(lightmap.x, HELD_ITEM_BRIGHTNESS * clamp( pow(max(1.0-length((feetPlayerPos+cameraPosition) - playerCamPos)/HANDHELD_LIGHT_RANGE,0.0),1.5),0.0,1.0));
 		if(heldItemId > 999 || heldItemId2 > 999){ 
-			float pointLight = clamp(1.0-(length((feetPlayerPos+cameraPosition)-playerCamPos)-1.0)/HANDHELD_LIGHT_RANGE,0.0,1.0);
+			float pointLight = clamp(1.0-(length(feetPlayerPos-playerCamPos)-1.0)/HANDHELD_LIGHT_RANGE,0.0,1.0);
 			lightmap.x = mix(lightmap.x, 0.9, pointLight*pointLight);
 		}
 	
@@ -464,8 +460,8 @@ void main() {
 		if(lightmap.x >= 0.9) Torch_Color *= LIT_PARTICLE_BRIGHTNESS;
 
 		#ifdef OVERWORLD_SHADER
-			directLightColor =  lightCol.rgb/2400.0;
-			AmbientLightColor = averageSkyCol_Clouds / 900.0;
+			directLightColor =  lightSourceColorSSBO/2400.0;
+			AmbientLightColor = averageSkyCol_CloudsSSBO / 900.0;
 		
 			#ifdef USE_CUSTOM_DIFFUSE_LIGHTING_COLORS
 				directLightColor = luma(directLightColor) * vec3(DIRECTLIGHT_DIFFUSE_R,DIRECTLIGHT_DIFFUSE_G,DIRECTLIGHT_DIFFUSE_B);
@@ -486,10 +482,10 @@ void main() {
 
 			Shadows *= mix(LM_shadowMapFallback, 1.0, shadowMapFalloff2);
 
-			Shadows *= GetCloudShadow(feetPlayerPos+cameraPosition, WsunVec);
+			Shadows *= GetCloudShadow(worldPos, WsunVec);
 
 			if(isEyeInWater == 1){
-	  			float distanceFromWaterSurface = max(-(feetPlayerPos.y + (cameraPosition.y - waterEnteredAltitude)),0.0) ;
+	  			float distanceFromWaterSurface = max(-(worldPos.y - waterEnteredAltitude),0.0) ;
 				directLightColor *= exp(-vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B) * distanceFromWaterSurface);
 			}
 			Direct_lighting = directLightColor * Shadows;
@@ -531,9 +527,9 @@ void main() {
 			#if RAINBOW_SELECT_BOX > 0
 
 				#if RAINBOW_SELECT_BOX == 1
-					float selectBoxHue = length(sin(mod(1.4*(feetPlayerPos+cameraPosition), 3.14159)));
+					float selectBoxHue = length(sin(mod(1.4*worldPos, 3.14159)));
 				#else
-					float selectBoxHue = length(sin(mod(1.4*(feetPlayerPos+cameraPosition)+0.7*frameTimeCounter, 3.14159)));
+					float selectBoxHue = length(sin(mod(1.4*worldPos+0.7*frameTimeCounter, 3.14159)));
 				#endif
 
 				vec3 selectBoxColor = HsvToRgb(vec3(selectBoxHue, 1.0, 1.0));

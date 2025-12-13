@@ -1,14 +1,12 @@
 #include "/lib/settings.glsl"
 
+#include "/lib/SSBOs.glsl"
+
 flat varying vec3 zMults;
 
 flat varying vec2 TAA_Offset;
 flat varying vec3 WsunVec;
 flat varying vec3 WmoonVec;
-
-#ifdef OVERWORLD_SHADER
-  flat varying vec3 skyGroundColor;
-#endif
 
 uniform sampler2D noisetex;
 uniform sampler2D depthtex0;
@@ -526,14 +524,13 @@ float getBorderFogDensity(float linearDistance, vec3 playerPos, bool sky){
   if(sky) return 0.0;
 
   #if defined DISTANT_HORIZONS || defined VOXY
-  	float borderFogDensity = smoothstep(1.0, 0.0, min(max(1.0 - linearDistance / dhVoxyRenderDistance,0.0)*3.0,1.0)   );
+  	float borderFogDensity = smoothstep(1.0, 0.0, min(max(1.0 - linearDistance / dhVoxyRenderDistance,0.0)*3.0/BorderFogIntensity,1.0)   );
   #else
-  	float borderFogDensity = smoothstep(1.0, 0.0, min(max(1.0 - linearDistance / far,0.0)*3.0,1.0)   );
+  	float borderFogDensity = smoothstep(1.0, 0.0, min(max(1.0 - linearDistance / far,0.0)*3.0/BorderFogIntensity,1.0)   );
   #endif
   
   borderFogDensity *= exp(-10.0 * pow(clamp(playerPos.y,0.0,1.0)*4.0,2.0));
   borderFogDensity *= (1.0-caveDetection);
-  borderFogDensity *= BorderFogIntensity;
 
   return borderFogDensity;
 }
@@ -839,12 +836,15 @@ void main() {
   // blend border fog. be sure to blend before and after forward rendered color blends.
   #if defined BorderFog && defined OVERWORLD_SHADER
     float borderFogDensity = getBorderFogDensity(linearDistance_cylinder, playerPos_normalized, isSky);
-    vec4 borderFog = vec4(skyGroundColor, borderFogDensity);
+    vec4 borderFog;
 
     #if !defined SKY_GROUND
       borderFog.rgb = skyFromTex(playerPos_normalized, colortex4)/1200.0 * Sky_Brightness;
+    #else
+      borderFog.rgb = skyGroundColSSBO / 1200.0 * Sky_Brightness;
     #endif
-    borderFog *= BorderFogIntensity;
+    borderFog.a = borderFogDensity;
+    
     #if !defined DISTANT_HORIZONS && !defined VOXY
       if(!isWater) color = mix(color, borderFog.rgb, getBorderFogDensity(linearDistance_cylinder_alt, normalize(playerPos_alt), z2 >= 1.0 || TranslucentShader.a <= 0));
     #endif

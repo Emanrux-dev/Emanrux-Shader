@@ -1,12 +1,11 @@
 #include "/lib/settings.glsl"
 
-#ifdef CUSTOM_MOON_ROTATION
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
 uniform sampler2D colortex7;
 uniform sampler2D colortex5;
 uniform sampler2D colortex6;
+uniform sampler2D colortex10;
 uniform sampler2D colortex14;
 uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
@@ -150,6 +149,8 @@ float doVignette( in vec2 texcoord, in float noise){
   layout (rgba16f) uniform image2D waveSim2;
 #endif
 
+layout (RGBA8) uniform image2D cloudShadow;
+
 void main() {
   
   float noise = blueNoise();
@@ -239,4 +240,8 @@ void main() {
     if (length(waveNormals.xy) > 0.0) gl_FragColor.rgb += waveNormals;
     }
   #endif
+
+  // gl_FragColor.rgb = texture2D(colortex10, texcoord).rgb;
+
+  //if(gl_FragCoord.x < 512 && gl_FragCoord.y < 512) gl_FragColor.rgb = vec3(imageLoad(cloudShadow, ivec2(gl_FragCoord.x,gl_FragCoord.y)*2).g);
 }

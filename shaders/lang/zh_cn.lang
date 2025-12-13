@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - Bliss 编辑版
     prefix.SHADER_VERSION_LABEL = 版本
-    value.SHADER_VERSION_LABEL.482 = 5.6.1
+    value.SHADER_VERSION_LABEL.482 = 5.7.0
 
 # 如果你是来翻译的，这不是玩笑，这些选项的功能正如其名
 profile.POTATO=§4土豆 (极低配置)
@@ -870,6 +870,7 @@ screen.Resource_Pack_Support = 材质 / 资源包支持
             value.SUN_SPECULAR_MULT.1 = 开启
             suffix.SUN_SPECULAR_MULT =x 更亮
         option.ROUGHNESS_THRESHOLD = 反射可见度阈值
+            suffix.ROUGHNESS_THRESHOLD = %
             value.ROUGHNESS_THRESHOLD.0.0 = 无阈值
 
     screen.Emissives = 自发光 / 发光纹理

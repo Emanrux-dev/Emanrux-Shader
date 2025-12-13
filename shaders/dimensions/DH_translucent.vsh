@@ -1,9 +1,7 @@
 #include "/lib/settings.glsl"
 #include "/lib/res_params.glsl"
 
-#ifdef CUSTOM_MOON_ROTATION
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
 varying vec4 pos;
 varying vec4 gcolor;
@@ -14,8 +12,6 @@ flat varying int isWater;
 
 
 uniform sampler2D colortex4;
-flat varying vec3 averageSkyCol_Clouds;
-flat varying vec4 lightCol;
 
 #ifdef OVERWORLD_SHADER
 	#include "/lib/scene_controller.glsl"
@@ -99,15 +95,6 @@ void main() {
     gcolor = gl_Color;
 	lightmapCoords = gl_MultiTexCoord1.xy;
 
-
-	lightCol.rgb = texelFetch2D(colortex4,ivec2(6,37),0).rgb;
-
-	averageSkyCol_Clouds = texelFetch2D(colortex4,ivec2(0,37),0).rgb;
-	
-	#ifdef OVERWORLD_SHADER
-		readSceneControllerParameters(colortex4, SC_parameters.smallCumulus, SC_parameters.largeCumulus, SC_parameters.altostratus, SC_parameters.cirrus, SC_parameters.fog);
-	#endif
-
 	#ifdef CUSTOM_MOON_ROTATION
 		vec3 WmoonVec = customMoonVecSSBO;
 
@@ -121,13 +108,13 @@ void main() {
 		WsunVec = mix(WmoonVec, WsunVec, float(sunElevation > 1e-5));
 		WsunVec2 = mix(normalize(mat3(gbufferModelView)*WmoonVec), WsunVec2, float(sunElevation > 1e-5));
 	#else
-		lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
+		float lightSourceCheck = float(sunElevation > 1e-5)*2.0 - 1.0;
 		#ifdef SMOOTH_SUN_ROTATION
-			WsunVec = lightCol.a * WsunVecSmooth;
+			WsunVec = lightSourceCheck * WsunVecSmooth;
 		#else
-			WsunVec = lightCol.a * normalize(mat3(gbufferModelViewInverse) * sunPosition);
+			WsunVec = lightSourceCheck * normalize(mat3(gbufferModelViewInverse) * sunPosition);
 		#endif
-		WsunVec2 = lightCol.a * normalize(sunPosition);
+		WsunVec2 = lightSourceCheck * normalize(sunPosition);
 	#endif
 
 	#ifdef TAA_UPSCALING

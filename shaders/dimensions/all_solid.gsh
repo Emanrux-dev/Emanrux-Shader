@@ -22,6 +22,10 @@ in DATA {
 
 	vec4 color;
 
+    #if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		float chunkFade;
+	#endif
+
 	vec4 lmtexcoord;
 	vec3 normalMat;
 
@@ -39,6 +43,10 @@ in DATA {
 
 out DATA {
 	vec4 color;
+
+    #if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		float chunkFade;
+	#endif
 
 	vec4 lmtexcoord;
 	vec3 normalMat;
@@ -176,6 +184,11 @@ void main() {
         gl_Position = vertex;
 
         data_out.color = data_in[i].color;
+
+        #if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		    data_out.chunkFade = data_in[i].chunkFade;
+	    #endif
+
         data_out.lmtexcoord = data_in[i].lmtexcoord;
         data_out.normalMat = data_in[i].normalMat;
 
@@ -386,6 +399,10 @@ void main() {
                     data_out.color = data_in[i].color*heightfade;
 
                     if (data_in[i].color.rgb == vec3(1.0)) data_out.color.rgb = vec3(0.22,0.32,0.11)*heightfade;
+
+                    #if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+                        data_out.chunkFade = data_in[i].chunkFade;
+                    #endif
 
                     data_out.lmtexcoord = data_in[i].lmtexcoord;
 

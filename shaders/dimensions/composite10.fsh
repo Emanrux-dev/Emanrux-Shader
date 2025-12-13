@@ -2,9 +2,8 @@
 
 #include "/lib/res_params.glsl"
 
+#include "/lib/SSBOs.glsl"
 
-flat varying vec4 exposure;
-flat varying vec2 rodExposureDepth;
 varying vec2 texcoord;
 
 const bool colortex5MipmapEnabled = true;
@@ -215,6 +214,12 @@ void main() {
 	float vignette = (1.5-dot(texcoord-0.5,texcoord-0.5)*2.);
 	vec3 col = texture2D(colortex5,texcoord).rgb;
 
+	vec2 rodExposureDepth = rodExposureDepthSSBO;
+	rodExposureDepth.y = sqrt(rodExposureDepth.y/65000.0);
+
+	vec4 exposure = vec4(exposureSSBO);
+
+
 	#if DOF_QUALITY >= 0
 		/*--------------------------------*/
 		float z = ld(texture2D(depthtex1, texcoord.st*RENDER_SCALE).r)*far;
@@ -284,6 +289,9 @@ void main() {
 
  	float VL_abs = texture2D(colortex7, texcoord*RENDER_SCALE).r;
 
+	float bloomyFog_Mult = BLOOMY_FOG;
+	if(isEyeInWater == 1) bloomyFog_Mult = UNDERWATER_BLOOMY_FOG;
+
 	#if Purkinje_strength > 0
 		float pstrength = float(Purkinje_strength) / 100.0;
 		
@@ -293,7 +301,7 @@ void main() {
 			float purkinje = clamp(rodExposureDepth.x/(1.0+rodExposureDepth.x)*pstrength,0,1);
 		#endif	
 		
-  		VL_abs = clamp((1.0-VL_abs)*BLOOMY_FOG*0.75*(1.0+rainStrength) * (1.0-purkinje*0.3),0.0,1.0)*clamp(1.0-pow(cdist(texcoord.xy),15.0),0.0,1.0);
+  		VL_abs = clamp((1.0-VL_abs)*bloomyFog_Mult*0.75*(1.0+rainStrength) * (1.0-purkinje*0.3),0.0,1.0)*clamp(1.0-pow(cdist(texcoord.xy),15.0),0.0,1.0);
 		col = (mix(col, fogBloom, VL_abs) + bloom*lightScat) * exposure.rgb;
 	
   		float lum = dot(col, vec3(0.15,0.3,0.55));
@@ -303,7 +311,7 @@ void main() {
 
 		col = mix(lum * vec3(Purkinje_R, Purkinje_G, Purkinje_B) * Purkinje_Multiplier, col, rodCurve);
 	#else
-  		VL_abs = clamp((1.0-VL_abs)*BLOOMY_FOG*0.75*(1.0+rainStrength),0.0,1.0)*clamp(1.0-pow(cdist(texcoord.xy),15.0),0.0,1.0);
+  		VL_abs = clamp((1.0-VL_abs)*bloomyFog_Mult*0.75*(1.0+rainStrength),0.0,1.0)*clamp(1.0-pow(cdist(texcoord.xy),15.0),0.0,1.0);
 		col = (mix(col, fogBloom, VL_abs) + bloom*lightScat) * exposure.rgb;
 	#endif
 	

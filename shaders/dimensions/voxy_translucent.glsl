@@ -193,17 +193,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	if (normal.z<=-0.9) normal.xy = vec2(-0.0000000000001);
 
-    vec4 lightCol;
     vec3 WsunVec;
     vec3 WsunVec2;
-
-    lightCol.rgb = texelFetch(colortex4,ivec2(6,37),0).rgb;
-
-	vec3 averageSkyCol_Clouds = texelFetch(colortex4,ivec2(0,37),0).rgb;
-	
-	#ifdef OVERWORLD_SHADER
-		readSceneControllerParameters(colortex4, SC_parameters.smallCumulus, SC_parameters.largeCumulus, SC_parameters.altostratus, SC_parameters.cirrus, SC_parameters.fog);
-	#endif
 
 	#ifdef CUSTOM_MOON_ROTATION
 		vec3 WmoonVec = customMoonVecSSBO;
@@ -218,13 +209,13 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		WsunVec = mix(WmoonVec, WsunVec, float(sunElevation > 1e-5));
 		WsunVec2 = mix(normalize(mat3(vxModelView)*WmoonVec), WsunVec2, float(sunElevation > 1e-5));
 	#else
-		lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
+		float lightSourceCheck = float(sunElevation > 1e-5)*2.0 - 1.0;
 		#ifdef SMOOTH_SUN_ROTATION
-			WsunVec = lightCol.a * WsunVecSmooth;
+			WsunVec = lightSourceCheck * WsunVecSmooth;
 		#else
-			WsunVec = lightCol.a * normalize(mat3(vxModelViewInv) * sunPosition);
+			WsunVec = lightSourceCheck * normalize(mat3(vxModelViewInv) * sunPosition);
 		#endif
-		WsunVec2 = lightCol.a * normalize(sunPosition);
+		WsunVec2 = lightSourceCheck * normalize(sunPosition);
 	#endif
 
     // diffuse
@@ -233,7 +224,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec3 Direct_lighting = vec3(0.0);
 
     #ifdef OVERWORLD_SHADER
-		vec3 DirectLightColor = lightCol.rgb/2400.0;
+		vec3 DirectLightColor = lightSourceColorSSBO/2400.0;
 
     	float NdotL = clamp(dot(normal, WsunVec),0.0,1.0); 
         NdotL = clamp((-15.0 + NdotL*255.0) / 240.0  ,0.0,1.0);
@@ -244,7 +235,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
     	Direct_lighting = DirectLightColor * NdotL * Shadows;
 
-    	vec3 AmbientLightColor = averageSkyCol_Clouds/900.0 ;
+    	vec3 AmbientLightColor = averageSkyCol_CloudsSSBO/900.0 ;
 
     	vec3 indirectNormal = normal.xyz / dot(abs(normal.xyz), vec3(1.0));
     	float SkylightDir = clamp(indirectNormal.y*0.7+0.3,0.0,1.0);

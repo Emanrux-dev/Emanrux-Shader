@@ -3,4 +3,4 @@
 #define OVERWORLD_SHADER
 #define TWILIGHT_FOREST_FLAG
 
-#include "/dimensions/deferred.fsh"
+#include "/dimensions/prepare4.fsh"

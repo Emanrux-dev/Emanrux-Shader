@@ -3,9 +3,7 @@
 #include "/lib/bokeh.glsl"
 #include "/lib/items.glsl"
 
-#ifdef CUSTOM_MOON_ROTATION
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
 #include "/lib/entities.glsl"
 
@@ -26,12 +24,14 @@ Read the terms of modification and sharing before changing something below pleas
 varying vec4 lmtexcoord;
 varying vec4 color;
 
+#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+varying float chunkFade;
+#endif
+
 uniform sampler2D colortex4;
 uniform sampler2D noisetex;
 
 #ifdef OVERWORLD_SHADER
-	flat varying vec3 averageSkyCol_Clouds;
-	flat varying vec4 lightCol;
 	flat varying vec3 WsunVec;
 
 	#include "/lib/scene_controller.glsl"
@@ -113,6 +113,11 @@ vec3 getWaveNormal(vec3 posxz, float range){
 	return wave;
 
 }
+
+#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND
+	uniform float caveDetection;
+#endif
+
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -144,8 +149,7 @@ void main() {
 
 	// lmtexcoord.xy = (gl_MultiTexCoord0).xy;
 	lmtexcoord.xy = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
-	vec2 lmcoord = gl_MultiTexCoord1.xy / 240.0;
-	lmtexcoord.zw = lmcoord;
+	lmtexcoord.zw = gl_MultiTexCoord1.xy / 240.0;
 
 	#if defined LARGE_WAVE_DISPLACEMENT && !defined PHYSICS_OCEAN
 		if(isWater) {
@@ -166,15 +170,25 @@ void main() {
 
 		}
 	#endif
-	
-   	vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
-	
-	#ifdef PLANET_CURVATURE
-		float curvature = length(worldpos) / (16*8);
-		worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
-	#endif
 
-	position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;
+	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		chunkFade = abs(mc_chunkFade);
+	#endif
+	
+	#if defined PLANET_CURVATURE || (defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND)
+		vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
+
+		#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND
+			worldpos.y += -45.0*(1.0-chunkFade)*(1.0-caveDetection)*smoothstep(25.0, far, length(worldpos));
+		#endif
+
+		#ifdef PLANET_CURVATURE
+			float curvature = length(worldpos) / (16*8);
+			worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
+		#endif
+
+		position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;
+	#endif
 	
 	#if !defined ENTITIES && !defined HAND
  		gl_Position = toClipSpace3(position);
@@ -195,7 +209,7 @@ void main() {
 	// translucent entities
 	#if defined ENTITIES || defined BLOCKENTITIES
 		mat = 0.9;
-		if (entityId == 1803) mat = 0.8;
+		if (entityId == 1804) mat = 0.8;
 	#endif
 
 	// translucent blocks
@@ -227,21 +241,16 @@ void main() {
 		}
 	#endif
 	flatnormal = normalMat.xyz;
-	viewVector = position.xyz;
 
-	viewVector = normalize(tbnMatrix * viewVector);
+	viewVector = position.xyz;
+	if(isWater) viewVector = normalize(tbnMatrix * viewVector);
 
 	color = vec4(gl_Color.rgb, 1.0);
 	#ifdef LIGHTNING
 		color.a = gl_Color.a;
 	#endif
 
-	#ifdef OVERWORLD_SHADER
-		lightCol.rgb = texelFetch2D(colortex4,ivec2(6,37),0).rgb;
-		lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
-	
-		averageSkyCol_Clouds = texelFetch2D(colortex4,ivec2(0,37),0).rgb;
-	
+	#ifdef OVERWORLD_SHADER		
 		// WsunVec = lightCol.a * normalize(mat3(gbufferModelViewInverse) * sunPosition);
 		
 		#ifdef SMOOTH_SUN_ROTATION
@@ -262,10 +271,7 @@ void main() {
 		
 		vec3 WmoonVec = moonVec;
 
-		WsunVec = mix(WmoonVec, WsunVec, clamp(lightCol.a,0,1));
-
-		readSceneControllerParameters(colortex4, SC_parameters.smallCumulus, SC_parameters.largeCumulus, SC_parameters.altostratus, SC_parameters.cirrus, SC_parameters.fog);
-
+		WsunVec = mix(WmoonVec, WsunVec, clamp(float(sunElevation > 1e-5)*2.0 - 1.0,0,1));
 	#endif
 
 	LIGHTNING_BOLT = 0.0;

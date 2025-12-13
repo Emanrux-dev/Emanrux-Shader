@@ -1,8 +1,6 @@
 #include "/lib/settings.glsl"
 
-#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
 #ifndef END_SHADER
 	flat varying vec3 WsunVec;
@@ -379,7 +377,7 @@ float ld(float dist) {
 
 #include "/lib/sky_gradient.glsl"
 
-/* RENDERTARGETS:3,14,12,10*/
+/* RENDERTARGETS:3,14,12*/
 
 void main() {
 
@@ -457,7 +455,7 @@ void main() {
 
 	vec3 FlatNormals = normalize(texture2D(colortex15,texcoord).rgb * 2.0 - 1.0);
 
-	#if defined DENOISE_SSS_AND_SSAO && indirect_effect == SSAO_FILTERED || indirect_effect == SSAO_HQ
+	#if indirect_effect == SSAO_FILTERED || indirect_effect == SSAO_HQ
 
 		if(z >= 1.0) FlatNormals = normal;
 
@@ -474,7 +472,7 @@ void main() {
 
 	/*------------- VOLUMETRICS BEHIND TRANSLUCENTS PASS-THROUGH -------------*/
 	// colortex10 is the history buffer used in reprojection of volumetrics, i can just hijack that.
-	gl_FragData[3] = texture2D(colortex10, texcoord);
+	// gl_FragData[3] = texture2D(colortex10, texcoord);
 	
 	// if(texture2D(colortex7,texcoord).a > 0.0) {
 	// 	vec4 VL = BilateralUpscale_VLFOG(colortex13, depthtex1, gl_FragCoord.xy - 1.5, ld(z));

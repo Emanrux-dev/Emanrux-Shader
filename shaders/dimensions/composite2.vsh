@@ -6,16 +6,6 @@
 	#include "/lib/SSBOs.glsl"
 #endif
 
-flat varying vec4 lightCol;
-flat varying vec3 sunlightCol;
-flat varying vec3 moonlightCol;
-flat varying vec3 averageSkyCol;
-flat varying vec3 averageSkyCol_Clouds;
-
-#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
-	flat varying float exposure;
-#endif
-
 #include "/lib/scene_controller.glsl"
 
 
@@ -54,31 +44,9 @@ void main() {
 
 	gl_Position.xy = (gl_Position.xy*0.5+0.5)*(0.01+VL_RENDER_SCALE)*2.0-1.0;
 
-	
-	#ifdef OVERWORLD_SHADER
-		lightCol.rgb = texelFetch2D(colortex4,ivec2(6,37),0).rgb;
-		sunlightCol = texelFetch2D(colortex4,ivec2(8,37),0).rgb;
-		moonlightCol = texelFetch2D(colortex4,ivec2(9,37),0).rgb;
-		averageSkyCol = texelFetch2D(colortex4,ivec2(1,37),0).rgb;
-		averageSkyCol_Clouds = texelFetch2D(colortex4,ivec2(0,37),0).rgb;
-
-		readSceneControllerParameters(colortex4, SC_parameters.smallCumulus, SC_parameters.largeCumulus, SC_parameters.altostratus, SC_parameters.cirrus, SC_parameters.fog);
-	#endif
-
-	#ifdef NETHER_SHADER
-		lightCol.rgb = vec3(0.0);
-		averageSkyCol = vec3(0.0);
-		averageSkyCol_Clouds = vec3(0.0);
-	#endif
-
-	#ifdef END_SHADER
-		lightCol.rgb = vec3(0.0);
-		averageSkyCol = vec3(0.0);
-		averageSkyCol_Clouds = vec3(5.0);
-	#endif
+	float lightSourceCheck = float(sunElevation > 1e-5)*2.0 - 1.0;
 
 	#ifdef OVERWORLD_SHADER
-		lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
 		#ifdef SMOOTH_SUN_ROTATION
 			WsunVec = WsunVecSmooth;
 		#else
@@ -91,7 +59,6 @@ void main() {
 			#else	
 				vec3 moonVec = customMoonVecSSBO;
 			#endif
-			sunlightCol *= smoothstep(0.005, 0.09, length(moonVec - WsunVec));
 		#else
 			#ifdef SMOOTH_MOON_ROTATION
 				vec3 moonVec = WmoonVecSmooth;
@@ -104,15 +71,11 @@ void main() {
 		WmoonVec = moonVec;
 
 		WrealSunVec = WsunVec;
-		WsunVec = mix(WmoonVec, WsunVec, clamp(lightCol.a,0,1));
+		WsunVec = mix(WmoonVec, WsunVec, clamp(lightSourceCheck,0,1));
 	#else
 		WmoonVec = vec3(0.0, 1.0, 0.0);
 		WsunVec = vec3(0.0, 1.0, 0.0);
 		WrealSunVec = vec3(0.0, 1.0, 0.0);
-	#endif
-
-	#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
-		exposure = texelFetch2D(colortex4,ivec2(10,37),0).r;
 	#endif
 
 	#ifdef TAA

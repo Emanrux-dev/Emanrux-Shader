@@ -6,7 +6,6 @@ varying vec4 color;
 
 uniform sampler2D gtexture;
 uniform sampler2D gaux1;
-uniform vec4 lightCol;
 uniform vec3 sunVec;
 
 uniform vec2 texelSize;

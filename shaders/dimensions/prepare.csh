@@ -54,7 +54,7 @@ void main() {
 
 
         // Big shenanigans lol, don't ask, it just works
-        if(noSimOngoingCheck == true) {
+        if(noSimOngoingCheck) {
             noSimOngoing = true;
         } else {
             noSimOngoing = false;
@@ -82,13 +82,13 @@ void main() {
         if(inShipCurrentFrame || inShipLastFrame || inShip2Frames) inShip = true;
 
         vec2 playerMovement = getPlayerMovementOffset();
-        water_move_ompensation_counter_SSBO += playerMovement;
+        water_move_compensation_counter_SSBO += playerMovement;
 
         water_move_compensationSSBO = ivec2(0);
-        ivec2 offset = ivec2(trunc(water_move_ompensation_counter_SSBO));
+        ivec2 offset = ivec2(trunc(water_move_compensation_counter_SSBO));
         if (any(notEqual(offset, ivec2(0)))) {
             water_move_compensationSSBO = offset;
-            water_move_ompensation_counter_SSBO -= vec2(offset);
+            water_move_compensation_counter_SSBO -= vec2(offset);
         }
     }
     #endif

@@ -1,9 +1,7 @@
 #include "/lib/settings.glsl"
 #include "/lib/res_params.glsl"
 
-#ifdef CUSTOM_MOON_ROTATION
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
 #ifdef END_SHADER
 	flat varying float Flashing;
@@ -14,11 +12,6 @@
 flat varying vec3 WsunVec;
 flat varying vec3 WmoonVec;
 flat varying vec3 unsigned_WsunVec;
-flat varying vec3 averageSkyCol_Clouds;
-flat varying vec4 lightCol;
-flat varying vec3 sunCol;
-flat varying vec3 moonCol;
-flat varying vec3 albedoSmooth;
 
 flat varying float exposure;
 
@@ -55,18 +48,6 @@ void main() {
 
 	zMults = vec3(1.0/(far * near),far+near,far-near);
 
-	lightCol.rgb = texelFetch2D(colortex4,ivec2(6,37),0).rgb;
-	lightCol.a = float(sunElevation > 1e-5)*2.0 - 1.0;
-
-	sunCol = texelFetch2D(colortex4,ivec2(8,37),0).rgb;
-	moonCol = texelFetch2D(colortex4,ivec2(9,37),0).rgb;
-	
-	#if defined FLASHLIGHT && defined FLASHLIGHT_BOUNCED_INDIRECT
-		albedoSmooth = texelFetch2D(colortex4,ivec2(15.5,2.5),0).rgb;
-	#endif
-
-	averageSkyCol_Clouds = texelFetch2D(colortex4,ivec2(0,37),0).rgb;
-
 	#ifdef SMOOTH_SUN_ROTATION
 		unsigned_WsunVec = WsunVecSmooth;
 	#else
@@ -86,16 +67,12 @@ void main() {
 	
 	WmoonVec = moonVec;
 
-	WsunVec = mix(WmoonVec, unsigned_WsunVec, clamp(lightCol.a,0,1));
+	WsunVec = mix(WmoonVec, unsigned_WsunVec, clamp(float(sunElevation > 1e-5)*2.0 - 1.0,0,1));
 
 	#if defined CUSTOM_MOON_ROTATION && LIGHTNING_SHADOWS > 0
 		WmoonVec = customMoonVec2SSBO;
 	#endif
 
-	// exposure = texelFetch2D(colortex4,ivec2(10,37),0).r;
-
-	readSceneControllerParameters(colortex4, SC_parameters.smallCumulus, SC_parameters.largeCumulus, SC_parameters.altostratus, SC_parameters.cirrus, SC_parameters.fog);
-	
 	#ifdef TAA
 		TAA_Offset = offsets[framemod8];
 	#else

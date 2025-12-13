@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.6.1
+    value.SHADER_VERSION_LABEL.482 = 5.7.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -309,6 +309,7 @@ screen.Fog = Fog Settings
     option.VL_SAMPLES = Fog Samples
     option.FOG_START_HEIGHT = Fog Start Height
     option.BLOOMY_FOG = Bloomy Fog Multiplier
+    option.UNDERWATER_BLOOMY_FOG = Bloomy Fog Multiplier Underwater
     option.Haze_amount = Atmospheric Haze Density
     option.RainFog_amount = Rain Fog Multiplier
     option.BorderFog = Chunk Border Fog
@@ -818,6 +819,7 @@ screen.Resource_Pack_Support = Materials / Resource Pack Support
             value.SUN_SPECULAR_MULT.1 = ON
             suffix.SUN_SPECULAR_MULT =x brighter
         option.ROUGHNESS_THRESHOLD = Reflection Visibilty Threshold
+            suffix.ROUGHNESS_THRESHOLD = %
             value.ROUGHNESS_THRESHOLD.0.0 = no threshold
         option.QUARTER_RES_SSR = Sample 1/4 resolution depth
 
@@ -935,6 +937,11 @@ option.EMISSIVE_TRIMS_STRENGTH = Emissive Trims Brightness
 
 option.PLANET_CURVATURE = Planet Curvature §c(VOXY NOT SUPPORTED!)
 option.CURVATURE_AMOUNT = Curvature Amount
+
+option.VANILLA_CHUNK_FADING = Chunks Fade In §c(Iris 1.10.3+)
+value.VANILLA_CHUNK_FADING.0 = Off
+value.VANILLA_CHUNK_FADING.1 = Fade In
+value.VANILLA_CHUNK_FADING.2 = Fade In + Slide In
 
 option.FISHEYE_EFFECT = Fisheye Effect
 option.FISHEYE_STRENGTH = Fisheye Strength

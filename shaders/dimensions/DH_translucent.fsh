@@ -1,8 +1,6 @@
 #include "/lib/settings.glsl"
 
-#ifdef CUSTOM_MOON_ROTATION
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
 #include "/lib/util.glsl"
 #include "/lib/res_params.glsl"
@@ -68,8 +66,6 @@ uniform int frameCounter;
 
 
 // uniform sampler2D colortex4;
-flat varying vec3 averageSkyCol_Clouds;
-flat varying vec4 lightCol;
 flat varying vec3 WsunVec;
 flat varying vec3 WsunVec2;
 
@@ -368,7 +364,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec3 Direct_lighting = vec3(0.0);
 
     #ifdef OVERWORLD_SHADER
-		vec3 DirectLightColor = lightCol.rgb/2400.0;
+		vec3 DirectLightColor = lightSourceColorSSBO/2400.0;
 
     	float NdotL = clamp(dot(worldSpaceNormals, WsunVec),0.0,1.0); 
         NdotL = clamp((-15 + NdotL*255.0) / 240.0  ,0.0,1.0);
@@ -406,7 +402,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
     	Direct_lighting = DirectLightColor * NdotL * Shadows;
 
-    	vec3 AmbientLightColor = averageSkyCol_Clouds/900.0 ;
+    	vec3 AmbientLightColor = averageSkyCol_CloudsSSBO/900.0 ;
 
     	vec3 indirectNormal = worldSpaceNormals.xyz / dot(abs(worldSpaceNormals.xyz), vec3(1.0));
     	float SkylightDir = clamp(indirectNormal.y*0.7+0.3,0.0,1.0);

@@ -1,8 +1,6 @@
 #include "/lib/settings.glsl"
 
-#ifdef CUSTOM_MOON_ROTATION
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
 flat varying vec2 TAA_Offset;
 flat varying vec3 WsunVec;

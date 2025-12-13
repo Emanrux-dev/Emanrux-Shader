@@ -153,14 +153,14 @@ void applySceneControllerParameters(
 ){
     // these are the default parameters if no "trigger" or custom uniform is being used.
     // do not remove them
-    smallCumulusCoverage = CloudLayer0_coverage;
-	smallCumulusDensity = CloudLayer0_density;
-	largeCumulusCoverage = CloudLayer1_coverage;
-    largeCumulusDensity = CloudLayer1_density;
-	altostratusCoverage = CloudLayer2_coverage;
-    altostratusDensity = CloudLayer2_density;
-    cirrusCoverage = CloudLayer3_coverage;
-    cirrusDensity = CloudLayer3_density;
+    smallCumulusCoverage =  CloudLayer0_coverage;
+	smallCumulusDensity =   CloudLayer0_density;
+	largeCumulusCoverage =  CloudLayer1_coverage;
+    largeCumulusDensity =   CloudLayer1_density;
+	altostratusCoverage =   CloudLayer2_coverage;
+    altostratusDensity =    CloudLayer2_density;
+    cirrusCoverage =        CloudLayer3_coverage;
+    cirrusDensity =         CloudLayer3_density;
 	fogA = 1.0;
     fogB = 1.0;
 
@@ -190,23 +190,23 @@ void applySceneControllerParameters(
 // fog = (uniform fog density, cloudy fog density)
 // ... and more, eventually
 
-#if !defined VOXY_PROGRAM && !defined CLOUD_SHADOW_PASS
-    flat varying struct sceneController {
-      vec2 smallCumulus;
-      vec2 largeCumulus;
-      vec2 altostratus;
-      vec2 cirrus;
-      vec2 fog;
-    } SC_parameters;
-#else
-    struct sceneController {
-      vec2 smallCumulus;
-      vec2 largeCumulus;
-      vec2 altostratus;
-      vec2 cirrus;
-      vec2 fog;
-    } SC_parameters;
-#endif
+// #if !defined VOXY_PROGRAM && !defined CLOUD_SHADOW_PASS
+//     flat varying struct sceneController {
+//       vec2 smallCumulus;
+//       vec2 largeCumulus;
+//       vec2 altostratus;
+//       vec2 cirrus;
+//       vec2 fog;
+//     } SC_parameters;
+// #else
+//     struct sceneController {
+//       vec2 smallCumulus;
+//       vec2 largeCumulus;
+//       vec2 altostratus;
+//       vec2 cirrus;
+//       vec2 fog;
+//     } SC_parameters;
+// #endif
 
 vec3 writeSceneControllerParameters(
 	vec2 uv,

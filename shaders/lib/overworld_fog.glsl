@@ -42,13 +42,14 @@ float cloudVol(in vec3 pos, float maxDistance ){
 		medium_gradientFog = mix(medium_gradientFog, 1.0, sandStorm+snowStorm);
 	}
 
-	FogDensities(medium_gradientFog, cloudyFog, rainyFog, maxDistance, SC_parameters.fog.x, SC_parameters.fog.y);
+	FogDensities(medium_gradientFog, cloudyFog, rainyFog, maxDistance, SC_fog.x, SC_fog.y);
 
 	return uniformFog + medium_gradientFog + cloudyFog + rainyFog;
 }
 
 float phaseRayleigh(float cosTheta) {
-	const vec2 mul_add = vec2(0.1, 0.28) / acos(-1.0);
+	const float oneOverPi 	= 1.0 / acos(-1.0);
+	const vec2 mul_add = vec2(0.1, 0.28) * oneOverPi;
 	return cosTheta * mul_add.x + mul_add.y; // optimized version from [Elek09], divided by 4 pi for energy conservation
 }
 float fogPhase(float lightPoint){
@@ -102,10 +103,15 @@ vec4 GetVolumetricFog(
 	vec3 dV = fragposition - start;
 	vec3 dVWorld = playerPos - gbufferModelViewInverse[3].xyz;
 
+	// vec3 nPlayerPos = normalize(playerPos);
+
+	float rayLength = length(dVWorld);
+
 	#if defined DISTANT_HORIZONS || defined VOXY
-		float maxLength = min(min(length(dVWorld), cloudPlaneDistance), max(far, dhVoxyRenderDistance))/length(dVWorld);
+		float maxLength = min(min(rayLength, cloudPlaneDistance), max(far, dhVoxyRenderDistance))/rayLength;
+		// float maxLength = min(length(dVWorld), max(far, dhVoxyRenderDistance))/length(dVWorld);
 	#else
-		float maxLength = min(min(length(dVWorld), cloudPlaneDistance), far)/length(dVWorld);
+		float maxLength = min(min(rayLength, cloudPlaneDistance), far)/rayLength;
 	#endif
 	
 	dV *= maxLength;
@@ -126,13 +132,13 @@ vec4 GetVolumetricFog(
 	// float atmosphereAbsorbance = 1.0;
 	vec3 atmosphereAbsorbance = vec3(1.0);
 
-	float SdotV = dot(mat3(gbufferModelView) * sunVector, normalize(viewPosition));
+	float SdotV = dot(sunVector, normalize(viewPosition));
 
 	///// ----- fog lighting
 	//Mie phase + somewhat simulates multiple scattering (Horizon zero down cloud approx)
 	float sunPhase = fogPhase(SdotV)*5.0;//  phaseCloudFog(SdotV, 0.9) + phaseCloudFog(SdotV, 0.85) + phaseCloudFog(SdotV, 0.5) * 5.0;
 	// float sunPhase2 = (phaseCloudFog(SdotV, 0.85) + phaseCloudFog(SdotV, 0.5)) * 5.0;
-	float skyPhase = 2.0 + pow(1.0-pow(1.0-clamp(normalize(playerPos).y*0.5+0.5,0.0,1.0),2.0),5.0)*2.0 ;//pow(clamp(normalize(wpos).y*0.5+0.5,0.0,1.0),4.0)*5.0;
+	float skyPhase = 0.5 + pow(1.0-pow(1.0-clamp(normalize(playerPos).y*0.5+0.5,0.0,1.0),2.0),5.0)*2.0;
 	float rayL = phaseRayleigh(SdotV);
 
 	vec3 rC = vec3(sky_coefficientRayleighR*1e-6, sky_coefficientRayleighG*1e-5, sky_coefficientRayleighB*1e-5) ;
@@ -259,7 +265,7 @@ vec4 GetVolumetricFog(
 				float shiftedLinearDistance = length(scaledViewPos);
 
 				float lightFalloff = 1.0 - clamp(1.0-linearDistance/FLASHLIGHT_RANGE, -0.999,1.0);
-				lightFalloff = max(exp(-30.0 * lightFalloff),0.0);
+				lightFalloff = max(exp(-10.0 * FLASHLIGHT_BRIGHTNESS_FALLOFF_MULT * lightFalloff),0.0);
 				float projectedCircle = clamp(1.0 - shiftedLinearDistance*FLASHLIGHT_SIZE,0.0,1.0);
 
 				vec3 flashlightGlow = vec3(FLASHLIGHT_R,FLASHLIGHT_G,FLASHLIGHT_B) * lightFalloff * projectedCircle * 0.5;

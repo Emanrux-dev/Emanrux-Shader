@@ -6,10 +6,13 @@ in DATA {
 	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES
 		vec4 grassSideCheck;
 		vec3 centerPosition;
-		int discardGrass;
 	#endif
 
 	vec4 color;
+
+    #if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		float chunkFade;
+	#endif
 
 	vec4 lmtexcoord;
 	vec3 normalMat;
@@ -33,6 +36,10 @@ out DATA {
 	#endif
 
 	vec4 color;
+
+    #if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		float chunkFade;
+	#endif
 
 	vec4 lmtexcoord;
 	vec3 normalMat;
@@ -72,6 +79,10 @@ void main() {
         data_out[gl_InvocationID].texcoordam = data_in[gl_InvocationID].texcoordam;
         data_out[gl_InvocationID].texcoord = data_in[gl_InvocationID].texcoord;
     #endif
+
+    #if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		data_out[gl_InvocationID].chunkFade = data_in[gl_InvocationID].chunkFade;
+	#endif
 
     #ifdef MC_NORMAL_MAP
         data_out[gl_InvocationID].tangent = data_in[gl_InvocationID].tangent;
@@ -148,7 +159,7 @@ void main() {
         }
 
         #if REPLACE_SHORT_GRASS > 0
-        if(data_in[gl_InvocationID].discardGrass == 1){
+        if(data_in[gl_InvocationID].blockID == -10){
             gl_TessLevelOuter[0] = 0;
             gl_TessLevelOuter[1] = 0;
             gl_TessLevelOuter[2] = 0;

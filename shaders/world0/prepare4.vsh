@@ -2,4 +2,4 @@
 
 #define OVERWORLD_SHADER
 
-#include "/dimensions/deferred.vsh"
+#include "/dimensions/prepare4.vsh"

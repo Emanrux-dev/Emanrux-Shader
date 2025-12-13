@@ -35,5 +35,37 @@ layout(binding = 0) buffer SSBO1 {
 
     ivec2 water_move_compensationSSBO; // 8 bytes
 
-    vec2 water_move_ompensation_counter_SSBO; // 8 bytes
+    vec2 water_move_compensation_counter_SSBO; // 8 bytes
+
+    vec2 SC_smallCumulus;
+
+    vec2 SC_largeCumulus;
+
+    vec2 SC_altostratus;
+
+    vec2 SC_cirrus;
+
+    vec2 SC_fog;
+
+    vec3 sunColorSSBO;
+
+    vec3 moonColorSSBO;
+
+    vec3 lightSourceColorSSBO;
+
+    vec3 averageSkyColSSBO;
+
+    vec3 averageSkyCol_CloudsSSBO;
+
+    vec3 skyGroundColSSBO;
+
+    vec3 albedoSmoothSSBO;
+
+    float avgBrightnessSSBO;
+
+    float avgL2SSBO;
+
+    float exposureSSBO;
+
+    vec2 rodExposureDepthSSBO;
 };

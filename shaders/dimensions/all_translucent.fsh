@@ -10,9 +10,7 @@
 
 #include "/lib/settings.glsl"
 
-#if defined CUSTOM_MOON_ROTATION || defined END_ISLAND_LIGHT || WATER_INTERACTION == 2
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
 #undef FLASHLIGHT_BOUNCED_INDIRECT
 
@@ -26,6 +24,10 @@ varying vec4 lmtexcoord;
 varying vec4 color;
 uniform vec4 entityColor;
 
+#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+varying float chunkFade;
+#endif
+
 #if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
 	const bool shadowHardwareFiltering = true;
 	uniform sampler2DShadow shadow;
@@ -38,9 +40,6 @@ uniform vec4 entityColor;
 
 	uniform float lightSign;
 	flat varying vec3 WsunVec;
-
-	flat varying vec3 averageSkyCol_Clouds;
-	flat varying vec4 lightCol;
 #endif
 
 
@@ -330,8 +329,7 @@ float ld(float dist) {
 
 #ifdef RIPPLE_WATER
 	#include "/lib/ripples.glsl"
-
-	uniform int biome_precipitation;
+	uniform float rippleAmount;
 #endif
 
 // #undef BASIC_SHADOW_FILTER
@@ -489,6 +487,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec3 FragCoord = gl_FragCoord.xyz;
 	float mipmapBias = bias();
 
+	float BN = blueNoise();
+
 	#ifdef TAA
 		vec2 tempOffset = offsets[framemod8];
 		vec3 viewPos = toScreenSpace(FragCoord*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize*0.5, 0.0));
@@ -540,6 +540,16 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		lightmap = clamp((lightmap - 1.0 / 32.0) * 32.0 / 30.0, 0.0, 1.0);
 
 		gl_FragData[0] = _color;
+	#endif
+
+	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		gl_FragData[0].a *= sqrt(chunkFade);
+
+		#ifdef TAA
+			if(sqrt(chunkFade) < BN && isWater) discard;
+		#else
+			if(sqrt(chunkFade) < R2_dither() && isWater) discard;
+		#endif
 	#endif
 
 	float UnchangedAlpha = gl_FragData[0].a;
@@ -650,9 +660,9 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 			vec3 flowDir = normalize(worldSpaceNormal*10.0) * frameTimeCounter * 2.0 * WATER_WAVE_SPEED;
 			
-			vec2 newPos = playerPos.xy + cameraPosition.xy + abs(flowDir.xz);
-			newPos = mix(newPos, playerPos.zy + cameraPosition.zy + abs(flowDir.zx), clamp(abs(worldSpaceNormal.x),0.0,1.0));
-			newPos = mix(newPos, playerPos.xz + cameraPosition.xz, clamp(abs(worldSpaceNormal.y),0.0,1.0));
+			vec2 newPos = worldPos.xy + abs(flowDir.xz);
+			newPos = mix(newPos, worldPos.zy + abs(flowDir.zx), clamp(abs(worldSpaceNormal.x),0.0,1.0));
+			newPos = mix(newPos, worldPos.xz, clamp(abs(worldSpaceNormal.y),0.0,1.0));
 			waterPos.xy = newPos;
 		
 			waterPos.xyz = getParallaxDisplacement(waterPos, playerPos);
@@ -660,8 +670,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 			vec3 bump = getWaveNormal(waterPos, playerPos);
 
 			#ifdef RIPPLE_WATER
-				if(viewDist < 35 && rainStrength > 0.0 && biome_precipitation == 1 && abs(worldSpaceNormal.z) < 0.95 && abs(worldSpaceNormal.x) < 0.95) {
-					float effectStrength = smoothstep(0.85, 1.0, lightmap.y);
+				if(viewDist < 35 && rainStrength > 0.0 && rippleAmount > 0.01 && abs(worldSpaceNormal.z) < 0.95 && abs(worldSpaceNormal.x) < 0.95) {
+					float effectStrength = smoothstep(0.85, 1.0, lightmap.y) * smoothstep(0.0, 1.0, rippleAmount);
 					rippleBump = ripples(worldPos.xz);
 					bump += 0.6 * RIPPLE_STRENGTH * rippleBump * rainStrength * effectStrength * smoothstep(35.0, 10.0, viewDist);
 				}
@@ -802,8 +812,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec3 Direct_lighting = vec3(0.0);
 
 	#ifdef OVERWORLD_SHADER
-		vec3 DirectLightColor = lightCol.rgb/2400.0;
-		vec3 AmbientLightColor = averageSkyCol_Clouds/900.0;
+		vec3 DirectLightColor = lightSourceColorSSBO/2400.0;
+		vec3 AmbientLightColor = averageSkyCol_CloudsSSBO/900.0;
 
 		#ifdef USE_CUSTOM_DIFFUSE_LIGHTING_COLORS
 			DirectLightColor = luma(DirectLightColor) * vec3(DIRECTLIGHT_DIFFUSE_R,DIRECTLIGHT_DIFFUSE_G,DIRECTLIGHT_DIFFUSE_B);
@@ -826,7 +836,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 		float LM_shadowMapFallback = min(max(lightmap.y-0.8, 0.0) * 25,1.0);
 
-		Shadows = ComputeShadowMap(DirectLightColor, shadowPlayerPos, shadowMapFalloff, blueNoise(), geoNormals);
+		Shadows = ComputeShadowMap(DirectLightColor, shadowPlayerPos, shadowMapFalloff, BN, geoNormals);
 
 		// Shadows = mix(LM_shadowMapFallback, Shadows, shadowMapFalloff2);
 		Shadows *= mix(LM_shadowMapFallback,1.0,shadowMapFalloff2);
@@ -882,7 +892,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 			float LM_shadowMapFallback = min(max(lightmap.y-0.8, 0.0) * 25,1.0);
 
-			Shadows = ComputeShadowMap(DirectLightColor, shadowPlayerPos, shadowMapFalloff, blueNoise(), geoNormals);
+			Shadows = ComputeShadowMap(DirectLightColor, shadowPlayerPos, shadowMapFalloff, BN, geoNormals);
 
 			// Shadows = mix(LM_shadowMapFallback, Shadows, shadowMapFalloff2);
 			Shadows *= mix(LM_shadowMapFallback,1.0,shadowMapFalloff2);
@@ -979,7 +989,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 				vec3 DirectLightColor = WsunVec;
 				float Shadows = 0.0;
 			#endif
-			vec3 specularReflections = specularReflections(viewPos, normalize(feetPlayerPos), WsunVec, vec3(blueNoise(), vec2(interleaved_gradientNoise_temporal())), worldSpaceNormal, roughness, f0, Albedo, FinalColor*gl_FragData[0].a, DirectLightColor * Shadows * Shadows, lightmap.y, isHand, isWater, reflectance, flashLightSpecularData);
+			vec3 specularReflections = specularReflections(viewPos, normalize(feetPlayerPos), WsunVec, vec3(BN, vec2(interleaved_gradientNoise_temporal())), worldSpaceNormal, roughness, f0, Albedo, FinalColor*gl_FragData[0].a, DirectLightColor * Shadows * Shadows, lightmap.y, isHand, isWater, reflectance, flashLightSpecularData);
 			
 			gl_FragData[0].a = gl_FragData[0].a + (1.0-gl_FragData[0].a) * reflectance;
 		

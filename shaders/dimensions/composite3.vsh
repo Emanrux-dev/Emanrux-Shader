@@ -1,8 +1,6 @@
 #include "/lib/settings.glsl"
 
-#ifdef CUSTOM_MOON_ROTATION
-	#include "/lib/SSBOs.glsl"
-#endif
+#include "/lib/SSBOs.glsl"
 
 varying vec2 texcoord;
 flat varying vec3 zMults;
@@ -10,10 +8,6 @@ flat varying vec3 zMults;
 #if defined BorderFog || (defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS) > 0
 	uniform sampler2D colortex4;
 	#include "/lib/scene_controller.glsl"
-#endif
-
-#ifdef BorderFog
-	flat varying vec3 skyGroundColor;
 #endif
 
 flat varying vec3 WsunVec;
@@ -41,9 +35,6 @@ uniform int framemod8;
 void main() {
 
 	#ifdef OVERWORLD_SHADER
-		#ifdef BorderFog
-			skyGroundColor = texelFetch2D(colortex4,ivec2(1,37),0).rgb / 1200.0 * Sky_Brightness;
-		#endif
 		#ifdef SMOOTH_SUN_ROTATION
 			WsunVec = WsunVecSmooth;
 		#else
@@ -61,10 +52,6 @@ void main() {
 				#endif
 				if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
 			#endif
-		#endif
-
-		#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
-			readSceneControllerParameters(colortex4, SC_parameters.smallCumulus, SC_parameters.largeCumulus, SC_parameters.altostratus, SC_parameters.cirrus, SC_parameters.fog);
 		#endif
 	#endif
 

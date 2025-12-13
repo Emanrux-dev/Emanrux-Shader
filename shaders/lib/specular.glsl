@@ -146,35 +146,35 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 
 	#if (defined VOXY && defined VOXY_REFLECTIONS) || (defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS)
 
-	const float biasAmount2 = 0.000015;
+		const float biasAmount2 = 0.000015;
 
 
-	_near = dhVoxyNearPlane;
-	_far = dhVoxyFarPlane;
+		_near = dhVoxyNearPlane;
+		_far = dhVoxyFarPlane;
 
 
-	vec3 clipPosition2 = toClipSpace3_DH(position, true);
-	float rayLength2 = ((position.z + dir.z * _far*sqrt(3.)) > -_near) ? (-_near -position.z) / dir.z : _far*sqrt(3.);
+		vec3 clipPosition2 = toClipSpace3_DH(position, true);
+		float rayLength2 = ((position.z + dir.z * _far*sqrt(3.)) > -_near) ? (-_near -position.z) / dir.z : _far*sqrt(3.);
 
-	vec3 direction2 = toClipSpace3_DH(position + dir*rayLength2, true) - clipPosition2;  //convert to clip space
+		vec3 direction2 = toClipSpace3_DH(position + dir*rayLength2, true) - clipPosition2;  //convert to clip space
 
-	//get at which length the ray intersects with the edge of the screen
-	vec3 maxLengths2 = (step(0.0, direction2) - clipPosition2) / direction2;
-	float mult2 = min(min(maxLengths2.x, maxLengths2.y), maxLengths2.z);
-	vec3 stepv2 = direction2 * mult2 / quality;
+		//get at which length the ray intersects with the edge of the screen
+		vec3 maxLengths2 = (step(0.0, direction2) - clipPosition2) / direction2;
+		float mult2 = min(min(maxLengths2.x, maxLengths2.y), maxLengths2.z);
+		vec3 stepv2 = direction2 * mult2 / quality;
 
-	clipPosition2.xy *= RENDER_SCALE;
-	stepv2.xy *= RENDER_SCALE;
+		clipPosition2.xy *= RENDER_SCALE;
+		stepv2.xy *= RENDER_SCALE;
 
-	vec3 spos2 = clipPosition2 + stepv2*dither;
-	spos2 += stepv2*0.5 + vec3(0.5*texelSize,0.0); // small offsets to reduce artifacts from precision differences.
-	
-	#if defined DEFERRED_SPECULAR && defined TAA
-		spos2.xy += TAA_Offset*texelSize*0.5/RENDER_SCALE;
-	#endif
+		vec3 spos2 = clipPosition2 + stepv2*dither;
+		spos2 += stepv2*0.5 + vec3(0.5*texelSize,0.0); // small offsets to reduce artifacts from precision differences.
+		
+		#if defined DEFERRED_SPECULAR && defined TAA
+			spos2.xy += TAA_Offset*texelSize*0.5/RENDER_SCALE;
+		#endif
 
-	float minZ2 = spos2.z - 0.00025 / linZ2(spos2.z, _near, _far);
-	float maxZ2 = spos2.z;
+		float minZ2 = spos2.z - 0.00025 / linZ2(spos2.z, _near, _far);
+		float maxZ2 = spos2.z;
 	#endif
 
 	vec3 hitPos = vec3(1.1);
@@ -356,33 +356,35 @@ float getReflectionVisibility(float f0, float roughness){
 
 	// the goal is to determine if the reflection is even visible. 
 	// if it reaches a point in smoothness or reflectance where it is not visible, allow it to interpolate to diffuse lighting.
-	float thresholdValue = ROUGHNESS_THRESHOLD;
+	#if ROUGHNESS_THRESHOLD < 1
+		return 0.0;
+	#else
+		float thresholdValue = ROUGHNESS_THRESHOLD/100.0;
 
-	if(thresholdValue < 0.01) return 0.0;
+		// the visibility gradient should only happen for dialectric materials. because metal is always shiny i guess or something
+		float dialectrics = max(f0*255.0 - 26.0,0.0)/229.0;
+		float value = 0.35; // so to a value you think is good enough.
+		float thresholdA = min(max( (1.0-dialectrics) - value, 0.0)/value, 1.0);
 
-	// the visibility gradient should only happen for dialectric materials. because metal is always shiny i guess or something
-	float dialectrics = max(f0*255.0 - 26.0,0.0)/229.0;
-	float value = 0.35; // so to a value you think is good enough.
-	float thresholdA = min(max( (1.0-dialectrics) - value, 0.0)/value, 1.0);
+		// use perceptual smoothness instead of linear roughness. it just works better i guess
+		float smoothness = 1.0-sqrt(roughness);
+		value = thresholdValue; // this one is typically want you want to scale.
+		float thresholdB = min(max(smoothness - value, 0.0)/value, 1.0);
+		
+		// preserve super smooth reflections. if thresholdB's value is really high, then fully smooth, low f0 materials would be removed (like water).
+		value = 0.1; // super low so only the smoothest of materials are includes.
+		float thresholdC = 1.0-min(max(value - (1.0-smoothness), 0.0)/value, 1.0);
+		
+		float visibilityGradient = max(thresholdA*thresholdC - thresholdB,0.0);
 
-	// use perceptual smoothness instead of linear roughness. it just works better i guess
-	float smoothness = 1.0-sqrt(roughness);
-	value = thresholdValue; // this one is typically want you want to scale.
-	float thresholdB = min(max(smoothness - value, 0.0)/value, 1.0);
-	
-	// preserve super smooth reflections. if thresholdB's value is really high, then fully smooth, low f0 materials would be removed (like water).
-	value = 0.1; // super low so only the smoothest of materials are includes.
-	float thresholdC = 1.0-min(max(value - (1.0-smoothness), 0.0)/value, 1.0);
-	
-	float visibilityGradient = max(thresholdA*thresholdC - thresholdB,0.0);
+		// a curve to make the gradient look smooth/nonlinear. just preference
+		visibilityGradient = 1.0-visibilityGradient;
+		visibilityGradient *=visibilityGradient;
+		visibilityGradient = 1.0-visibilityGradient;
+		visibilityGradient *=visibilityGradient;
 
-	// a curve to make the gradient look smooth/nonlinear. just preference
-	visibilityGradient = 1.0-visibilityGradient;
-	visibilityGradient *=visibilityGradient;
-	visibilityGradient = 1.0-visibilityGradient;
-	visibilityGradient *=visibilityGradient;
-
-	return visibilityGradient;
+		return visibilityGradient;
+	#endif
 }
 
 // derived from N and K from labPBR wiki https://shaderlabs.org/wiki/LabPBR_Material_Standard

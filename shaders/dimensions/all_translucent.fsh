@@ -151,6 +151,10 @@ uniform float dhVoxyFarPlane;
 #include "/lib/sky_gradient.glsl"
 #include "/lib/waterBump.glsl"
 
+#ifdef IRIS_FEATURE_TEXTURE_FILTERING
+#include "/lib/texture_filtering.glsl"
+#endif
+
 #ifdef OVERWORLD_SHADER
 	flat varying float Flashing;
 	#include "/lib/lightning_stuff.glsl"
@@ -530,7 +534,11 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec2 lightmap = lmtexcoord.zw;
 	
 	#ifndef COLORWHEEL
+		#ifdef IRIS_FEATURE_TEXTURE_FILTERING
+		gl_FragData[0] = textureFilteringMode == 1 ? sampleRGSS(gtexture, lmtexcoord.xy, 1.0 / vec2(textureSize(gtexture, 0))) : sampleNearest(gtexture, lmtexcoord.xy, 1.0 / vec2(textureSize(gtexture, 0))) * color;
+		#else
 		gl_FragData[0] = texture2D(gtexture, lmtexcoord.xy, mipmapBias) * color;
+		#endif
 	#else
 		vec4 _color = texture2D(gtexture, lmtexcoord.xy, mipmapBias);
 		float ao;

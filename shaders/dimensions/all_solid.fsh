@@ -6,6 +6,10 @@
 #include "/lib/items.glsl"
 #include "/lib/hsv.glsl"
 
+#ifdef IRIS_FEATURE_TEXTURE_FILTERING
+#include "/lib/texture_filtering.glsl"
+#endif
+
 #ifdef HAND
 #undef POM
 #endif
@@ -333,9 +337,9 @@ float getTrimEmission(vec3 Albedo) {
     return sqrt(hsv.z);
 }
 
-// #if defined HAND || (defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES)
-// 	uniform float alphaTestRef;
-// #endif
+#if defined HAND || (defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES)
+	uniform float alphaTestRef;
+#endif
 
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -406,7 +410,7 @@ void main() {
 	
 	// this fixes create multiblock entity thingies like train wheels (but probably breaks something else, didn't notice anything tho)
 	#ifndef COLORWHEEL
-		adjustedTexCoord = fract(data_in.texcoord.st)*data_in.texcoordam.pq+data_in.texcoordam.st;
+		// adjustedTexCoord = fract(data_in.texcoord.st)*data_in.texcoordam.pq+data_in.texcoordam.st;
 	#endif
 
 	// vec3 fragpos = toScreenSpace(gl_FragCoord.xyz*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize*0.5,0.0));
@@ -522,13 +526,17 @@ void main() {
 		// don't fix vanilla ao on some custom block models.
 		// if (Color.a < 0.3) Color.a = 1.0; // fix vanilla ao on some custom block models.
 
-		vec4 Albedo = Color;
+		vec4 Albedo = vec4(Color.rgb, 1.0);
 		
 		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && defined WORLD
 		if (!ShaderGrass)
 		#endif
 		{
+		#ifdef IRIS_FEATURE_TEXTURE_FILTERING
+		 Albedo *= textureFilteringMode == 1 ? sampleRGSS(gtexture, adjustedTexCoord.xy, 1.0 / vec2(textureSize(gtexture, 0))) : sampleNearest(gtexture, adjustedTexCoord.xy, 1.0 / vec2(textureSize(gtexture, 0)));
+		#else
 		 Albedo *= texture2D_POMSwitch(gtexture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
+		#endif
 		}
 	#else
 		vec4 Albedo = texture2D_POMSwitch(gtexture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
@@ -557,7 +565,7 @@ void main() {
 	#endif
 	
 	#if defined HAND || (defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES)
-		if (Albedo.a < 0.1) discard;
+		if (Albedo.a < alphaTestRef) discard;
 	#endif
 	
 	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND

@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - Bliss 编辑版
     prefix.SHADER_VERSION_LABEL = 版本
-    value.SHADER_VERSION_LABEL.482 = 5.8.2
+    value.SHADER_VERSION_LABEL.482 = 5.9.0
 
 # 如果你是来翻译的，这不是玩笑，这些选项的功能正如其名
 profile.POTATO=§4土豆 (极低配置)
@@ -1136,7 +1136,7 @@ screen.World.comment = 配置世界中发生的各种事物的设置，从摆动
         option.Water_Top_Layer.comment = 配置世界中海洋应处的 Y 坐标。
     screen.Water_fog_color.comment = 配置水雾的颜色。
 
-    screen.World_Effects = 世界天气效果
+    screen.Weather_Effects = 世界天气效果
         option.PUDDLE_MODE = 水坑
             value.PUDDLE_MODE.0 = 无湿润
             value.PUDDLE_MODE.1 = 水坑 + 完全湿润

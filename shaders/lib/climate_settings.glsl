@@ -23,19 +23,10 @@
 			bool isLeaves,
 			bool isPlants
 	    ){
-	    	// colors for things that arent leaves and using the tint index.
-	    	vec3 SummerCol = vec3(Summer_R, Summer_G, Summer_B);
-	    	vec3 AutumnCol = vec3(Fall_R, Fall_G, Fall_B);
-	    	vec3 WinterCol = vec3(Winter_R, Winter_G, Winter_B) ;
-	    	vec3 SpringCol = vec3(Spring_R, Spring_G, Spring_B);
-			
-
-			// decide if you want to replace biome colors or tint them.
-			
-			SummerCol *= glcolor;
-			AutumnCol *= glcolor;
-			WinterCol *= glcolor;
-			SpringCol *= glcolor;
+	    	vec3 SummerCol;
+	    	vec3 AutumnCol;
+	    	vec3 WinterCol;
+	    	vec3 SpringCol;			
 
 	    	// do leaf colors different because thats cool and i like it
 	    	if(isLeaves){
@@ -43,12 +34,19 @@
 	    	    AutumnCol = vec3(Fall_Leaf_R, Fall_Leaf_G, Fall_Leaf_B);
 	    		WinterCol = vec3(Winter_Leaf_R, Winter_Leaf_G, Winter_Leaf_B);
 	    		SpringCol = vec3(Spring_Leaf_R, Spring_Leaf_G, Spring_Leaf_B);
-
-				SummerCol *= glcolor;
-				AutumnCol *= glcolor;
-				WinterCol *= glcolor;
-				SpringCol *= glcolor;
-	    	}
+	    	} else {
+				// colors for things that arent leaves and using the tint index.
+				SummerCol = vec3(Summer_R, Summer_G, Summer_B);
+				AutumnCol = vec3(Fall_R, Fall_G, Fall_B);
+				WinterCol = vec3(Winter_R, Winter_G, Winter_B) ;
+				SpringCol = vec3(Spring_R, Spring_G, Spring_B);
+			}
+			
+			// decide if you want to replace biome colors or tint them.
+			SummerCol *= glcolor;
+			AutumnCol *= glcolor;
+			WinterCol *= glcolor;
+			SpringCol *= glcolor;
 
 			// length of each season in minecraft days
 	    	int SeasonLength = Season_Length; 

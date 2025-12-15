@@ -397,7 +397,6 @@ void main() {
 	vec2 tempOffset = offsets[framemod8];
 	vec3 viewPos = toScreenSpace(gl_FragCoord.xyz*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize*0.5,0.0));
 	vec3 feetPlayerPos = mat3(gbufferModelViewInverse) * viewPos;
-	vec3 worldPos = feetPlayerPos + cameraPosition;
 	// vec3 feetPlayerPos_normalized = normalize(feetPlayerPos);
 
 	vec4 TEXTURE = texture2D(gtexture, lmtexcoord.xy)*color;
@@ -407,9 +406,9 @@ void main() {
 	#endif
 
 	vec3 Albedo = toLinear(TEXTURE.rgb);
-	
-	vec2 lightmap = clamp(lmtexcoord.zw,0.0,1.0);
 
+	///////////////////////// BLOCKLIGHT LIGHTING OR LPV LIGHTING OR FLOODFILL COLORED LIGHTING
+	vec2 lightmap = clamp(lmtexcoord.zw,0.0,1.0);
 
 	#ifndef OVERWORLD_SHADER
 		lightmap.y = 1.0;
@@ -430,14 +429,31 @@ void main() {
 	#endif
 
 	#ifdef WEATHER
-		gl_FragData[1] = vec4(0.0,0.0,0.0,TEXTURE.a); // for bloomy rain and stuff
-	#endif
+		// remove very close rain
+		TEXTURE.a *= smoothstep(0.15, 1.5, length(feetPlayerPos));
 
-	#if !defined WEATHER || (defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0)
-		float viewDist = length(feetPlayerPos + gbufferModelViewInverse[3].xyz);
+		#if RAIN_MODE == 1
+			if(TEXTURE.a > 0.01) {
+				#ifdef IS_LPV_ENABLED
+					vec3 lpvPos = GetLpvPosition(feetPlayerPos);
+				#else
+					const vec3 lpvPos = vec3(0.0);
+				#endif
+
+				vec3 Indirect_lighting = doBlockLightLighting(vec3(TORCH_R,TORCH_G,TORCH_B), lightmap.x, feetPlayerPos, lpvPos);
+
+				TEXTURE.rgb *= Indirect_lighting + averageSkyCol_CloudsSSBO / 360.0;
+			}
+		#endif
+
+		// not linearizing since it kinda looks better like that
+		gl_FragData[1] = vec4(TEXTURE); // for bloomy rain and stuff
 	#endif
 
 	#ifndef WEATHER
+		float viewDist = length(feetPlayerPos + gbufferModelViewInverse[3].xyz);
+		vec3 worldPos = feetPlayerPos + cameraPosition;
+
 		#ifndef LINES
 			gl_FragData[0].a = TEXTURE.a;
 		#else
@@ -557,13 +573,11 @@ void main() {
 		gl_FragData[0].rgb *= 0.1;
 		
 
+		#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
+				float ditherFade = smoothstep(0.98*far, 1.0*far, viewDist);
+
+				if (step(ditherFade, R2_dither()) == 0.0) discard;
+		#endif
 	#endif
-
-	#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
-			float ditherFade = smoothstep(0.98*far, 1.0*far, viewDist);
-
-			if (step(ditherFade, R2_dither()) == 0.0) discard;
-	#endif
-
 #endif
 }

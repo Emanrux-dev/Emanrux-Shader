@@ -873,16 +873,6 @@ void main() {
     temporallyFilteredVL.rgb *= nametagbackground;
   #endif
 
-  // bloomy rain effect
-  #ifdef OVERWORLD_SHADER
-    float rainDrops = texelFetch2D(colortex9,ivec2(texcoord/texelSize),0).a;
-    if(hand) rainDrops *= (1.0-TranslucentShader.a);
-    if(rainDrops > 0.0) {
-      bloomyFogMult *= clamp(1.0 - pow(rainDrops*5.0,2),0.0,1.0);
-      color.rgb += color.rgb * 0.25 * rainDrops;
-    }
-  #endif
-
   // blend all fog types. volumetric fog, volumetric clouds, distance based fogs for lava, powdered snow, blindness, and darkness.
   blendAllFogTypes(color, bloomyFogMult, temporallyFilteredVL, linearDistance, playerPos_normalized, cameraPosition, isSky, isLightning);
 
@@ -922,6 +912,27 @@ void main() {
 
       color += rainbowColor * (1.0 - caveDetection);
     } 
+  #endif
+
+  // (bloomy) rain effect
+  #ifdef OVERWORLD_SHADER
+    #if RAIN_MODE == 0 // brighten the color behind
+      float rainDrops = texelFetch2D(colortex9,ivec2(texcoord/texelSize),0).a;
+      if(hand) rainDrops *= (1.0-TranslucentShader.a);
+
+      if(rainDrops > 0.01) {
+        bloomyFogMult *= clamp(1.0 - pow(rainDrops*5.0,2),0.0,1.0);
+        color.rgb += color.rgb * RAIN_BRIGHTNESS * rainDrops;
+      }
+    #else // add albedo of weather particle
+      vec4 rainDrops = texelFetch2D(colortex9,ivec2(texcoord/texelSize),0);
+      if(hand) rainDrops.a *= (1.0-TranslucentShader.a);
+
+      if(rainDrops.a > 0.01) {
+        bloomyFogMult *= clamp(1.0 - pow(rainDrops.a*5.0,2),0.0,1.0);
+        color.rgb += RAIN_BRIGHTNESS * rainDrops.rgb * rainDrops.a;
+      }
+    #endif
   #endif
 
 ////// --------------- FINALIZE

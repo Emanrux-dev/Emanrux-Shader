@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.8.2
+    value.SHADER_VERSION_LABEL.482 = 5.9.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -868,6 +868,12 @@ screen.Rainbow_Settings = Rainbow Settings
     option.RAINBOW_TIME = Rainbow Fade Time (seconds)
     option.RAINBOW_ONLY_BELOW_CLOUDS = Rainbow above Clouds
 
+option.RAIN_BRIGHTNESS = Rain Brightness
+option.RAIN_MODE = Rain Mode
+    option.RAIN_MODE.comment = Specify how vanilla rain particles get added to the image.
+    value.RAIN_MODE.0 = Increase Brightness (Bliss)
+    value.RAIN_MODE.1 = Use Particle Albedo
+
 screen.AURORA_SETTINGS = Aurora Settings
     option.AURORA_LOCATION = Aurora
         value.AURORA_LOCATION.0 = Off
@@ -1112,7 +1118,7 @@ screen.World.comment = Configure settings for various things that happen in the 
         option.Water_Top_Layer.comment = Configure the Y coordinate at which the ocean should be in the world.
     screen.Water_fog_color.comment = Configure colors of the water fog.
 
-    screen.World_Effects = World Weather Effects
+    screen.Weather_Effects = Weather Effects
         option.PUDDLE_MODE = Puddles
             value.PUDDLE_MODE.0 = No Wetness
             value.PUDDLE_MODE.1 = Puddles + Completely Wet

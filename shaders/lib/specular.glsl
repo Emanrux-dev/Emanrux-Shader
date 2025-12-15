@@ -292,7 +292,8 @@ vec4 screenSpaceReflections(
 	bool depthCheck = false;
 
 	vec3 raytracePos = rayTraceSpeculars(reflectedVector, viewPos, noise, quality, isHand, reflectionLength, depthCheck);
-	if (raytracePos.z > 1.001 || distance(gl_FragCoord.xy*texelSize, raytracePos.xy) < 0.002) return reflection;
+	// if (raytracePos.z > 1.001 || distance(gl_FragCoord.xy*texelSize, raytracePos.xy) < 0.002) return reflection;
+	if (raytracePos.z > 1.001) return reflection;
 	
 	// use higher LOD as the reflection goes on, to blur it. this helps denoise a little.
 
@@ -500,7 +501,7 @@ vec3 specularReflections(
 					//vec3 backgroundReflection = imageLoad(reflectionSphere, ivec2(p)).rgb;
 									
 					#if defined SNELLS_WINDOW
-						if(isEyeInWater == 1) backgroundReflection *= exp(-vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B) * 15.0)*2;
+						if(isEyeInWater == 1) backgroundReflection *= exp(-vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B) * 15.0)*2.0;
 					#endif
 				#endif
 			#endif

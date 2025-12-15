@@ -124,13 +124,15 @@
 ///////////////////////////// BIOME SPECIFICS /////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef PER_BIOME_ENVIRONMENT
-
+#ifndef VOXY_PROGRAM
 	uniform float isJungles;
 	uniform float isSwamps;
 	uniform float isDarkForests;
 	uniform float sandStorm;
 	uniform float snowStorm;
+#endif
+
+#ifdef PER_BIOME_ENVIRONMENT
 
 	void BiomeFogColor(
 		inout vec3 FinalFogColor

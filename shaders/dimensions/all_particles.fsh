@@ -112,6 +112,8 @@ uniform int heldItemId2;
 	#include "/lib/lpv_render.glsl"
 #endif
 
+#undef FLASHLIGHT_BOUNCED_INDIRECT
+
 #include "/lib/diffuse_lighting.glsl"
 #include "/lib/sky_gradient.glsl"
 

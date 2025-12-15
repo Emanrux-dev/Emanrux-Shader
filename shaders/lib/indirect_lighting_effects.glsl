@@ -180,7 +180,7 @@ vec3 RT_alternate(vec3 dir, vec3 position, float noise, float stepsizes, bool ha
 	stepv.xy *= RENDER_SCALE;
 
 	vec3 spos = clipPosition + stepv*noise;
-	spos += stepv*0.3;
+	// spos += stepv*0.3;
 	spos.xy += TAA_Offset*texelSize*0.5*RENDER_SCALE;
 	
 
@@ -273,7 +273,7 @@ vec3 ApplySSRT(
 		radiance += skycontribution;
 		radiance2 += skycontribution2;
 
-		if (rayHit.z < 1.0){
+		if (rayHit.z < 0.9999 && distance(gl_FragCoord.xy*texelSize, rayHit.xy) > 0.001){
 			#if indirect_effect == SSRT_AO_GI
 				vec3 previousPosition = mat3(gbufferModelViewInverse) * toScreenSpace(rayHit) + gbufferModelViewInverse[3].xyz + cameraPosition-previousCameraPosition;
 				previousPosition = mat3(gbufferPreviousModelView) * previousPosition + gbufferPreviousModelView[3].xyz;

@@ -134,8 +134,8 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 	clipPosition.xy *= RENDER_SCALE;
 	stepv.xy *= RENDER_SCALE;
 
-	vec3 spos = clipPosition + stepv*dither;
-	spos += stepv*0.5 + vec3(0.5*texelSize,0.0); // small offsets to reduce artifacts from precision differences.
+	vec3 spos = clipPosition + stepv*(dither*0.5+0.5);
+	spos += vec3(0.5*texelSize,0.0); // small offsets to reduce artifacts from precision differences.
 	
 	#if defined DEFERRED_SPECULAR && defined TAA
 		spos.xy += TAA_Offset*texelSize*0.5/RENDER_SCALE;
@@ -166,8 +166,8 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 		clipPosition2.xy *= RENDER_SCALE;
 		stepv2.xy *= RENDER_SCALE;
 
-		vec3 spos2 = clipPosition2 + stepv2*dither;
-		spos2 += stepv2*0.5 + vec3(0.5*texelSize,0.0); // small offsets to reduce artifacts from precision differences.
+		vec3 spos2 = clipPosition2 + stepv2*(dither*0.5+0.5);
+		spos2 += vec3(0.5*texelSize,0.0); // small offsets to reduce artifacts from precision differences.
 		
 		#if defined DEFERRED_SPECULAR && defined TAA
 			spos2.xy += TAA_Offset*texelSize*0.5/RENDER_SCALE;
@@ -292,7 +292,7 @@ vec4 screenSpaceReflections(
 	bool depthCheck = false;
 
 	vec3 raytracePos = rayTraceSpeculars(reflectedVector, viewPos, noise, quality, isHand, reflectionLength, depthCheck);
-	if (raytracePos.z > 1.001) return reflection;
+	if (raytracePos.z > 1.001 || distance(gl_FragCoord.xy*texelSize, raytracePos.xy) < 0.002) return reflection;
 	
 	// use higher LOD as the reflection goes on, to blur it. this helps denoise a little.
 
@@ -320,7 +320,7 @@ vec4 screenSpaceReflections(
 			reflection.a = 1.0;
 		#endif
 		
-		#ifdef FORWARD_RENDERED_SPECULAR
+		#ifdef FORWARD_SPECULAR
 			// vec2 clampedRes = max(vec2(viewWidth,viewHeight),vec2(1920.0,1080.));
 			// vec2 resScale = vec2(1920.,1080.)/clampedRes;
 			// vec2 bloomTileUV = (((previousPosition.xy/texelSize)*2.0 + 0.5)*texelSize/2.0) / clampedRes*vec2(1920.,1080.);

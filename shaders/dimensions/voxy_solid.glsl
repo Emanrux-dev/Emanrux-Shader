@@ -3,6 +3,11 @@
 #include "/lib/settings.glsl"
 #include "/lib/blocks.glsl"
 
+#undef PER_BIOME_ENVIRONMENT
+#undef TIMEOFDAYFOG
+#define SEASONS_VSH
+#include "/lib/climate_settings.glsl"
+
 layout (location = 0) out vec4 gbuffer_data_0;
 layout (location = 1) out vec4 gbuffer_data_1;
 layout (location = 2) out vec4 gbuffer_data_2;
@@ -40,9 +45,15 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 
     vec4 Albedo;
 
-    Albedo.rgb = parameters.sampledColour.rgb * parameters.tinting.rgb;
+	vec3 color = parameters.tinting.rgb;
 
-    int blockID = int(parameters.customId);
+	int blockID = int(parameters.customId);
+
+	#if defined Seasons
+		YearCycleColor(color, parameters.tinting.rgb, blockID == BLOCK_AIR_WAVING, true);
+	#endif
+
+    Albedo.rgb = parameters.sampledColour.rgb * color;
 
     float SSSAMOUNT = 0.0;
 

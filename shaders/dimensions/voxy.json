@@ -96,6 +96,7 @@
     }"},
     "useViewportDims": true,
     "uniforms": [
+        "noPuddleAreas",
         "dhVoxyRenderDistance",
         "worldDay",
         "worldTime",

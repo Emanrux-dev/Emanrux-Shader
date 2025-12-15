@@ -442,6 +442,11 @@ void main() {
 
 				vec3 Indirect_lighting = doBlockLightLighting(vec3(TORCH_R,TORCH_G,TORCH_B), lightmap.x, feetPlayerPos, lpvPos);
 
+				#ifdef FLASHLIGHT
+					vec4 flashLightSpecularData = vec4(0.0);
+					Indirect_lighting += calculateFlashlight(gl_FragCoord.xy*texelSize/RENDER_SCALE, viewPos, vec3(0.0), -normalize(feetPlayerPos), flashLightSpecularData, false);
+				#endif
+
 				TEXTURE.rgb *= Indirect_lighting + averageSkyCol_CloudsSSBO / 360.0;
 			}
 		#endif

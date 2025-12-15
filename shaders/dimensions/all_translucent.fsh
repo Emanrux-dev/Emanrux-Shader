@@ -535,7 +535,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	
 	#ifndef COLORWHEEL
 		#ifdef IRIS_FEATURE_TEXTURE_FILTERING
-		gl_FragData[0] = textureFilteringMode == 1 ? sampleRGSS(gtexture, lmtexcoord.xy, 1.0 / vec2(textureSize(gtexture, 0))) : sampleNearest(gtexture, lmtexcoord.xy, 1.0 / vec2(textureSize(gtexture, 0))) * color;
+		gl_FragData[0] = textureFilteringMode == 1 ? sampleRGSS(gtexture, lmtexcoord.xy, 1.0 / vec2(textureSize(gtexture, 0))) : sampleNearest(gtexture, lmtexcoord.xy, 1.0 / vec2(textureSize(gtexture, 0)));
+		gl_FragData[0] *= color;
 		#else
 		gl_FragData[0] = texture2D(gtexture, lmtexcoord.xy, mipmapBias) * color;
 		#endif

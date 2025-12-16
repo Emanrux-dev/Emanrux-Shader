@@ -337,10 +337,6 @@ float getTrimEmission(vec3 Albedo) {
     return sqrt(hsv.z);
 }
 
-#if defined HAND || (defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES)
-	uniform float alphaTestRef;
-#endif
-
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -564,8 +560,16 @@ void main() {
 			if(step(ditherFade, R2) == 0.0) discard;
 	#endif
 	
-	#if defined HAND || (defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES)
-		if (Albedo.a < alphaTestRef) discard;
+	#if defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES
+		#if MC_VERSION >= 12111
+			if (Albedo.a < 0.5) discard;
+		#else
+			if (Albedo.a < 0.1) discard;
+		#endif
+	#endif
+
+	#if defined ENTITIES || defined BLOCKENTITIES || defined HAND
+		if (Albedo.a < 0.1) discard;
 	#endif
 	
 	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND

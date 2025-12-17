@@ -671,12 +671,13 @@ void main() {
 	vec3 scatterCoef = dirtAmount * vec3(Dirt_Scatter_R, Dirt_Scatter_G, Dirt_Scatter_B) / 3.14;
 
 	vec3 directLightColor = lightSourceColorSSBO / 2400.0;
+
 	vec3 directSunlightColor = sunColorSSBO / 2400.0;
 	#ifdef CUSTOM_MOON_ROTATION
 		directSunlightColor *= smoothstep(0.005, 0.09, length(WmoonVec - WrealSunVec));
 	#endif
-	vec3 directMoonlightColor = moonColorSSBO / 2400.0;
 
+	vec3 directMoonlightColor = moonColorSSBO / 2400.0;
 	#ifdef CUSTOM_MOON_ROTATION
 		directMoonlightColor *= mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
 	#endif
@@ -691,7 +692,7 @@ void main() {
 	// #endif
 
 	#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
-		vec4 LPV_ILLUMINATION = raymarchLPV(viewPos0, R2_dither());
+		vec4 LPV_ILLUMINATION = raymarchLPV(viewPos0, BN.y);
 	#else
 		vec4 LPV_ILLUMINATION = vec4(0.0,0.0,0.0,1.0);
 	#endif
@@ -830,8 +831,8 @@ void main() {
 			#if defined NETHER_SHADER || defined END_SHADER
 				VolumetricFog = GetVolumetricFog(viewPos1, noise_1, noise_1);
 			#endif
-			
 		}
+		
 		gl_FragData[1] = clamp(VolumetricFog, 0.0, 65000.0);
 	}
 

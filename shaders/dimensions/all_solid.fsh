@@ -560,7 +560,7 @@ void main() {
 			if(step(ditherFade, R2) == 0.0) discard;
 	#endif
 	
-	#if defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES
+	#if defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES && !defined HAND
 		#if MC_VERSION >= 12111
 			if (Albedo.a < 0.5) discard;
 		#else

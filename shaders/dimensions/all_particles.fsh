@@ -535,7 +535,7 @@ void main() {
 			Indirect_lighting = vec3(AmbientLightEnd_R,AmbientLightEnd_G,AmbientLightEnd_B) * 0.1;
 		#endif
 
-	///////////////////////// BLOCKLIGHT LIGHTING OR LPV LIGHTING OR FLOODFILL COLORED LIGHTING
+		///////////////////////// BLOCKLIGHT LIGHTING OR LPV LIGHTING OR FLOODFILL COLORED LIGHTING
 		#ifdef IS_LPV_ENABLED
 			vec3 lpvPos = GetLpvPosition(feetPlayerPos);
 		#else

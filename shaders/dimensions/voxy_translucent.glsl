@@ -266,10 +266,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		}
 	#endif
 
-	vec2 TangentNormal = normal.xy;
-
     vec3 normals = normalize(worldToView(normal));
-
 
 	#if defined FORWARD_SPECULAR
 		vec3 Reflections_Final = vec3(0.0);

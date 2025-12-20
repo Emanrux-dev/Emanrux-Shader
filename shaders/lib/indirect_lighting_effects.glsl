@@ -75,14 +75,14 @@ vec4 BilateralUpscale_SSAO(sampler2D tex, sampler2D depth, vec2 coord, float ref
 		
 		ivec2 radius = getRadius[i];
 		#if defined DISTANT_HORIZONS || defined VOXY
-			float offsetDepth = sqrt(texelFetch2D(depth, posDepth + radius * scaling + pos * scaling,0).a/65000.0);
+			float offsetDepth = sqrt(texelFetch(depth, posDepth + radius * scaling + pos * scaling,0).a/65000.0);
 		#else
-			float offsetDepth = ld(texelFetch2D(depth, posDepth + radius * scaling + pos * scaling, 0).r);
+			float offsetDepth = ld(texelFetch(depth, posDepth + radius * scaling + pos * scaling, 0).r);
 		#endif
 
 		float EDGES = abs(offsetDepth - referenceDepth) < diffThreshold ? 1.0 : 1e-5;
 		
-		RESULT += texelFetch2D(tex, posColor + radius + pos, 0) * EDGES;
+		RESULT += texelFetch(tex, posColor + radius + pos, 0) * EDGES;
 		
 		SUM += EDGES;
 	}
@@ -127,9 +127,9 @@ vec3 rayTrace_GI(vec3 dir,vec3 position,float dither, float quality){
   	for (int i = 0; i <= int(quality); i++) {
 
 		#ifdef UseQuarterResDepth
-			float sampleDepth = sqrt(texelFetch2D(colortex4,ivec2(spos.xy/texelSize/4.0),0).a/65000.0);
+			float sampleDepth = sqrt(texelFetch(colortex4,ivec2(spos.xy/texelSize/4.0),0).a/65000.0);
 		#else
-			float sampleDepth = linZ(texelFetch2D(depthtex1,ivec2(spos.xy/ texelSize),0).r);
+			float sampleDepth = linZ(texelFetch(depthtex1,ivec2(spos.xy/ texelSize),0).r);
 		#endif
 		float sp = invLinZ(sampleDepth) ;
 
@@ -150,7 +150,7 @@ float convertHandDepth_3(in float depth, bool hand) {
     return ndcDepth * 0.5 + 0.5;
 }
 
-vec3 RT_alternate(vec3 dir, vec3 position, float noise, float stepsizes, bool hand, inout float CURVE ){
+vec3 RT_alternate(vec3 dir, vec3 position, float noise, float stepsizes, bool hand, inout float CURVE){
 
 	vec3 worldpos = mat3(gbufferModelViewInverse) * position;
 
@@ -195,9 +195,9 @@ vec3 RT_alternate(vec3 dir, vec3 position, float noise, float stepsizes, bool ha
 		if (spos.x < 0.0 || spos.y < 0.0 || spos.z < 0.0 || spos.x > 1.0 || spos.y > 1.0 || spos.z > 1.0) return vec3(1.1);
 		
 		#ifdef UseQuarterResDepth
-			float sp = invLinZ(sqrt(texelFetch2D(colortex4,ivec2(spos.xy/ texelSize/4),0).w/65000.0));
+			float sp = invLinZ(sqrt(texelFetch(colortex4,ivec2(spos.xy/ texelSize/4),0).w/65000.0));
 		#else
-			float sp = texelFetch2D(depthtex1,ivec2(spos.xy/texelSize),0).r;
+			float sp = texelFetch(depthtex1,ivec2(spos.xy/texelSize),0).r;
 		#endif
 
 		float currZ = linZ(spos.z);
@@ -280,7 +280,7 @@ vec3 ApplySSRT(
 				previousPosition.xy = projMAD(gbufferPreviousProjection, previousPosition).xy / -previousPosition.z * 0.5 + 0.5;
 
 				if (previousPosition.x > 0.0 && previousPosition.y > 0.0 && previousPosition.x < 1.0 && previousPosition.y < 1.0){
-					bouncedLight = texture2D(colortex5, previousPosition.xy).rgb * GI_Strength * CURVE;	
+					bouncedLight = texelFetch(colortex5, ivec2(previousPosition.xy/texelSize),0).rgb * GI_Strength * CURVE;
 
 					radiance += bouncedLight;
 					radiance2 += bouncedLight;

@@ -17,8 +17,9 @@ Notable changes/additions compared to Bliss unstable:
  + Better shader-side (hardcoded) emissives
  + Lightsource with shadows on the main end island
  + Better lightning strikes with clouds lighting up and shadows
- + Voxy, Colorwheel, Caelum (Arda Craft) support
- + Emissive Ores
+ + Colorwheel, Caelum (Arda Craft) support
+ + 1.21.11 Chunk Fade In and Texture Filtering support
+ + Emissive Ores and Trims
 
 Note: With default settings there is at least one guaranteed eclipse per ingame year.
 
@@ -73,6 +74,6 @@ Note: With default settings there is at least one guaranteed eclipse per ingame 
  - once the zip file finishes downloading, install it like a normal shader. you do NOT need to unzip/extract/decompress.
 
 # You want MOAR performance?
- Delete the gbuffers_terrain.tcs and gbuffers_terrain.tes files for all world folders in the shaders.
+ Delete the "gbuffers_terrain.tcs" and "gbuffers_terrain.tes" files for all world folders in the shader.
  This will make the shader grass setting non functional BUT will increase performance, especially with high vanilla render distances!
  (If you're wondering why, Iris does NOT allow me to disable these files once they're there. So even when Shader Grass is disabled these execute and harm performance!)

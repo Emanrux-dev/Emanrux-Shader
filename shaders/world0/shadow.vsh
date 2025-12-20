@@ -18,9 +18,18 @@ Read the terms of modification and sharing before changing something below pleas
 !! DO NOT REMOVE !!
 */
 
+out DATA {
+	vec2 texcoord;
+	vec3 color;	
+	vec3 playerpos;
+};
+
+in vec4 mc_midTexCoord;
+in vec4 mc_Entity;
+
 #define SHADOW_MAP_BIAS 0.5
 const float PI = 3.1415927;
-varying vec2 texcoord;
+
 uniform mat4 shadowProjectionInverse;
 uniform mat4 shadowProjection;
 uniform mat4 shadowModelViewInverse;
@@ -45,11 +54,7 @@ uniform vec3 shadowViewDir;
 uniform vec3 shadowCamera;
 uniform vec3 shadowLightVec;
 uniform float shadowMaxProj;
-attribute vec4 mc_midTexCoord;
-varying vec4 color;
-varying vec3 vertexPos;
 
-attribute vec4 mc_Entity;
 uniform int blockEntityId;
 uniform int entityId;
 
@@ -60,9 +65,9 @@ uniform int entityId;
 
 #if defined IS_LPV_ENABLED || WATER_INTERACTION == 2 || defined SHADER_GRASS
 	#ifdef IRIS_FEATURE_BLOCK_EMISSION_ATTRIBUTE
-		attribute vec4 at_midBlock;
+		in vec4 at_midBlock;
 	#else
-		attribute vec3 at_midBlock;
+		in vec3 at_midBlock;
 	#endif
     uniform int currentRenderedItemId;
 	uniform int renderStage;
@@ -145,14 +150,12 @@ vec3 viewToWorld(vec3 viewPos) {
     return pos.xyz;
 }
 
-varying vec3 playerpos;
-
 // uniform int renderStage;
 
 // uniform mat4 gbufferModelViewInverse;
 void main() {
-	texcoord.xy = gl_MultiTexCoord0.xy;
-	color = gl_Color;
+	texcoord.xy = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
+	color = gl_Color.rgb;
 
 	vec3 position = mat3(gl_ModelViewMatrix) * vec3(gl_Vertex) + gl_ModelViewMatrix[3].xyz;
 	

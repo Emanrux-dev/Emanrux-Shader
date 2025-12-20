@@ -36,14 +36,20 @@ uniform sampler2D colortex5;
 #include "/lib/waterBump.glsl"
 #include "/lib/Shadow_Params.glsl"
 
-varying vec4 pos;
-varying vec4 gcolor;
+in DATA {
+	vec4 pos;
+	vec4 gcolor;
+		
+	vec4 normalMat;
+	vec2 lightmapCoords;
+	flat int isWater;
 
-varying vec4 normals_and_materials;
+	mat4 normalmatrix;
 
-varying vec2 lightmapCoords;
+	flat vec3 WsunVec;
+	flat vec3 WsunVec2;
+};
 
-flat varying int isWater;
 
 // uniform float far;
 uniform float dhVoxyFarPlane;
@@ -66,8 +72,6 @@ uniform int frameCounter;
 
 
 // uniform sampler2D colortex4;
-flat varying vec3 WsunVec;
-flat varying vec3 WsunVec2;
 
 
 
@@ -197,10 +201,10 @@ vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
 		#endif
 
 		#ifdef QUARTER_RES_SSR
-        	float sampleDepth = sqrt(texelFetch2D(colortex12, ivec2(spos.xy / (texelSize * 4.0)), 0).a / 65000.0);
+        	float sampleDepth = sqrt(texelFetch(colortex12, ivec2(spos.xy / (texelSize * 4.0)), 0).a / 65000.0);
 			float sp = DH_inv_ld(sampleDepth);
 		#else
-			float sp = texelFetch2D(dhDepthTex, ivec2(spos.xy /texelSize), 0).r;
+			float sp = texelFetch(dhDepthTex, ivec2(spos.xy /texelSize), 0).r;
 		#endif
         
         if (sp < max(minZ, maxZ) && sp > min(minZ, maxZ)) {
@@ -302,7 +306,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
     float material = 0.7;
     if(iswater) material = 1.0;
 
-    vec3 normals = normalize(normals_and_materials.xyz);
+    vec3 normals = normalize(normalMat.xyz);
     if (!gl_FrontFacing) normals = -normals;
 
    vec3 worldSpaceNormals =  mat3(gbufferModelViewInverse) * normals;
@@ -320,7 +324,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	vec3 waterNormals = worldSpaceNormals;
 
-	#ifndef Vanilla_like_water
+	#ifndef VANILLA_LIKE_WATER
 		if(iswater && abs(worldSpaceNormals.y) > 0.1){
 			vec3 waterPos = (playerPos+cameraPosition).xzy;
 
@@ -348,7 +352,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec3 Albedo = toLinear(gl_FragData[0].rgb);
 
 	#ifndef WhiteWorld
-	    #ifdef Vanilla_like_water
+	    #ifdef VANILLA_LIKE_WATER
 			if (iswater) Albedo *= sqrt(luma(Albedo));
 		#else
 	    	if (iswater){
@@ -393,7 +397,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
     	    	Shadows = 0.0;
     	    	projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5);
 
-    	    	Shadows = shadow2D(shadow, projectedShadowPosition + vec3(0.0,0.0, smallbias)).x;
+    	    	Shadows = texture(shadow, projectedShadowPosition + vec3(0.0,0.0, smallbias)).x;
     	    }
         #endif
 
@@ -449,7 +453,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
             	previousPosition.xy = projMAD(dhPreviousProjection, previousPosition).xy / -previousPosition.z * 0.5 + 0.5;
             	if (previousPosition.x > 0.0 && previousPosition.y > 0.0 && previousPosition.x < 1.0 && previousPosition.y < 1.0) {
 					Reflections.a = 1.0;
-					Reflections.rgb = texture2D(colortex5, previousPosition.xy).rgb;
+					Reflections.rgb = texture(colortex5, previousPosition.xy).rgb;
             	}
             }else{
 				if (rtPos.x > 0.0 && rtPos.y > 0.0 && rtPos.x < 1.0 && rtPos.y < 1.0) SSR_HIT_SKY_MASK = 1.0;
@@ -479,7 +483,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
     #ifdef DH_OVERDRAW_PREVENTION
         float distancefade = min(max(1.0 - viewDist/clamp(far-16*4, 16, maxOverdrawDistance),0.0)*5,1.0);
 
-        if(texelFetch2D(depthtex0, ivec2(gl_FragCoord.xy), 0).x < 1.0 ||  distancefade > 0.0){
+        if(texelFetch(depthtex0, ivec2(gl_FragCoord.xy), 0).x < 1.0 ||  distancefade > 0.0){
             gl_FragData[0].a = 0.0;
             material = 0.0;
         }

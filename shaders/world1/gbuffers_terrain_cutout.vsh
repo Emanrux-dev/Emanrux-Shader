@@ -3,5 +3,6 @@
 #define END_SHADER
 
 #define WORLD
+#define CUTOUT
 
-#include "/dimensions/all_solid.gsh"
+#include "/dimensions/all_solid.vsh"

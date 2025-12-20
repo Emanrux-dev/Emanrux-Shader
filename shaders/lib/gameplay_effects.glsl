@@ -69,7 +69,7 @@ void applyGameplayEffects(inout vec3 color, in vec2 texcoord, float noise){
             scale.z = eyeInWater ? 0.0 : exitWater;
 
 
-            float waterDrops = texture2D(noisetex, (texcoord - vec2(0.0, scale.z)) * scale.xy).r ;
+            float waterDrops = texture(noisetex, (texcoord - vec2(0.0, scale.z)) * scale.xy).r ;
             if(eyeInWater) waterDrops = 0.0;
             if(isEyeInWater == 0 && exitWater > 0.0) waterDrops = sqrt(min(max(waterDrops - (1.0-sqrt(exitWater))*0.7,0.0) * (1.0 + exitWater),1.0)) * 0.3;
 
@@ -78,7 +78,7 @@ void applyGameplayEffects(inout vec3 color, in vec2 texcoord, float noise){
         }
         if(enterWater > 0.0){
             vec2 zoomTC = 0.5 + (texcoord - 0.5) * (1.0 - (1.0-sqrt(1.0-enterWater)) );
-            float waterSplash = texture2D(noisetex, zoomTC * vec2(aspectRatio,1.0)).r * (1.0-enterWater);
+            float waterSplash = texture(noisetex, zoomTC * vec2(aspectRatio,1.0)).r * (1.0-enterWater);
 
             distortmask = max(distortmask, waterSplash);
         }
@@ -90,7 +90,7 @@ void applyGameplayEffects(inout vec3 color, in vec2 texcoord, float noise){
 
             vec2 UV = zoomin;
 
-            float flameDistort = texture2D(noisetex,  UV * vec2(aspectRatio,1.0) - vec2(0.0,frameTimeCounter*0.3)).b * clamp(-texcoord.y*0.3+0.3,0.0,1.0) * ON_FIRE_DISTORT_EFFECT_STRENGTH * exitLava;
+            float flameDistort = texture(noisetex,  UV * vec2(aspectRatio,1.0) - vec2(0.0,frameTimeCounter*0.3)).b * clamp(-texcoord.y*0.3+0.3,0.0,1.0) * ON_FIRE_DISTORT_EFFECT_STRENGTH * exitLava;
 
             distortmask = max(distortmask, flameDistort);
         }
@@ -101,7 +101,7 @@ void applyGameplayEffects(inout vec3 color, in vec2 texcoord, float noise){
     vec2 zoomUV = 0.5 + (texcoord - 0.5) * (1.0 - distortmask);
     
     #ifndef PIXELATED
-        vec3 distortedColor = texture2D(colortex7, zoomUV).rgb;
+        vec3 distortedColor = texture(colortex7, zoomUV).rgb;
     #else
         vec2 fragCoord = zoomUV*view_res;
         vec3 distortedColor = texelFetch(colortex7, ivec2(fragCoord)-ivec2(mod(fragCoord, PIXELIZATION_STRENGTH)), 0).rgb;

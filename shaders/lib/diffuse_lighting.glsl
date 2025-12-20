@@ -51,11 +51,11 @@
 		
             #if defined DISTANT_HORIZONS || defined VOXY
                 if(depthCheck) {
-                    samplePos = texelFetch2D(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+                    samplePos = texelFetch(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
                 } else
             #endif
                 {
-                    samplePos = texelFetch2D(depthtex2, ivec2(newPos.xy/texelSize),0).x,hand;
+                    samplePos = texelFetch(depthtex2, ivec2(newPos.xy/texelSize),0).x,hand;
                 }
 
             if(samplePos < newPos.z && samplePos > 0.0){// && (samplePos <= max(minZ,maxZ) && samplePos >= min(minZ,maxZ))){
@@ -221,7 +221,7 @@ vec3 calculateFlashlight(in vec2 texcoord, in vec3 viewPos, in vec3 albedo, in v
 	#endif
 
 	float projectedCircle = clamp(1.0 - shiftedLinearDistance*FLASHLIGHT_SIZE,0.0,1.0);
-	float lenseDirt = texture2D(noisetex, scaledViewPos * 0.2 + 0.1).b;
+	float lenseDirt = texture(noisetex, scaledViewPos * 0.2 + 0.1).b;
 	float lenseShape = (pow(abs(pow(abs(projectedCircle-1.0),2.0)*2.0 - 0.5),2.0) + lenseDirt*0.2) * 10.0;
 	
 	float offsetNdotL = clamp(dot(-normal, normalize(shiftedPlayerPos)),0,1);

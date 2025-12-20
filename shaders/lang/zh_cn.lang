@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - Bliss 编辑版
     prefix.SHADER_VERSION_LABEL = 版本
-    value.SHADER_VERSION_LABEL.482 = 5.9.2
+    value.SHADER_VERSION_LABEL.482 = 5.10.0
 
 # 如果你是来翻译的，这不是玩笑，这些选项的功能正如其名
 profile.POTATO=§4土豆 (极低配置)
@@ -105,7 +105,7 @@ option.WATER_CAUSTICS_BRIGHTNESS = 水体焦散线亮度
 option.WATER_CAUSTICS_POWER = 水体焦散线强度
 option.FORCE_TRANSLUCENT_GLASS = 强制半透明玻璃
 option.LARGE_WAVE_DISPLACEMENT = 大型波浪
-option.Vanilla_like_water = 原版水体样式
+option.VANILLA_LIKE_WATER = 原版水体样式
 option.INCLUDE_UNLISTED_ENTITIES = 识别未添加实体
 
 screen.DEBUG_STUFF = §c调试设置§r

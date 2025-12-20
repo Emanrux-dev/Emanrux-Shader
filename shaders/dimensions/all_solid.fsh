@@ -35,7 +35,7 @@ in DATA {
 	vec4 lmtexcoord;
 	vec3 normalMat;
 
-	#if (defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)) || (!defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD)
+	#if (defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)) || (!defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT)
 		vec4 texcoordam; // .st for add, .pq for mul
 	#endif
 
@@ -142,11 +142,11 @@ float R2_dither(){
 
 #ifdef TAA
 	float blueNoise() {
-		return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
+		return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
 	} 
 #else
 	float blueNoise() {
-		return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887);
+		return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887);
 	}
 #endif
 
@@ -224,11 +224,11 @@ vec3 toClipSpace3(vec3 viewSpacePosition) {
 #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	vec4 readNormal(in vec2 coord)
 	{
-		return texture2DGradARB(normals,fract(coord)*data_in.texcoordam.pq+data_in.texcoordam.st,dcdx,dcdy);
+		return textureGrad(normals,fract(coord)*data_in.texcoordam.pq+data_in.texcoordam.st,dcdx,dcdy);
 	}
 	vec4 readTexture(in vec2 coord)
 	{
-		return texture2DGradARB(gtexture,fract(coord)*data_in.texcoordam.pq+data_in.texcoordam.st,dcdx,dcdy);
+		return textureGrad(gtexture,fract(coord)*data_in.texcoordam.pq+data_in.texcoordam.st,dcdx,dcdy);
 	}
 #endif
 
@@ -262,8 +262,8 @@ float ld(float dist) {
 
 
 // vec4 readNoise(in vec2 coord){
-// 	// return texture2D(noisetex,coord*texcoordam.pq+texcoord);
-// 		return texture2DGradARB(noisetex,coord*texcoordam.pq + texcoordam.st,dcdx,dcdy);
+// 	// return texture(noisetex,coord*texcoordam.pq+texcoord);
+// 		return textureGradARB(noisetex,coord*texcoordam.pq + texcoordam.st,dcdx,dcdy);
 // }
 // float EndPortalEffect(
 // 	inout vec4 ALBEDO,
@@ -303,7 +303,7 @@ float bias(){
 		return 1.0 - texelSize.x * 2560.0;
 	#endif
 }
-vec4 texture2D_POMSwitch(
+vec4 texture_POMSwitch(
 	sampler2D sampler, 
 	vec2 lightmapCoord,
 	vec4 dcdxdcdy, 
@@ -312,11 +312,11 @@ vec4 texture2D_POMSwitch(
 ){
 	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	if(ifPOM){
-		return texture2DGradARB(sampler, lightmapCoord, dcdxdcdy.xy, dcdxdcdy.zw);
+		return textureGrad(sampler, lightmapCoord, dcdxdcdy.xy, dcdxdcdy.zw);
 	}else
 	#endif
 	{
-		return texture2D(sampler, lightmapCoord, LOD);
+		return texture(sampler, lightmapCoord, LOD);
 	}
 }
 
@@ -337,13 +337,21 @@ float getTrimEmission(vec3 Albedo) {
     return sqrt(hsv.z);
 }
 
+uniform float alphaTestRef;
+
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 
+layout(location = 0) out vec4 OutAlbedo;
+layout(location = 1) out vec4 OutSpecular;
+layout(location = 2) out vec4 OutNormalAO;
+
 #if defined HAND || defined ENTITIES || defined BLOCKENTITIES
+	layout(location = 3) out vec4 OutTranslucents;
+
 	/* RENDERTARGETS:1,8,15,2 */
 #else
 	/* RENDERTARGETS:1,8,15 */
@@ -362,7 +370,7 @@ void main() {
 		bool ifPOM = false;
 	#endif
 
-	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT
 		bool ShaderGrass = data_in.blockID == -15;
 		if(ShaderGrass) ifPOM = false;
 	#else
@@ -426,7 +434,7 @@ void main() {
 		gl_FragDepth = gl_FragCoord.z;
 	#endif
 
-	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT
 	 if (falloff > 0.0 && !ShaderGrass)
 	#else
 	 if (falloff > 0.0)
@@ -484,7 +492,7 @@ void main() {
 	float opaqueMasks = 1.0;
 
 	#ifndef HAND
-		#ifdef WORLD
+		#if defined WORLD && !defined ENTITIES
 			if(data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL || data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_LOWER || data_in.blockID == BLOCK_GRASS_TALL_UPPER ) opaqueMasks = 0.60;
 			else if(data_in.blockID == BLOCK_AIR_WAVING) opaqueMasks = 0.55;
 		#endif
@@ -501,7 +509,7 @@ void main() {
 			#endif
 		#endif
 
-		#if !defined BLOCKENTITIES && !defined ENTITIES && defined SHADER_GRASS && !defined COLORWHEEL
+		#if !defined BLOCKENTITIES && !defined ENTITIES && defined SHADER_GRASS && !defined COLORWHEEL && !defined HAND && !defined CUTOUT
 			if(ShaderGrass) opaqueMasks = 0.8;
 		#endif
 	#endif
@@ -524,18 +532,19 @@ void main() {
 
 		vec4 Albedo = vec4(Color.rgb, 1.0);
 		
-		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && defined WORLD
+		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && defined WORLD && !defined CUTOUT
 		if (!ShaderGrass)
 		#endif
 		{
 		#ifdef IRIS_FEATURE_TEXTURE_FILTERING
-		 Albedo *= textureFilteringMode == 1 ? sampleRGSS(gtexture, adjustedTexCoord.xy, 1.0 / vec2(textureSize(gtexture, 0))) : sampleNearest(gtexture, adjustedTexCoord.xy, 1.0 / vec2(textureSize(gtexture, 0)));
+		vec2 texSize = 1.0 / vec2(textureSize(gtexture, 0));
+		 Albedo *= textureFilteringMode == 1 ? sampleRGSS(gtexture, adjustedTexCoord.xy, texSize) : sampleNearest(gtexture, adjustedTexCoord.xy, texSize);
 		#else
-		 Albedo *= texture2D_POMSwitch(gtexture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
+		 Albedo *= texture_POMSwitch(gtexture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
 		#endif
 		}
 	#else
-		vec4 Albedo = texture2D_POMSwitch(gtexture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
+		vec4 Albedo = texture_POMSwitch(gtexture, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM, textureLOD);
 		vec4 overlayColor;
 		float vanillaAO;
 
@@ -548,7 +557,7 @@ void main() {
 		vec3 flatNormals = viewToWorld(normal);
 	#endif
 
-	#if REPLACE_SHORT_GRASS < 2 && !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+	#if REPLACE_SHORT_GRASS < 2 && !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT
 		// darken the top of grass blocks a bit
 		if(data_in.blockID == 85 && flatNormals.y > 0.9 && !ShaderGrass) Albedo.rgb *= smoothstep(-30.0, 25.0, length(playerpos));
 	#endif
@@ -560,17 +569,7 @@ void main() {
 			if(step(ditherFade, R2) == 0.0) discard;
 	#endif
 	
-	#if defined WORLD && !defined ENTITIES && !defined BLOCKENTITIES && !defined HAND
-		#if MC_VERSION >= 12111
-			if (Albedo.a < 0.5) discard;
-		#else
-			if (Albedo.a < 0.1) discard;
-		#endif
-	#endif
-
-	#if defined ENTITIES || defined BLOCKENTITIES || defined HAND
-		if (Albedo.a < 0.1) discard;
-	#endif
+	if(Albedo.a < alphaTestRef) discard;
 	
 	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
 		#ifdef TAA
@@ -623,7 +622,7 @@ void main() {
 
 		float endPortalEmission = 0.0;
 		if(PORTAL) {
-			const float steps = 20;
+			const float steps = 20.0;
 
 			vec3 color = vec3(0.0);
 			float absorbance = 1.0;
@@ -659,7 +658,7 @@ void main() {
 				float verticalGradient = (i + BN)/steps ;
 				float verticalGradient2 = exp(-7*(1-verticalGradient*verticalGradient));
 			
-				float density = max(max(verticalGradient - texture2D(noisetex, uv/256.0 + animation.xy).b*0.5,0.0) - (1.0-texture2D(noisetex, uv/32.0 + animation.xx).r) * (0.4 + 0.1 * (texture2D(noisetex, uv/10.0 - animation.yy).b)),0.0);
+				float density = max(max(verticalGradient - texture(noisetex, uv/256.0 + animation.xy).b*0.5,0.0) - (1.0-texture(noisetex, uv/32.0 + animation.xx).r) * (0.4 + 0.1 * (texture(noisetex, uv/10.0 - animation.yy).b)),0.0);
 			
 				float volumeCoeff = exp(-density*(i+1));
 				
@@ -723,13 +722,13 @@ void main() {
 	#ifdef HAND
 		if (Albedo.a > 0.1){
 			Albedo.a = 0.75;
-			gl_FragData[3] = vec4(0.0);
+			OutTranslucents = vec4(0.0);
 		} else {
 			Albedo.a = 1.0;
 		}
 	#endif
 	#if defined PARTICLE_RENDERING_FIX && (defined ENTITIES || defined BLOCKENTITIES)
-		gl_FragData[3] = vec4(0.0);
+		OutTranslucents = vec4(0.0);
 	#endif
 
 	// #ifdef COLORWHEEL
@@ -742,11 +741,11 @@ void main() {
 	//////////////////////////////// 				//////////////////////////////// 
 
 	#if defined WORLD && defined MC_NORMAL_MAP
-		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT
 		if(!ShaderGrass)
 		#endif
 		{
-			vec4 NormalTex = texture2D_POMSwitch(normals, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD).xyzw;
+			vec4 NormalTex = texture_POMSwitch(normals, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD).xyzw;
 			
 			#ifdef MATERIAL_AO
 				Albedo.rgb *= NormalTex.b*0.5+0.5;
@@ -843,7 +842,7 @@ void main() {
 			// normal block lightsources
 			if(data_in.blockID >= 100 && data_in.blockID < 300) EMISSIVE = 0.5;
 
-			else if(data_in.blockID == 266 || data_in.blockID == 497) EMISSIVE = 0.2; // sculk stuff
+			if(data_in.blockID == 266 || data_in.blockID == 497) EMISSIVE = 0.2; // sculk stuff
 
 			else if(data_in.blockID == 195) EMISSIVE = 2.3; // glow lichen
 
@@ -878,20 +877,20 @@ void main() {
 
 
 		vec4 SpecularTex = vec4(0.0);
-		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT
 		if (ShaderGrass) {
 			SpecularTex = vec4(0.15, 0.025, 1.0, 0.0);
 		} else
 		#endif
 		{
-			SpecularTex = texture2D_POMSwitch(specular, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD);
+			SpecularTex = texture_POMSwitch(specular, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD);
 		}
 
 		// SpecularTex.r = max(SpecularTex.r, rainfall);
 		// SpecularTex.g = max(SpecularTex.g, max(Puddle_shape*0.02,0.02));
 
-		gl_FragData[1] = vec4(0.0,0.0,0.0,0.0);
-		gl_FragData[1].rg = SpecularTex.rg;
+		OutSpecular = vec4(0.0,0.0,0.0,0.0);
+		OutSpecular.rg = SpecularTex.rg;
 
 		#if EMISSIVE_ORES > 1 && EMISSIVE_TYPE > 1
 			if(data_in.blockID == 502) {
@@ -925,43 +924,43 @@ void main() {
 		#endif
 
 		#if EMISSIVE_TYPE == 0
-			gl_FragData[1].a = 0.0;
+			OutSpecular.a = 0.0;
 		#endif
 
 		#if EMISSIVE_TYPE == 1
 			EMISSIVE = clamp(EMISSIVE, 0.0, 0.99);
-			gl_FragData[1].a = EMISSIVE;
+			OutSpecular.a = EMISSIVE;
 		#endif
 
 		#if EMISSIVE_TYPE == 2
-			gl_FragData[1].a = SpecularTex.a;
+			OutSpecular.a = SpecularTex.a;
 			EMISSIVE = clamp(EMISSIVE, 0.0, 0.99);
-			if(emissionCheck) gl_FragData[1].a = EMISSIVE;
+			if(emissionCheck) OutSpecular.a = EMISSIVE;
 		#endif
 
 		#if EMISSIVE_TYPE == 3		
-			gl_FragData[1].a = SpecularTex.a;
+			OutSpecular.a = SpecularTex.a;
 		#endif
 		
 		#if defined WORLD && !defined ENTITIES && !defined HAND && defined BLOCKENTITIES && !defined COLORWHEEL
-			if(PORTAL) gl_FragData[1].a = endPortalEmission;
+			if(PORTAL) OutSpecular.a = endPortalEmission;
 		#endif
 
 		#if SSS_TYPE == 0
-			gl_FragData[1].b = 0.0;
+			OutSpecular.b = 0.0;
 		#endif
 
 		#if SSS_TYPE == 1
-			gl_FragData[1].b = SSSAMOUNT;
+			OutSpecular.b = SSSAMOUNT;
 		#endif
 
 		#if SSS_TYPE == 2
-			gl_FragData[1].b = SpecularTex.b;
-			if(SpecularTex.b < 65.0/255.0) gl_FragData[1].b = SSSAMOUNT;
+			OutSpecular.b = SpecularTex.b;
+			if(SpecularTex.b < 65.0/255.0) OutSpecular.b = SSSAMOUNT;
 		#endif
 
 		#if SSS_TYPE == 3		
-			gl_FragData[1].b = SpecularTex.b;
+			OutSpecular.b = SpecularTex.b;
 		#endif
 	#endif
 
@@ -987,20 +986,20 @@ void main() {
 		
 		#if defined WORLD && !defined HAND && !defined ENTITIES
 			// some dither to lightmaps to reduce banding.
-			PackLightmaps = clamp( PackLightmaps + PackLightmaps * (interleaved_gradientNoise()-0.5)*0.005,0,1);
+			PackLightmaps = clamp( PackLightmaps + PackLightmaps * (BN-0.5)*0.005,0,1);
 		#endif
 
 		normal = viewToWorld(normal);
 
-		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD
+		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT
 			if (ShaderGrass) {flatNormals = data_in.normalMat; normal = data_in.texcoordam.xyz;}
 		#endif
 
 		vec4 data1 = clamp( encode(normal, PackLightmaps), 0.0, 1.0);
 
-		gl_FragData[0] = vec4(encodeVec2(Albedo.x,data1.x),	encodeVec2(Albedo.y,data1.y),	encodeVec2(Albedo.z,data1.z),	encodeVec2(data1.w,Albedo.w));
+		OutAlbedo = vec4(encodeVec2(Albedo.x,data1.x),	encodeVec2(Albedo.y,data1.y),	encodeVec2(Albedo.z,data1.z),	encodeVec2(data1.w,Albedo.w));
 
-		gl_FragData[2] = vec4(flatNormals * 0.5 + 0.5, vanillaAO);
+		OutNormalAO = vec4(flatNormals * 0.5 + 0.5, vanillaAO);
 	#endif
 	
 }

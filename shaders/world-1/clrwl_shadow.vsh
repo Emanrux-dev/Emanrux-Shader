@@ -20,13 +20,13 @@ Read the terms of modification and sharing before changing something below pleas
 */
 
 #ifdef IS_LPV_ENABLED
-	attribute vec4 mc_Entity;
+	in vec4 mc_Entity;
 	#ifdef IRIS_FEATURE_BLOCK_EMISSION_ATTRIBUTE
-		attribute vec4 at_midBlock;
+		in vec4 at_midBlock;
 	#else
-		attribute vec3 at_midBlock;
+		in vec3 at_midBlock;
 	#endif
-	attribute vec3 vaPosition;
+	in vec3 vaPosition;
 
 	uniform mat4 shadowModelViewInverse;
 	

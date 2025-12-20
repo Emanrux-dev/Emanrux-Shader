@@ -93,7 +93,7 @@ float R2_dither(){
 	return fract(alpha.x * gl_FragCoord.x + alpha.y * gl_FragCoord.y + 1.0/1.6180339887 * frameCounter) ;
 }
 float blueNoise(){
-  return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
+  return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
 }
 
 #define DHVLFOG
@@ -291,11 +291,11 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 		vec3 moonColor2 = moonColorSSBO;
 	#endif
 
-	vec3 sky = texelFetch2D(colortex4,ivec2(gl_FragCoord.xy)-ivec2(257,0),0).rgb/150.0;	
+	vec3 sky = texelFetch(colortex4,ivec2(gl_FragCoord.xy)-ivec2(257,0),0).rgb/150.0;	
 	sky = mix(averageSkyCol_CloudsSSBO / 600.0, sky,  pow(clamp(viewVector.y+1.0,0.0,1.0),5.0));
 	vec3 suncol = lightSourceColorSSBO;
 
-	#ifdef ambientLight_only
+	#ifdef AMBIENT_LIGHT_ONLY
 		suncol = vec3(0.0);
 	#endif
 
@@ -372,7 +372,7 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 	float flash = 0.0;
 	float maxWaitTime = 5;
 
-	float Timer = texelFetch2D(colortex4, ivec2(3,1), 0).x/150.0;
+	float Timer = texelFetch(colortex4, ivec2(3,1), 0).x/150.0;
 	Timer -= frameTime;
 
 	if(Timer <= 0.0){
@@ -401,7 +401,7 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 	if (gl_FragCoord.x > pixelPos2.x && gl_FragCoord.x < pixelPos2.x + 1 && gl_FragCoord.y > pixelPos2.y && gl_FragCoord.y < pixelPos2.y + 1){
 		mixhistory = clamp(500.0 * frameTime,0.0,1.0);
 
-		vec3 LastPos = (texelFetch2D(colortex4,ivec2(2,1),0).xyz/150.0) * 2.0 - 1.0;
+		vec3 LastPos = (texelFetch(colortex4,ivec2(2,1),0).xyz/150.0) * 2.0 - 1.0;
 		
 		LastPos += (hash31(frameCounter / 50) * 2.0 - 1.0);
 		LastPos = LastPos * 0.5 + 0.5;
@@ -416,7 +416,7 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 #endif
 
 //Temporally accumulate sky and light values
-vec3 frameHistory = texelFetch2D(colortex4,ivec2(gl_FragCoord.xy),0).rgb;
+vec3 frameHistory = texelFetch(colortex4,ivec2(gl_FragCoord.xy),0).rgb;
 vec3 currentFrame = gl_FragData[0].rgb*150.;
 
 

@@ -2,10 +2,10 @@
 
 #include "/lib/settings.glsl"
 
-varying vec4 color;
+in vec4 color;
 
-varying vec2 texcoord;
-uniform sampler2D tex;
+in vec2 texcoord;
+uniform sampler2D gtexture;
 uniform sampler2D noisetex;
 
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -15,13 +15,13 @@ uniform sampler2D noisetex;
 //////////////////////////////VOID MAIN//////////////////////////////
 
 float blueNoise(){
-  return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 );
+  return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 );
 }
 
 /* RENDERTARGETS: 0 */
 
 void main() {
-	vec4 color = texture2D(tex,texcoord.xy);
+	vec4 color = texture(gtexture,texcoord.xy);
 	vec2 lmcoord;
 	float ao;
     vec4 overlayColor;

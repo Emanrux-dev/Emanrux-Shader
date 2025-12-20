@@ -12,7 +12,7 @@ screen.Misc_Settings = Configurações Diversas
      option.ORB_B = Orb Azul
 
     option.WhiteWorld=Mundo Branco
-    option.ambientLight_only=Apenas Luz Ambiente
+    option.AMBIENT_LIGHT_ONLY=Apenas Luz Ambiente
     option.Glass_Tint=Tintura de Vidro
     option.display_LUT=Mostrar LUT
     option.SSS_view=Visualização de SSS vindo do Céu

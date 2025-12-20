@@ -4,7 +4,7 @@
 
 #include "/lib/SSBOs.glsl"
 
-varying vec2 texcoord;
+in vec2 texcoord;
 
 const bool colortex5MipmapEnabled = true;
 // uniform sampler2D colortex4;
@@ -50,7 +50,7 @@ float cdist(vec2 coord) {
 	return max(abs(coord.s-0.5),abs(coord.t-0.5))*2.0;
 }
 float blueNoise(){
-  return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
+  return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
 }
 float ld(float depth) {
     return (2.0 * near) / (far + near - depth * (far - near));		// (-depth * (far - near)) = (2.0 * near)/ld - far - near
@@ -138,7 +138,7 @@ float h1(float a)
     return 1.0 + w3(a) / (w2(a) + w3(a));
 }
 
-vec4 texture2D_bicubic(sampler2D tex, vec2 uv)
+vec4 texture_bicubic(sampler2D tex, vec2 uv)
 {
 	vec4 texelSize = vec4(texelSize,1.0/texelSize);
 	uv = uv*texelSize.zw;
@@ -157,10 +157,10 @@ vec4 texture2D_bicubic(sampler2D tex, vec2 uv)
 	vec2 p2 = (vec2(iuv.x + h0x, iuv.y + h1y) - 0.5) * texelSize.xy;
 	vec2 p3 = (vec2(iuv.x + h1x, iuv.y + h1y) - 0.5) * texelSize.xy;
 
-    return g0(fuv.y) * (g0x * texture2D(tex, p0)  +
-                        g1x * texture2D(tex, p1)) +
-           g1(fuv.y) * (g0x * texture2D(tex, p2)  +
-                        g1x * texture2D(tex, p3));
+    return g0(fuv.y) * (g0x * texture(tex, p0)  +
+                        g1x * texture(tex, p1)) +
+           g1(fuv.y) * (g0x * texture(tex, p2)  +
+                        g1x * texture(tex, p3));
 }
 
 // vec3 lenseFlare(vec2 UV){
@@ -174,14 +174,14 @@ vec4 texture2D_bicubic(sampler2D tex, vec2 uv)
 //   vec2 centeredUV = texcoord - 0.5;
 
 //   vec3 color = vec3(0.0);
-//   color = texture2D(colortex7, texcoord).rgb;
+//   color = texture(colortex7, texcoord).rgb;
 
 //   vec2 distortedUV = (centeredUV -  (centeredUV ) * aberrationStrength) + 0.5;
 
-//   color += texture2D(colortex7,  distortedUV).rgb;
-//   // color.r = texture2D(colortex7, (centeredUV - (centeredUV + centeredUV*noise) * aberrationStrength) + 0.5).r;
-//   // color.g = texture2D(colortex7, texcoord).g;
-//   // color.b = texture2D(colortex7, (centeredUV + (centeredUV + centeredUV*noise) * aberrationStrength) + 0.5).b;
+//   color += texture(colortex7,  distortedUV).rgb;
+//   // color.r = texture(colortex7, (centeredUV - (centeredUV + centeredUV*noise) * aberrationStrength) + 0.5).r;
+//   // color.g = texture(colortex7, texcoord).g;
+//   // color.b = texture(colortex7, (centeredUV + (centeredUV + centeredUV*noise) * aberrationStrength) + 0.5).b;
 
 //   return color;
 // }
@@ -212,7 +212,7 @@ vec3 blackbody(float Temp)
 void main() {
   /* RENDERTARGETS:7 */
 	float vignette = (1.5-dot(texcoord-0.5,texcoord-0.5)*2.);
-	vec3 col = texture2D(colortex5,texcoord).rgb;
+	vec3 col = texture(colortex5,texcoord).rgb;
 
 	vec2 rodExposureDepth = rodExposureDepthSSBO;
 	rodExposureDepth.y = sqrt(rodExposureDepth.y/65000.0);
@@ -222,7 +222,7 @@ void main() {
 
 	#if DOF_QUALITY >= 0
 		/*--------------------------------*/
-		float z = ld(texture2D(depthtex1, texcoord.st*RENDER_SCALE).r)*far;
+		float z = ld(texture(depthtex1, texcoord*RENDER_SCALE).r)*far;
 		#if MANUAL_FOCUS == -2
 			float focus = rodExposureDepth.y*far;
 		#elif MANUAL_FOCUS == -1
@@ -251,11 +251,11 @@ void main() {
 		vec2 dispersion = (texcoord - 0.5) * pcoc * 200.0 * DOF_DISPERSION_MULT;
 
 		for ( int i = 0; i < BOKEH_SAMPLES; i++) {
-			// bcolor += texture2DLod(colortex5, texcoord.xy + bokeh_offsets[i]*pcoc*vec2(DOF_ANAMORPHIC_RATIO,aspectRatio), dofLodLevel).rgb;
+			// bcolor += textureLod(colortex5, texcoord.xy + bokeh_offsets[i]*pcoc*vec2(DOF_ANAMORPHIC_RATIO,aspectRatio), dofLodLevel).rgb;
 			
-			bcolor.r += texture2DLod(colortex5, texcoord.xy + (bokeh_offsets[i] + dispersion)*pcoc*vec2(DOF_ANAMORPHIC_RATIO,aspectRatio), dofLodLevel).r;
-			bcolor.g += texture2DLod(colortex5, texcoord.xy + bokeh_offsets[i]*pcoc*vec2(DOF_ANAMORPHIC_RATIO,aspectRatio), dofLodLevel).g;
-			bcolor.b += texture2DLod(colortex5, texcoord.xy + (bokeh_offsets[i] - dispersion)*pcoc*vec2(DOF_ANAMORPHIC_RATIO,aspectRatio), dofLodLevel).b;
+			bcolor.r += textureLod(colortex5, texcoord + (bokeh_offsets[i] + dispersion)*pcoc*vec2(DOF_ANAMORPHIC_RATIO,aspectRatio), dofLodLevel).r;
+			bcolor.g += textureLod(colortex5, texcoord + bokeh_offsets[i]*pcoc*vec2(DOF_ANAMORPHIC_RATIO,aspectRatio), dofLodLevel).g;
+			bcolor.b += textureLod(colortex5, texcoord + (bokeh_offsets[i] - dispersion)*pcoc*vec2(DOF_ANAMORPHIC_RATIO,aspectRatio), dofLodLevel).b;
 		}
 		col = bcolor/BOKEH_SAMPLES;
 		#endif
@@ -266,19 +266,19 @@ void main() {
 	vec2 resScale = vec2(1920.,1080.)/clampedRes;
 	vec2 bloomTileUV = (((gl_FragCoord.xy)*2.0 + 0.5)*texelSize/2.0) / clampedRes*vec2(1920.,1080.);
 
-	vec3 bloomTile0 = texture2D_bicubic(colortex3, bloomTileUV/2.).rgb; //1/4 res
-	vec3 bloomTile1 = texture2D_bicubic(colortex6, bloomTileUV/4.).rgb; //1/8 res
-	vec3 bloomTile2 = texture2D_bicubic(colortex6, bloomTileUV/8.+vec2(0.25*resScale.x+2.5*texelSize.x,.0)).rgb;  //1/16 res
-	vec3 bloomTile3 = texture2D_bicubic(colortex6, bloomTileUV/16.+vec2(0.375*resScale.x+4.5*texelSize.x,.0)).rgb; //1/32 res
-	vec3 bloomTile4 = texture2D_bicubic(colortex6, bloomTileUV/32.+vec2(0.4375*resScale.x+6.5*texelSize.x,.0)).rgb; //1/64 res
-	vec3 bloomTile5 = texture2D_bicubic(colortex6, bloomTileUV/64.+vec2(0.46875*resScale.x+8.5*texelSize.x,.0)).rgb; //1/128 res
-	vec3 bloomTile6 = texture2D_bicubic(colortex6, bloomTileUV/128.+vec2(0.484375*resScale.x+10.5*texelSize.x,.0)).rgb; //1/256 res
+	vec3 bloomTile0 = texture_bicubic(colortex3, bloomTileUV/2.).rgb; //1/4 res
+	vec3 bloomTile1 = texture_bicubic(colortex6, bloomTileUV/4.).rgb; //1/8 res
+	vec3 bloomTile2 = texture_bicubic(colortex6, bloomTileUV/8.+vec2(0.25*resScale.x+2.5*texelSize.x,.0)).rgb;  //1/16 res
+	vec3 bloomTile3 = texture_bicubic(colortex6, bloomTileUV/16.+vec2(0.375*resScale.x+4.5*texelSize.x,.0)).rgb; //1/32 res
+	vec3 bloomTile4 = texture_bicubic(colortex6, bloomTileUV/32.+vec2(0.4375*resScale.x+6.5*texelSize.x,.0)).rgb; //1/64 res
+	vec3 bloomTile5 = texture_bicubic(colortex6, bloomTileUV/64.+vec2(0.46875*resScale.x+8.5*texelSize.x,.0)).rgb; //1/128 res
+	vec3 bloomTile6 = texture_bicubic(colortex6, bloomTileUV/128.+vec2(0.484375*resScale.x+10.5*texelSize.x,.0)).rgb; //1/256 res
 
 	#ifdef OLD_BLOOM
 		vec3 bloom = (bloomTile0 + bloomTile1 + bloomTile2 + bloomTile3 + bloomTile4 + bloomTile5 + bloomTile6) / 7.0;
 		vec3 fogBloom = bloom;
 		
-		float lightScat = clamp((BLOOM_STRENGTH+3) * 0.05 * pow(exposure.a, 0.2)  ,0.0,1.0) * vignette;
+		float lightScat = clamp((BLOOM_STRENGTH+3.0) * 0.05 * pow(exposure.a, 0.2)  ,0.0,1.0) * vignette;
 	#else
 		float weights[7] = float[](     1.0,    1.0/2.0,    1.0/3.0,    1.0/5.5,    1.0/8.0,    1.0/10.0,   1.0/12.0    );
 		vec3 bloom = (bloomTile0*weights[0] + bloomTile1*weights[1] + bloomTile2*weights[2] + bloomTile3*weights[3] + bloomTile4*weights[4] + bloomTile5*weights[5] + bloomTile6*weights[6]) / bloomWeight();
@@ -287,7 +287,7 @@ void main() {
 		float lightScat = clamp(BLOOM_STRENGTH * 0.3,0.0,1.0) * vignette;
 	#endif
 
- 	float VL_abs = texture2D(colortex7, texcoord*RENDER_SCALE).r;
+ 	float VL_abs = texture(colortex7, texcoord*RENDER_SCALE).r;
 
 	float bloomyFog_Mult = BLOOMY_FOG;
 	if(isEyeInWater == 1) bloomyFog_Mult = UNDERWATER_BLOOMY_FOG;
@@ -301,7 +301,7 @@ void main() {
 			float purkinje = clamp(rodExposureDepth.x/(1.0+rodExposureDepth.x)*pstrength,0,1);
 		#endif	
 		
-  		VL_abs = clamp((1.0-VL_abs)*bloomyFog_Mult*0.75*(1.0+rainStrength) * (1.0-purkinje*0.3),0.0,1.0)*clamp(1.0-pow(cdist(texcoord.xy),15.0),0.0,1.0);
+  		VL_abs = clamp((1.0-VL_abs)*bloomyFog_Mult*0.75*(1.0+rainStrength) * (1.0-purkinje*0.3),0.0,1.0)*clamp(1.0-pow(cdist(texcoord),15.0),0.0,1.0);
 		col = (mix(col, fogBloom, VL_abs) + bloom*lightScat) * exposure.rgb;
 	
   		float lum = dot(col, vec3(0.15,0.3,0.55));
@@ -311,7 +311,7 @@ void main() {
 
 		col = mix(lum * vec3(Purkinje_R, Purkinje_G, Purkinje_B) * Purkinje_Multiplier, col, rodCurve);
 	#else
-  		VL_abs = clamp((1.0-VL_abs)*bloomyFog_Mult*0.75*(1.0+rainStrength),0.0,1.0)*clamp(1.0-pow(cdist(texcoord.xy),15.0),0.0,1.0);
+  		VL_abs = clamp((1.0-VL_abs)*bloomyFog_Mult*0.75*(1.0+rainStrength),0.0,1.0)*clamp(1.0-pow(cdist(texcoord),15.0),0.0,1.0);
 		col = (mix(col, fogBloom, VL_abs) + bloom*lightScat) * exposure.rgb;
 	#endif
 	
@@ -351,7 +351,7 @@ void main() {
 		float _far = far*4.0;
 
 		if (depth >= 1.0) {
-			depth = texture2D(dhVoxyDepthTex, texcoord).x;
+			depth = texture(dhVoxyDepthTex, texcoord).x;
 			_near = dhVoxyNearPlane;
 			_far = dhVoxyFarPlane;
 		}

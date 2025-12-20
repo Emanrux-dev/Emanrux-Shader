@@ -1,6 +1,6 @@
 #include "/lib/settings.glsl"
 
-varying vec2 texcoord;
+out vec2 texcoord;
 
 
 //////////////////////////////VOID MAIN//////////////////////////////

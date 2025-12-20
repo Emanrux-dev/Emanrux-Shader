@@ -20,7 +20,7 @@ uniform sampler2D shadowcolor1;
   layout (rgba16f) uniform image2D cloudDepthTex;
 #endif
 
-varying vec2 texcoord;
+in vec2 texcoord;
 uniform vec2 texelSize;
 uniform float frameTimeCounter;
 uniform int frameCounter;
@@ -62,7 +62,7 @@ float interleaved_gradientNoise(){
 	return noise;
 }
 float blueNoise(){
-  return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
+  return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
 }
 
 float convertHandDepth_2(in float depth, bool hand) {
@@ -123,7 +123,7 @@ vec3 doMotionBlur(vec2 texcoord, float depth, float noise, bool hand){
 	for (int i = 0; i < int(samples); i++) {
 
     texcoord += velocity;
-    color += texture2D(colortex7, clamp(texcoord, screenEdges, 1.0-screenEdges)).rgb;
+    color += texture(colortex7, clamp(texcoord, screenEdges, 1.0-screenEdges)).rgb;
 
   }
 
@@ -156,7 +156,7 @@ void main() {
   float noise = blueNoise();
 
   #if defined MOTION_BLUR
-    float depth = texture2D(depthtex0, texcoord*RENDER_SCALE).r;
+    float depth = texture(depthtex0, texcoord*RENDER_SCALE).r;
     bool hand = depth < 0.56;
     float depth2 = convertHandDepth_2(depth, hand);
 
@@ -174,9 +174,9 @@ void main() {
       
       _texcoord += vec2(0.5);
 
-      vec3 COLOR = texture2D(colortex7, _texcoord).rgb;
+      vec3 COLOR = texture(colortex7, _texcoord).rgb;
     #else
-      vec3 COLOR = texture2D(colortex7, texcoord).rgb;
+      vec3 COLOR = texture(colortex7, texcoord).rgb;
     #endif
   #endif
   
@@ -216,13 +216,13 @@ void main() {
     // float zoom = 0.1;
     // shadowUV = ((shadowUV-0.5) - (shadowUV-0.5)*zoom) + 0.5;
 
-    if(shadowUV.x < 1.0 && shadowUV.y < 1.0 && hideGUI == 1) COLOR = texture2D(shadowcolor1,shadowUV).rgb;
+    if(shadowUV.x < 1.0 && shadowUV.y < 1.0 && hideGUI == 1) COLOR = texture(shadowcolor1,shadowUV).rgb;
   #endif
   #if DEBUG_VIEW == debug_DEPTHTEX0
-    COLOR = vec3(ld(texture2D(depthtex0, texcoord*RENDER_SCALE).r));
+    COLOR = vec3(ld(texture(depthtex0, texcoord*RENDER_SCALE).r));
   #endif
   #if DEBUG_VIEW == debug_DEPTHTEX1
-    COLOR = vec3(ld(texture2D(depthtex1, texcoord*RENDER_SCALE).r));
+    COLOR = vec3(ld(texture(depthtex1, texcoord*RENDER_SCALE).r));
   #endif
   #if DEBUG_VIEW == debug_CLOUDDEPTHTEX && defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
     COLOR = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_SCALE*RENDER_SCALE)).rgb;
@@ -240,8 +240,4 @@ void main() {
     if (length(waveNormals.xy) > 0.0) gl_FragColor.rgb += waveNormals;
     }
   #endif
-
-  // gl_FragColor.rgb = texture2D(colortex10, texcoord).rgb;
-
-  //if(gl_FragCoord.x < 512 && gl_FragCoord.y < 512) gl_FragColor.rgb = vec3(imageLoad(cloudShadow, ivec2(gl_FragCoord.x,gl_FragCoord.y)*2).g);
 }

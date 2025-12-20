@@ -3,13 +3,19 @@
 
 #include "/lib/SSBOs.glsl"
 
-varying vec4 pos;
-varying vec4 gcolor;
-	
-varying vec4 normals_and_materials;
-varying vec2 lightmapCoords;
-flat varying int isWater;
+out DATA {
+	vec4 pos;
+	vec4 gcolor;
+		
+	vec4 normalMat;
+	vec2 lightmapCoords;
+	flat int isWater;
 
+	mat4 normalmatrix;
+
+	flat vec3 WsunVec;
+	flat vec3 WsunVec2;
+};
 
 uniform sampler2D colortex4;
 
@@ -17,13 +23,9 @@ uniform sampler2D colortex4;
 	#include "/lib/scene_controller.glsl"
 #endif
 
-varying mat4 normalmatrix;
-
 uniform mat4 gbufferModelViewInverse;
 uniform mat4 gbufferModelView;
 
-flat varying vec3 WsunVec;
-flat varying vec3 WsunVec2;
 uniform mat4 dhProjection;
 uniform vec3 sunPosition;
 uniform float sunElevation;
@@ -90,7 +92,7 @@ void main() {
 
 	// gl_Position = toClipSpace3(position);
 
-	normals_and_materials = vec4(mat3(gbufferModelView) * gl_Normal, 1.0);
+	normalMat = vec4(mat3(gbufferModelView) * gl_Normal, 1.0);
 
     gcolor = gl_Color;
 	lightmapCoords = gl_MultiTexCoord1.xy;

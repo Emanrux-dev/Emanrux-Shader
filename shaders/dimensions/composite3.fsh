@@ -2,11 +2,12 @@
 
 #include "/lib/SSBOs.glsl"
 
-flat varying vec3 zMults;
-
-flat varying vec2 TAA_Offset;
-flat varying vec3 WsunVec;
-flat varying vec3 WmoonVec;
+#ifdef OVERWORLD_SHADER
+  in DATA {
+    flat vec3 WsunVec;
+    flat vec3 WmoonVec;
+  };
+#endif
 
 uniform sampler2D noisetex;
 uniform sampler2D depthtex0;
@@ -126,9 +127,9 @@ uniform float eyeAltitude;
 #define diagonal3(m) vec3((m)[0].x, (m)[1].y, m[2].z)
 #define  projMAD(m, v) (diagonal3(m) * (v) + (m)[3].xyz)
 
-float ld(float depth) {
-    return 1.0 / (zMults.y - depth * zMults.z);		// (-depth * (far - near)) = (2.0 * near)/ld - far - near
-}
+// float ld(float depth) {
+//     return 1.0 / (zMults.y - depth * zMults.z);		// (-depth * (far - near)) = (2.0 * near)/ld - far - near
+// }
 
 float convertHandDepth(float depth) {
     float ndcDepth = depth * 2.0 - 1.0;
@@ -184,14 +185,14 @@ float R2_dither(){
 
 float blueNoise(){
 	#ifdef TAA
-  		return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
+  		return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
 	#else
-		return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887);
+		return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887);
 	#endif
 }
 
 vec4 blueNoise(vec2 coord){
-  return texelFetch2D(colortex6, ivec2(coord)%512 , 0) ;
+  return texelFetch(colortex6, ivec2(coord)%512 , 0) ;
 }
 
 vec3 normVec (vec3 vec){
@@ -285,31 +286,31 @@ vec3 doRefractionEffect( inout vec2 passTexcoord, vec2 normal, float linearDista
 
   #if FAKE_DISPERSION_AMOUNT > 0
     // do not offset texcoord if alpha is 1.0
-    refractAmount *= min(  decodeVec2(texelFetch2D(colortex11, ivec2(clampUV(texcoord - ((normal + dispersion) + smudge)*refractAmount, texcoord)/texelSize),0).b).g,
-                           decodeVec2(texelFetch2D(colortex11, ivec2(clampUV(texcoord - ((normal - dispersion) + smudge)*refractAmount, texcoord)/texelSize),0).b).g  ) > 0.0 ? 1.0 : 0.0;
+    refractAmount *= min(  decodeVec2(texelFetch(colortex11, ivec2(clampUV(texcoord - ((normal + dispersion) + smudge)*refractAmount, texcoord)/texelSize),0).b).g,
+                           decodeVec2(texelFetch(colortex11, ivec2(clampUV(texcoord - ((normal - dispersion) + smudge)*refractAmount, texcoord)/texelSize),0).b).g  ) > 0.0 ? 1.0 : 0.0;
 
     // create offsets
     vec2 offsetTexcoord = clampUV(texcoord - (normal + smudge)*refractAmount, texcoord);
     passTexcoord = offsetTexcoord;
 
     // sample color with offsetted texcoord. in this case, the red and blue channels have offsets in opposite directions for a dispersion effect.
-    color.g = texture2D(colortex3, offsetTexcoord).g;
+    color.g = texture(colortex3, offsetTexcoord).g;
 
     offsetTexcoord = clampUV(texcoord - ((normal + dispersion) + smudge)*refractAmount, texcoord);
-    color.r = texture2D(colortex3, offsetTexcoord).r;
+    color.r = texture(colortex3, offsetTexcoord).r;
 
     offsetTexcoord = clampUV(texcoord - ((normal - dispersion) + smudge)*refractAmount, texcoord);
-    color.b = texture2D(colortex3, offsetTexcoord).b;
+    color.b = texture(colortex3, offsetTexcoord).b;
   #else
     // do not offset texcoord if alpha is 1.0
-    refractAmount *= decodeVec2(texelFetch2D(colortex11, ivec2(clampUV(texcoord - (normal + smudge)*refractAmount, texcoord)/texelSize),0).b).g > 0.0 ? 1.0 : 0.0; 
+    refractAmount *= decodeVec2(texelFetch(colortex11, ivec2(clampUV(texcoord - (normal + smudge)*refractAmount, texcoord)/texelSize),0).b).g > 0.0 ? 1.0 : 0.0; 
 
     // create offsets
     vec2 offsetTexcoord = clampUV(texcoord - (normal + smudge)*refractAmount, texcoord);
     passTexcoord = offsetTexcoord;
 
     // sample color with distorted texcoords
-    color.rgb = texture2D(colortex3, offsetTexcoord).rgb;
+    color.rgb = texture(colortex3, offsetTexcoord).rgb;
   #endif
 
   return color;
@@ -370,18 +371,18 @@ vec4 bilateralUpsample(vec2 fragcoord, sampler2D colortex, out float outerEdgeRe
 		#if defined DISTANT_HORIZONS || defined VOXY
 		  float offsetDepth;
       if(!behindTranslucents) {
-        offsetDepth = sqrt(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).z/65000.0);
+        offsetDepth = sqrt(texelFetch(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).z/65000.0);
       } else {
-        offsetDepth = sqrt(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).a/65000.0);
+        offsetDepth = sqrt(texelFetch(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).a/65000.0);
       }
     #else
-      float offsetDepth = linearize(texelFetch2D(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE, 0).r);
+      float offsetDepth = linearize(texelFetch(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE, 0).r);
     #endif
 
     float edgeDiff = abs(offsetDepth - referenceDepth) < threshold ? 1.0 : 1e-7;
     outerEdgeResults = max(outerEdgeResults, abs(referenceDepth - offsetDepth));
 
-    vec4 offsetColor = texelFetch2D(colortex, UV_COLOR + OFFSET[i] + UV_NOISE, 0).rgba;
+    vec4 offsetColor = texelFetch(colortex, UV_COLOR + OFFSET[i] + UV_NOISE, 0).rgba;
     colorSum += offsetColor*edgeDiff;
     edgeSum += edgeDiff;
 
@@ -405,7 +406,7 @@ vec4 VLTemporalFiltering(vec3 viewPos, in float referenceDepth, sampler2D depth,
 	vec2 velocity = previousPosition.xy - offsetTexcoord;
 	previousPosition.xy = offsetTexcoord + velocity;
 
-  vec4 currentFrame = texture2D(colortex0, VLtexCoord);
+  vec4 currentFrame = texture(colortex0, VLtexCoord);
 
   // return vec4(outerEdgeResults,0,0,1);
   // return upsampledCurrentFrame;
@@ -418,19 +419,19 @@ vec4 VLTemporalFiltering(vec3 viewPos, in float referenceDepth, sampler2D depth,
   vec4 upsampledCurrentFrame = bilateralUpsample(gl_FragCoord.xy , colortex0, outerEdgeResults, referenceDepth, depth, hand, false);
   // vec4 upsampledCurrentFrame = BilateralUpscale(colortex0, depth, gl_FragCoord.xy - 1.5, referenceDepth);
   
-	vec4 col1 = texture2D(colortex0, VLtexCoord + vec2( texelSize.x,  texelSize.y));
-	vec4 col2 = texture2D(colortex0, VLtexCoord + vec2( texelSize.x, -texelSize.y));
-	vec4 col3 = texture2D(colortex0, VLtexCoord + vec2(-texelSize.x, -texelSize.y));
-	vec4 col4 = texture2D(colortex0, VLtexCoord + vec2(-texelSize.x,  texelSize.y));
-	vec4 col5 = texture2D(colortex0, VLtexCoord + vec2( 0.0,			    texelSize.y));
-	vec4 col6 = texture2D(colortex0, VLtexCoord + vec2( 0.0,			   -texelSize.y));
-	vec4 col7 = texture2D(colortex0, VLtexCoord + vec2(-texelSize.x,  		    0.0));
-	vec4 col8 = texture2D(colortex0, VLtexCoord + vec2( texelSize.x,  		    0.0));
+	vec4 col1 = texture(colortex0, VLtexCoord + vec2( texelSize.x,  texelSize.y));
+	vec4 col2 = texture(colortex0, VLtexCoord + vec2( texelSize.x, -texelSize.y));
+	vec4 col3 = texture(colortex0, VLtexCoord + vec2(-texelSize.x, -texelSize.y));
+	vec4 col4 = texture(colortex0, VLtexCoord + vec2(-texelSize.x,  texelSize.y));
+	vec4 col5 = texture(colortex0, VLtexCoord + vec2( 0.0,			    texelSize.y));
+	vec4 col6 = texture(colortex0, VLtexCoord + vec2( 0.0,			   -texelSize.y));
+	vec4 col7 = texture(colortex0, VLtexCoord + vec2(-texelSize.x,  		    0.0));
+	vec4 col8 = texture(colortex0, VLtexCoord + vec2( texelSize.x,  		    0.0));
 
 	vec4 colMax = max(currentFrame,max(col1,max(col2,max(col3, max(col4, max(col5, max(col6, max(col7, col8))))))));
 	vec4 colMin = min(currentFrame,min(col1,min(col2,min(col3, min(col4, min(col5, min(col6, min(col7, col8))))))));
   
-  vec4 frameHistory = texture2D(colortex10, previousPosition.xy*RENDER_SCALE);
+  vec4 frameHistory = texture(colortex10, previousPosition.xy*RENDER_SCALE);
   vec4 clampedFrameHistory = clamp(frameHistory, colMin, colMax);
 
   float blendingFactor = 0.1;
@@ -545,7 +546,7 @@ void main() {
 
 	////// --------------- SETUP STUFF --------------- //////
   vec2 texcoord = gl_FragCoord.xy*texelSize;
-  float depth = texelFetch2D(depthtex0, ivec2(gl_FragCoord.xy),0).x;
+  float depth = texelFetch(depthtex0, ivec2(gl_FragCoord.xy),0).x;
   bool hand = depth < 0.56;
   float z = depth;
 
@@ -554,7 +555,7 @@ void main() {
 	float swappedDepth = z;
 
 	#if defined DISTANT_HORIZONS || defined VOXY
-    float DH_depth0 = texelFetch2D(dhVoxyDepthTex, ivec2(gl_FragCoord.xy),0).x;
+    float DH_depth0 = texelFetch(dhVoxyDepthTex, ivec2(gl_FragCoord.xy),0).x;
 
 		float depthOpaque = z;
 		float depthOpaqueL = linearizeDepthFast(depthOpaque, near, farPlane);
@@ -575,12 +576,12 @@ void main() {
   bool isSky = swappedDepth >= 1.0;
 
   #if !defined DISTANT_HORIZONS && !defined VOXY || (AURORA_LOCATION > 0 && defined OVERWORLD_SHADER)
-    float z2 = texelFetch2D(depthtex1, ivec2(gl_FragCoord.xy),0).x;
+    float z2 = texelFetch(depthtex1, ivec2(gl_FragCoord.xy),0).x;
   #endif
 
   #if AURORA_LOCATION > 0 && defined OVERWORLD_SHADER
     #if defined DISTANT_HORIZONS || defined VOXY
-      float DH_depth1 = texelFetch2D(dhVoxyDepthTex, ivec2(gl_FragCoord.xy),0).x;
+      float DH_depth1 = texelFetch(dhVoxyDepthTex, ivec2(gl_FragCoord.xy),0).x;
       bool isSkyTranslucent = z2 >= 1.0 && DH_depth1 >= 1.0;
     #else
       bool isSkyTranslucent = z2 >= 1.0;
@@ -604,11 +605,11 @@ void main() {
 	// float lightleakfixfast = clamp(eyeBrightness.y/240.,0.0,1.0);
 
 	////// --------------- UNPACK OPAQUE GBUFFERS --------------- //////
-	// float opaqueMasks = decodeVec2(texture2D(colortex1,texcoord).a).y;
+	// float opaqueMasks = decodeVec2(texture(colortex1,texcoord).a).y;
 	// bool isOpaque_entity = abs(opaqueMasks-0.45) < 0.01;
 
 	////// --------------- UNPACK TRANSLUCENT GBUFFERS --------------- //////
-	vec4 data = texelFetch2D(colortex11,ivec2(texcoord/texelSize),0).rgba;
+	vec4 data = texelFetch(colortex11,ivec2(texcoord/texelSize),0).rgba;
 	vec4 unpack0 = vec4(decodeVec2(data.r),decodeVec2(data.g)) ;
 	vec4 unpack1 = vec4(decodeVec2(data.b),decodeVec2(data.a)) ;
 	
@@ -625,7 +626,7 @@ void main() {
 	// 0.9 = entity mask
 	// 0.8 = reflective entities
 	// 0.7 = reflective blocks
-  float translucentMasks = texelFetch2D(colortex7, ivec2(gl_FragCoord.xy),0).a;
+  float translucentMasks = texelFetch(colortex7, ivec2(gl_FragCoord.xy),0).a;
 
 	bool isWater = translucentMasks > 0.99;
 	bool isReflectiveEntity = abs(translucentMasks - 0.8) < 0.01;
@@ -634,7 +635,7 @@ void main() {
 
   ////// --------------- get volumetrics
   #if defined DISTANT_HORIZONS || defined VOXY
-	  float DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy),0).z/65000.0);
+	  float DH_mixedLinearZ = sqrt(texelFetch(colortex12,ivec2(gl_FragCoord.xy),0).z/65000.0);
     vec4 temporallyFilteredVL = VLTemporalFiltering(viewPos, DH_mixedLinearZ, colortex12, hand);
   #else
     vec4 temporallyFilteredVL = VLTemporalFiltering(viewPos, frDepth, depthtex0, hand);
@@ -649,7 +650,7 @@ void main() {
   #if FAKE_REFRACTION_AMOUNT > 0
     vec3 color = doRefractionEffect(refractedCoord, tangentNormals.xy, linearDistance, isReflectiveEntity, isWater && isEyeInWater == 1);
   #else
-    vec3 color = texture2D(colortex3, texcoord).rgb;
+    vec3 color = texture(colortex3, texcoord).rgb;
   #endif
 
   ////// --------------- lightning effect
@@ -705,61 +706,61 @@ void main() {
 
         // TODO: There has to be a better way to do this.............
         if (randomTex < 1.0) {
-          lightningTex = texture2D(lightningTex1, uv);
+          lightningTex = texture(lightningTex1, uv);
         } else if (randomTex < 2.0) {
-          lightningTex = texture2D(lightningTex2, uv);
+          lightningTex = texture(lightningTex2, uv);
         } else if (randomTex < 3.0) {
           u = 1.3*dot(dirDiff, tangent) + 0.5/uvScalar;
           uv = vec2(u, v) * uvScalar;
-          lightningTex = texture2D(lightningTex3, uv);
+          lightningTex = texture(lightningTex3, uv);
         } else if (randomTex < 4.0) {
-          lightningTex = texture2D(lightningTex4, uv);
+          lightningTex = texture(lightningTex4, uv);
         } else if (randomTex < 5.0) {
-          lightningTex = texture2D(lightningTex5, uv);
+          lightningTex = texture(lightningTex5, uv);
         } else if (randomTex < 6.0) {
           u = 1.25*dot(dirDiff, tangent) + 0.5/uvScalar;
           uv = vec2(u, v) * uvScalar;
-          lightningTex = texture2D(lightningTex6, uv);
+          lightningTex = texture(lightningTex6, uv);
         } else if (randomTex < 7.0) {
-          lightningTex = texture2D(lightningTex7, uv);
+          lightningTex = texture(lightningTex7, uv);
         } else if (randomTex < 8.0) {
-          lightningTex = texture2D(lightningTex8, uv);
+          lightningTex = texture(lightningTex8, uv);
         } else if (randomTex < 9.0) {
           u = 1.4*dot(dirDiff, tangent) + 0.5/uvScalar;
           uv = vec2(u, v) * uvScalar;
-          lightningTex = texture2D(lightningTex9, uv);
+          lightningTex = texture(lightningTex9, uv);
         } else if (randomTex < 10.0) {
-          lightningTex = texture2D(lightningTex10, uv);
+          lightningTex = texture(lightningTex10, uv);
         } else if (randomTex < 11.0) {
           u = 0.5*dot(dirDiff, tangent)+0.5/uvScalar;
           v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
           uv = vec2(u, v) * uvScalar;
-          lightningTex = texture2D(lightningTex11, uv);
+          lightningTex = texture(lightningTex11, uv);
         } else if (randomTex < 12.0) {
           u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
           v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
           uv = vec2(u, v) * uvScalar;
-          lightningTex = texture2D(lightningTex12, uv);
+          lightningTex = texture(lightningTex12, uv);
         } else if (randomTex < 13.0) {
           u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
           v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
           uv = vec2(u, v) * uvScalar;
-          lightningTex = texture2D(lightningTex13, uv);
+          lightningTex = texture(lightningTex13, uv);
         } else if (randomTex < 14.0) {
           u = 0.5*dot(dirDiff, tangent)+0.5/uvScalar;
           v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
           uv = vec2(u, v) * uvScalar;
-          lightningTex = texture2D(lightningTex14, uv);
+          lightningTex = texture(lightningTex14, uv);
         } else if (randomTex < 15.0) {
           u = 0.45*dot(dirDiff, tangent)+0.5/uvScalar;
           v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
           uv = vec2(u, v) * uvScalar;
-          lightningTex = texture2D(lightningTex15, uv);
+          lightningTex = texture(lightningTex15, uv);
         } else {
           u = 0.4*dot(dirDiff, tangent)+0.5/uvScalar;
           v = 0.7*dot(dirDiff, binormal) + 0.5/uvScalar;
           uv = vec2(u, v) * uvScalar;
-          lightningTex = texture2D(lightningTex16, uv);
+          lightningTex = texture(lightningTex16, uv);
         }
 
         lightningTex.rgb *= vec3(CUSTOM_LIGHTNING_R, CUSTOM_LIGHTNING_G, CUSTOM_LIGHTNING_B) * CUMULONIMBUS_LIGHTNING_BRIGHTNESS * 0.01;
@@ -796,14 +797,14 @@ void main() {
   ////// --------------- get volumetrics behind translucents
   float blank = 0.0;
   #if defined DISTANT_HORIZONS || defined VOXY
-    DH_mixedLinearZ = sqrt(texelFetch2D(colortex12,ivec2(gl_FragCoord.xy),0).a/65000.0);
+    DH_mixedLinearZ = sqrt(texelFetch(colortex12,ivec2(gl_FragCoord.xy),0).a/65000.0);
     vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, DH_mixedLinearZ, colortex12, hand, true);
   #else
-    vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, linearize(texelFetch2D(depthtex1, ivec2(refractedCoord/texelSize),0).x), depthtex1, hand, true);
+    vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, linearize(texelFetch(depthtex1, ivec2(refractedCoord/texelSize),0).x), depthtex1, hand, true);
   #endif
 
   ////// --------------- START BLENDING FOGS AND FORWARD RENDERED COLOR
-  vec4 TranslucentShader = texture2D(colortex2, texcoord);
+  vec4 TranslucentShader = texelFetch(colortex2, ivec2(gl_FragCoord.xy), 0);
 
   bool translucentCheck = TranslucentShader.a > 0.0 &&  TranslucentShader.a < 1.0;
 
@@ -890,9 +891,9 @@ void main() {
       #else
         float clippingDistance = 4.0 * far;
       #endif
-      #if RAINBOW_DISTANCE > 0.99999*clippingDistance
+      if (RAINBOW_DISTANCE > 0.99999*clippingDistance) {
         if (linearDistance > 0.99999*clippingDistance) linearDistance = 1.1 * RAINBOW_DISTANCE; // allow rainbow distances greater than clipping distance
-      #endif
+      }
 
       float angleFromSun = degrees(acos(cosAngle));
       float rainbowHue = 1.0 - smoothstep(41.4, 44.0, angleFromSun); // remove the red at the bottom
@@ -917,7 +918,7 @@ void main() {
   // (bloomy) rain effect
   #ifdef OVERWORLD_SHADER
     #if RAIN_MODE == 0 // brighten the color behind
-      float rainDrops = texelFetch2D(colortex9,ivec2(texcoord/texelSize),0).a;
+      float rainDrops = texelFetch(colortex9,ivec2(texcoord/texelSize),0).a;
       if(hand) rainDrops *= (1.0-TranslucentShader.a);
 
       if(rainDrops > 0.01) {
@@ -925,7 +926,7 @@ void main() {
         color.rgb += color.rgb * RAIN_BRIGHTNESS * rainDrops;
       }
     #else // add albedo of weather particle
-      vec4 rainDrops = texelFetch2D(colortex9,ivec2(texcoord/texelSize),0);
+      vec4 rainDrops = texelFetch(colortex9,ivec2(texcoord/texelSize),0);
       if(hand) rainDrops.a *= (1.0-TranslucentShader.a);
 
       if(rainDrops.a > 0.01) {
@@ -938,7 +939,7 @@ void main() {
 ////// --------------- FINALIZE
   #ifdef display_LUT
       float zoomLevel = 2.0;
-      vec3 thingy = texelFetch2D(colortex4,ivec2(gl_FragCoord.xy/zoomLevel),0).rgb /1200.0;
+      vec3 thingy = texelFetch(colortex4,ivec2(gl_FragCoord.xy/zoomLevel),0).rgb /1200.0;
 
       if(luma(thingy) > 0.0){
         color.rgb =  thingy;
@@ -956,7 +957,7 @@ void main() {
   gl_FragData[1].rgb = clamp(color.rgb, 0.0,68000.0);
 
   // gl_FragData[1].rgb =  vec3(tangentNormals.xy,0.0) * 0.1  ;
-  // gl_FragData[1].rgb =  vec3(1.0) * ld(    (data.a > 0.0 ? data.a : texture2D(depthtex0, texcoord).x   )              )   ;
+  // gl_FragData[1].rgb =  vec3(1.0) * ld(    (data.a > 0.0 ? data.a : texture(depthtex0, texcoord).x   )              )   ;
   // gl_FragData[1].rgb = gl_FragData[1].rgb * (1.0-TranslucentShader.a) + TranslucentShader.rgb*10.0;
   // gl_FragData[1].rgb = 1-(texcoord.x > 0.5 ? vec3(TranslucentShader.a) : vec3(data.a));
 

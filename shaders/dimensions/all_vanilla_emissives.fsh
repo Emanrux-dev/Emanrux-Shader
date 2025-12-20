@@ -1,7 +1,9 @@
 #include "/lib/settings.glsl"
 
-varying vec4 color;
-varying vec2 texcoord;
+in DATA {
+    vec4 color;
+    vec2 texcoord;
+};
 
 uniform sampler2D gtexture;
 
@@ -21,7 +23,7 @@ vec3 toLinear(vec3 sRGB){
 
 void main() {
 
-	vec4 Albedo = texture2D(gtexture, texcoord);
+	vec4 Albedo = texture(gtexture, texcoord);
 
     #ifndef COLORWHEEL
 	    Albedo.rgb = toLinear(Albedo.rgb * color.rgb);

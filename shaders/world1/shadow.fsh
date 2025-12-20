@@ -2,10 +2,12 @@
 
 #include "/lib/settings.glsl"
 
-varying vec4 color;
+in DATA {
+	float LIGHTNING;
+	vec4 color;
+	vec2 texcoord;
+};
 
-varying vec2 texcoord;
-uniform sampler2D tex;
 uniform sampler2D gtexture;
 uniform sampler2D noisetex;
 
@@ -13,7 +15,6 @@ uniform sampler2D noisetex;
 	uniform float far;
 #endif
 
-varying float LIGHTNING;
 uniform float frameTimeCounter;
 
 uniform int renderStage;
@@ -22,7 +23,7 @@ uniform int renderStage;
 //////////////////////////////VOID MAIN//////////////////////////////
 
 float blueNoise(){
-  return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 );
+  return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 );
 }
 
 
@@ -30,7 +31,7 @@ void main() {
 	#ifdef END_ISLAND_LIGHT
 		if (LIGHTNING > 0.0) discard;
 		
-		vec4 shadowColor = vec4(texture2D(tex,texcoord.xy).rgb * color.rgb,  texture2DLod(tex, texcoord.xy, 0).a);
+		vec4 shadowColor = vec4(texture(gtexture,texcoord.xy).rgb * color.rgb,  textureLod(gtexture, texcoord.xy, 0).a);
 
 		// #ifdef TRANSLUCENT_COLORED_SHADOWS
 		// 	if(shadowColor.a > 0.9999) shadowColor.rgb = vec3(0.0);
@@ -39,7 +40,7 @@ void main() {
 
 		gl_FragData[0] = shadowColor;
 		
-		// gl_FragData[0] = vec4(texture2D(tex,texcoord.xy).rgb * color.rgb,  texture2DLod(tex, texcoord.xy, 0).a);
+		// gl_FragData[0] = vec4(texture(tex,texcoord.xy).rgb * color.rgb,  textureLod(tex, texcoord.xy, 0).a);
 
 		#ifdef Stochastic_Transparent_Shadows
 			if(gl_FragData[0].a < blueNoise() && (renderStage == MC_RENDER_STAGE_TERRAIN_TRANSLUCENT || renderStage == MC_RENDER_STAGE_ENTITIES || renderStage == MC_RENDER_STAGE_BLOCK_ENTITIES)) { discard; return;}

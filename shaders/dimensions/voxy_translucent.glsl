@@ -179,7 +179,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
     bool isWater = blockID == 8;
 
     #ifndef WhiteWorld
-		#ifdef Vanilla_like_water
+		#ifdef VANILLA_LIKE_WATER
 			if (isWater) Albedo *= luma(Albedo);
 		#else
 			if (isWater){
@@ -252,7 +252,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	float indoors = min(max(parameters.lightMap.y-0.5,0.0)/0.4,1.0);
 	vec3 FinalColor = (Indirect_lighting + Direct_lighting*indoors) * Albedo;
 	
-    #ifndef Vanilla_like_water
+    #ifndef VANILLA_LIKE_WATER
 		if(isWater && abs(normal.y) > 0.1){
 			vec3 waterPos = (feetPlayerPos+cameraPosition).xzy;
 

@@ -9,22 +9,28 @@ Read the terms of modification and sharing before changing something below pleas
 !! DO NOT REMOVE !!
 */
 
-varying vec4 lmtexcoord;
-varying vec4 color;
+out DATA {
+	vec4 lmtexcoord;
+	vec4 color;
+
+	#if defined DAMAGE_BLOCK_EFFECT && defined POM
+		vec4 tangent;
+		vec3 normalMat;
+
+		vec4 texcoordam; // .st for add, .pq for mul
+		vec2 texcoord;
+	#endif
+
+	#ifdef OVERWORLD_SHADER
+		flat vec3 WsunVec;
+	#endif
+};
+
 uniform sampler2D colortex4;
 
-// flat varying float exposure;
-
-#ifdef LINES
-	flat varying int SELECTION_BOX;
-#endif
-
 #ifdef OVERWORLD_SHADER
-	flat varying vec3 WsunVec;
-
 	#include "/lib/scene_controller.glsl"
 #endif
-	
 
 uniform vec3 sunPosition;
 uniform float sunElevation;
@@ -46,19 +52,11 @@ uniform int heldItemId2;
 #define  projMAD(m, v) (diagonal3(m) * (v) + (m)[3].xyz)
 vec4 toClipSpace3(vec3 viewSpacePosition) {
     return vec4(projMAD(gl_ProjectionMatrix, viewSpacePosition),-viewSpacePosition.z);
-}		
-
-
-
+}
 
 #if defined DAMAGE_BLOCK_EFFECT && defined POM
-	varying vec4 vtexcoordam; // .st for add, .pq for mul
-	varying vec2 vtexcoord;
-
-	attribute vec4 mc_midTexCoord;
-	varying vec4 tangent;
-	attribute vec4 at_tangent;
-	varying vec4 normalMat;
+	in vec4 mc_midTexCoord;
+	in vec4 at_tangent;
 #endif
 
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -69,20 +67,22 @@ vec4 toClipSpace3(vec3 viewSpacePosition) {
 
 void main() {
 
-	lmtexcoord.xy = (gl_MultiTexCoord0).xy;
+	color = gl_Color;
+
+	lmtexcoord.xy = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
 	vec2 lmcoord = gl_MultiTexCoord1.xy / 240.0;
 	lmtexcoord.zw = lmcoord;
 
 	#if defined DAMAGE_BLOCK_EFFECT && defined POM
 		vec2 midcoord = (gl_TextureMatrix[0] *  mc_midTexCoord).st;
 		vec2 texcoordminusmid = lmtexcoord.xy-midcoord;
-		vtexcoordam.pq  = abs(texcoordminusmid)*2;
-		vtexcoordam.st  = min(lmtexcoord.xy,midcoord-texcoordminusmid);
-		vtexcoord.xy    = sign(texcoordminusmid)*0.5+0.5;
+		texcoordam.pq  = abs(texcoordminusmid)*2;
+		texcoordam.st  = min(lmtexcoord.xy,midcoord-texcoordminusmid);
+		texcoord.xy    = sign(texcoordminusmid)*0.5+0.5;
 
 		tangent = vec4(normalize(gl_NormalMatrix * at_tangent.rgb), at_tangent.w);
 		
-		normalMat = vec4(normalize(gl_NormalMatrix * gl_Normal), 1.0);
+		normalMat = normalize(gl_NormalMatrix * gl_Normal);
 	#endif
 
 
@@ -108,17 +108,6 @@ void main() {
 			gl_Position = toClipSpace3(position);
 	#else
 		gl_Position = ftransform();
-	#endif
-
-
-	color = gl_Color;
-	
-	// exposure = texelFetch2D(colortex4,ivec2(10,37),0).r;
-	// color.rgb = worldpos;
-	
-	#ifdef LINES
-		SELECTION_BOX = 0;
-		if(dot(color.rgb,vec3(0.33333))	 < 0.00001) SELECTION_BOX = 1;
 	#endif
 	
 	#ifdef OVERWORLD_SHADER		

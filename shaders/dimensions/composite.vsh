@@ -2,8 +2,13 @@
 
 #include "/lib/SSBOs.glsl"
 
-flat varying vec2 TAA_Offset;
-flat varying vec3 WsunVec;
+out DATA {
+	flat vec2 TAA_Offset;
+
+	#ifdef OVERWORLD_SHADER
+		flat vec3 WsunVec;
+	#endif
+};
 
 uniform sampler2D colortex4;
 
@@ -13,8 +18,6 @@ uniform float sunElevation;
 uniform vec3 sunPosition;
 uniform mat4 gbufferModelViewInverse;
 
-
-flat varying vec3 zMults;
 
 uniform float far;
 uniform float near;
@@ -29,20 +32,20 @@ uniform int framemod8;
 void main() {
 	gl_Position = ftransform();
 
-	#ifdef CUSTOM_MOON_ROTATION
-		vec3 moonVec = customMoonVecSSBO;
-		#ifdef SMOOTH_SUN_ROTATION
-			WsunVec = WsunVecSmooth;
+	#ifdef OVERWORLD_SHADER
+		#ifdef CUSTOM_MOON_ROTATION
+			vec3 moonVec = customMoonVecSSBO;
+			#ifdef SMOOTH_SUN_ROTATION
+				WsunVec = WsunVecSmooth;
+			#else
+				WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+			#endif
+			WsunVec = mix(moonVec, WsunVec, float(sunElevation > 1e-5));
+			// WsunVec = moonVec;
 		#else
-			WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+			WsunVec = (float(sunElevation > 1e-5)*2-1.)*normalize(mat3(gbufferModelViewInverse) * sunPosition);
 		#endif
-		WsunVec = mix(moonVec, WsunVec, float(sunElevation > 1e-5));
-		// WsunVec = moonVec;
-	#else
-		WsunVec = (float(sunElevation > 1e-5)*2-1.)*normalize(mat3(gbufferModelViewInverse) * sunPosition);
 	#endif
-
-	zMults = vec3(1.0/(far * near),far+near,far-near);
 
 	#ifdef TAA
 		TAA_Offset = offsets[framemod8];

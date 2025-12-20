@@ -8,7 +8,7 @@ float densityAtPosFog(in vec3 pos){
 	f = (f*f) * (3.-2.*f);
 	vec2 uv =  p.xz + f.xz + p.y * vec2(0.0,193.0);
 	vec2 coord =  uv / 512.0;
-	vec2 xy = texture2D(noisetex, coord).yx;
+	vec2 xy = texture(noisetex, coord).yx;
 	return mix(xy.r,xy.g, f.y);
 }
 
@@ -155,7 +155,7 @@ vec4 GetVolumetricFog(
 	skyLightPhased *= skyPhase;
 	LightSourcePhased *= sunPhase;
 
-	#ifdef ambientLight_only
+	#ifdef AMBIENT_LIGHT_ONLY
 		LightSourcePhased = vec3(0.0);
 	#endif
 
@@ -200,14 +200,14 @@ vec4 GetVolumetricFog(
 				shadowPos = shadowPos*vec3(0.5,0.5,0.5/6.0)+0.5;
 
 				#ifdef TRANSLUCENT_COLORED_SHADOWS
-					sh = vec3(shadow2D(shadowtex0, shadowPos).x);
+					sh = vec3(texture(shadowtex0, shadowPos).x);
 
-					if(shadow2D(shadowtex1, shadowPos).x > shadowPos.z && sh.x < 1.0){
-						vec4 translucentShadow = texture2D(shadowcolor0, shadowPos.xy);
+					if(texture(shadowtex1, shadowPos).x > shadowPos.z && sh.x < 1.0){
+						vec4 translucentShadow = texture(shadowcolor0, shadowPos.xy);
 						if(translucentShadow.a < 0.9) sh = normalize(translucentShadow.rgb+0.0001);
 					}
 				#else
-					sh = vec3(shadow2D(shadow, shadowPos).x);
+					sh = vec3(texture(shadow, shadowPos).x);
 				#endif
 			}
 
@@ -236,7 +236,7 @@ vec4 GetVolumetricFog(
 			#endif
 
 			vec3 Lightning = Iris_Lightningflash_VLfog(progressP);
-			vec3 lighting = DirectLight + indirectLight + 0.1 * Lightning;
+			vec3 lighting = DirectLight + indirectLight + 0.0025 * Lightning;
 			
 			color += (lighting - lighting * fogVolumeCoeff) * totalAbsorbance;
 

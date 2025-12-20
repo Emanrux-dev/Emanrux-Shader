@@ -16,6 +16,13 @@ This code is from Chocapic13' shaders
 Read the terms of modification and sharing before changing something below please !
 !! DO NOT REMOVE !!
 */
+
+out DATA {
+	float LIGHTNING;
+	vec4 color;
+	vec2 texcoord;
+};
+
 #if defined IS_LPV_ENABLED || defined END_ISLAND_LIGHT || WATER_INTERACTION == 2 || defined SHADER_GRASS
 	uniform int renderStage;
 	uniform mat4 shadowModelViewInverse;
@@ -25,13 +32,13 @@ Read the terms of modification and sharing before changing something below pleas
 #endif
 
 #if defined IS_LPV_ENABLED || WATER_INTERACTION == 2  || defined SHADER_GRASS
-	attribute vec4 mc_Entity;
+	in vec4 mc_Entity;
 	#ifdef IRIS_FEATURE_BLOCK_EMISSION_ATTRIBUTE
-		attribute vec4 at_midBlock;
+		in vec4 at_midBlock;
 	#else
-		attribute vec3 at_midBlock;
+		in vec3 at_midBlock;
 	#endif
-	attribute vec3 vaPosition;
+	in vec3 vaPosition;
 	
 	uniform vec3 chunkOffset;
 	uniform vec3 cameraPosition;
@@ -43,12 +50,6 @@ Read the terms of modification and sharing before changing something below pleas
 	#include "/lib/voxel_common.glsl"
 	#include "/lib/voxel_write.glsl"
 #endif
-
-varying float LIGHTNING;
-// out float entity;
-varying vec4 color;
-
-varying vec2 texcoord;
 
 
 //#include "/lib/Shadow_Params.glsl"
@@ -73,7 +74,7 @@ void main() {
 	#endif
 
 	#ifdef END_ISLAND_LIGHT
-		texcoord.xy = gl_MultiTexCoord0.xy;
+		texcoord.xy = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
 		color = gl_Color;
 
 		// hide lightning and dragon death beams

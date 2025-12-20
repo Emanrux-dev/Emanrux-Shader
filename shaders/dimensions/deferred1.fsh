@@ -58,16 +58,16 @@ vec2 decodeVec2(float a){
 
 void main() {
 /* RENDERTARGETS:4,12 */
-	vec3 oldTex = texelFetch2D(colortex4, ivec2(gl_FragCoord.xy), 0).xyz;
-	float newTex = texelFetch2D(depthtex1, ivec2(gl_FragCoord.xy*4), 0).x;
+	vec3 oldTex = texelFetch(colortex4, ivec2(gl_FragCoord.xy), 0).xyz;
+	float newTex = texelFetch(depthtex1, ivec2(gl_FragCoord.xy*4), 0).x;
 
-	float dataUnpacked = decodeVec2(texelFetch2D(colortex1,ivec2(gl_FragCoord.xy*4),0).w).y; 
+	float dataUnpacked = decodeVec2(texelFetch(colortex1,ivec2(gl_FragCoord.xy*4),0).w).y; 
 	bool hand = abs(dataUnpacked-0.75) < 0.01;
 
 	if(hand) convertHandDepth(newTex);
 
 	#if defined DISTANT_HORIZONS || defined VOXY
-    	float QuarterResDepth = texelFetch2D(dhVoxyDepthTex, ivec2(gl_FragCoord.xy*4), 0).x;
+    	float QuarterResDepth = texelFetch(dhVoxyDepthTex, ivec2(gl_FragCoord.xy*4), 0).x;
 		QuarterResDepth = DH_linZ(QuarterResDepth);
    		gl_FragData[1].a = QuarterResDepth*QuarterResDepth*65000.0;
         if(QuarterResDepth >= 1.0) gl_FragData[1].a = 66000.0;

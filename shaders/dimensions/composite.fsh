@@ -2,10 +2,13 @@
 
 #include "/lib/SSBOs.glsl"
 
-#ifndef END_SHADER
-	flat varying vec3 WsunVec;
-#endif
-flat varying vec2 TAA_Offset;
+in DATA {
+	flat vec2 TAA_Offset;
+
+	#ifdef OVERWORLD_SHADER
+		flat vec3 WsunVec;
+	#endif
+};
 
 #include "/lib/res_params.glsl"
 
@@ -161,13 +164,13 @@ float R2_dither(){
 }
 float blueNoise(){
 	#ifdef TAA
-  		return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
+  		return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
 	#else
-		return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887);
+		return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887);
 	#endif
 }
 vec4 blueNoise(vec2 coord){
-  return texelFetch2D(colortex6, ivec2(coord)%512 , 0) ;
+  return texelFetch(colortex6, ivec2(coord)%512 , 0) ;
 }
 vec2 R2_samples(int n){
 	vec2 alpha = vec2(0.75487765, 0.56984026);
@@ -271,7 +274,7 @@ float convertHandDepth_2(in float depth, bool hand) {
 		vec4 viewPos = vec4(0.0);
 		vec3 feetPlayerPos = vec3(0.0);
 
-		float depth = convertHandDepth_2(texelFetch2D(depthtex1, samplecoord, 0).x, hand);
+		float depth = convertHandDepth_2(texelFetch(depthtex1, samplecoord, 0).x, hand);
 
 		if (depth < 1.0) {
 			feetPlayerPos = vec3(texcoord, depth) * 2.0 - 1.0;
@@ -279,7 +282,7 @@ float convertHandDepth_2(in float depth, bool hand) {
 			viewPos.xyz /= viewPos.w;
 	
 		} else {
-			depth = texelFetch2D(dhVoxyDepthTex1, samplecoord, 0).x;
+			depth = texelFetch(dhVoxyDepthTex1, samplecoord, 0).x;
 
 			feetPlayerPos = vec3(texcoord, depth) * 2.0 - 1.0;
 			viewPos = iProjDiag_DH * feetPlayerPos.xyzz + dhVoxyProjectionInverse[3];
@@ -323,7 +326,7 @@ vec2 SSAO(
 			#if defined DISTANT_HORIZONS || defined VOXY
 				vec3 offsetViewPos = toScreenSpace_DH_SSAO((offsetUV*texelSize - jitterOffsets) * (1.0/RENDER_SCALE), offsetUV, hand);
 			#else
-				float sampleDepth = convertHandDepth_2(texelFetch2D(depthtex1, offsetUV, 0).x, hand);
+				float sampleDepth = convertHandDepth_2(texelFetch(depthtex1, offsetUV, 0).x, hand);
 				vec3 offsetViewPos = toScreenSpace(vec3((offsetUV*texelSize - jitterOffsets) * (1.0/RENDER_SCALE), sampleDepth));
 			#endif
 
@@ -384,7 +387,7 @@ void main() {
 	float noise = R2_dither();
 	vec2 texcoord = gl_FragCoord.xy*texelSize;
 	
-	vec4 data = texelFetch2D(colortex1,ivec2(gl_FragCoord.xy),0);
+	vec4 data = texelFetch(colortex1,ivec2(gl_FragCoord.xy),0);
 	vec4 dataUnpacked0 = vec4(decodeVec2(data.x),decodeVec2(data.y));
 	vec4 dataUnpacked1 = vec4(decodeVec2(data.z),decodeVec2(data.w));
 	vec3 normal = mat3(gbufferModelViewInverse) * clamp(worldToView( decode(dataUnpacked0.yw) ),-1.,1.);
@@ -393,7 +396,7 @@ void main() {
 
 	float lightLeakFix = clamp(pow(eyeBrightnessSmooth.y/240. + lightmap.y,2.0) ,0.0,1.0);
 
-	gl_FragData[1] = vec4(0.0,0.0, texelFetch2D(colortex14, ivec2(gl_FragCoord.xy), 0).b, texelFetch2D(colortex14,ivec2((floor(gl_FragCoord.xy)/VL_RENDER_SCALE*texelSize+0.5*texelSize)/texelSize),0).a);
+	gl_FragData[1] = vec4(0.0,0.0, texelFetch(colortex14, ivec2(gl_FragCoord.xy), 0).b, texelFetch(colortex14,ivec2((floor(gl_FragCoord.xy)/VL_RENDER_SCALE*texelSize+0.5*texelSize)/texelSize),0).a);
 
 
 	// bool lightningBolt = abs(dataUnpacked1.w-0.5) <0.01;
@@ -404,12 +407,12 @@ void main() {
 	bool hand = abs(dataUnpacked1.w-0.75) < 0.01;
 	// bool blocklights = abs(dataUnpacked1.w-0.8) <0.01;
 
-	float z = texelFetch2D(depthtex1,ivec2(gl_FragCoord.xy),0).x;
-	float z0 = texelFetch2D(depthtex0,ivec2(gl_FragCoord.xy),0).x;
+	float z = texelFetch(depthtex1,ivec2(gl_FragCoord.xy),0).x;
+	float z0 = texelFetch(depthtex0,ivec2(gl_FragCoord.xy),0).x;
 
 	#if defined DISTANT_HORIZONS || defined VOXY
-		float DH_depth1 = texelFetch2D(dhVoxyDepthTex1,ivec2(gl_FragCoord.xy),0).x;
-		float DH_depth0 = texelFetch2D(dhVoxyDepthTex,ivec2(gl_FragCoord.xy),0).x;
+		float DH_depth1 = texelFetch(dhVoxyDepthTex1,ivec2(gl_FragCoord.xy),0).x;
+		float DH_depth0 = texelFetch(dhVoxyDepthTex,ivec2(gl_FragCoord.xy),0).x;
 
 		float swappedDepth = z >= 1.0 ? DH_depth1 : z;
 	#else
@@ -453,7 +456,7 @@ void main() {
 	else
 		gl_FragData[2] = vec4(vec2(0.0), 65000.0, 65000.0);
 
-	vec3 FlatNormals = normalize(texture2D(colortex15,texcoord).rgb * 2.0 - 1.0);
+	vec3 FlatNormals = normalize(texture(colortex15,texcoord).rgb * 2.0 - 1.0);
 
 	#if indirect_effect == SSAO_FILTERED || indirect_effect == SSAO_HQ
 
@@ -472,9 +475,9 @@ void main() {
 
 	/*------------- VOLUMETRICS BEHIND TRANSLUCENTS PASS-THROUGH -------------*/
 	// colortex10 is the history buffer used in reprojection of volumetrics, i can just hijack that.
-	// gl_FragData[3] = texture2D(colortex10, texcoord);
+	// gl_FragData[3] = texture(colortex10, texcoord);
 	
-	// if(texture2D(colortex7,texcoord).a > 0.0) {
+	// if(texture(colortex7,texcoord).a > 0.0) {
 	// 	vec4 VL = BilateralUpscale_VLFOG(colortex13, depthtex1, gl_FragCoord.xy - 1.5, ld(z));
 		
 	// 	// gl_FragData[3].rgb += VL.rgb * gl_FragData[3].a;
@@ -487,14 +490,16 @@ void main() {
 #if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
 	vec3 feetPlayerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
 	#ifdef END_SHADER
-		vec3 WsunVec = normalize(END_LIGHT_POS-(feetPlayerPos+cameraPosition));
+		vec3 sunVec = normalize(END_LIGHT_POS-(feetPlayerPos+cameraPosition));
+	#else
+		vec3 sunVec = WsunVec;
 	#endif
 
-	float SpecularTex = texture2D(colortex8,texcoord).z;
+	float SpecularTex = texture(colortex8,texcoord).z;
 	float LabSSS = clamp((-64.0 + SpecularTex * 255.0) / 191.0 ,0.0,1.0);
 
-	float NdotL = clamp(dot(normal,WsunVec),0.0,1.0);
-	float vanillAO = clamp(texture2D(colortex15,texcoord).a,0.0,1.0)  ;
+	float NdotL = clamp(dot(normal, sunVec),0.0,1.0);
+	float vanillAO = clamp(texture(colortex15,texcoord).a,0.0,1.0)  ;
 
 	#ifdef END_SHADER
 		float minshadowfilt = Min_Shadow_Filter_Radius_END;
@@ -579,7 +584,7 @@ void main() {
 					
 						float weight = 3.0 + (i+noise) * rdMul/SHADOW_FILTER_SAMPLE_COUNT*shadowMapResolution*distortFactor/2.7;
 						
-						float d = texelFetch2D(shadow, ivec2((projectedShadowPosition.xy+offsetS*rdMul)*shadowMapResolution),0).x;
+						float d = texelFetch(shadow, ivec2((projectedShadowPosition.xy+offsetS*rdMul)*shadowMapResolution),0).x;
 						float b = smoothstep(weight*diffthresh/2.0, weight*diffthresh, projectedShadowPosition.z - d);
 
 						blockerCount += b;

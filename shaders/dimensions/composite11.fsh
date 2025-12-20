@@ -1,6 +1,7 @@
 #include "/lib/settings.glsl"
 
-varying vec2 texcoord;
+in vec2 texcoord;
+
 uniform vec2 texelSize;
 
 uniform sampler2D colortex7;
@@ -57,17 +58,17 @@ vec4 SampleTextureCatmullRom(sampler2D tex, vec2 uv, vec2 texSize )
     texPos12 *= texelSize;
 
     vec4 result = vec4(0.0);
-    result += texture2D(tex, vec2(texPos0.x,  texPos0.y)) * w0.x * w0.y;
-    result += texture2D(tex, vec2(texPos12.x, texPos0.y)) * w12.x * w0.y;
-    result += texture2D(tex, vec2(texPos3.x,  texPos0.y)) * w3.x * w0.y;
+    result += texture(tex, vec2(texPos0.x,  texPos0.y)) * w0.x * w0.y;
+    result += texture(tex, vec2(texPos12.x, texPos0.y)) * w12.x * w0.y;
+    result += texture(tex, vec2(texPos3.x,  texPos0.y)) * w3.x * w0.y;
 
-    result += texture2D(tex, vec2(texPos0.x,  texPos12.y)) * w0.x * w12.y;
-    result += texture2D(tex, vec2(texPos12.x, texPos12.y)) * w12.x * w12.y;
-    result += texture2D(tex, vec2(texPos3.x,  texPos12.y)) * w3.x * w12.y;
+    result += texture(tex, vec2(texPos0.x,  texPos12.y)) * w0.x * w12.y;
+    result += texture(tex, vec2(texPos12.x, texPos12.y)) * w12.x * w12.y;
+    result += texture(tex, vec2(texPos3.x,  texPos12.y)) * w3.x * w12.y;
 
-    result += texture2D(tex, vec2(texPos0.x,  texPos3.y)) * w0.x * w3.y;
-    result += texture2D(tex, vec2(texPos12.x, texPos3.y)) * w12.x * w3.y;
-    result += texture2D(tex, vec2(texPos3.x,  texPos3.y)) * w3.x * w3.y;
+    result += texture(tex, vec2(texPos0.x,  texPos3.y)) * w0.x * w3.y;
+    result += texture(tex, vec2(texPos12.x, texPos3.y)) * w12.x * w3.y;
+    result += texture(tex, vec2(texPos3.x,  texPos3.y)) * w3.x * w3.y;
 
     return result;
 }
@@ -106,10 +107,10 @@ vec3 colorGrading(vec3 color) {
 vec3 contrastAdaptiveSharpening(vec3 color, vec2 texcoord){
   float sharpen_strength = float(SHARPENING)/100.0;
   //Weights : 1 in the center, 0.5 middle, 0.25 corners
-  vec3 albedoCurrent1 = texture2D(colortex7, texcoord + vec2(texelSize.x,texelSize.y)/MC_RENDER_QUALITY*0.5).rgb;
-  vec3 albedoCurrent2 = texture2D(colortex7, texcoord + vec2(texelSize.x,-texelSize.y)/MC_RENDER_QUALITY*0.5).rgb;
-  vec3 albedoCurrent3 = texture2D(colortex7, texcoord + vec2(-texelSize.x,-texelSize.y)/MC_RENDER_QUALITY*0.5).rgb;
-  vec3 albedoCurrent4 = texture2D(colortex7, texcoord + vec2(-texelSize.x,texelSize.y)/MC_RENDER_QUALITY*0.5).rgb;
+  vec3 albedoCurrent1 = texture(colortex7, texcoord + vec2(texelSize.x,texelSize.y)/MC_RENDER_QUALITY*0.5).rgb;
+  vec3 albedoCurrent2 = texture(colortex7, texcoord + vec2(texelSize.x,-texelSize.y)/MC_RENDER_QUALITY*0.5).rgb;
+  vec3 albedoCurrent3 = texture(colortex7, texcoord + vec2(-texelSize.x,-texelSize.y)/MC_RENDER_QUALITY*0.5).rgb;
+  vec3 albedoCurrent4 = texture(colortex7, texcoord + vec2(-texelSize.x,texelSize.y)/MC_RENDER_QUALITY*0.5).rgb;
  
   vec3 m1 = -0.5/3.5*color + albedoCurrent1/3.5 + albedoCurrent2/3.5 + albedoCurrent3/3.5 + albedoCurrent4/3.5;
   
@@ -141,7 +142,7 @@ float interleaved_gradientNoise(){
 	return noise;
 }
 float blueNoise(){
-  return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
+  return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
 }
 
 vec3 chromaticAberration(vec2 UV){
@@ -154,9 +155,9 @@ vec3 chromaticAberration(vec2 UV){
   float aberrationStrength = CHROMATIC_ABERRATION_STRENGTH * vignette;
 
   vec3 color = vec3(0.0);
-  color.r = texture2D(colortex7, (centeredUV - (centeredUV + centeredUV*noise) * aberrationStrength) + 0.5).r;
-  color.g = texture2D(colortex7, texcoord).g;
-  color.b = texture2D(colortex7, (centeredUV + (centeredUV + centeredUV*noise) * aberrationStrength) + 0.5).b;
+  color.r = texture(colortex7, (centeredUV - (centeredUV + centeredUV*noise) * aberrationStrength) + 0.5).r;
+  color.g = texture(colortex7, texcoord).g;
+  color.b = texture(colortex7, (centeredUV + (centeredUV + centeredUV*noise) * aberrationStrength) + 0.5).b;
 
   return color;
 }
@@ -168,7 +169,7 @@ void main() {
   #ifdef CHROMATIC_ABERRATION
 	  vec3 color = chromaticAberration(texcoord);
   #else
-	  vec3 color = texture2D(colortex7,texcoord).rgb;
+	  vec3 color = texture(colortex7,texcoord).rgb;
   #endif
 
 	#if SHARPENING > 0

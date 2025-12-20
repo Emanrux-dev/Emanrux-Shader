@@ -5,6 +5,8 @@
 #include "/lib/entities.glsl"
 #include "/lib/items.glsl"
 
+#include "/lib/SSBOs.glsl"
+
 /*
 !! DO NOT REMOVE !!
 This code is from Chocapic13' shaders
@@ -30,7 +32,7 @@ Read the terms of modification and sharing before changing something below pleas
 
 
 out DATA {
-	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES
+	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && !defined CUTOUT
 		vec4 grassSideCheck;
 		vec3 centerPosition;
 	#endif
@@ -57,15 +59,15 @@ out DATA {
 } data_out;
 
 #ifdef MC_NORMAL_MAP
-	attribute vec4 at_tangent;
+	in vec4 at_tangent;
 #endif
 
 uniform float frameTimeCounter;
 const float PI48 = 150.796447372*WAVY_SPEED;
 float pi2wt = PI48*frameTimeCounter;
 
-attribute vec4 mc_Entity;
-attribute vec4 mc_midTexCoord;
+in vec4 mc_Entity;
+in vec4 mc_midTexCoord;
 
 uniform int blockEntityId;
 uniform int entityId;
@@ -75,9 +77,9 @@ uniform int heldItemId;
 uniform int heldItemId2;
 
 #ifdef IRIS_FEATURE_BLOCK_EMISSION_ATTRIBUTE
-	attribute vec4 at_midBlock;
+	in vec4 at_midBlock;
 #else
-	attribute vec3 at_midBlock;
+	in vec3 at_midBlock;
 #endif
 
 uniform int frameCounter;
@@ -154,7 +156,7 @@ vec3 calcMovePlants(in vec3 pos) {
    return vec3(move1.x,move1y,move1.y)*5.*WAVY_STRENGTH;
 }
 
-vec3 calcWaveLeaves(in vec3 pos, in float fm, in float mm, in float ma, in float f0, in float f1, in float f2, in float f3, in float f4, in float f5) {
+vec3 calcWaveLeaves(in vec3 pos) {
 
     float magnitude = abs(sin(dot(vec4(frameTimeCounter, pos),vec4(1.0,0.005,0.005,0.005)))*0.5+0.72)*0.013;
 	vec3 ret = (sin(pi2wt*vec3(0.0063,0.0224,0.0015)*1.5 - pos))*magnitude;
@@ -162,8 +164,8 @@ vec3 calcWaveLeaves(in vec3 pos, in float fm, in float mm, in float ma, in float
     return ret;
 }
 
-vec3 calcMoveLeaves(in vec3 pos, in float f0, in float f1, in float f2, in float f3, in float f4, in float f5, in vec3 amp1, in vec3 amp2) {
-    vec3 move1 = calcWaveLeaves(pos      , 0.0054, 0.0400, 0.0400, 0.0127, 0.0089, 0.0114, 0.0063, 0.0224, 0.0015) * amp1;
+vec3 calcMoveLeaves(in vec3 pos, in vec3 amp1) {
+    vec3 move1 = calcWaveLeaves(pos) * amp1;
     return move1*5.*WAVY_STRENGTH;
 }
 vec3 srgbToLinear2(vec3 srgb){
@@ -211,7 +213,7 @@ float densityAtPos(in vec3 pos){
 	vec2 coord =  uv / 512.0;
 	
 	//The y channel has an offset to avoid using two textures fetches
-	vec2 xy = texture2D(noisetex, coord).yx;
+	vec2 xy = texture(noisetex, coord).yx;
 
 	return mix(xy.r,xy.g, f.y);
 }
@@ -306,86 +308,69 @@ void main() {
 
 	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && (defined GRASS_DETECT_FALLOFF || defined GRASS_DETECT_INV_FALLOFF || REPLACE_SHORT_GRASS > 0) && !defined BLOCKENTITIES
 
-		data_out.grassSideCheck = vec4(0.0);
-	
-		if(length(worldpos) < min(GRASS_RANGE, 0.5*float(LpvSize)) && data_out.blockID == 85 && worldNormals.y > 0.9) {
+		#ifndef CUTOUT
+			data_out.grassSideCheck = vec4(0.0);
+		
+			if(length(worldpos) < min(GRASS_RANGE, 0.5*float(LpvSize)) && data_out.blockID == 85 && worldNormals.y > 0.9) {
 
-			float fractYPos = fract(worldpos.y+cameraPosition.y);
-			if(fractYPos > 0.9999 || fractYPos < 0.0001 || abs(fractYPos - 0.5) < 0.0001) {
+				float fractYPos = fract(worldpos.y+cameraPosition.y);
+				if(fractYPos > 0.9999 || fractYPos < 0.0001 || abs(fractYPos - 0.5) < 0.0001) {
 
-				data_out.centerPosition = worldpos + at_midBlock.xyz / 64.0;
+					data_out.centerPosition = worldpos + at_midBlock.xyz / 64.0;
 
-				vec3 LPVpos = GetLpvPosition(data_out.centerPosition);
+					vec3 LPVpos = GetLpvPosition(data_out.centerPosition);
 
-				#if REPLACE_SHORT_GRASS > 0
-					uint blockTop = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y + 0.6, LPVpos.z));
-				#else
-					uint blockTop = 0;
-				#endif
+					#if REPLACE_SHORT_GRASS > 0
+						uint blockTop = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y + 0.6, LPVpos.z));
+					#else
+						uint blockTop = 0;
+					#endif
 
-				if(blockTop == 12 || blockTop > 4000) {
-					data_out.grassSideCheck = vec4(2.0);
-				}
-				#if REPLACE_SHORT_GRASS < 2
-				else {
-					uint blockEast = GetVoxelBlock(ivec3(LPVpos.x + 1.0, LPVpos.y + 0.6, LPVpos.z));
-					uint blockWest = GetVoxelBlock(ivec3(LPVpos.x - 1.0, LPVpos.y + 0.6, LPVpos.z));
-					uint blockSouth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y + 0.6, LPVpos.z + 1.0));
-					uint blockNorth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y + 0.6, LPVpos.z - 1.0));
+					if(blockTop == 12 || blockTop > 4000) {
+						data_out.grassSideCheck = vec4(2.0);
+					}
+					#if REPLACE_SHORT_GRASS < 2
+					else {
+						uint blockEast = GetVoxelBlock(ivec3(LPVpos.x + 1.0, LPVpos.y + 0.6, LPVpos.z));
+						uint blockWest = GetVoxelBlock(ivec3(LPVpos.x - 1.0, LPVpos.y + 0.6, LPVpos.z));
+						uint blockSouth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y + 0.6, LPVpos.z + 1.0));
+						uint blockNorth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y + 0.6, LPVpos.z - 1.0));
 
-					if(blockEast > 4000 || blockEast == 12 || (blockEast > 80 && blockEast < 86) || blockEast == 503 || (blockEast > 406 && blockEast < 440)) {data_out.grassSideCheck.x = 1.0;} else {
-						#ifdef GRASS_DETECT_FALLOFF
-							blockEast = GetVoxelBlock(ivec3(LPVpos.x + 1.0, LPVpos.y, LPVpos.z));
-							if(blockEast != 85) {data_out.grassSideCheck.x = -1.0;}
+						if(blockEast > 4000 || blockEast == 12 || (blockEast > 80 && blockEast < 86) || blockEast == 503 || (blockEast > 406 && blockEast < 440)) {data_out.grassSideCheck.x = 1.0;} else {
+							#ifdef GRASS_DETECT_FALLOFF
+								blockEast = GetVoxelBlock(ivec3(LPVpos.x + 1.0, LPVpos.y, LPVpos.z));
+								if(blockEast != 85) {data_out.grassSideCheck.x = -1.0;}
+							#endif
+						}
+						if(blockWest > 4000 || blockWest == 12 || (blockWest > 80 && blockWest < 86) || blockWest == 503 || (blockWest > 406 && blockWest < 440)) {data_out.grassSideCheck.y = 1.0;} else {
+							#ifdef GRASS_DETECT_FALLOFF
+								blockWest = GetVoxelBlock(ivec3(LPVpos.x - 1.0, LPVpos.y, LPVpos.z));
+								if(blockWest != 85) {data_out.grassSideCheck.y = -1.0;}
+							#endif
+						}
+						if(blockSouth > 4000 || blockSouth == 12 || (blockSouth > 80 && blockSouth < 86) || blockSouth == 503 || (blockSouth > 406 && blockSouth < 440)) {data_out.grassSideCheck.z = 1.0;} else {
+							#ifdef GRASS_DETECT_FALLOFF
+								blockSouth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y, LPVpos.z+ 1.0));
+								if(blockSouth != 85) {data_out.grassSideCheck.z = -1.0;}
+							#endif
+						}
+						if(blockNorth > 4000 || blockNorth == 12 || (blockNorth > 80 && blockNorth < 86) || blockNorth == 503 || (blockNorth > 406 && blockNorth < 440)) {data_out.grassSideCheck.w = 1.0;} else {
+							#ifdef GRASS_DETECT_FALLOFF
+								blockNorth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y, LPVpos.z - 1.0));
+								if(blockNorth != 85) {data_out.grassSideCheck.w = -1.0;}
+							#endif
+						}
+						#ifndef GRASS_DETECT_INV_FALLOFF
+							data_out.grassSideCheck = clamp(data_out.grassSideCheck, -1.0, 0.0);
 						#endif
 					}
-					if(blockWest > 4000 || blockWest == 12 || (blockWest > 80 && blockWest < 86) || blockWest == 503 || (blockWest > 406 && blockWest < 440)) {data_out.grassSideCheck.y = 1.0;} else {
-						#ifdef GRASS_DETECT_FALLOFF
-							blockWest = GetVoxelBlock(ivec3(LPVpos.x - 1.0, LPVpos.y, LPVpos.z));
-							if(blockWest != 85) {data_out.grassSideCheck.y = -1.0;}
-						#endif
-					}
-					if(blockSouth > 4000 || blockSouth == 12 || (blockSouth > 80 && blockSouth < 86) || blockSouth == 503 || (blockSouth > 406 && blockSouth < 440)) {data_out.grassSideCheck.z = 1.0;} else {
-						#ifdef GRASS_DETECT_FALLOFF
-							blockSouth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y, LPVpos.z+ 1.0));
-							if(blockSouth != 85) {data_out.grassSideCheck.z = -1.0;}
-						#endif
-					}
-					if(blockNorth > 4000 || blockNorth == 12 || (blockNorth > 80 && blockNorth < 86) || blockNorth == 503 || (blockNorth > 406 && blockNorth < 440)) {data_out.grassSideCheck.w = 1.0;} else {
-						#ifdef GRASS_DETECT_FALLOFF
-							blockNorth = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y, LPVpos.z - 1.0));
-							if(blockNorth != 85) {data_out.grassSideCheck.w = -1.0;}
-						#endif
-					}
-					#ifndef GRASS_DETECT_INV_FALLOFF
-						data_out.grassSideCheck = clamp(data_out.grassSideCheck, -1.0, 0.0);
 					#endif
 				}
-				#endif
-			}
-		}
-
-		#if REPLACE_SHORT_GRASS > 0
-			#if GRASS_DENSITY == 3
-				float maxShortGrassRange = 28.0;
-			#elif GRASS_DENSITY == 2
-				float maxShortGrassRange = 24.0;
-			#elif GRASS_DENSITY == 2
-				float maxShortGrassRange = 20.0;
-			#else
-				float maxShortGrassRange = 16.0;
-			#endif
-
-			if(length(worldpos) < maxShortGrassRange && data_out.blockID == 12) {
-				data_out.centerPosition = worldpos + at_midBlock.xyz / 64.0;
-				vec3 LPVpos = GetLpvPosition(data_out.centerPosition);
-				uint blockBelow = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y - 0.6, LPVpos.z));
-				if(blockBelow == 85) data_out.blockID = -10;
 			}
 		#endif
 	#endif
 
-	#ifdef WAVY_PLANTS
+	#if defined WAVY_PLANTS && !defined ENTITIES && !defined HAND
 		// also use normal, so up/down facing geometry does not get detatched from its model parts.
 		bool InterpolateFromBase = gl_MultiTexCoord0.t < max(mc_midTexCoord.t, abs(worldNormals.y));
 
@@ -408,7 +393,7 @@ void main() {
 
 			// apply displacement for waving leaf blocks specifically, overwriting the other waving mode. these wave off of the air. they wave uniformly
 			if(mc_Entity.x == BLOCK_AIR_WAVING) {
-				worldpos += calcMoveLeaves(worldpos + cameraPosition, 0.0040, 0.0064, 0.0043, 0.0035, 0.0037, 0.0041, vec3(1.0,0.2,1.0), vec3(0.5,0.1,0.5))*data_out.lmtexcoord.w;
+				worldpos += calcMoveLeaves(worldpos + cameraPosition, vec3(1.0,0.2,1.0))*data_out.lmtexcoord.w;
 			} else {
 				// apply displacement for waving plant blocks
 				worldpos += calcMovePlants(worldpos + cameraPosition) * max(data_out.lmtexcoord.w,0.5);
@@ -429,7 +414,12 @@ void main() {
 			gl_Position = vec4(worldpos, 0.0);
 		#endif
 
-		#ifdef BLOCKENTITIES
+		#if defined PLANET_CURVATURE && !defined HAND && (defined BLOCKENTITIES || defined CUTOUT)
+			float curvature = length(worldpos.xyz) / (16.0*8.0);
+			worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
+		#endif
+
+		#if defined BLOCKENTITIES || defined CUTOUT
 			gl_Position = toClipSpace3(mat3(gbufferModelView) * vec3(worldpos) + gbufferModelView[3].xyz);
 		#endif
 	#else
@@ -445,7 +435,7 @@ void main() {
 	#endif
 #endif
 
-	#if !defined SHADER_GRASS || defined ENTITIES || defined HAND || defined BLOCKENTITIES
+	#if !defined SHADER_GRASS || defined ENTITIES || defined HAND || defined BLOCKENTITIES || defined CUTOUT
 		#ifdef TAA_UPSCALING
 			gl_Position.xy = gl_Position.xy * RENDER_SCALE + RENDER_SCALE * gl_Position.w - gl_Position.w;
 		#endif
@@ -465,7 +455,7 @@ void main() {
 		YearCycleColor(data_out.color.rgb, gl_Color.rgb, mc_Entity.x == BLOCK_AIR_WAVING, true);
 	#endif
 
-	#if DOF_QUALITY == 5 && !defined SHADER_GRASS && (defined ENTITIES || defined HAND)
+	#if DOF_QUALITY == 5 && ((defined SHADER_GRASS && (defined ENTITIES || defined HAND || defined CUTOUT || defined BLOCKENTIIES)) || !defined SHADER_GRASS)
 		vec2 jitter = clamp(jitter_offsets[frameCounter % 64], -1.0, 1.0);
 		jitter = rotate(radians(float(frameCounter))) * jitter;
 		jitter.y *= aspectRatio;
@@ -481,5 +471,25 @@ void main() {
 
 		vec2 totalOffset = (jitter * JITTER_STRENGTH) * focusMul * 1e-2;
 		gl_Position.xy += hideGUI >= 1 ? totalOffset : vec2(0);
+	#endif
+
+	
+	#if defined SHADER_GRASS && REPLACE_SHORT_GRASS > 0 && defined CUTOUT
+		#if GRASS_DENSITY == 3
+			const float maxShortGrassRange = 28.0;
+		#elif GRASS_DENSITY == 2
+			const float maxShortGrassRange = 24.0;
+		#elif GRASS_DENSITY == 1
+			const float maxShortGrassRange = 20.0;
+		#else
+			const float maxShortGrassRange = 16.0;
+		#endif
+
+		if(length(worldpos) < maxShortGrassRange && data_out.blockID == 12) {
+			vec3 centerPosition = worldpos + at_midBlock.xyz / 64.0;
+			vec3 LPVpos = GetLpvPosition(centerPosition);
+			uint blockBelow = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y - 0.6, LPVpos.z));
+			if(blockBelow == 85) gl_Position.z -= 10000.0;
+		}
 	#endif
 }

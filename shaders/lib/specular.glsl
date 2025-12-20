@@ -325,10 +325,10 @@ vec4 screenSpaceReflections(
 			// vec2 clampedRes = max(vec2(viewWidth,viewHeight),vec2(1920.0,1080.));
 			// vec2 resScale = vec2(1920.,1080.)/clampedRes;
 			// vec2 bloomTileUV = (((previousPosition.xy/texelSize)*2.0 + 0.5)*texelSize/2.0) / clampedRes*vec2(1920.,1080.);
-			// reflection.rgb = texture2D(colortex6, bloomTileUV / 4.0).rgb;
-			reflection.rgb = texture2D(colortex5, previousPosition.xy).rgb;
+			// reflection.rgb = texture(colortex6, bloomTileUV / 4.0).rgb;
+			reflection.rgb = texture(colortex5, previousPosition.xy).rgb;
 		#else
-			reflection.rgb = texture2DLod(colortex5, previousPosition.xy, LOD).rgb;
+			reflection.rgb = textureLod(colortex5, previousPosition.xy, LOD).rgb;
 		#endif
 	}
 
@@ -348,7 +348,7 @@ vec4 screenSpaceReflections(
 // );
 // // reflectLength = pow(1-pow(1-reflectLength,2),5) * 6;
 // reflectLength = (exp(-4*(1-reflectLength))) * 6;
-// Reflections.rgb = texture2D(colortex6, bloomTileoffsetUV[0]).rgb;
+// Reflections.rgb = texture(colortex6, bloomTileoffsetUV[0]).rgb;
 
 	return reflection;
 }

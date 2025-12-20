@@ -1,15 +1,15 @@
 #include "/lib/settings.glsl"
 
-
-varying vec4 pos;
-varying vec4 localPos;
-varying vec4 vPos;
-varying vec4 gcolor;
-varying vec2 lightmapCoords;
-varying vec4 normals_and_materials;
-flat varying float SSSAMOUNT;
-flat varying float EMISSIVE;
-flat varying int dh_material_id;
+in DATA {
+    vec4 localPos;
+    vec4 vPos;
+    vec4 gcolor;
+    vec2 lightmapCoords;
+    vec4 normalMat;
+    flat float SSSAMOUNT;
+    flat float EMISSIVE;
+    flat int dh_material_id;
+};
 
 uniform float far;
 uniform float nightVision;
@@ -69,7 +69,7 @@ uniform sampler2D noisetex;
 uniform int frameCounter;
 uniform float frameTimeCounter;
 float blueNoise(){
-  return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
+  return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
 }
 float interleaved_gradientNoise_temporal(){
 	return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y)+frameTimeCounter*51.9521);
@@ -96,7 +96,7 @@ float densityAtPos(in vec3 pos){
 	vec2 coord =  uv / 512.0;
 	
 	//The y channel has an offset to avoid using two textures fetches
-	vec2 xy = texture2D(noisetex, coord).yx;
+	vec2 xy = texture(noisetex, coord).yx;
 
 	return mix(xy.r,xy.g, f.y);
 }
@@ -181,8 +181,8 @@ void main() {
         }
     #endif
 
-    vec3 normals = (normals_and_materials.xyz);
-    float materials = normals_and_materials.a;
+    vec3 normals = (normalMat.xyz);
+    float materials = normalMat.a;
 	vec2 PackLightmaps = lightmapCoords;
 
     // PackLightmaps.y *= 1.05;

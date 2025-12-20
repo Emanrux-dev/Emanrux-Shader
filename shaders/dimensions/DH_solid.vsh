@@ -1,15 +1,17 @@
 #include "/lib/settings.glsl"
 #include "/lib/res_params.glsl"
 
-varying vec4 pos;
-varying vec4 localPos;
-varying vec4 vPos;
-varying vec4 gcolor;
-varying vec2 lightmapCoords;
-varying vec4 normals_and_materials;
-flat varying float SSSAMOUNT;
-flat varying float EMISSIVE;
-flat varying int dh_material_id;
+out DATA {
+    vec4 localPos;
+    vec4 vPos;
+    vec4 gcolor;
+    vec2 lightmapCoords;
+    vec4 normalMat;
+    flat float SSSAMOUNT;
+    flat float EMISSIVE;
+    flat int dh_material_id;
+};
+
 uniform float nightVision;
 
 uniform vec2 texelSize;
@@ -109,7 +111,7 @@ void main() {
 	// a mask for DH terrain in general.
 	float MATERIALS = 0.65;
 
-	normals_and_materials = vec4(normalize(gl_NormalMatrix * gl_Normal), MATERIALS);
+	normalMat = vec4(normalize(gl_NormalMatrix * gl_Normal), MATERIALS);
 	dh_material_id = dhMaterialId;
 
 	#if defined Seasons && defined OVERWORLD_SHADER

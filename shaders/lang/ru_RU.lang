@@ -381,8 +381,8 @@ screen.World = Мир
             option.Water_Absorb_G = Поглощ. зеленый (вода)
             option.Water_Absorb_B = Поглощ. синий (вода)
 			
-		option.Vanilla_like_water = Ванильная вода
-		option.Vanilla_like_water.comment = Влючите ваниильную текстуру воды
+		option.VANILLA_LIKE_WATER = Ванильная вода
+		option.VANILLA_LIKE_WATER.comment = Влючите ваниильную текстуру воды
 
 
 screen.Post_Processing = Постобработка
@@ -538,8 +538,8 @@ screen.the_orb = Сфера
      option.ORB_B = Сфера синего
 option.WhiteWorld = Белый мир
 option.WhiteWorld.comment = ЭТО ОТЛАДОЧНЫЙ РЕЖИМ. используется для упрощения просмотра AO. используется для лучшего просмотра поддельного GI (зеленый свет)
-option.ambientLight_only = Только рассеянный свет
-option.ambientLight_only.comment = ЭТО ОТЛАДОЧНЫЙ РЕЖИМ. выключите солнечный свет. Производительность не увеличивается, тени по-прежнему работают в фоновом режиме
+option.AMBIENT_LIGHT_ONLY = Только рассеянный свет
+option.AMBIENT_LIGHT_ONLY.comment = ЭТО ОТЛАДОЧНЫЙ РЕЖИМ. выключите солнечный свет. Производительность не увеличивается, тени по-прежнему работают в фоновом режиме
 option.HURT_AND_DEATH_EFFECT = Эффект боли и смерти
 option.PLANET_GROUND_BRIGHTNESS = Яркость поверхности планеты
 option.ORIGINAL_CHOCAPIC_SKY = Оригинальное Chocapic небо

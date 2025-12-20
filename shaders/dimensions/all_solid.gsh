@@ -284,9 +284,8 @@ void main() {
 
             vec2 Wvertex = vertex.xz+cameraPositionFract.xz+mod(vec2(cameraPositionInt.xz), vec2(20.0));
 
-            vec2 randomDir = 2.0*(texture2D(noisetex, 0.75*Wvertex).xy+texture2D(noisetex, 0.35*Wvertex.yx).xy)-1.0;
+            vec2 randomDir = 2.0*(texture(noisetex, 0.75*Wvertex).xy+texture(noisetex, 0.35*Wvertex.yx).xy)-1.0;
             // vertex.xz -= 0.05*randomDir;
-
 
             vec3 dir = normalize(vertex);
             vec3 originalVertex = vertex;
@@ -297,7 +296,7 @@ void main() {
 
             worldUp *= heightMult;
 
-            originalVertex -= right*0.0625*GRASS_BASE_THICKNESS;
+            originalVertex -= right*0.125*GRASS_BASE_THICKNESS;
 
             vec3 verticies[21];
             float grassHeights[21];

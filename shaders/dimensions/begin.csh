@@ -39,15 +39,15 @@ float luma(vec3 color) {
 }
 vec3 rodSample(vec2 Xi)
 {
-	float r = sqrt(1.0f - Xi.x*Xi.y);
-    float phi = 2 * 3.14159265359 * Xi.y;
+	float r = sqrt(1.0 - Xi.x*Xi.y);
+    float phi = 2.0 * 3.14159265359 * Xi.y;
 
     return normalize(vec3(cos(phi) * r, sin(phi) * r, Xi.x)).xzy;
 }
 //Low discrepancy 2D sequence, integration error is as low as sobol but easier to compute : http://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
 vec2 R2_samples(int n){
 	vec2 alpha = vec2(0.75487765, 0.56984026);
-	return fract(alpha * n);
+	return fract(alpha * float(n));
 }
 
 #define interpolateValue(old_value, new_value, mixhistory) clamp(mix(old_value, new_value, clamp(mixhistory,0.0,1.0)),0.0,65000.)
@@ -76,7 +76,7 @@ vec3 toLinear(vec3 sRGB){
         
         float t = worldTime / 24000.0;
 
-        t *= 1.0 + 1.0 / MONTH_LENGTH;
+        t *= 1.0 + 1.0 / float(MONTH_LENGTH);
 
         float H = t * 2.0 * PI - PI; // hour angle
         
@@ -180,7 +180,7 @@ void main() {
             #else
                 float time = worldTime;
             #endif
-            
+
             float absWorldTime = worldTimeSmooth  + mod(worldDay, 100 - mod(100, MONTH_LENGTH))*24000.0 - 48000.0; // offset by two days to align to vanilla moon phases by default
 
             float yearLengthTicks = float(MONTH_LENGTH) * 12.0 * 24000.0;
@@ -414,7 +414,7 @@ void main() {
 
         skyGroundColSSBO = interpolateValue(skyGroundColSSBO, skyGroundCol, mixhistory);
 
-        #ifdef ambientLight_only
+        #ifdef AMBIENT_LIGHT_ONLY
             lightSourceColorSSBO = vec3(0.0);
 
             sunColorSSBO = vec3(0.0);

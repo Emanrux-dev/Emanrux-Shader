@@ -39,7 +39,7 @@ void main() {
 	for (int i = 0; i < maxITexp; i++){
 			vec2 ij = R2_samples((frameCounter%2000)*maxITexp+i);
 			vec2 tc = 0.5 + (ij-0.5) * 0.7;
-			vec3 sp = texture2D(colortex6, tc/16. * resScale+vec2(0.375*resScale.x+4.5*texelSize.x,.0)).rgb;
+			vec3 sp = texture(colortex6, tc/16. * resScale+vec2(0.375*resScale.x+4.5*texelSize.x,.0)).rgb;
 			avgExp += log(sqrt(luma(sp)));
 			avgB += log(min(dot(sp,vec3(0.07,0.22,0.71)),8e-2));
 	}
@@ -63,7 +63,7 @@ void main() {
 
 	float exposure = max(targetExposure*EXPOSURE_MULTIPLIER, 0.0);
 
-	float currCenterDepth = ld(texture2D(depthtex2, vec2(0.5)*RENDER_SCALE).r);
+	float currCenterDepth = ld(texture(depthtex2, vec2(0.5)*RENDER_SCALE).r);
 	float centerDepth = mix(sqrt(rodExposureDepthSSBO.y/65000.0), currCenterDepth, clamp(DoF_Adaptation_Speed*exp(-0.016/frameTime+1.0)/(6.0+currCenterDepth*far),0.0,1.0));
 	centerDepth = centerDepth * centerDepth * 65000.0;
 

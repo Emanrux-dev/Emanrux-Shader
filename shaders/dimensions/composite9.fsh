@@ -1,6 +1,5 @@
 uniform sampler2D colortex6;
 uniform vec2 texelSize;
-varying vec2 texcoord;
 uniform float viewWidth;
 uniform float viewHeight;
 vec2 resScale = vec2(1920.,1080.)/max(vec2(viewWidth,viewHeight),vec2(1920.0,1080.));
@@ -11,9 +10,9 @@ vec3 gauss1D(vec2 coord,vec2 dir,float alpha,int maxIT){
 	for (int i = -maxIT;i<maxIT+1;i++){
 		float weight = exp(-i*i*alpha*4.0);
 		vec2 spCoord = coord+dir*texelSize*(2.0*i+0.5);
-		tot += vec4(texture2D(colortex6,spCoord).rgb,1.0)*weight*float(spCoord.y > minTC && spCoord.y < maxTC);
+		tot += vec4(texture(colortex6,spCoord).rgb,1.0)*weight*float(spCoord.y > minTC && spCoord.y < maxTC);
 	}
-	return  tot.rgb/max(1.0,tot.a);
+	return tot.rgb/max(1.0,tot.a);
 }
 
 //////////////////////////////VOID MAIN//////////////////////////////

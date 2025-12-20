@@ -8,8 +8,8 @@ Read the terms of modification and sharing before changing something below pleas
 !! DO NOT REMOVE !!
 */
 
-varying vec4 lmtexcoord;
-varying vec4 color;
+out vec4 lmtexcoord;
+out vec4 color;
 
 uniform vec2 texelSize;
 uniform int framemod8;

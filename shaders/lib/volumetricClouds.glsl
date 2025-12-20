@@ -303,7 +303,7 @@ vec2 getCumulonimbusShape(int LOD, in vec3 position, float minHeight, float maxH
 	float posToMax = maxHeight - position.y;
 
 	float cumulonimbusScale = 1.0;
-	//largeCloud = texture2D(noisetex, (samplePos.zx - cloud_movement*6.0) / 17000.0 * cumulonimbusScale * 0.2).b;
+	//largeCloud = texture(noisetex, (samplePos.zx - cloud_movement*6.0) / 17000.0 * cumulonimbusScale * 0.2).b;
 	
 	//largeCloud = abs(largeCloud* -8.0);
 
@@ -850,14 +850,14 @@ vec4 raymarchCloud(
 							shadowPos = shadowPos*vec3(0.5,0.5,0.5/6.0)+0.5;
 
 							#ifdef TRANSLUCENT_COLORED_SHADOWS
-								sh = vec3(shadow2D(shadowtex0, shadowPos).x);
+								sh = vec3(texture(shadowtex0, shadowPos).x);
 
-								if(shadow2D(shadowtex1, shadowPos).x > shadowPos.z && sh.x < 1.0){
+								if(texture(shadowtex1, shadowPos).x > shadowPos.z && sh.x < 1.0){
 									vec4 translucentShadow = texture(shadowcolor0, shadowPos.xy);
 									if(translucentShadow.a < 0.9) sh = normalize(translucentShadow.rgb+0.0001);
 								}
 							#else
-								sh = vec3(shadow2D(shadow, shadowPos).x);
+								sh = vec3(texture(shadow, shadowPos).x);
 							#endif
 						}
 					#else

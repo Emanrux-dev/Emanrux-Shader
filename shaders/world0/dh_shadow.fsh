@@ -3,12 +3,12 @@
 
 #include "/lib/settings.glsl"
 
-flat varying int water;
-varying vec2 texcoord;
+in flat int water;
+in vec2 texcoord;
 
-varying float overdrawCull;
+in float overdrawCull;
 
-uniform sampler2D tex;
+uniform sampler2D gtexture;
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -27,5 +27,5 @@ void main() {
         return;
     }
     
-	gl_FragData[0] = texture2D(tex, texcoord.xy);
+	gl_FragData[0] = texture(gtexture, texcoord.xy);
 }

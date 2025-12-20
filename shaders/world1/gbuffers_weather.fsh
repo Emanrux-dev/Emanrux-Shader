@@ -1,8 +1,8 @@
 #version 430 compatibility
 
 
-varying vec4 lmtexcoord;
-varying vec4 color;
+in vec4 lmtexcoord;
+in vec4 color;
 
 uniform sampler2D gtexture;
 uniform sampler2D gaux1;
@@ -36,10 +36,10 @@ vec3 toScreenSpaceVector(vec3 p) {
 
 void main() {
 /* RENDERTARGETS:2 */
-	gl_FragData[0] = texture2D(gtexture, lmtexcoord.xy)*color;
+	gl_FragData[0] = texture(gtexture, lmtexcoord.xy)*color;
 		gl_FragData[0].a = clamp(gl_FragData[0].a -0.1,0.0,1.0)*0.5;
 		vec3 albedo = toLinear(gl_FragData[0].rgb*color.rgb);
-		vec3 ambient = texture2D(gaux1,(lmtexcoord.zw*15.+0.5)*texelSize).rgb;
+		vec3 ambient = texture(gaux1,(lmtexcoord.zw*15.+0.5)*texelSize).rgb;
 
 		gl_FragData[0].rgb = dot(albedo,vec3(1.0))*ambient*10./3.0/150.*0.1;
 

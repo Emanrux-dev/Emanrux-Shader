@@ -766,54 +766,46 @@ void main() {
 	
 	#ifdef WORLD
 
-		#if SSS_TYPE == 1 || SSS_TYPE == 2
-			float SSSAMOUNT = 0.0;
-
-			if (ShaderGrass) SSSAMOUNT = 0.65;
-
-			/////// ----- SSS ON BLOCKS ----- ///////
-			// strong
-			else if (
-				data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_AIR_WAVING
-			) {
-				SSSAMOUNT = 1.0;
-			}
-			// medium
-			else if (
-				data_in.blockID == BLOCK_GROUND_WAVING || data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL
-				|| data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_UPPER || data_in.blockID == BLOCK_GRASS_TALL_LOWER
-			) {
-				SSSAMOUNT = 0.5;
-			} else
-			if (
-				data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_SSS_WEAK_2 ||
-				data_in.blockID == BLOCK_GLOW_LICHEN || data_in.blockID == BLOCK_SNOW_LAYERS || data_in.blockID == BLOCK_CARPET ||
-				data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER ||
-				data_in.blockID == BLOCK_BAMBOO || data_in.blockID == BLOCK_SAPLING || data_in.blockID == BLOCK_VINE || data_in.blockID == BLOCK_VINE_OTHER
-			) {
-				SSSAMOUNT = 0.5;
-			}
-			
-			// low
-			#ifdef MISC_BLOCK_SSS
-				else if(
-					data_in.blockID == BLOCK_SSS_WEIRD || data_in.blockID == BLOCK_GRASS
-				){
-					SSSAMOUNT = 0.5;
-				}
-			#endif
-
+		float SSSAMOUNT = 0.0;
+		#if (SSS_TYPE == 1 || SSS_TYPE == 2) && !defined HAND
 			#ifdef ENTITIES
 				#ifdef MOB_SSS
-				/////// ----- SSS ON MOBS----- ///////
-				// strong
-				else if(data_in.blockID == ENTITY_SSS_MEDIUM) SSSAMOUNT = 0.75;
-		
-				// medium
-		
-				// low
-				else if(data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER || data_in.blockID == ENTITY_CURRENT_PLAYER) SSSAMOUNT = 0.4;
+					/////// ----- SSS ON MOBS----- ///////
+					// strong
+					if(data_in.blockID == ENTITY_SSS_MEDIUM) SSSAMOUNT = 0.75;
+			
+					// medium
+			
+					// low
+					else if(data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER || data_in.blockID == ENTITY_CURRENT_PLAYER) SSSAMOUNT = 0.4;
 				#endif
+			#else
+				#if defined SHADER_GRASS && !defined CUTOUT
+					if (ShaderGrass) SSSAMOUNT = 0.65;
+					else
+				#endif
+
+				/////// ----- SSS ON BLOCKS ----- ///////
+				// strong
+				if (
+					data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_AIR_WAVING
+				) {
+					SSSAMOUNT = 1.0;
+				}
+				// medium
+				else if (
+					data_in.blockID == BLOCK_GROUND_WAVING || data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL ||
+					data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_UPPER || data_in.blockID == BLOCK_GRASS_TALL_LOWER ||
+					data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_SSS_WEAK_2 ||
+					data_in.blockID == BLOCK_GLOW_LICHEN || data_in.blockID == BLOCK_SNOW_LAYERS || data_in.blockID == BLOCK_CARPET ||
+					data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER ||
+					data_in.blockID == BLOCK_BAMBOO || data_in.blockID == BLOCK_SAPLING || data_in.blockID == BLOCK_VINE || data_in.blockID == BLOCK_VINE_OTHER
+					#ifdef MISC_BLOCK_SSS
+					|| data_in.blockID == BLOCK_SSS_WEIRD || data_in.blockID == BLOCK_GRASS
+					#endif
+				) {
+					SSSAMOUNT = 0.5;
+				}
 			#endif
 
 			#ifdef BLOCKENTITIES
@@ -821,7 +813,7 @@ void main() {
 				// strong
 
 				// medium
-				else if(data_in.blockID == BLOCK_SSS_WEAK_3) SSSAMOUNT = 0.4;
+				if(data_in.blockID == BLOCK_SSS_WEAK_3) SSSAMOUNT = 0.4;
 
 				// low
 

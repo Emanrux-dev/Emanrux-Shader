@@ -58,7 +58,7 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 					voxelId = uint(blockEntityId);
 			}
 			else if (currentRenderedItemId > 100 && currentRenderedItemId < 300) {
-				#if MC_VERSION > 12100 && MC_VERSION != 12109 && MC_VERSION != 12110
+				#if MC_VERSION > 12100 && ((MC_VERSION != 12109 && MC_VERSION != 12110) || IRIS_VERSION >= 10907)
 				if (entityId != ENTITY_ITEM_FRAME && entityId != ENTITY_CURRENT_PLAYER)
 				#else
 				if (entityId != ENTITY_ITEM_FRAME && entityId != ENTITY_PLAYER)

@@ -168,6 +168,7 @@ vec3 calcMoveLeaves(in vec3 pos, in vec3 amp1) {
     vec3 move1 = calcWaveLeaves(pos) * amp1;
     return move1*5.*WAVY_STRENGTH;
 }
+
 vec3 srgbToLinear2(vec3 srgb){
     return mix(
         srgb / 12.92,
@@ -291,7 +292,7 @@ void main() {
 			}
 		#endif
 
-		#if PUDDLE_MODE > 0 || ShaderSnow > 0
+		#if (PUDDLE_MODE > 0 || ShaderSnow > 0) && !defined CUTOUT
 			if(data_out.blockID == 215) data_out.lmtexcoord.w = 0.0;
 		#endif
 	#endif

@@ -112,7 +112,7 @@ float invertLinearizeDepthFast(const in float z) {
 
 vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, bool hand, inout float reflectionLength, inout bool depthCheck){
 
-	const float biasAmount = 0.00003;
+	const float biasAmount = 0.0001;
 
 	float _near = near; float _far = far;
 
@@ -146,7 +146,7 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 
 	#if (defined VOXY && defined VOXY_REFLECTIONS) || (defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS)
 
-		const float biasAmount2 = 0.000015;
+		const float biasAmount2 = 0.00005;
 
 
 		_near = dhVoxyNearPlane;
@@ -293,7 +293,7 @@ vec4 screenSpaceReflections(
 
 	vec3 raytracePos = rayTraceSpeculars(reflectedVector, viewPos, noise, quality, isHand, reflectionLength, depthCheck);
 	// if (raytracePos.z > 1.001 || distance(gl_FragCoord.xy*texelSize, raytracePos.xy) < 0.002) return reflection;
-	if (raytracePos.z > 1.001) return reflection;
+	if (raytracePos.z > 1.00001) return reflection;
 	
 	// use higher LOD as the reflection goes on, to blur it. this helps denoise a little.
 
@@ -486,12 +486,10 @@ vec3 specularReflections(
 	float reflectionVisibilty = getReflectionVisibility(f0, roughness);
 
 	vec4 enviornmentReflection = vec4(0.0);
+	float backgroundReflectMask = lightmap;
 
 	#if (defined DEFERRED_BACKGROUND_REFLECTION || defined FORWARD_BACKGROUND_REFLECTION) || (DEFERRED_SSR_QUALITY > 0 || FORWARD_SSR_QUALITY > 0)
 		if(reflectionVisibilty < 1.0){
-
-			float backgroundReflectMask = lightmap;
-			
 			#if defined DEFERRED_BACKGROUND_REFLECTION || defined FORWARD_BACKGROUND_REFLECTION
 				#if !defined OVERWORLD_SHADER
 					vec3 backgroundReflection = volumetricsFromTex(reflectedVector_L, colortex4, roughness).rgb / 1200.0;
@@ -531,12 +529,12 @@ vec3 specularReflections(
 		}
 	#endif
 
-	#if defined OVERWORLD_SHADER || SUN_SPECULAR_MULT > 0
-		vec3 lightSourceReflection = SUN_SPECULAR_MULT * lightColor * GGX(normal, -playerPos, lightPos, roughness, reflectance, metalAlbedoTint);
+	#if defined OVERWORLD_SHADER && SUN_SPECULAR_MULT > 0
+		vec3 lightSourceReflection = backgroundReflectMask*SUN_SPECULAR_MULT * lightColor * GGX(normal, -playerPos, lightPos, roughness, reflectance, metalAlbedoTint);
 		#if DEFERRED_SSR_QUALITY > 0 || FORWARD_SSR_QUALITY > 0
 			specularReflections += mix(lightSourceReflection, vec3(0.0), enviornmentReflection.a);
 		#else
-			specularReflections += lightSourceReflection;
+			specularReflections += lightSourceReflection*backgroundReflectMask;
 		#endif
 	#endif
 

@@ -531,8 +531,8 @@ void main() {
         }
 
         if (blockId == BLOCK_FURNACE_LIT) {
-            lightColor = vec3(0.8, 0.7, 0.1);
-            lightRange = 13.0;
+            lightColor = vec3(0.85, 0.6, 0.12);
+            lightRange = 12.0;
         }
 
         if (blockId == BLOCK_GLOW_LICHEN || blockId == ITEM_GLOW_LICHEN) {

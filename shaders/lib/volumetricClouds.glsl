@@ -10,13 +10,14 @@ uniform int worldDay;
 uniform int worldTime;
 uniform float moonElevation;
 uniform float worldTimeSmooth;
+uniform float cloudTime;
 #endif
 
 
 #if CLOUD_MOVEMENT_TYPE == 0
 	float cloud_movement = (worldTimeSmooth  + mod(worldDay,100)*24000.0) / 24.0 * Cloud_Speed;
 #else
-	float cloud_movement = frameTimeCounter * Cloud_Speed;
+	float cloud_movement = cloudTime * Cloud_Speed;
 #endif
 
 float lightningFlashTimer = floor(frameTimeCounter * 11.0);
@@ -910,7 +911,7 @@ vec4 raymarchCloud(
 					// normal lightning strikes
 					float horizontalDist = length((newPos.xz) - lightningBoltPosition.xz);
 					if (horizontalDist < 7500.0 && lightningBoltPosition.w > 0.0) {
-						lightningIntensity = exp(-horizontalDist * 0.006) * density * smoothstep(0.0, 0.02, fract(frameTimeCounter)) * lightningFlash;
+						lightningIntensity = exp(-horizontalDist * 0.006) * density * lightningFlash;
 						lighting = mix(lighting, vec3(1.3,1.5,3.0), lightningIntensity);
 					}
 

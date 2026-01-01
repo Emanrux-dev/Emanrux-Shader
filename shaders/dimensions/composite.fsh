@@ -14,6 +14,7 @@ in DATA {
 
 uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
+uniform sampler2D depthtex2;
 
 #ifdef DISTANT_HORIZONS
 	uniform sampler2D dhDepthTex;
@@ -274,7 +275,14 @@ float convertHandDepth_2(in float depth, bool hand) {
 		vec4 viewPos = vec4(0.0);
 		vec3 feetPlayerPos = vec3(0.0);
 
-		float depth = convertHandDepth_2(texelFetch(depthtex1, samplecoord, 0).x, hand);
+		float depth;
+
+		if(hand) {
+			depth = texelFetch(depthtex1, samplecoord, 0).x;
+			convertHandDepth(depth);
+		} else {
+			depth = texelFetch(depthtex2, samplecoord, 0).x;
+		}
 
 		if (depth < 1.0) {
 			feetPlayerPos = vec3(texcoord, depth) * 2.0 - 1.0;
@@ -326,7 +334,14 @@ vec2 SSAO(
 			#if defined DISTANT_HORIZONS || defined VOXY
 				vec3 offsetViewPos = toScreenSpace_DH_SSAO((offsetUV*texelSize - jitterOffsets) * (1.0/RENDER_SCALE), offsetUV, hand);
 			#else
-				float sampleDepth = convertHandDepth_2(texelFetch(depthtex1, offsetUV, 0).x, hand);
+				float sampleDepth;
+				if(hand) {
+					sampleDepth = texelFetch(depthtex1, offsetUV, 0).x;
+					convertHandDepth(sampleDepth);
+				} else {
+					sampleDepth = texelFetch(depthtex2, offsetUV, 0).x;
+				}
+				
 				vec3 offsetViewPos = toScreenSpace(vec3((offsetUV*texelSize - jitterOffsets) * (1.0/RENDER_SCALE), sampleDepth));
 			#endif
 
@@ -411,10 +426,14 @@ void main() {
 	float z0 = texelFetch(depthtex0,ivec2(gl_FragCoord.xy),0).x;
 
 	#if defined DISTANT_HORIZONS || defined VOXY
-		float DH_depth1 = texelFetch(dhVoxyDepthTex1,ivec2(gl_FragCoord.xy),0).x;
-		float DH_depth0 = texelFetch(dhVoxyDepthTex,ivec2(gl_FragCoord.xy),0).x;
-
-		float swappedDepth = z >= 1.0 ? DH_depth1 : z;
+		float DH_depth1 = 1.0;
+		float swappedDepth;
+		if(z >= 1.0) {
+			DH_depth1 = texelFetch(dhVoxyDepthTex1,ivec2(gl_FragCoord.xy),0).x;
+			swappedDepth = DH_depth1;
+		} else {
+			swappedDepth = z;
+		}
 	#else
 		float DH_depth1 = 1.0;
 		float swappedDepth = z;
@@ -442,7 +461,7 @@ void main() {
 		_far = far*4.0;
 
 		if (depth0 >= 1.0) {
-			depth0 = DH_depth0;
+			depth0 = texelFetch(dhVoxyDepthTex,ivec2(gl_FragCoord.xy),0).x;
 			_near = dhVoxyNearPlane;
 			_far = dhVoxyFarPlane;
 		}

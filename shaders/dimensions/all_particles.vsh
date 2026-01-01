@@ -59,6 +59,44 @@ vec4 toClipSpace3(vec3 viewSpacePosition) {
 	in vec4 at_tangent;
 #endif
 
+#ifdef LINES
+	uniform int currentSelectedBlockId;
+	uniform int renderStage;
+	uniform vec3 currentSelectedBlockPos;
+
+	#include "/lib/blocks.glsl"
+
+	const float PI48 = 150.796447372*WAVY_SPEED;
+	float pi2wt = PI48*frameTimeCounter;
+
+	vec2 calcWave(in vec3 pos) {
+
+		float magnitude = abs(sin(dot(vec4(frameTimeCounter, pos),vec4(1.0,0.005,0.005,0.005)))*0.5+0.72)*0.013;
+		vec2 ret = (sin(pi2wt*vec2(0.0063,0.0015)*4. - pos.xz + pos.y*0.05)+0.1)*magnitude;
+
+		return ret;
+	}
+
+	vec3 calcMovePlants(in vec3 pos) {
+		vec2 move1 = calcWave(pos );
+		float move1y = -length(move1);
+	return vec3(move1.x,move1y,move1.y)*5.*WAVY_STRENGTH;
+	}
+
+	vec3 calcWaveLeaves(in vec3 pos) {
+
+		float magnitude = abs(sin(dot(vec4(frameTimeCounter, pos),vec4(1.0,0.005,0.005,0.005)))*0.5+0.72)*0.013;
+		vec3 ret = (sin(pi2wt*vec3(0.0063,0.0224,0.0015)*1.5 - pos))*magnitude;
+
+		return ret;
+	}
+
+	vec3 calcMoveLeaves(in vec3 pos, in vec3 amp1) {
+		vec3 move1 = calcWaveLeaves(pos) * amp1;
+		return move1*5.*WAVY_STRENGTH;
+	}
+#endif
+
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -98,9 +136,19 @@ void main() {
 			}
 		#endif
 
-		#if defined LINES && defined PLANET_CURVATURE
+		#ifdef LINES
+			#ifdef PLANET_CURVATURE
 			float curvature = length(worldpos) / (16*8);
 			worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
+			#endif
+
+			#if defined WAVY_PLANTS
+				bool selectionBox = renderStage == MC_RENDER_STAGE_OUTLINE;
+				if(currentSelectedBlockId == BLOCK_AIR_WAVING && abs(position.z) < 64.0 && selectionBox){
+					// apply displacement for waving leaf blocks specifically, overwriting the other waving mode. these wave off of the air. they wave uniformly
+					worldpos += calcMoveLeaves(worldpos + cameraPosition, vec3(1.0,0.2,1.0))*clamp(eyeBrightnessSmooth.y/240.0,0,1);
+				}
+			#endif
 		#endif
 
 			position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;

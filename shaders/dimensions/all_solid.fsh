@@ -523,8 +523,9 @@ void main() {
 
 	vec2 lmcoord = data_in.lmtexcoord.zw;
 
+	vec4 Color = data_in.color;
+
 	#ifndef COLORWHEEL
-		vec4 Color = data_in.color;
 		float vanillaAO = 1.0 - clamp(Color.a,0,1);
 
 		// don't fix vanilla ao on some custom block models.
@@ -580,7 +581,7 @@ void main() {
 	#endif
 
 	#if (defined BLOCKENTITIES || defined ENTITIES || defined HAND) && !defined TRANSLUCENT_ENTITIES && defined TRANSLUCENT_ENTITIES_DITHER_FALLBACK
-		float entityAlbedo = clamp((Albedo.a - 0.1) * 10.0 / 9.0, 0.0, 1.0);
+		float entityAlbedo = clamp((Albedo.a*Color.a - 0.1) * 10.0 / 9.0, 0.0, 1.0);
 		#ifdef TAA
 			if(entityAlbedo < BN) discard;
 		#else
@@ -788,7 +789,7 @@ void main() {
 				/////// ----- SSS ON BLOCKS ----- ///////
 				// strong
 				if (
-					data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_AIR_WAVING
+					data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_AIR_WAVING || data_in.blockID == BLOCK_SSS_STRONG_2
 				) {
 					SSSAMOUNT = 1.0;
 				}

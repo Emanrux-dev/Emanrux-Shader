@@ -490,8 +490,13 @@ vec2 SSRT_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, boo
 			sampleDepth = texelFetch(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
 		} else
 		#endif
-		{
-			sampleDepth = convertHandDepth_2(texelFetch(depthtex1, ivec2(newPos.xy/texelSize),0).x,hand);
+		{	
+			if(hand) {
+				sampleDepth = texelFetch(depthtex1, ivec2(newPos.xy/texelSize),0).x;
+				convertHandDepth(sampleDepth);
+			} else {
+				sampleDepth = texelFetch(depthtex2, ivec2(newPos.xy/texelSize),0).x;
+			}
 		}
 
 		if(sampleDepth < newPos.z){
@@ -737,10 +742,10 @@ vec3 ComputeShadowMap_COLOR(in vec3 projectedShadowPosition, float distortFactor
 	#ifdef debug_SHADOWMAP
 		shadowDebug = texture(shadow, projectedShadowPosition).x;
 	#endif
-	#ifdef TRANSLUCENT_COLORED_SHADOWS
-		// directLightColor *= mix(vec3(1.0), translucentTint.rgb / samples, maxDistFade);
-		tintedSunlight *= translucentTint.rgb / samples;
-	#endif
+	// #ifdef TRANSLUCENT_COLORED_SHADOWS
+	// 	// directLightColor *= mix(vec3(1.0), translucentTint.rgb / samples, maxDistFade);
+	// 	tintedSunlight *= translucentTint.rgb / samples;
+	// #endif
 
 	return shadowColor.rgb / samples;
 	// return mix(directLightColor, shadowColor.rgb / samples, maxDistFade);
@@ -956,13 +961,12 @@ void main() {
 		float z =  texelFetch(depthtex1, ivec2(gl_FragCoord.xy), 0).x;
 		float swappedDepth = z;
 
-
-
-		bool isDHrange = z >= 1.0;
-
 		#if defined DISTANT_HORIZONS || defined VOXY
+			bool isDHrange = z >= 1.0;
+
 			float DH_mixedLinearZ = sqrt(texelFetch(colortex12,ivec2(gl_FragCoord.xy), 0).z/65000.0);
-			float DH_depth0 = texelFetch(dhVoxyDepthTex,ivec2(gl_FragCoord.xy), 0).x;
+			float DH_depth0 = 0.0;
+			if(isDHrange) DH_depth0 = texelFetch(dhVoxyDepthTex,ivec2(gl_FragCoord.xy), 0).x;
 			float DH_depth1 = texelFetch(dhVoxyDepthTex1,ivec2(gl_FragCoord.xy), 0).x;
 
 			float depthOpaque = z;
@@ -971,13 +975,14 @@ void main() {
 			float dhDepthOpaque = DH_depth1;
 			float dhDepthOpaqueL = linearizeDepthFast(dhDepthOpaque, dhVoxyNearPlane, dhVoxyFarPlane);
 
-			if (depthOpaque >= 1.0 || (dhDepthOpaqueL < depthOpaqueL && dhDepthOpaque > 0.0)){
+			if (isDHrange || (dhDepthOpaqueL < depthOpaqueL && dhDepthOpaque > 0.0)){
 				depthOpaque = dhDepthOpaque;
 				depthOpaqueL = dhDepthOpaqueL;
 			}
 
 			swappedDepth = depthOpaque;
 		#else
+			bool isDHrange = false;
 			float DH_depth0 = 0.0;
 			float DH_depth1 = 0.0;
 		#endif
@@ -1141,7 +1146,7 @@ void main() {
 				#endif
 				{
 					vec3 lightningColor = vec3(2.0, 4.5, 6.6) * lightningFlash;
-					DirectLightColor += lightningColor * smoothstep(500.0, 0.0, length(feetPlayerPos-lightningBoltPosition.xyz));
+					DirectLightColor += 0.5 * lightningColor * smoothstep(300.0, 0.0, length(feetPlayerPos-lightningBoltPosition.xyz));
 				}
 			#endif
 			
@@ -1324,6 +1329,7 @@ void main() {
 
 		float ShadowAlpha = 0.0; // this is for subsurface scattering later.
 		vec3 tintedSunlight = DirectLightColor; // this is for subsurface scattering later.
+		// nobody cares, it makes zero difference
 		
 		#if defined END_ISLAND_LIGHT && defined END_SHADER			
 			// make light fade out
@@ -1372,11 +1378,11 @@ void main() {
 			#endif
 			
 				
-			#ifdef TRANSLUCENT_COLORED_SHADOWS
-				SSSColor = tintedSunlight;
-			#else
-				SSSColor = DirectLightColor;
-			#endif
+			// #ifdef TRANSLUCENT_COLORED_SHADOWS
+			// 	SSSColor = tintedSunlight;
+			// #else
+			// 	SSSColor = DirectLightColor;
+			// #endif
 			
 			// TODO CHECK IF *= OR =
 			// *= looks better idk

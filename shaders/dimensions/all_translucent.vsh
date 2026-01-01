@@ -186,9 +186,10 @@ void main() {
 		chunkFade = abs(mc_chunkFade);
 	#endif
 	
-	#if defined PLANET_CURVATURE || (defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND)
-		vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
+	// keep this OUT of the #if block... otherwise there will be z-fighting when using some overlay textures for some random ass reason.....
+	vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
 
+	#if defined PLANET_CURVATURE || (defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND)
 		#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND
 			worldpos.y += -45.0*(1.0-chunkFade)*(1.0-caveDetection)*smoothstep(25.0, far, length(worldpos));
 		#endif
@@ -197,9 +198,9 @@ void main() {
 			float curvature = length(worldpos) / (16*8);
 			worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
 		#endif
-
-		position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;
 	#endif
+
+	position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;
 	
 	#if !defined ENTITIES && !defined HAND
  		gl_Position = toClipSpace3(position);

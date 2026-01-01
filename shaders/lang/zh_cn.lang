@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - Bliss 编辑版
     prefix.SHADER_VERSION_LABEL = 版本
-    value.SHADER_VERSION_LABEL.482 = 5.10.2
+    value.SHADER_VERSION_LABEL.482 = 6.0.0
 
 # 如果你是来翻译的，这不是玩笑，这些选项的功能正如其名
 profile.POTATO=§4土豆 (极低配置)
@@ -17,9 +17,9 @@ profile.ULTRA=§d极致
 
 option.OLD_LIGHTLEAK_FIX = 旧版漏光修复
 option.CAVE_DETECTION = 洞穴检测
-    value.CAVE_DETECTION.0.0 = 开启
-    value.CAVE_DETECTION.1.0 = Y < 62.0
-    value.CAVE_DETECTION.2.0 = 关闭
+    value.CAVE_DETECTION.0 = 开启
+    value.CAVE_DETECTION.1 = Y < 62.0
+    value.CAVE_DETECTION.2 = 关闭
 option.sunPathRotation = 太阳角度
 suffix.sunPathRotation = °
 option.sun_illuminance = 太阳亮度

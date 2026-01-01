@@ -14,6 +14,10 @@
 
 #undef FLASHLIGHT_BOUNCED_INDIRECT
 
+#if MC_VERSION >= 12110
+#define MAIN_SHADOW_PASS
+#endif
+
 // #if defined END_SHADER || defined NETHER_SHADER
 // 	#undef IS_LPV_ENABLED
 // #endif
@@ -66,8 +70,9 @@ uniform vec4 entityColor;
 #endif
 
 uniform sampler2D noisetex;
-uniform sampler2D depthtex1;
 uniform sampler2D depthtex0;
+uniform sampler2D depthtex1;
+uniform sampler2D depthtex2;
 
 #ifdef DISTANT_HORIZONS
 	uniform sampler2D dhDepthTex1;
@@ -80,6 +85,7 @@ uniform sampler2D depthtex0;
 #endif
 
 uniform sampler2D colortex7;
+uniform sampler2D colortex11;
 uniform sampler2D colortex12;
 uniform sampler2D colortex13;
 uniform sampler2D colortex14;
@@ -127,6 +133,7 @@ uniform vec3 nsunColor;
 
 uniform int heldItemId;
 uniform int heldItemId2;
+uniform bool firstPersonCamera;
 
 uniform float waterEnteredAltitude;
 
@@ -465,6 +472,12 @@ void convertHandDepth(inout float depth) {
     depth = ndcDepth * 0.5 + 0.5;
 }
 
+vec2 decodeVec2(float a){
+    const vec2 constant1 = 65535. / vec2( 256., 65536.);
+    const float constant2 = 256. / 255.;
+    return fract( a * constant1 ) * constant2 ;
+}
+
 void Emission(
 	inout vec3 Lighting,
 	vec3 Albedo,
@@ -481,6 +494,67 @@ float bias(){
 		return 1.0 - texelSize.x * 2560.0;
 	#endif
 }
+
+#if defined FLASHLIGHT_SHADOWS && defined FLASHLIGHT && defined MAIN_SHADOW_PASS
+float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, vec3 normals, bool hand){
+	
+	if(hand || !firstPersonCamera) return 1.0;
+
+	vec3 WlightDir = normalize((gbufferModelViewInverse*vec4(lightDir, 1.0)).xyz);
+
+	float NdotL = dot(normals, WlightDir);
+	NdotL = smoothstep(0.0, 0.2, abs(NdotL));
+
+	float shadows = 1.0;
+	float samples = 16.0;
+
+	float _near = near; float _far = far*4.0;
+
+	if (depthCheck) {
+		_near = dhVoxyNearPlane;
+		_far = dhVoxyFarPlane;
+	}
+
+	vec3 position = toClipSpace3_DH(viewPos, depthCheck) ;
+	
+	//prevents the ray from going behind the camera
+	float rayLength = ((viewPos.z + lightDir.z * _far * sqrt(3.)) > -_near) ? (-_near - viewPos.z) / lightDir.z : _far * sqrt(3.);
+
+	vec3 direction = toClipSpace3_DH(viewPos + lightDir*rayLength, depthCheck) - position;
+	direction.xyz = direction.xyz / max(max(abs(direction.x)/0.0005, abs(direction.y)/0.0005),400.0);	//fixed step size
+	direction *= 6.0;
+
+	position.xy *= RENDER_SCALE;
+	direction.xy *= RENDER_SCALE;
+	
+	vec3 newPos = position + direction*noise;
+	// literally shadow bias to fight shadow acne due to precision problems when comparing sampled depth and marched position
+	//newPos += direction*0.3;
+
+
+	for (int i = 0; i < int(samples); i++) {
+		float samplePos;
+		
+		#if defined DISTANT_HORIZONS || defined VOXY
+			if(depthCheck) {
+				samplePos = texelFetch(dhVoxyDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+			} else
+		#endif
+			{
+				samplePos = texelFetch(depthtex2, ivec2(newPos.xy/texelSize),0).x,hand;
+			}
+
+		if(samplePos < newPos.z && samplePos > 0.0){// && (samplePos <= max(minZ,maxZ) && samplePos >= min(minZ,maxZ))){
+			shadows = 0.0;
+			break;
+		} 
+	
+		newPos += direction;
+	}
+
+	return clamp(shadows*NdotL, 1.0-FLASHLIGHT_SHADOWS_STRENGTH, 1.0);
+}
+#endif
 
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -783,13 +857,22 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		if (isWater) TangentNormal = mix(NormalTex.xy, normalize(wave.normal).xz, smoothstep(0.0, 0.1, physics_localWaviness));
 	#endif
 
-	float nameTagMask = 0.0;
+	gl_FragData[2].r = encodeVec2(TangentNormal*0.5+0.5);
 
-	#if defined ENTITIES && defined IS_IRIS
-		if(NAMETAG > 0) nameTagMask = 0.1;
-	#endif
+	vec4 blockBreak = texelFetch(colortex11, ivec2(gl_FragCoord.xy), 0);
 
-	gl_FragData[2] = vec4(encodeVec2(TangentNormal*0.5+0.5), encodeVec2(GLASS_TINT_COLORS.rg), encodeVec2(GLASS_TINT_COLORS.ba), encodeVec2(0.0, nameTagMask));
+	if(blockBreak.a > 0.99) {
+		gl_FragData[2].gba = blockBreak.gba;
+	} else {
+		#if defined ENTITIES && defined IS_IRIS
+			float nameTagMask = 0.0;
+			if(NAMETAG > 0) nameTagMask = 1.0;
+		#else
+			const float nameTagMask = 0.0;
+		#endif
+
+		gl_FragData[2].gba = vec3(encodeVec2(GLASS_TINT_COLORS.rg), encodeVec2(GLASS_TINT_COLORS.ba), nameTagMask);
+	}
 
 ////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// SPECULARS /////////////////////////////////////
@@ -947,11 +1030,21 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		vec3 lightColor = vec3(TORCH_R,TORCH_G,TORCH_B);
 	#endif
 
-	Indirect_lighting += doBlockLightLighting(lightColor, lightmap.x, feetPlayerPos, lpvPos);
+	#ifdef MAIN_SHADOW_PASS
+		Indirect_lighting += doBlockLightLighting(lightColor, lightmap.x, feetPlayerPos, lpvPos, viewPos, false, BN, worldSpaceNormal, false);
+	#else
+		Indirect_lighting += doBlockLightLighting(lightColor, lightmap.x, feetPlayerPos, lpvPos);
+	#endif
 	
 	vec4 flashLightSpecularData = vec4(0.0);
 	#ifdef FLASHLIGHT
-		Indirect_lighting += calculateFlashlight(FragCoord.xy*texelSize/RENDER_SCALE, viewPos, vec3(0.0), worldSpaceNormal, flashLightSpecularData, false);
+		#if defined FLASHLIGHT_SHADOWS && defined MAIN_SHADOW_PASS && !defined HAND && defined MAIN_SHADOW_PASS
+			vec3 newViewPos = viewPos + vec3(-0.25, 0.2, 0.0);
+			float flashlightshadows = SSRT_FlashLight_Shadows(viewPos, false, -newViewPos, BN, worldSpaceNormal, false);
+		#else
+			const float flashlightshadows = 1.0;
+		#endif
+		Indirect_lighting += flashlightshadows * calculateFlashlight(FragCoord.xy*texelSize/RENDER_SCALE, viewPos, vec3(0.0), worldSpaceNormal, flashLightSpecularData, false);
 	#endif
 
 	vec3 FinalColor = (Indirect_lighting + Direct_lighting) * Albedo;
@@ -1029,14 +1122,14 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		}
 	#endif
 	
-	#if defined DISTANT_HORIZONS && defined DH_OVERDRAW_PREVENTION && !defined HAND
+	#if defined DISTANT_HORIZONS && defined DH_OVERDRAW_PREVENTION && !defined HAND && !defined NETHER_SHADER
 		#if OVERDRAW_MAX_DISTANCE == 0
 			float maxOverdrawDistance = far;
 		#else
 			float maxOverdrawDistance = OVERDRAW_MAX_DISTANCE;
 		#endif
 	 
-		bool WATER = texture(colortex7, gl_FragCoord.xy*texelSize).a > 0.0 && length(feetPlayerPos) > clamp(far-16.0*4.0, 16.0, maxOverdrawDistance) && texelFetch(depthtex1, ivec2(gl_FragCoord.xy), 0).x >= 1.0;
+		bool WATER = texelFetch(colortex7, ivec2(gl_FragCoord.xy), 0).a > 0.0 && length(feetPlayerPos) > clamp(far-16.0*4.0, 16.0, maxOverdrawDistance) && texelFetch(depthtex1, ivec2(gl_FragCoord.xy), 0).x >= 1.0;
 
 		if(WATER && isWater) {
 			gl_FragData[0].a = 0.0;

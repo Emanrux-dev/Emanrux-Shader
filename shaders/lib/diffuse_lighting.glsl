@@ -55,7 +55,7 @@
                 } else
             #endif
                 {
-                    samplePos = texelFetch(depthtex2, ivec2(newPos.xy/texelSize),0).x,hand;
+                    samplePos = texelFetch(depthtex2, ivec2(newPos.xy/texelSize),0).x;
                 }
 
             if(samplePos < newPos.z && samplePos > 0.0){// && (samplePos <= max(minZ,maxZ) && samplePos >= min(minZ,maxZ))){
@@ -119,7 +119,7 @@ vec3 doBlockLightLighting(
 
         // create a smooth falloff at the edges of the voxel volume.
         float fadeLength = 10.0; // in meters
-        vec3 cubicRadius = clamp( min(((LpvSize3-1.0) - lpvPos)/fadeLength,      lpvPos/fadeLength) ,0.0,1.0);
+        vec3 cubicRadius = clamp(min(((LpvSize3-1.0) - lpvPos)/fadeLength, lpvPos/fadeLength), 0.0, 1.0);
         float voxelRangeFalloff = cubicRadius.x*cubicRadius.y*cubicRadius.z;
         voxelRangeFalloff = 1.0 - pow(1.0-pow(voxelRangeFalloff,1.5),3.0);
         
@@ -137,6 +137,10 @@ vec3 doBlockLightLighting(
                         if (lightRange > 0.0 && firstPersonCamera) handLightCol *=  SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(-0.25, 0.2, 0.0)), noise, normals, hand);
                     #endif
 
+                    #ifdef WEATHER
+                        handLightCol *= 0.5;
+                    #endif
+
                     blockLight += handLightCol;
             }
             
@@ -147,6 +151,10 @@ vec3 doBlockLightLighting(
                     
                     #if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS
                         if (lightRange2 > 0.0 && firstPersonCamera) handLightCol2 *= SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(0.25, 0.2, 0.0)), noise, normals, hand);
+                    #endif
+
+                    #ifdef WEATHER
+                        handLightCol2 *= 0.5;
                     #endif
 
                     blockLight += handLightCol2;
@@ -173,6 +181,7 @@ vec3 doIndirectLighting(
     return indirectLight;
 }
 
+#ifndef VOXY_PROGRAM
 uniform float centerDepthSmooth;
 
 #if defined VIVECRAFT
@@ -245,3 +254,4 @@ vec3 calculateFlashlight(in vec2 texcoord, in vec3 viewPos, in vec3 albedo, in v
 
 	return flashlightDiffuse * vec3(FLASHLIGHT_R,FLASHLIGHT_G,FLASHLIGHT_B);
 }
+#endif

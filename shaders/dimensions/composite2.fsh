@@ -97,94 +97,6 @@ float linearizeDepthFast(const in float depth, const in float near, const in flo
     return (near * far) / (depth * (near - far) + far);
 }
 
-#define IS_LPV_ENABLED
-
-#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
-	#ifdef IS_LPV_ENABLED
-		#extension GL_ARB_shader_image_load_store: enable
-		#extension GL_ARB_shading_language_packing: enable
-	#endif
-
-	#ifdef IS_LPV_ENABLED
-		uniform usampler1D texBlockData;
-		uniform sampler3D texLpv1;
-		uniform sampler3D texLpv2;
-	#endif
-
-	// #ifdef IS_LPV_ENABLED
-	// 	uniform int heldItemId;
-	// 	uniform int heldItemId2;
-	// #endif
-
-	#ifdef IS_LPV_ENABLED
-		#include "/lib/hsv.glsl"
-		#include "/lib/lpv_common.glsl"
-		#include "/lib/lpv_render.glsl"
-	#endif
-
-	vec4 raymarchLPV(
-		in vec3 viewPos,
-		in float dither
-	){
-		#if !defined LPV_VL_FOG_ILLUMINATION
-			return vec3(0.0);
-		#endif
-
-		const int SAMPLECOUNT = 8;
-		const float density = 0.0001;
-		const float fadeLength = 10.0; // in blocks
-
-		vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
-		vec3 LPVrayStartPos = playerPos - gbufferModelViewInverse[3].xyz;
-		
-		// ensure the max marching distance is the voxel distance, or the render distance if the voxels go farther than it
-		float LPVRayLength = length(LPVrayStartPos);
-		#if LPV_SIZE == 8
-			LPVrayStartPos *= min(LPVRayLength, min(256.0,far))/LPVRayLength;
-		#elif LPV_SIZE == 7
-			LPVrayStartPos *= min(LPVRayLength, min(128.0,far))/LPVRayLength;
-		#elif LPV_SIZE == 6
-			LPVrayStartPos *= min(LPVRayLength, min(64.0,far))/LPVRayLength;
-		#endif
-		LPVRayLength = length(LPVrayStartPos);
-
-		vec3 LPVrayProgress = vec3(0.0);
-		vec4 color = vec4(0.0,0.0,0.0,1.0);
-		const float expFactor = 11.0;
-
-		for (int i = 0; i < SAMPLECOUNT; i++) {
-			float d = (pow(expFactor, float(i+dither)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1.0-1.0/expFactor);
-			float dd = pow(expFactor, float(i+dither)/float(SAMPLECOUNT)) * log(expFactor) / float(SAMPLECOUNT)/(expFactor-1.0);
-
-			LPVrayProgress = gbufferModelViewInverse[3].xyz + d*LPVrayStartPos;
-
-			vec3 lpvPos = GetLpvPosition(LPVrayProgress);
-
-        	vec3 cubicRadius = clamp(	min(((LpvSize3-1.0) - lpvPos)/fadeLength, lpvPos/fadeLength) ,0.0,1.0);
-        	float LpvFadeF = cubicRadius.x*cubicRadius.y*cubicRadius.z;
-
-			if(LpvFadeF < 0.01) break;
-
-			vec3 sampleColor = SampleLpvLinear(lpvPos).rgb;
-			#ifdef VANILLA_LIGHTMAP_MASK
-				vec3 lighting = sampleColor * LPV_VL_FOG_ILLUMINATION_BRIGHTNESS * 25. * exp(-10 * (1.0-luma(sampleColor)));
-			#else
-				vec3 lighting = sampleColor * LPV_VL_FOG_ILLUMINATION_BRIGHTNESS * 25. * exp(-5 * (1.0-luma(sampleColor)));
-			#endif
-
-			float volumeCoeff = exp(-dd*density*LPVRayLength);
-
-			color.rgb += (lighting - lighting * volumeCoeff) * color.a;
-			color.a *= volumeCoeff;
-		}
-		return color;
-	}
-
-#endif
-float invLinZ (float lindepth){
-	return -((2.0*near/lindepth)-far-near)/(far-near);
-}
-
 uniform float nightVision;
 
 #ifdef OVERWORLD_SHADER
@@ -201,8 +113,6 @@ uniform float nightVision;
 	
 	#include "/lib/scene_controller.glsl"
 
-
-	// uniform int dhRenderDistance;
 	#define TIMEOFDAYFOG
 	#include "/lib/lightning_stuff.glsl"
 
@@ -220,7 +130,172 @@ uniform sampler2D colortex4;
 	#include "/lib/end_fog.glsl"
 #endif
 
-#define fsign(a)  (clamp((a)*1e35,0.,1.)*2.-1.)
+#define IS_LPV_ENABLED
+
+#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
+	#extension GL_ARB_shader_image_load_store: enable
+	#extension GL_ARB_shading_language_packing: enable
+
+	uniform usampler1D texBlockData;
+	uniform sampler3D texLpv1;
+	uniform sampler3D texLpv2;
+
+	#include "/lib/hsv.glsl"
+	#include "/lib/lpv_common.glsl"
+	#include "/lib/lpv_render.glsl"
+
+	#if defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER || defined LPV_VL_FOG_ILLUMINATION_HANDHELD
+		uniform int heldItemId;
+		uniform int heldItemId2;
+
+		#include "/lib/util.glsl"
+		#include "/lib/diffuse_lighting.glsl"
+	#endif
+	#ifdef LPV_VL_FOG_ILLUMINATION_HANDHELD
+	#endif
+#endif
+
+bool eyeInWater = isEyeInWater == 1;
+
+vec4 raymarchLPV(
+	in vec3 viewPos,
+	in float dither
+){
+	#if (!defined LPV_VL_FOG_ILLUMINATION || !defined IS_LPV_ENABLED) && (!defined FLASHLIGHT_FOG_ILLUMINATION || !defined FLASHLIGHT)
+		return vec3(0.0);
+	#endif
+
+	const int SAMPLECOUNT = 8;
+	float minimumDensity = 0.000025;
+	if(eyeInWater) minimumDensity = 0.00006;
+	const float fadeLength = 10.0; // in blocks
+
+	vec3 LPVrayStartPos = mat3(gbufferModelViewInverse) * viewPos;
+	
+	// ensure the max marching distance is the voxel distance, or the render distance if the voxels go farther than it
+	float LPVRayLength = length(LPVrayStartPos);
+	#if LPV_SIZE == 8
+		LPVrayStartPos *= min(LPVRayLength, min(256.0,far))/LPVRayLength;
+	#elif LPV_SIZE == 7
+		LPVrayStartPos *= min(LPVRayLength, min(128.0,far))/LPVRayLength;
+	#elif LPV_SIZE == 6
+		LPVrayStartPos *= min(LPVRayLength, min(64.0,far))/LPVRayLength;
+	#endif
+	LPVRayLength = length(LPVrayStartPos);
+
+	vec3 rayProgress = vec3(0.0);
+	vec4 color = vec4(0.0,0.0,0.0,1.0);
+	const float expFactor = 11.0;
+
+	for (int i = 0; i < SAMPLECOUNT; i++) {
+		float d = (pow(expFactor, float(i+dither)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1.0-1.0/expFactor);
+		float dd = pow(expFactor, float(i+dither)/float(SAMPLECOUNT)) * log(expFactor) / float(SAMPLECOUNT)/(expFactor-1.0);
+
+		rayProgress = gbufferModelViewInverse[3].xyz + d*LPVrayStartPos;
+
+		float density;
+		float _minimumDensity = minimumDensity;
+
+		#ifdef OVERWORLD_SHADER
+			if(caveDetection < 0.9999) density = cloudVol(rayProgress + cameraPosition, 0.0) * (1.0 - caveDetection);
+
+			_minimumDensity += caveDetection * minimumDensity;
+		#elif defined NETHER_SHADER
+			vec3 progressW = rayProgress + cameraPosition;
+			density = cloudVol(progressW);
+
+			float dist = length(rayProgress);
+			float clearArea = 1.0 - min(max(1.0 - dist / 24.0,0.0),1.0);
+
+			float plumeDensity = min(density * pow(min(max(100.0-progressW.y,0.0)/30.0,1.0),4.0), pow(clamp(1.0 - dist/far,0.0,1.0),5.0));
+			plumeDensity *= NETHER_PLUME_DENSITY;
+
+			float ceilingSmokeDensity = 0.001 * pow(min(max(progressW.y-40.0,0.0)/50.0,1.0),3.0);
+			ceilingSmokeDensity *= NETHER_CEILING_SMOKE_DENSITY;
+
+			density = plumeDensity + ceilingSmokeDensity;
+		#elif defined END_SHADER
+			float volumeDensity = fogShape(rayProgress + cameraPosition);
+			float clearArea =  1.0-min(max(1.0 - length(rayProgress) / 100,0.0),1.0);
+			density = min(volumeDensity, clearArea*clearArea * END_STORM_DENSTIY);
+		#endif
+		
+		density = max(density/1000.0, _minimumDensity);
+
+		// density = 0.0001;
+
+		float volumeCoeff = exp(-dd*density*LPVRayLength);
+
+		#ifdef IS_LPV_ENABLED
+			vec3 lpvPos = GetLpvPosition(rayProgress);
+
+			vec3 cubicRadius = clamp(min(((LpvSize3-1.0) - lpvPos)/fadeLength, lpvPos/fadeLength), 0.0, 1.0);
+			float LpvFadeF = cubicRadius.x*cubicRadius.y*cubicRadius.z;
+
+			if(LpvFadeF < 0.01) break;
+
+			vec3 sampleColor = SampleLpvLinear(lpvPos).rgb;
+			#ifdef VANILLA_LIGHTMAP_MASK
+				vec3 lighting = sampleColor * LPV_VL_FOG_ILLUMINATION_BRIGHTNESS * 25. * exp(-10 * (1.0-luma(sampleColor)));
+			#else
+				vec3 lighting = sampleColor * LPV_VL_FOG_ILLUMINATION_BRIGHTNESS * 25. * exp(-5 * (1.0-luma(sampleColor)));
+			#endif
+
+			if(eyeInWater) lighting *= 2.5;
+
+			#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD
+				float lightRange = 0.0;
+				vec3 handLightCol = GetHandLight(heldItemId, rayProgress, lightRange);
+				
+				vec3 handLightCol2 = GetHandLight(heldItemId2, rayProgress, lightRange);
+
+				lighting += (handLightCol + handLightCol2) * TORCH_AMOUNT * LPV_VL_FOG_ILLUMINATION_BRIGHTNESS * 0.04;
+			#endif
+
+			color.rgb += (lighting - lighting * volumeCoeff) * color.a;
+		#endif
+
+		#if defined FLASHLIGHT && defined FLASHLIGHT_FOG_ILLUMINATION
+			// vec3 shiftedViewPos = mat3(gbufferModelView)*(progressW-cameraPosition) + vec3(-0.25, 0.2, 0.0);
+			// vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos;
+				vec3 shiftedViewPos;
+				vec3 shiftedPlayerPos;
+				float forwardOffset;
+
+				#ifdef VIVECRAFT
+					if (vivecraftIsVR) {
+						forwardOffset = 0.0;
+						shiftedPlayerPos = (rayProgress) + ( vivecraftRelativeMainHandPos);
+						shiftedViewPos = shiftedPlayerPos * mat3(vivecraftRelativeMainHandRot);
+					} else
+				#endif
+				{
+					forwardOffset = 0.5;
+					shiftedViewPos = mat3(gbufferModelView)*(rayProgress) + vec3(-0.25, 0.2, 0.0);
+					shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos;
+				}
+
+			vec2 scaledViewPos = shiftedViewPos.xy / max(-shiftedViewPos.z - forwardOffset, 1e-7);
+			float linearDistance = length(shiftedPlayerPos);
+			float shiftedLinearDistance = length(scaledViewPos);
+
+			float lightFalloff = 1.0 - clamp(1.0-linearDistance/FLASHLIGHT_RANGE, -0.999,1.0);
+			lightFalloff = max(exp(-10.0 * FLASHLIGHT_BRIGHTNESS_FALLOFF_MULT * lightFalloff),0.0);
+			float projectedCircle = clamp(1.0 - shiftedLinearDistance*FLASHLIGHT_SIZE,0.0,1.0);
+
+			vec3 flashlightGlow = 25.0 * vec3(FLASHLIGHT_R,FLASHLIGHT_G,FLASHLIGHT_B) * lightFalloff * projectedCircle * FLASHLIGHT_BRIGHTNESS_MULT;
+
+			color.rgb += (flashlightGlow - flashlightGlow * volumeCoeff) * color.a;
+		#endif
+
+		color.a *= volumeCoeff;
+	}
+	return color;
+}
+
+float invLinZ (float lindepth){
+	return -((2.0*near/lindepth)-far-near)/(far-near);
+}
 
 /*
 from https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
@@ -257,56 +332,11 @@ float R2_dither(){
 	return fract(alpha.x * coord.x + alpha.y * coord.y ) ;
 }
 
-void waterVolumetrics_notoverworld(inout vec3 inColor, vec3 rayStart, vec3 rayEnd, float estEndDepth, float estSunDepth, float rayLength, float dither, vec3 waterCoefs, vec3 scatterCoef, vec3 ambient){
-	inColor *= exp(-rayLength * waterCoefs);	//No need to take the integrated value
-	
-	int spCount = rayMarchSampleCount;
-	vec3 start = toShadowSpaceProjected(rayStart);
-	vec3 end = toShadowSpaceProjected(rayEnd);
-	vec3 dV = (end-start);
-	//limit ray length at 32 blocks for performance and reducing integration error
-	//you can't see above this anyway
-	float maxZ = min(rayLength,12.0)/(1e-8+rayLength);
-	dV *= maxZ;
-
-
-	rayLength *= maxZ;
-	
-	float dY = normalize(mat3(gbufferModelViewInverse) * rayEnd).y * rayLength;
-	estEndDepth *= maxZ;
-	estSunDepth *= maxZ;
-
-	vec3 wpos = mat3(gbufferModelViewInverse) * rayStart  + gbufferModelViewInverse[3].xyz;
-	vec3 dVWorld = (wpos-gbufferModelViewInverse[3].xyz);
-
-	vec3 absorbance = vec3(1.0);
-	vec3 vL = vec3(0.0);
-
-	float expFactor = 11.0;
-	for (int i=0;i<spCount;i++) {
-		float d = (pow(expFactor, float(i+dither)/float(spCount))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);
-		float dd = pow(expFactor, float(i+dither)/float(spCount)) * log(expFactor) / float(spCount)/(expFactor-1.0);
-		vec3 spPos = start.xyz + dV*d;
-
-		vec3 progressW = start.xyz+cameraPosition+dVWorld;
-
-		vec3 ambientMul = exp(-max(estEndDepth * d,0.0) * waterCoefs );
-		vec3 Indirectlight = ambientMul*ambient;
-
-		vec3 light = Indirectlight * scatterCoef;
-
-		vL += (light - light * exp(-waterCoefs * dd * rayLength)) / waterCoefs * absorbance;
-		absorbance *= exp(-dd * rayLength * waterCoefs);
-	}
-	inColor += vL;
-
-}
-
 uniform float waterEnteredAltitude;
 float lightSourceCheck = float(sunElevation > 1e-5)*2.0 - 1.0;
 
 vec4 waterVolumetrics(vec3 rayStart, vec3 rayEnd, float rayLength, vec2 dither, vec3 waterCoefs, vec3 scatterCoef, vec3 ambient, vec3 lightSource, float VdotL, vec3 LPV){
-	int spCount = 8;
+	const int spCount = 8;
 
 	vec3 start = toShadowSpaceProjected(rayStart);
 	vec3 end = toShadowSpaceProjected(rayEnd);
@@ -325,11 +355,9 @@ vec4 waterVolumetrics(vec3 rayStart, vec3 rayEnd, float rayLength, vec2 dither, 
 	vec3 vL = vec3(0.0);
 	
 	#ifdef OVERWORLD_SHADER
-		float lowlightlevel  = clamp(eyeBrightnessSmooth.y/240.0,0.1,1.0);
 		float phase = fogPhase(VdotL) * 5.0;
 	#else
-		float lowlightlevel  = 1.0;
-		float phase = 0.0;
+		const float phase = 0.0;
 	#endif
 
 	float thing = -normalize(dVWorld).y;
@@ -342,7 +370,8 @@ vec4 waterVolumetrics(vec3 rayStart, vec3 rayEnd, float rayLength, vec2 dither, 
 		float d = (pow(expFactor, float(i+dither.x)/float(spCount))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);		// exponential step position (0-1)
 		float dd = pow(expFactor, float(i+dither.y)/float(spCount)) * log(expFactor) / float(spCount)/(expFactor-1.0);	//step length (derivative)
 		
-		vec3 progressW = gbufferModelViewInverse[3].xyz+cameraPosition + d*dVWorld;
+		vec3 progressP = gbufferModelViewInverse[3].xyz + d*dVWorld;
+		vec3 progressW = progressP + cameraPosition;
 		
 		float distanceFromWaterSurface = max(-(progressW.y - waterEnteredAltitude),0.0);
 
@@ -351,7 +380,7 @@ vec4 waterVolumetrics(vec3 rayStart, vec3 rayEnd, float rayLength, vec2 dither, 
 			vec3 spPos = start.xyz + dV*d;
 
 			//project into biased shadowmap space
-			#ifdef DISTORT_SHADOWMAP && defined OVERWORLD_SHADER
+			#if defined DISTORT_SHADOWMAP && defined OVERWORLD_SHADER
 				float distortFactor = calcDistort(spPos.xy);
 			#else
 				float distortFactor = 1.0;
@@ -386,7 +415,27 @@ vec4 waterVolumetrics(vec3 rayStart, vec3 rayEnd, float rayLength, vec2 dither, 
 		vec3 WaterAbsorbance = exp(-waterCoefs * (distanceFromWaterSurface + thing));
 
 		vec3 Directlight = lightSource * sh * phase * caustics * sunAbsorbance;
-		vec3 Indirectlight = ambient * WaterAbsorbance;
+
+		vec3 _ambient = ambient;
+
+		#ifdef OVERWORLD_SHADER
+			float horizontalDist = length((progressP.xz) - lightningBoltPosition.xz);
+			if (horizontalDist < 250.0 && lightningBoltPosition.w > 0.0) {
+				float lightningIntensity = exp(-horizontalDist * 0.02) * lightningFlash;
+				_ambient = mix(_ambient, vec3(1.3,1.5,3.0) * sh, lightningIntensity);
+			}
+		#endif
+
+		vec3 Indirectlight = _ambient * WaterAbsorbance;
+
+		#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER
+			float lightRange = 0.0;
+			vec3 handLightCol = GetHandLight(heldItemId, progressP, lightRange);
+			
+			vec3 handLightCol2 = GetHandLight(heldItemId2, progressP, lightRange);
+
+			Indirectlight += (handLightCol + handLightCol2) * TORCH_AMOUNT * (LPV_VL_FOG_ILLUMINATION_BRIGHTNESS / 100.0) * 0.2 * exp(-waterCoefs * (length(progressP) + 0.05 * thing));
+		#endif
 
 
 		vec3 light = (Indirectlight + Directlight + LPV) * scatterCoef;
@@ -531,13 +580,13 @@ vec4 waterVolumetrics_alt( vec3 rayStart, vec3 rayEnd, float estEndDepth, float 
 	estEndDepth *= maxZ;
 	estSunDepth *= maxZ;
 	
-	vec3 wpos = mat3(gbufferModelViewInverse) * rayStart  + gbufferModelViewInverse[3].xyz;
-	vec3 dVWorld = (wpos - gbufferModelViewInverse[3].xyz);
+	vec3 dVWorld = mat3(gbufferModelViewInverse) * rayStart;
+	vec3 wpos = dVWorld + gbufferModelViewInverse[3].xyz;
 	
     #ifdef OVERWORLD_SHADER
 		float phase = fogPhase(VdotL) * 5.0;
 	#else
-		float phase = 1.0;
+		const float phase = 1.0;
 	#endif
 
 	vec3 absorbance = vec3(1.0);
@@ -560,9 +609,9 @@ vec4 waterVolumetrics_alt( vec3 rayStart, vec3 rayEnd, float estEndDepth, float 
 		float d = (pow(expFactor, float(i+dither)/float(spCount))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);
 		float dd = pow(expFactor, float(i+dither)/float(spCount)) * log(expFactor) / float(spCount)/(expFactor-1.0);
 
-		// progressW = gbufferModelViewInverse[3].xyz+cameraPosition + d*dVWorld;
-		
-		vec3 progressW = gbufferModelViewInverse[3].xyz + cameraPosition + d*dVWorld;
+		#if defined OVERWORLD_SHADER || (defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER)
+			vec3 progressP = gbufferModelViewInverse[3].xyz + d*dVWorld + dVWorld;
+		#endif
 
 		vec3 sh2 = sh;
 
@@ -598,7 +647,27 @@ vec4 waterVolumetrics_alt( vec3 rayStart, vec3 rayEnd, float estEndDepth, float 
 		vec3 ambientAbsorbance = exp(-waterCoefs * (estEndDepth * d + thing));
 
 		vec3 Directlight = lightSource * sh2 * phase * sunAbsorbance;
-		vec3 Indirectlight = ambient * ambientAbsorbance;
+
+		vec3 _ambient = ambient;
+
+		#ifdef OVERWORLD_SHADER
+			float horizontalDist = length(progressP.xz - lightningBoltPosition.xz);
+			if (horizontalDist < 250.0 && lightningBoltPosition.w > 0.0) {
+				float lightningIntensity = exp(-horizontalDist * 0.02) * lightningFlash;
+				_ambient = mix(_ambient, vec3(1.3,1.5,3.0) * sh2, lightningIntensity);
+			}
+		#endif
+
+		#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER
+			float lightRange = 0.0;
+			vec3 handLightCol = GetHandLight(heldItemId, progressP, lightRange);
+			
+			vec3 handLightCol2 = GetHandLight(heldItemId2, progressP, lightRange);
+
+			_ambient += (handLightCol + handLightCol2) * TORCH_AMOUNT * 0.225 * (LPV_VL_FOG_ILLUMINATION_BRIGHTNESS / 100.0);
+		#endif
+
+		vec3 Indirectlight = _ambient * ambientAbsorbance;
 
 		vec3 light = (Indirectlight + Directlight) * scatterCoef;
 		
@@ -656,7 +725,9 @@ void main() {
 	// z0 = depth < 0.56 ? convertHandDepth(depth) : depth;
 
 	#if defined DISTANT_HORIZONS || defined VOXY
-		float DH_z0 = texelFetch(dhVoxyDepthTex, texcoord,0).x;
+		float DH_z0 = 0.0;
+		
+		if (z0 >= 1.0) DH_z0 = texelFetch(dhVoxyDepthTex, texcoord,0).x;
 	#else
 		float DH_z0 = 0.0;
 	#endif
@@ -692,7 +763,7 @@ void main() {
 	// 	float godrays = 1.0;
 	// #endif
 
-	#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
+	#if (defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED) || (defined FLASHLIGHT && defined FLASHLIGHT_FOG_ILLUMINATION)
 		vec4 LPV_ILLUMINATION = raymarchLPV(viewPos0, BN.y);
 	#else
 		vec4 LPV_ILLUMINATION = vec4(0.0,0.0,0.0,1.0);
@@ -713,8 +784,6 @@ void main() {
 	#ifdef OVERWORLD_SHADER
 		vec4 VolumetricClouds;
 	#endif
-
-	bool eyeInWater = isEyeInWater == 1;
 	
 	if (eyeInWater){
 		vec4 underWaterFog =  waterVolumetrics(vec3(0.0), viewPos0, length(viewPos0), vec2(noise_1, BN.y), totEpsilon, scatterCoef, indirectLightColor_dynamic, directLightColor, dot(normalize(viewPos0), normalize(sunVec * lightSourceCheck)), LPV_ILLUMINATION.rgb);
@@ -728,14 +797,14 @@ void main() {
 			#endif
 
 			#ifdef CAVE_FOG
-				#if CAVE_DETECTION == 0.0 || CAVE_DETECTION == 1.0
-					#if CAVE_DETECTION == 1.0
-						float caveFactor = 1.0-smoothstep(60.0, 63.0, cameraPosition.y);
+				#if CAVE_DETECTION < 2
+					#if CAVE_DETECTION == 1
+						float caveFactor = 1.0 - smoothstep(60.0, 63.0, cameraPosition.y);
 					#else
-						float caveFactor = 1.0;
+						const float caveFactor = 1.0;
 					#endif
 				#else
-					float caveFactor = 0.0;
+					const float caveFactor = 0.0;
 				#endif
 
 				float skyhole = pow(clamp(1.0-pow(max(playerPos_normalized.y - 0.6,0.0)*5.0,2.0),0.0,1.0),2)* caveDetection * caveFactor;
@@ -746,7 +815,7 @@ void main() {
 			// vec3 sceneColor = texelFetch(colortex3,texcoord,0).rgb * VolumetricClouds.a + VolumetricClouds.rgb;
 			VolumetricFog = GetVolumetricFog(viewPos0, WsunVec, BN, directLightColor, indirectLight_fog, indirectLightColor_dynamic, cloudPlaneDistance);
 
-			#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
+			#if (defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED) || (defined FLASHLIGHT && defined FLASHLIGHT_FOG_ILLUMINATION)
 				VolumetricFog.a *= LPV_ILLUMINATION.a;
 				VolumetricFog.rgb = VolumetricFog.rgb * LPV_ILLUMINATION.a + LPV_ILLUMINATION.rgb;
 			#endif
@@ -760,7 +829,7 @@ void main() {
 		#if defined NETHER_SHADER || defined END_SHADER
 			VolumetricFog = GetVolumetricFog(viewPos0, noise_1, noise_1);
 
-			#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
+			#if (defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED) || (defined FLASHLIGHT && defined FLASHLIGHT_FOG_ILLUMINATION)
 				VolumetricFog.a *= LPV_ILLUMINATION.a;
 				VolumetricFog.rgb = VolumetricFog.rgb * LPV_ILLUMINATION.a + LPV_ILLUMINATION.rgb;
 			#endif
@@ -792,7 +861,8 @@ void main() {
 		float z1 = texelFetch(depthtex1, texcoord,0).x;
 
 		#if defined DISTANT_HORIZONS || defined VOXY
-			float DH_z1 = texelFetch(dhVoxyDepthTex1, texcoord,0).x;
+			float DH_z1 = 0.0;
+			if (z1 >= 1.0) DH_z1 = texelFetch(dhVoxyDepthTex1, texcoord,0).x;
 		#else
 			float DH_z1 = 0.0;
 		#endif
@@ -811,7 +881,7 @@ void main() {
 			float estimatedDepth = Vdiff * abs(playerPos_normalized.y);
 			float estimatedSunDepth = Vdiff / abs(WsunVec.y); //assuming water plane
 
-			float lightleakfix = clamp(lightmap.y + (1-caveDetection),0.0,1.0);
+			float lightleakfix = clamp(lightmap.y + (1.0-caveDetection),0.0,1.0);
 
 			directLightColor *= lightleakfix;
 
@@ -836,5 +906,4 @@ void main() {
 		
 		gl_FragData[1] = clamp(VolumetricFog, 0.0, 65000.0);
 	}
-
 }

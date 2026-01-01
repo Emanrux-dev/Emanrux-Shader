@@ -9,19 +9,19 @@ layout(binding = 0) buffer SSBO1 {
 
     vec3 customSunVecSSBO; // 12 bytes
 
+    #if IRIS_VERSION < 11004
     bool onWaterSurface; // 1 byte
-
-    bool inBoat; // 1 byte
 
     bool inBoatCurrentFrame; // 1 byte
 
     bool inBoatLastFrame; // 1 byte
 
-    bool inShip; // 1 byte
-
     bool inShipCurrentFrame; // 1 byte
 
     bool inShipLastFrame; // 1 byte
+    #endif
+
+    float waterRoundSize;
 
     float lastFrameTimeCount; // 4 bytes
 

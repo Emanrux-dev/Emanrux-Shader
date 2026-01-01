@@ -43,11 +43,7 @@ layout (rgba16f) uniform image2D waveSim2;
 const ivec2 resolution = ivec2(workGroups.x * 32, workGroups.y * 32);
 
 uniform int frameCounter;
-uniform float frameTime;
 uniform float frameTimeCounter;
-uniform vec3 cameraPosition;
-uniform vec3 previousCameraPosition;
-uniform vec3 relativeEyePosition;
 
 #include "/lib/SSBOs.glsl"
 
@@ -61,10 +57,19 @@ uniform vec3 relativeEyePosition;
     const float delta = 1.4;
 #endif
 
+#if IRIS_VERSION >= 11004
+    uniform bool onWaterSurface;
+    uniform vec3 vehicleLookVector;
+    uniform bool isRiding;
+    uniform int vehicleId;
+
+    #include "/lib/entities.glsl"
+#endif
+
 void main() {
     #if WATER_INTERACTION == 2
     if (abs(frameTimeCounter - lastFrameTimeCount) > WATER_SIM_FRAMETIME && (!noSimOngoing || onWaterSurface)) {
-        if (frameCounter == 0) return;
+        // if (frameCounter == 0) return;
         ivec2 imgCoord = ivec2(gl_GlobalInvocationID.xy);
         float dist = length(imgCoord-0.5*resolution);
         if (dist >= resolution.x) return;
@@ -80,9 +85,9 @@ void main() {
         float pVel = oldState.y;
 
         #if WATER_SIM_FRAMERATE == 30
-            int offset = 2;
+            const int offset = 2;
         #else
-            int offset = 1;
+            const int offset = 1;
         #endif
         
         float p_down = imageLoad(waveSim2, clamp(sampledCoord + ivec2(0, -offset), ivec2(offset), resolution - ivec2(offset))).r;
@@ -109,35 +114,33 @@ void main() {
         pVel -= 0.0014 * delta * pressure;
         
         // Velocity damping so things eventually calm down
-        pVel *= 1.0 - 0.003 * delta;
+        pVel *= 1.0 - 0.006 * delta;
         
         // Pressure damping to prevent it from building up forever.
-        float distFade = smoothstep(0.49*resolution.x, 0.4*resolution.x, dist);
+        float distFade = smoothstep(0.49*resolution.x, 0.25*resolution.x, dist);
         pressure *= 0.985 * distFade;
         pVel *= distFade;
 
         if (onWaterSurface) {
-            vec3 velocity = (cameraPosition-relativeEyePosition-previousCameraPositionWave)/frameTime;
-            velocity.y *= 1.15;
-            float speed = length(velocity);
+            #if IRIS_VERSION >= 11004
+                if(isRiding && vehicleId == ENTITY_BOAT) {
+                    vec2 p = imgCoord - 0.5 * resolution;
+                    vec2 f = normalize(vehicleLookVector.xz);
 
-            float size = 10.0;
-            if(inBoat) {
-                size += 26.0 * smoothstep(0.0, 10.0, speed);
-            } else if (inShip) {
-                size += 61.0 * smoothstep(0.0, 10.0, speed);
-            } else {
-                size += 10.0 * smoothstep(0.1, 13.0, speed);
-            }
-            #if WATER_SIM_SCALE == 0
-                size *= 0.5;
-            #else
-                size *= WATER_SIM_SCALE;
+                    float t = dot(p, f);
+
+                    t = clamp(t, -waterRoundSize * 0.73, waterRoundSize * 0.73);
+
+                    float dist = length(p - f * t);
+
+                    float shape = smoothstep(waterRoundSize, 0.7 * waterRoundSize, dist);
+
+                    pressure += shape * (smoothstep(-waterRoundSize * 0.75, waterRoundSize * 0.75, t)* 2.0 - 1.0);
+                } else
             #endif
-
-            float upOrDown = step(-0.1, cameraPosition.y-relativeEyePosition.y-previousCameraPositionWave.y)*2.0-1.0;
-
-            pressure += smoothstep(size, 0.7*size, dist) * upOrDown;
+            {
+                pressure += smoothstep(waterRoundSize, 0.7*waterRoundSize, dist);
+            }
         }
 
         if(abs(pressure) > 0.0) noSimOngoingCheck = false;

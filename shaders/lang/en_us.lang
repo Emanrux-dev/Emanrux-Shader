@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 5.10.2
+    value.SHADER_VERSION_LABEL.482 = 6.0.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -17,9 +17,9 @@ profile.ULTRA=§dUltra
 
 option.OLD_LIGHTLEAK_FIX = Old Lightleak Fix
 option.CAVE_DETECTION = Cave detection
-    value.CAVE_DETECTION.0.0 = ON
-    value.CAVE_DETECTION.1.0 = Y < 62.0
-    value.CAVE_DETECTION.2.0 = OFF
+    value.CAVE_DETECTION.0 = ON
+    value.CAVE_DETECTION.1 = Y < 62.0
+    value.CAVE_DETECTION.2 = OFF
 option.sunPathRotation = Sun Angle
 suffix.sunPathRotation = °
 option.sun_illuminance = Sun Brightness
@@ -246,6 +246,7 @@ screen.Direct_Light = Direct Light
             value.LPV_VL_FOG_ILLUMINATION.2 = On
         option.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS = Fog Light Propagation Brightness
             suffix.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS=%
+        option.LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER = Water Fog Handheld Light Propagation
 	    option.VANILLA_LIGHTMAP_MASK = Vanilla Lightmap Mask
         option.LPV_HANDHELD_SHADOWS = Handheld Shadows
         option.LPV_HANDHELD_SHADOWS_STRENGTH = Handheld Shadows Strength
@@ -276,6 +277,7 @@ screen.Ambient_light = Ambient Light
         option.RAY_COUNT.comment = Helps reduce visual noise of SSRT. §aPERFORMANCE COST:§r High
     option.RAY_STEPS = Ray Steps
 	option.HANDHELD_LIGHT_RANGE = Handheld Light Range
+    option.GTAO_SLICES = GTAO Quality
 
     screen.SSRT_SETTINGS = SSRT Settings
 
@@ -639,6 +641,14 @@ screen.Climate = Climate Settings
         option.DARKFOREST_R = Red Amount
         option.DARKFOREST_G = Green Amount
         option.DARKFOREST_B = Blue Amount
+    
+    screen.PALE_GARDEN = Dark Forest
+        option.PALE_GARDEN_ENV = Pale Garden Environment
+        option.PALE_GARDEN_UNIFORM_DENSITY = Uniform Fog Density
+        option.PALE_GARDEN_CLOUDY_DENSITY = Cloudy Fog Density
+        option.PALE_GARDEN_R = Red Amount
+        option.PALE_GARDEN_G = Green Amount
+        option.PALE_GARDEN_B = Blue Amount
 
 screen.World = World
     screen.Sky_coefficients = Sky Coefficients
@@ -1158,6 +1168,9 @@ screen.Climate.comment = Configure settings related to the climate, like seasona
 
         screen.DARKFOREST.comment = Configure the environment in this biome type.
             option.DARKFOREST_ENV.comment = Toggle the environment only for this biome type. The other biome environments remain active even if this one is disabled.
+
+        screen.PALE_GARDEN.comment = Configure the environment in this biome type.
+            option.PALE_GARDEN_ENV.comment = Toggle the environment only for this biome type. The other biome environments remain active even if this one is disabled.
 
 
 screen.Foliage.comment = Configure settings related to foliage.

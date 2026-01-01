@@ -393,13 +393,10 @@ void main() {
 #endif
 
 #if !defined DAMAGE_BLOCK_EFFECT
-	#ifdef LINES
-		bool selectionBox = renderStage == MC_RENDER_STAGE_OUTLINE;
-	#endif
-	
 	gl_FragData[2] = vec4(0.0);
 	
 	#ifdef LINES
+		bool selectionBox = renderStage == MC_RENDER_STAGE_OUTLINE;
 		#ifndef SELECT_BOX
 			if(selectionBox) discard;
 		#endif
@@ -455,7 +452,7 @@ void main() {
 
 				#ifdef FLASHLIGHT
 					vec4 flashLightSpecularData = vec4(0.0);
-					Indirect_lighting += calculateFlashlight(gl_FragCoord.xy*texelSize/RENDER_SCALE, viewPos, vec3(0.0), -normalize(feetPlayerPos), flashLightSpecularData, false);
+					Indirect_lighting += 0.3*calculateFlashlight(gl_FragCoord.xy*texelSize/RENDER_SCALE, viewPos, vec3(0.0), -normalize(feetPlayerPos), flashLightSpecularData, false);
 				#endif
 
 				TEXTURE.rgb *= Indirect_lighting + averageSkyCol_CloudsSSBO / 360.0;
@@ -557,7 +554,6 @@ void main() {
 			gl_FragData[0].rgb = (Indirect_lighting + Direct_lighting) * toLinear(color.rgb);
 
 			#if RAINBOW_SELECT_BOX > 0
-
 				#if RAINBOW_SELECT_BOX == 1
 					float selectBoxHue = length(sin(mod(1.4*worldPos, 3.14159)));
 				#else
@@ -588,9 +584,9 @@ void main() {
 				float BN = blueNoise();
 
 				// distance fade targeting the world border...
-				float distaneFade = clamp(2.5 - length(feetPlayerPos) / (0.1*min(far, 225.0)),0.0,1.0);
+				float distanceFade = clamp(2.5 - length(feetPlayerPos) / (0.1*min(far, 225.0)),0.0,1.0);
 
-				if(distaneFade < BN) discard;
+				if(distanceFade < BN) discard;
 			}
 		#endif
 

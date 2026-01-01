@@ -314,23 +314,6 @@ vec4 GetVolumetricFog(
 			float hazeDensity = 0.001 * END_HAZE_DENSTIY;
 			vec3 hazeLighting = vec3(0.37,0.32,0.75) * skyPhase * 0.5;
 			color += (hazeLighting - hazeLighting*exp(-hazeDensity*dd*dL)) * absorbance;
-
-
-		#if defined FLASHLIGHT && defined FLASHLIGHT_FOG_ILLUMINATION
-			vec3 shiftedViewPos = mat3(gbufferModelView)*progressP + vec3(-0.25, 0.2, 0.0);
-			vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos;
-			vec2 scaledViewPos = shiftedViewPos.xy / max(-shiftedViewPos.z - 0.5, 1e-7);
-			float linearDistance = length(shiftedPlayerPos);
-			float shiftedLinearDistance = length(scaledViewPos);
-
-			float lightFalloff = 1.0 - clamp(1.0-linearDistance/FLASHLIGHT_RANGE, -0.999,1.0);
-			lightFalloff = max(exp(-10.0 * FLASHLIGHT_BRIGHTNESS_FALLOFF_MULT * lightFalloff),0.0);
-			float projectedCircle = clamp(1.0 - shiftedLinearDistance*FLASHLIGHT_SIZE,0.0,1.0);
-
-			vec3 flashlightGlow = vec3(FLASHLIGHT_R,FLASHLIGHT_G,FLASHLIGHT_B) * lightFalloff * projectedCircle * 0.5;
-
-			color += (flashlightGlow - flashlightGlow * exp(-max(stormDensity,0.005)*dd*dL)) * absorbance;
-		#endif
 	}
 	return vec4(color, absorbance);
 }

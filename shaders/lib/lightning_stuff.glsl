@@ -51,7 +51,7 @@ if(lightningBoltPosition.w > 0.0){
 		float lightningLight = max(1.0 - length(LightningPos) / 50, 0.0);
 		lightningLight = exp((1.0 - lightningLight) * -15.0) ;
 	#else
-        float lightDistance = 300.0;
+        float lightDistance = 150.0;
 		float lightningLight = max(1.0 - length(LightningPos) / lightDistance, 0.0) ;
 
 		lightningLight = exp((1.0 - lightningLight) * -15.0) ;

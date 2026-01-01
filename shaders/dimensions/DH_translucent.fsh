@@ -26,6 +26,7 @@ uniform sampler2D dhDepthTex1;
 uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
 
+uniform sampler2D colortex11;
 uniform sampler2D colortex12;
 // uniform sampler2D colortex7;
 uniform sampler2D colortex4;
@@ -285,7 +286,7 @@ vec3 applyBump(mat3 tbnMatrix, vec3 bump, float puddle_values){
 #ifdef FORWARD_ROUGH_REFLECTION
 #endif
 
-/* RENDERTARGETS:2,7,14 */
+/* RENDERTARGETS:2,7,11,14 */
 void main() {
 if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	{
    
@@ -342,7 +343,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
     
 
     gl_FragData[0] = gcolor;
-    // float UnchangedAlpha = gl_FragData[0].a;
+    float UnchangedAlpha = gl_FragData[0].a;
 
 	#ifdef WhiteWorld
 		gl_FragData[0].rgb = vec3(0.5);
@@ -462,12 +463,12 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		#ifdef FORWARD_BACKGROUND_REFLECTION
             BackgroundReflection = skyCloudsFromTex(mat3(gbufferModelViewInverse) * reflectedVector, colortex4).rgb / 1200.0;
         #endif
-        #ifdef WATER_SUN_SPECULAR
-            SunReflection = (DirectLightColor * Shadows) * GGX(normalize(normals), -normalize(viewPos), normalize(WsunVec2), roughness, f0) * (1.0-Reflections.a);
+        #if defined OVERWORLD_SHADER && SUN_SPECULAR_MULT > 0
+            SunReflection = SUN_SPECULAR_MULT * DirectLightColor * Shadows * GGX(normalize(normals), -normalize(viewPos), normalize(WsunVec2), roughness, f0) * (1.0-Reflections.a);
         #endif
 
 		Reflections_Final = mix(FinalColor, mix(BackgroundReflection*SSR_HIT_SKY_MASK, Reflections.rgb, Reflections.a), fresnel);
-		Reflections_Final += SunReflection*indoors;
+		Reflections_Final += SunReflection*SSR_HIT_SKY_MASK;
 
 		gl_FragData[0].a = gl_FragData[0].a + (1.0-gl_FragData[0].a) * fresnel;
 	
@@ -495,7 +496,21 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
    
     gl_FragData[1] = vec4(Albedo, material);
 
-	gl_FragData[2] = vec4(1, 1, encodeVec2(lightmapCoords.x, lightmapCoords.y), 1);
+	vec4 GLASS_TINT_COLORS = vec4(Albedo, UnchangedAlpha);
+	
+	#ifdef BIOME_TINT_WATER
+		if (isWater) GLASS_TINT_COLORS.rgb = toLinear(gcolor.rgb);
+	#endif
+	
+	vec4 blockBreak = texelFetch(colortex11, ivec2(gl_FragCoord.xy), 0);
+
+	if(blockBreak.a > 0.99) {
+		gl_FragData[2] = blockBreak;
+	} else {
+		gl_FragData[2] = vec4(encodeVec2(vec2(0.5)), encodeVec2(GLASS_TINT_COLORS.rg), encodeVec2(GLASS_TINT_COLORS.ba), 0.0);
+	}
+
+	gl_FragData[3] = vec4(1, 1, encodeVec2(lightmapCoords.x, lightmapCoords.y), 1);
 
 }
 

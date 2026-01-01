@@ -61,7 +61,7 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 		/////// ----- SSS ON BLOCKS ----- ///////
 		// strong
 		if (
-			blockID == BLOCK_SSS_STRONG || blockID == BLOCK_AIR_WAVING
+			blockID == BLOCK_SSS_STRONG || blockID == BLOCK_AIR_WAVING || blockID == BLOCK_SSS_STRONG_2
 		) {
 			SSSAMOUNT = 1.0;
 		}

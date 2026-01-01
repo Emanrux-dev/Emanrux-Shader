@@ -448,8 +448,6 @@ vec4 VLTemporalFiltering(vec3 viewPos, in float referenceDepth, sampler2D depth,
 
 uniform float waterEnteredAltitude;
 
-#define CAVE_FOG_DARKEN_SKY
-
 void blendAllFogTypes( inout vec3 color, inout float bloomyFogMult, vec4 volumetrics, float linearDistance, vec3 playerPos, vec3 cameraPosition, bool isSky, bool isLightning){
 
   // blend cave fog
@@ -461,14 +459,14 @@ void blendAllFogTypes( inout vec3 color, inout float bloomyFogMult, vec4 volumet
 
       float skyhole = pow(clamp(1.0-pow(max(playerPos.y - 0.6,0.0)*5.0,2.0),0.0,1.0),2);
 
-      #if (CAVE_DETECTION == 0.0) || (CAVE_DETECTION == 1.0)
-        #if (CAVE_DETECTION == 1.0)
-          float caveFactor = 1-smoothstep(60.0, 63.0, cameraPosition.y);
+      #if CAVE_DETECTION < 2
+        #if CAVE_DETECTION == 1
+          float caveFactor = 1.0 - smoothstep(60.0, 63.0, cameraPosition.y);
         #else
-          float caveFactor = 1.0;
+          const float caveFactor = 1.0;
         #endif
       #else
-        float caveFactor = 0.0;
+        const float caveFactor = 0.0;
       #endif
 
       color.rgb = mix(color.rgb + cavefogCol * caveDetection, cavefogCol, isSky ? skyhole * caveDetection * caveFactor: 0.0);
@@ -552,28 +550,16 @@ void main() {
 
   float frDepth = linearize(z);
 
-	float swappedDepth = z;
-
 	#if defined DISTANT_HORIZONS || defined VOXY
-    float DH_depth0 = texelFetch(dhVoxyDepthTex, ivec2(gl_FragCoord.xy),0).x;
+    float DH_depth0 = 0.0;
+    bool isDHrange = z >= 1.0;
+    if(isDHrange) DH_depth0 = texelFetch(dhVoxyDepthTex, ivec2(gl_FragCoord.xy),0).x;
 
-		float depthOpaque = z;
-		float depthOpaqueL = linearizeDepthFast(depthOpaque, near, farPlane);
-		
-		float dhDepthOpaque = DH_depth0;
-		float dhDepthOpaqueL = linearizeDepthFast(dhDepthOpaque, dhVoxyNearPlane, dhVoxyFarPlane);
-	  if (depthOpaque >= 1.0 || (dhDepthOpaqueL < depthOpaqueL && dhDepthOpaque > 0.0)){
-		  depthOpaque = dhDepthOpaque;
-		  depthOpaqueL = dhDepthOpaqueL;
-		}
-
-		swappedDepth = depthOpaque;
-
+    bool isSky = DH_depth0 >= 1.0;
 	#else
-		float DH_depth0 = 0.0;
+    bool isSky = z >= 1.0;
+		float DH_depth0 = 1.0;
 	#endif
-
-  bool isSky = swappedDepth >= 1.0;
 
   #if !defined DISTANT_HORIZONS && !defined VOXY || (AURORA_LOCATION > 0 && defined OVERWORLD_SHADER)
     float z2 = texelFetch(depthtex1, ivec2(gl_FragCoord.xy),0).x;
@@ -611,12 +597,12 @@ void main() {
 	////// --------------- UNPACK TRANSLUCENT GBUFFERS --------------- //////
 	vec4 data = texelFetch(colortex11,ivec2(texcoord/texelSize),0).rgba;
 	vec4 unpack0 = vec4(decodeVec2(data.r),decodeVec2(data.g)) ;
-	vec4 unpack1 = vec4(decodeVec2(data.b),decodeVec2(data.a)) ;
+	vec2 unpack1 = decodeVec2(data.b);
 	
-	vec4 albedo = vec4(unpack0.ba,unpack1.rg);
+	vec4 albedo = vec4(unpack0.ba,unpack1);
 	vec2 tangentNormals = unpack0.xy*2.0-1.0;
   
-	bool nameTagMask = abs(unpack1.a - 0.1) < 0.01;
+	bool nameTagMask = abs(data.a - 0.1) < 0.01;
   float nametagbackground = nameTagMask ? 0.25 : 1.0;
 
   if(albedo.a < 0.01) tangentNormals = vec2(0.0);
@@ -648,7 +634,16 @@ void main() {
   ////// --------------- distort texcoords as a refraction effect
   vec2 refractedCoord = texcoord;
   #if FAKE_REFRACTION_AMOUNT > 0
-    vec3 color = doRefractionEffect(refractedCoord, tangentNormals.xy, linearDistance, isReflectiveEntity, isWater && isEyeInWater == 1);
+    vec3 color;
+    #if defined DISTANT_HORIZONS || defined VOXY
+    if(isDHrange || hand) {
+      color = texture(colortex3, texcoord).rgb;
+    }
+    else
+    #endif
+    {
+      color = doRefractionEffect(refractedCoord, tangentNormals.xy, linearDistance, isReflectiveEntity, isWater && isEyeInWater == 1);
+    }
   #else
     vec3 color = texture(colortex3, texcoord).rgb;
   #endif
@@ -672,12 +667,6 @@ void main() {
       float depth = z;
       
       float z0 = depth < 0.56 ? convertHandDepth(depth) : depth;
-
-      #if defined DISTANT_HORIZONS || defined VOXY
-        float DH_z0 = DH_depth0;
-      #else
-        float DH_z0 = 1.0;
-      #endif
 
       float uvScalar = 3.0 * CUSTOM_LIGHTNING_SCALE;
 
@@ -806,7 +795,7 @@ void main() {
   ////// --------------- START BLENDING FOGS AND FORWARD RENDERED COLOR
   vec4 TranslucentShader = texelFetch(colortex2, ivec2(gl_FragCoord.xy), 0);
 
-  bool translucentCheck = TranslucentShader.a > 0.0 &&  TranslucentShader.a < 1.0;
+  bool translucentCheck = TranslucentShader.a > 0.0 && TranslucentShader.a < 1.0;
 
   ////// --------------- AURORA
 
@@ -847,18 +836,19 @@ void main() {
     borderFog.a = borderFogDensity;
     
     #if !defined DISTANT_HORIZONS && !defined VOXY
-      if(!isWater) color = mix(color, borderFog.rgb, getBorderFogDensity(linearDistance_cylinder_alt, normalize(playerPos_alt), z2 >= 1.0 || TranslucentShader.a <= 0));
+      if(!isWater) color = mix(color, borderFog.rgb, getBorderFogDensity(linearDistance_cylinder_alt, normalize(playerPos_alt), z2 >= 1.0 || !translucentCheck));
     #endif
   #else
     vec4 borderFog = vec4(0.0);
   #endif
 
   // apply block breaking effect.
-  if(albedo.a > 0.01 && !isWater && TranslucentShader.a <= 0.0 && !isEntity) color = mix(color*6.0, color, luma(albedo.rgb)) * albedo.rgb;
+  bool isBlockBreaking = data.a > 0.99;
+  if(albedo.a > 0.01 && !isWater && !isEntity && isBlockBreaking && !hand) color = mix(color*6.0, color, luma(albedo.rgb)) * albedo.rgb;
   
   // apply multiplicative color blend for glass n stuff
   #ifdef Glass_Tint
-    if(!isWater) color *= mix(normalize(albedo.rgb+1e-7), vec3(1.0), max(borderFog.a, min(max(0.1-albedo.a,0.0) * 10.0,1.0))) ;
+    if(!isWater && translucentCheck && !isBlockBreaking) color *= mix(normalize(albedo.rgb+1e-7), vec3(1.0), max(borderFog.a, min(max(0.1-albedo.a,0.0) * 10.0,1.0))) ;
   #endif
 
   // blend forward rendered programs onto the color.

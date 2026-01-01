@@ -91,7 +91,7 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 		}
 	#endif
 
-	#if WATER_INTERACTION == 2 && !defined COLORWHEEL
+	#if WATER_INTERACTION == 2 && !defined COLORWHEEL && IRIS_VERSION < 11004
 		if (
 			((renderStage == MC_RENDER_STAGE_ENTITIES && (currentRenderedItemId > 0 || entityId > 0)) || renderStage == MC_RENDER_STAGE_BLOCK_ENTITIES)
 		) {

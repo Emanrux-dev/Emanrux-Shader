@@ -149,7 +149,6 @@ float doVignette( in vec2 texcoord, in float noise){
   layout (rgba16f) uniform image2D waveSim2;
 #endif
 
-layout (RGBA8) uniform image2D cloudShadow;
 
 void main() {
   

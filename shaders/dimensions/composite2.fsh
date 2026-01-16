@@ -162,7 +162,7 @@ vec4 raymarchLPV(
 	in float dither
 ){
 	#if (!defined LPV_VL_FOG_ILLUMINATION || !defined IS_LPV_ENABLED) && (!defined FLASHLIGHT_FOG_ILLUMINATION || !defined FLASHLIGHT)
-		return vec3(0.0);
+		return vec4(0.0);
 	#endif
 
 	const int SAMPLECOUNT = 8;
@@ -226,7 +226,7 @@ vec4 raymarchLPV(
 
 		float volumeCoeff = exp(-dd*density*LPVRayLength);
 
-		#ifdef IS_LPV_ENABLED
+		#if defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION
 			vec3 lpvPos = GetLpvPosition(rayProgress);
 
 			vec3 cubicRadius = clamp(min(((LpvSize3-1.0) - lpvPos)/fadeLength, lpvPos/fadeLength), 0.0, 1.0);
@@ -243,7 +243,7 @@ vec4 raymarchLPV(
 
 			if(eyeInWater) lighting *= 2.5;
 
-			#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD
+			#ifdef LPV_VL_FOG_ILLUMINATION_HANDHELD
 				float lightRange = 0.0;
 				vec3 handLightCol = GetHandLight(heldItemId, rayProgress, lightRange);
 				

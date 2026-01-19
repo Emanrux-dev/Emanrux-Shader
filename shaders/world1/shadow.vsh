@@ -23,7 +23,7 @@ out DATA {
 	vec2 texcoord;
 };
 
-#if defined IS_LPV_ENABLED || defined END_ISLAND_LIGHT || WATER_INTERACTION == 2 || defined SHADER_GRASS
+#if defined IS_LPV_ENABLED || defined END_ISLAND_LIGHT || (WATER_INTERACTION == 2 && IRIS_VERSION < 11004) || defined SHADER_GRASS
 	uniform int renderStage;
 	uniform mat4 shadowModelViewInverse;
 	uniform int entityId;
@@ -31,7 +31,7 @@ out DATA {
 	#include "/lib/entities.glsl"
 #endif
 
-#if defined IS_LPV_ENABLED || WATER_INTERACTION == 2  || defined SHADER_GRASS
+#if defined IS_LPV_ENABLED || (WATER_INTERACTION == 2 && IRIS_VERSION < 11004)  || defined SHADER_GRASS
 	in vec4 mc_Entity;
 	#ifdef IRIS_FEATURE_BLOCK_EMISSION_ATTRIBUTE
 		in vec4 at_midBlock;
@@ -58,12 +58,12 @@ out DATA {
 
 
 void main() {
-	#if defined END_ISLAND_LIGHT || (defined IS_LPV_ENABLED && defined MC_GL_ARB_shader_image_load_store)
+	#if defined END_ISLAND_LIGHT || (defined IS_LPV_ENABLED && defined MC_GL_ARB_shader_image_load_store) || (WATER_INTERACTION == 2 && IRIS_VERSION < 11004)  || defined SHADER_GRASS
 		vec3 shadowViewPos = mat3(gl_ModelViewMatrix) * vec3(gl_Vertex) + gl_ModelViewMatrix[3].xyz;
 		vec3 feetPlayerPos = mat3(shadowModelViewInverse) * shadowViewPos + shadowModelViewInverse[3].xyz;
 	#endif
 
-	#if defined IS_LPV_ENABLED && defined MC_GL_ARB_shader_image_load_store || WATER_INTERACTION == 2  || defined SHADER_GRASS
+	#if (defined IS_LPV_ENABLED && defined MC_GL_ARB_shader_image_load_store) || (WATER_INTERACTION == 2 && IRIS_VERSION < 11004) || defined SHADER_GRASS
 		#ifdef LPV_NOSHADOW_HACK
 			vec3 playerpos = gl_Vertex.xyz;
 		#else

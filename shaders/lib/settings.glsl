@@ -1219,14 +1219,13 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #undef CUSTOM_MOON_ROTATION
 #define LIGHTNING_SHADOWS 0
 #undef END_ISLAND_LIGHT
-#if WATER_INTERACTION == 2
+#if WATER_INTERACTION == 2 && IRIS_VERSION < 11004
 	#define WATER_INTERACTION 1
 #endif
 #undef SHADER_GRASS
 #endif
 
-// only iris 1.7+ allows tessellation
-#ifndef IRIS_FEATURE_TESSELLATION_SHADERS
+#if MC_VERSION < 12101
 	#undef SHADER_GRASS
 #endif
 

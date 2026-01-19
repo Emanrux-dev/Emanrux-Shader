@@ -62,7 +62,6 @@ vec4 toClipSpace3(vec3 viewSpacePosition) {
 #ifdef LINES
 	uniform int currentSelectedBlockId;
 	uniform int renderStage;
-	uniform vec3 currentSelectedBlockPos;
 
 	#include "/lib/blocks.glsl"
 

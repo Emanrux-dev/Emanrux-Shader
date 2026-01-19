@@ -54,7 +54,7 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 			((renderStage == MC_RENDER_STAGE_ENTITIES && (currentRenderedItemId > 0 || entityId > 0)) || renderStage == MC_RENDER_STAGE_BLOCK_ENTITIES)
 		) {
 			if (renderStage == MC_RENDER_STAGE_BLOCK_ENTITIES) {
-				if (blockEntityId > 0 && blockEntityId < 500)
+				if (blockEntityId > 0 && blockEntityId < 500 && blockEntityId != BLOCK_ENCHANTING_TABLE)
 					voxelId = uint(blockEntityId);
 			}
 			else if (currentRenderedItemId > 100 && currentRenderedItemId < 300) {
@@ -66,7 +66,7 @@ void PopulateShadowVoxel(const in vec3 playerPos) {
 				{
 					voxelId = uint(currentRenderedItemId);
 
-					// offset by a random number that came into my head to make entities and items not interact with grass
+					// offset by a random number that came into my head to make entities and items not interact with shader grass
 					voxelId += 2000u;
 
 					#if defined SHADER_GRASS && REPLACE_SHORT_GRASS < 2

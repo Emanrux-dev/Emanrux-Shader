@@ -109,7 +109,7 @@ screen.Foliage = Foliage
     option.WAVY_STRENGTH = Waving Strength
     option.WAVY_SPEED = Waving Speed
 
-    option.SHADER_GRASS = Shader Grass §c(Iris 1.7+)
+    option.SHADER_GRASS = Shader Grass §c(1.21.1+)
     option.GRASS_BASE_THICKNESS = Grass Blade Base Thickness
     option.GRASS_THICKNESS_FALLOFF = Grass Thickness Falloff
         option.GRASS_THICKNESS_FALLOFF.comment = Controls how quickly each blade of grass becomes narrower. At 1.0 it will stay the same thickness until the tip

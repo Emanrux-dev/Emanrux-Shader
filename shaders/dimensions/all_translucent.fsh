@@ -149,7 +149,7 @@ uniform float waterEnteredAltitude;
 
 #if WATER_INTERACTION == 2
 	#ifdef PIXELATED_WAVES
-		layout (rgba16f) uniform image2D waveSim2;
+		layout (rgba16f) uniform readonly image2D waveSim2;
 	#else
 		uniform sampler2D waveSim2Sampler;
 	#endif

@@ -114,6 +114,7 @@ uniform int heldItemId2;
 #endif
 
 #ifdef IS_LPV_ENABLED
+	#include "/lib/lpv_blocks.glsl"
 	#include "/lib/lpv_common.glsl"
 	#include "/lib/lpv_render.glsl"
 #endif

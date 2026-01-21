@@ -7,7 +7,7 @@
         
         if(hand) return 1.0;
 
-        vec3 WlightDir = normalize((gbufferModelViewInverse*vec4(lightDir, 1.0)).xyz);
+        vec3 WlightDir = normalize((gbufferModelViewInverse*vec4(lightDir, 1.0)) .xyz);
 
         float NdotL = dot(normals, WlightDir);
         NdotL = smoothstep(0.0, 0.2, abs(NdotL));
@@ -75,15 +75,15 @@
         vec3 lightFinal = vec3(0.0);
         vec3 lightColor = vec3(0.0);
 
-        uvec2 blockData = texelFetch(texBlockData, itemId, 0).rg;
-        vec4 lightColorRange = unpackUnorm4x8(blockData.r);
+        uint blockData = imageLoad(imgBlockData, itemId).r;
+        vec4 lightColorRange = unpackUnorm4x8(blockData);
         lightColor = srgbToLinear(lightColorRange.rgb);
         lightRange = lightColorRange.a * 255.0;
 
         if (lightRange > 0.0) {
             float lightDist = length(playerPos+relativeEyePosition);
             // vec3 lightDir = playerPos / lightDist;
-            float NoL = 1.0;//max(dot(normal, lightDir), 0.0);
+            const float NoL = 1.0;//max(dot(normal, lightDir), 0.0);
             float falloff = pow(1.0 - lightDist / lightRange, 3.0);
             lightFinal = lightColor * NoL * max(falloff, 0.0);
         }
@@ -118,7 +118,7 @@ vec3 doBlockLightLighting(
         // vec3 lpvBlockLight = GetLpvBlockLight(lpvSample);
 
         // create a smooth falloff at the edges of the voxel volume.
-        float fadeLength = 10.0; // in meters
+        const float fadeLength = 10.0; // in meters
         vec3 cubicRadius = clamp(min(((LpvSize3-1.0) - lpvPos)/fadeLength, lpvPos/fadeLength), 0.0, 1.0);
         float voxelRangeFalloff = cubicRadius.x*cubicRadius.y*cubicRadius.z;
         voxelRangeFalloff = 1.0 - pow(1.0-pow(voxelRangeFalloff,1.5),3.0);

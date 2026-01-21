@@ -206,6 +206,7 @@ float convertHandDepth_2(in float depth, bool hand) {
 	#include "/lib/hsv.glsl"
 	#include "/lib/lpv_common.glsl"
 	#include "/lib/lpv_render.glsl"
+	#include "/lib/blocks.glsl"
 #endif
 
 #define DEFERRED_SPECULAR

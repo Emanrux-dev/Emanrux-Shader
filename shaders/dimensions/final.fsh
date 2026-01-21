@@ -146,7 +146,7 @@ float doVignette( in vec2 texcoord, in float noise){
 }
 
 #if DEBUG_VIEW == debug_WATERSIM && WATER_INTERACTION == 2
-  layout (rgba16f) uniform image2D waveSim2;
+  layout (rgba16f) uniform readonly image2D waveSim2;
 #endif
 
 

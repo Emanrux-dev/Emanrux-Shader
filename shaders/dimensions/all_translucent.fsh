@@ -801,11 +801,11 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 				#ifdef PIXELATED_WAVES
 					#if WATER_SIM_SCALE == 0
-						float NORMAL_SCALE = 20.0;
+						const float NORMAL_SCALE = 20.0;
 					#elif WATER_SIM_SCALE == 1
-						float NORMAL_SCALE = 40.0;
+						const float NORMAL_SCALE = 40.0;
 					#else
-						float NORMAL_SCALE = 80.0;
+						const float NORMAL_SCALE = 80.0;
 					#endif
 
 					ivec2 normalSize = imageSize(waveSim2);
@@ -816,13 +816,13 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 						vec4 waves = imageLoad(waveSim2, ivec2(centeredUV));
 				#else
 					#if WATER_SIM_DISTANCE == 1
-						float NORMAL_SCALE = 0.04;
+						const float NORMAL_SCALE = 0.04;
 					#elif WATER_SIM_DISTANCE == 2
-						float NORMAL_SCALE = 0.02;
+						const float NORMAL_SCALE = 0.02;
 					#elif WATER_SIM_DISTANCE == 3
-						float NORMAL_SCALE = 0.015;
+						const float NORMAL_SCALE = 0.015;
 					#else
-						float NORMAL_SCALE = 0.01;
+						const float NORMAL_SCALE = 0.01;
 					#endif
 
 					vec2 waveUV = (worldPos.xz - previousCameraPositionWave2.xz) * NORMAL_SCALE;

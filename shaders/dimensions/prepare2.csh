@@ -37,7 +37,7 @@ layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 #endif
 
 
-layout (rg16f) uniform image2D waveSim;
+layout (rg16f) uniform readonly image2D waveSim;
 layout (rgba16f) uniform image2D waveSim2;
 
 const ivec2 resolution = ivec2(workGroups.x * 32, workGroups.y * 32);

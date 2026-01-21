@@ -277,20 +277,19 @@ void main() {
 
             vec2 edgeBlend = eastHeightMult*vec2(-0.17,0.0) + westHeightMult*vec2(0.17,0.0) + southHeightMult*vec2(0.0,-0.17) + northHeightMult*vec2(0.0,0.17);
 
+            vec3 worldUp = vec3(0.0, 1.0, 0.0);
 
-            vec3 offsetPos = vertex+vec3(0.0, 1.0, 0.0)+relativeEyePosition;
+            vec3 offsetPos = vertex + worldUp + relativeEyePosition;
             float playerDist = smoothstep(0.5, 0.05, length(offsetPos.xz)) * smoothstep(1.0, 0.2, abs(offsetPos.y));
-            vec2 dir2 = normalize(vertex.xz+relativeEyePosition.xz);
+            vec2 dir2 = normalize(vertex.xz + relativeEyePosition.xz);
 
-            vec2 Wvertex = vertex.xz+cameraPositionFract.xz+mod(vec2(cameraPositionInt.xz), vec2(20.0));
+            vec2 Wvertex = vertex.xz + cameraPositionFract.xz + mod(vec2(cameraPositionInt.xz), vec2(20.0));
 
-            vec2 randomDir = 2.0*(texture(noisetex, 0.75*Wvertex).xy+texture(noisetex, 0.35*Wvertex.yx).xy)-1.0;
+            vec2 randomDir = 2.0 * (texture(noisetex, 0.75*Wvertex).xy + texture(noisetex, 0.35*Wvertex.yx).xy) - 1.0;
             // vertex.xz -= 0.05*randomDir;
 
             vec3 dir = normalize(vertex);
             vec3 originalVertex = vertex;
-
-            vec3 worldUp = vec3(0.0, 1.0, 0.0);
 
             vec3 right = GRASS_BASE_THICKNESS*normalize(cross(worldUp, dir));
 
@@ -298,9 +297,19 @@ void main() {
 
             originalVertex -= right*0.125*GRASS_BASE_THICKNESS;
 
-            vec3 verticies[21];
-            float grassHeights[21];
-            vec3 GrassNormal[7];
+            #if GRASS_QUALITY == 2
+                vec3 verticies[21];
+                float grassHeights[21];
+                vec3 GrassNormal[7];
+            #elif GRASS_QUALITY == 1
+                vec3 verticies[15];
+                float grassHeights[15];
+                vec3 GrassNormal[5];
+            #else
+                vec3 verticies[9];
+                float grassHeights[9];
+                vec3 GrassNormal[3];
+            #endif
 
             for (j = 0; j < triangle_count; j++) {
 

@@ -851,6 +851,7 @@ uniform float wetness;
 					puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
 
 					float wetnessStages = max(puddles, fullWet) * lightmap;
+					float wetnessDarkening = max(puddles, fullWet*0.5) * lightmap;
 				#endif
 
 				#if PUDDLE_MODE == 2
@@ -858,11 +859,13 @@ uniform float wetness;
 					puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
 
 					float wetnessStages = puddles * lightmap;
+					float wetnessDarkening = wetnessStages;
 				#endif
 
 				#if PUDDLE_MODE == 3
 					float puddles = 0.0;
 					float wetnessStages = fullWet * lightmap;
+					float wetnessDarkening = wetnessStages*0.5;
 				#endif				
 
 				wetnessStages *= effectStrength;
@@ -883,15 +886,15 @@ uniform float wetness;
 							rippleNormal = mix(flatNormals, ripple, smoothstep(35., 10., viewDist) * rainStrength * smoothstep(0.0, 1.0, rippleAmount));
 						}
 
-						normals = mix(normals, rippleNormal, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
+						normals = mix(normals, rippleNormal, wetnessStages * clamp(flatNormals.y,0.0,1.0));
 					#else
-						normals = mix(normals, flatNormals, puddles * effectStrength * clamp(flatNormals.y,0.0,1.0));
+						normals = mix(normals, flatNormals, wetnessStages * clamp(flatNormals.y,0.0,1.0));
 					#endif
 				}
 
 				roughness = mix(roughness, 0.5*(1.0+snowR), wetnessStages * Puddle_Reflection_Sharpness);
 
-				if(f0 < 229.5/255.0 ) albedo = pow(albedo * (1.0 - 0.08*wetnessStages), vec3(1.0 + 0.7*wetnessStages));
+				if(f0 < 229.5/255.0 ) albedo = pow(albedo * (1.0 - 0.08*wetnessDarkening), vec3(1.0 + 0.7*wetnessDarkening));
 			}
 		#endif
 

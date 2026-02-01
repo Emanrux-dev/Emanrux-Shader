@@ -138,11 +138,6 @@ void main() {
 		color.a = gl_Color.a;
 	#endif
 
-	#if defined ENTITIES && defined IS_IRIS
-		// force out of frustum
-		if (entityId == 1599) gl_Position.z -= 10000.0;
-	#endif
-
 	bool isWater = mc_Entity.x == 8.0;
 
 	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
@@ -189,21 +184,22 @@ void main() {
 	// keep this OUT of the #if block... otherwise there will be z-fighting when using some overlay textures for some random ass reason.....
 	vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
 
-	#if defined PLANET_CURVATURE || (defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND)
-		#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND
-			worldpos.y += -45.0*(1.0-chunkFade)*(1.0-caveDetection)*smoothstep(25.0, far, length(worldpos));
-		#endif
+	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND
+		worldpos.y += -45.0*(1.0-chunkFade)*(1.0-caveDetection)*smoothstep(25.0, far, length(worldpos));
+	#endif
 
-		#ifdef PLANET_CURVATURE
-			float curvature = length(worldpos) / (16*8);
-			worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
-		#endif
+	#ifdef PLANET_CURVATURE
+		float curvature = length(worldpos.xz) / (16.0*8.0);
+		worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
 	#endif
 
 	position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;
 	
-	#if !defined ENTITIES && !defined HAND
- 		gl_Position = toClipSpace3(position);
+ 	gl_Position = toClipSpace3(position);
+
+	#if defined ENTITIES && defined IS_IRIS
+		// force out of frustum
+		if (entityId == 1599) gl_Position.z -= 10000.0;
 	#endif
 	
 	// 1.0 = water mask

@@ -72,7 +72,7 @@ void main() {
 	#ifdef PLANET_CURVATURE
 		vec4 worldPos = localPos;
 
-		float curvature = length(worldPos) / (16*8);
+		float curvature = length(worldPos.xz) / (16*8);
 		worldPos.y -= curvature*curvature * CURVATURE_AMOUNT;
 
 		worldPos = gbufferModelView * worldPos;

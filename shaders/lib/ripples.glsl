@@ -32,16 +32,16 @@ vec2 hash22(vec2 p)
 }
 
 vec3 ripples(vec2 fragCoord) {
-    float cell_density = 5 * RIPPLE_INTENSITY;
+    float cell_density = 5.0 * RIPPLE_INTENSITY;
 
     float size_compensation = cell_density / 5.0;
     
     vec2 uv = fragCoord * cell_density;
     vec2 p0 = floor(uv);
 
-    int MAX_RADIUS = 1;
+    const int MAX_RADIUS = 1;
 
-	float wave_frequency = 21;
+	const float wave_frequency = 21;
 
     vec2 circles = vec2(0.);
     for (int j = -MAX_RADIUS; j <= MAX_RADIUS; ++j) {
@@ -57,7 +57,7 @@ vec3 ripples(vec2 fragCoord) {
             
             float d = length(v) - ( (float(MAX_RADIUS) + 1.) * t ) * size_compensation;
 
-            float h = 1e-2;
+            const float h = 1e-2;
             float d1 = d - h;
             float d2 = d + h;
             float p1 = sin(wave_frequency*d1) * smoothstep(-0.6, -0.3, d1) * smoothstep(0., -0.3, d1);

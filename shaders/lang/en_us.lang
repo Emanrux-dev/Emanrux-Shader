@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 6.0.0
+    value.SHADER_VERSION_LABEL.482 = 6.1.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -836,11 +836,12 @@ screen.Resource_Pack_Support = Materials / Resource Pack Support
     screen.Emissives = Emissives / Glowing Textures
         option.Emissive_Brightness = Emission Multiplier
         option.Emissive_Curve = Emission Curve
-        option.EMISSIVE_TYPE = Mode
-            value.EMISSIVE_TYPE.0 = No emission
-            value.EMISSIVE_TYPE.1 = Hardcoded only
-            value.EMISSIVE_TYPE.2 = Hardcoded + Lab Emission
-            value.EMISSIVE_TYPE.3 = Lab Emission only
+        option.EMISSIVE_TYPE_SETTING = Emission Mode
+            value.EMISSIVE_TYPE_SETTING.0 = No emission
+            value.EMISSIVE_TYPE_SETTING.1 = Hardcoded only
+            value.EMISSIVE_TYPE_SETTING.2 = Hardcoded + Lab Emission
+            value.EMISSIVE_TYPE_SETTING.3 = Lab Emission only
+            value.EMISSIVE_TYPE_SETTING.4 = Auto
 
 
 screen.POM = Parallax Occlusion Mapping / POM
@@ -857,11 +858,12 @@ screen.Subsurface_Scattering = Sub-Surface Scattering
     option.MOB_SSS = SSS for Mobs
     option.Ambient_SSS = SSS from the Sky
     option.ambientsss_brightness = Sky SSS Brightness
-    option.SSS_TYPE = Mode
-        value.SSS_TYPE.0 = None
-        value.SSS_TYPE.1 = Hardcoded only
-        value.SSS_TYPE.2 = Hardcoded + LabSSS
-        value.SSS_TYPE.3 = LabSSS only
+    option.SSS_TYPE_SETTING = SSS Mode
+        value.SSS_TYPE_SETTING.0 = None
+        value.SSS_TYPE_SETTING.1 = Hardcoded only
+        value.SSS_TYPE_SETTING.2 = Hardcoded + LabSSS
+        value.SSS_TYPE_SETTING.3 = LabSSS only
+        value.SSS_TYPE_SETTING.4 = Auto
     option.sss_density_multiplier = SSS Density Multiplier
     option.sss_absorbance_multiplier = SSS Absorbance Multiplier
 
@@ -1066,7 +1068,7 @@ screen.Resource_Pack_Support.comment = A handfull of effects that use informatio
         
 
 screen.Subsurface_Scattering.comment = §bWhat is this?§r Sub-surface scattering is what happens when you put a bright light on your hand, and it starts to glow. The sun actually does the same thing to plants, cloth, skin, and other things.
-    option.SSS_TYPE.comment = Configure how the sub-surface scattering is applied to the world.  §bHardcoded:§r The shader decides what gets it. §bLabSSS:§r The resourcepack decides what gets it. §aPERFORMANCE COST:§r very low
+    option.SSS_TYPE_SETTING.comment = Configure how the sub-surface scattering is applied to the world.  §bHardcoded:§r The shader decides what gets it. §bLabSSS:§r The resourcepack decides what gets it. §aPERFORMANCE COST:§r very low
     option.MOB_SSS.comment = Toggle sub-surface scattering for mobs. players are included. §aPERFORMANCE COST:§r very low
     option.MISC_BLOCK_SSS.comment = Toggle sub-surface scattering for random blocks it may not fit. this is for grass and sand mostly. §aPERFORMANCE COST:§r very low
     option.Ambient_SSS.comment = §bWhat is this?§r sub-surface scattering from light coming from the sky, instead of the sun. §aPERFORMANCE COST:§r very low to medium; if SSAO is enabled this costs very little, but costs more if SSAO is OFF
@@ -1074,7 +1076,7 @@ screen.Subsurface_Scattering.comment = §bWhat is this?§r Sub-surface scatterin
 
 screen.Emissives.comment = §bWhat is this?§r Emissiveness is just how much light something is letting off, or how much something is glowing.
     option.Emissive_Brightness.comment = Configure how bright the texture emission should be.
-    option.EMISSIVE_TYPE.comment = Configure how texture emission is applied to the world.  §bHardcoded:§r The shader decides what gets it. §bLabSSS:§r The resourcepack decides what gets it. §aPERFORMANCE COST:§r very low
+    option.EMISSIVE_TYPE_SETTING.comment = Configure how texture emission is applied to the world.  §bHardcoded:§r The shader decides what gets it. §bLabSSS:§r The resourcepack decides what gets it. §aPERFORMANCE COST:§r very low
     option.Emissive_Curve.comment = This determines how quickly the emissive texture reaches its brightest point. 1.0 is linear.
 
 screen.POM.comment = Configure settings related to parallax occlusion mapping that uses information provided by a resourcepack.

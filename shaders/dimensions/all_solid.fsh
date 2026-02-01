@@ -748,11 +748,11 @@ void main() {
 		{
 			vec4 NormalTex = texture_POMSwitch(normals, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD).xyzw;
 			
-			#ifdef MATERIAL_AO
+			#if defined MATERIAL_AO && defined MC_TEXTURE_FORMAT_LAB_PBR
 				Albedo.rgb *= NormalTex.b*0.5+0.5;
 			#endif
 
-			float Heightmap = 1.0 - NormalTex.w;
+			// float Heightmap = 1.0 - NormalTex.w;
 
 			NormalTex.xy = NormalTex.xy * 2.0-1.0;
 			NormalTex.z = sqrt(max(1.0 - dot(NormalTex.xy, NormalTex.xy), 0.0));
@@ -876,7 +876,9 @@ void main() {
 		} else
 		#endif
 		{
-			SpecularTex = texture_POMSwitch(specular, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD);
+			#ifdef MC_TEXTURE_FORMAT_LAB_PBR
+				SpecularTex = texture_POMSwitch(specular, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD);
+			#endif
 		}
 
 		// SpecularTex.r = max(SpecularTex.r, rainfall);

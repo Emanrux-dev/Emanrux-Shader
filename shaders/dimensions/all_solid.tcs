@@ -112,9 +112,9 @@ void main() {
         #endif
         {
             // This removes the second layer of some texture packs like patrix, otherwise the grass is duplicated
-            float fractYPos = fract(gl_out[gl_InvocationID].gl_Position.y+cameraPosition.y);
-            if(fractYPos > 0.9999 || fractYPos < 0.0001 || abs(fractYPos - 0.5) < 0.0001)
-            {
+            // float fractYPos = fract(gl_out[gl_InvocationID].gl_Position.y+cameraPosition.y);
+            // if(fractYPos > 0.9999 || fractYPos < 0.0001 || abs(fractYPos - 0.5) < 0.0001)
+            // {
                 #if GRASS_DENSITY == 3
                     int innerDivisions = 8;
                     int outerDivisions = 6;
@@ -143,13 +143,13 @@ void main() {
                 gl_TessLevelOuter[2] = outerDivisions;
 
                 gl_TessLevelInner[0] = innerDivisions;
-            } else {
-                gl_TessLevelOuter[0] = 0;
-                gl_TessLevelOuter[1] = 0;
-                gl_TessLevelOuter[2] = 0;
+            // } else {
+            //     gl_TessLevelOuter[0] = 0;
+            //     gl_TessLevelOuter[1] = 0;
+            //     gl_TessLevelOuter[2] = 0;
 
-                gl_TessLevelInner[0] = 0;
-            }
+            //     gl_TessLevelInner[0] = 0;
+            // }
         } else {
             gl_TessLevelOuter[0] = 1;
             gl_TessLevelOuter[1] = 1;

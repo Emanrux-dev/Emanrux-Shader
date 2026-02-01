@@ -83,7 +83,7 @@ void main() {
 		if (renderStage == MC_RENDER_STAGE_ENTITIES && (entityId == ENTITY_LIGHTNING || (entityId == 0 && gl_Color.a < 0.2 && abs(normal.y) < 0.2))) LIGHTNING = 1.0;
 
 		#ifdef PLANET_CURVATURE
-			float curvature = length(feetPlayerPos) / (16*8);
+			float curvature = length(feetPlayerPos.xz) / (16*8);
 			feetPlayerPos.y -= curvature*curvature * CURVATURE_AMOUNT;
 		#endif
 

@@ -66,7 +66,7 @@ void main() {
 	// worldpos.y -= length(worldpos)/(16*2);
 
 	#ifdef PLANET_CURVATURE
-		float curvature = length(worldpos) / (16*8);
+		float curvature = length(worldpos.xz) / (16*8);
 		worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
 	#endif
 	position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;

@@ -302,10 +302,20 @@ const float entityShadowDistanceMul = 0.25; // [0.01 0.02 0.03 0.04 0.05 0.10 0.
 	#define LIGHTSOURCE_REFLECTION
 #endif
 
-#define EMISSIVE_TYPE 1 // [0 1 2 3]
+#define EMISSIVE_TYPE_SETTING 4 // [0 1 2 3 4]
 #define Emissive_Brightness 1.0 // [1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 15.0 20.0 25.0 30.0 35.0 40.0 45.0 50.0 100.]
 #define Emissive_Curve 2.0 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0 ]
 
+
+#if EMISSIVE_TYPE_SETTING == 4
+	#ifdef MC_TEXTURE_FORMAT_LAB_PBR
+		#define EMISSIVE_TYPE 3
+	#else
+		#define EMISSIVE_TYPE 1
+	#endif
+#else
+	#define EMISSIVE_TYPE EMISSIVE_TYPE_SETTING
+#endif
 
 // #define POM
 // #define Horrible_slope_normals
@@ -325,7 +335,7 @@ const float entityShadowDistanceMul = 0.25; // [0.01 0.02 0.03 0.04 0.05 0.10 0.
 #ifdef DEPTH_WRITE_POM
 #endif
 
-#define SSS_TYPE 1 // [0 1 2 3]
+#define SSS_TYPE_SETTING 1 // [0 1 2 3 4]
 #define LabSSS_Curve 1.0 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0]
 // #define MOB_SSS
 // #define MISC_BLOCK_SSS
@@ -334,6 +344,16 @@ const float entityShadowDistanceMul = 0.25; // [0.01 0.02 0.03 0.04 0.05 0.10 0.
 #define sss_absorbance_multiplier 1.0 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0]
 #define sss_density_multiplier 1.0 		// [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0]
 #define SCREENSPACE_DIRECT_SSS_BLENDING	0.5 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+
+#if SSS_TYPE_SETTING == 4
+	#ifdef MC_TEXTURE_FORMAT_LAB_PBR
+		#define SSS_TYPE 3
+	#else
+		#define SSS_TYPE 1
+	#endif
+#else
+	#define SSS_TYPE SSS_TYPE_SETTING
+#endif
 
 // #define Porosity
 #define PUDDLE_MODE 1 // [0 1 2 3]
@@ -349,6 +369,9 @@ const float entityShadowDistanceMul = 0.25; // [0.01 0.02 0.03 0.04 0.05 0.10 0.
 #define RIPPLE_STRENGTH 1.0 // [0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0]
 
 // #define MATERIAL_AO
+
+#ifdef MATERIAL_AO
+#endif
 
 #define NORMAL_MAP_MULT 1.0 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0]
 

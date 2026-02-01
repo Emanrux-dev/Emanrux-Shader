@@ -411,28 +411,25 @@ void main() {
 	// position = mat3(gbufferModelView) * worldpos + gbufferModelView[3].xyz;
 
 	#ifdef SHADER_GRASS
-		#if !defined ENTITIES && !defined HAND
+		#if !defined ENTITIES && !defined HAND && !defined BLOCKENTITIES && !defined CUTOUT
 			gl_Position = vec4(worldpos, 0.0);
 		#endif
 
-		#if defined PLANET_CURVATURE && !defined HAND && (defined BLOCKENTITIES || defined CUTOUT)
-			float curvature = length(worldpos.xyz) / (16.0*8.0);
+		#if defined PLANET_CURVATURE && (defined BLOCKENTITIES || defined CUTOUT || defined HAND || defined ENTITIES)
+			float curvature = length(worldpos.xz) / (16.0*8.0);
 			worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
 		#endif
 
-		#if defined BLOCKENTITIES || defined CUTOUT
+		#if defined BLOCKENTITIES || defined CUTOUT || defined HAND || defined ENTITIES
 			gl_Position = toClipSpace3(mat3(gbufferModelView) * vec3(worldpos) + gbufferModelView[3].xyz);
 		#endif
 	#else
-		#if defined PLANET_CURVATURE && !defined HAND
-			float curvature = length(worldpos.xyz) / (16.0*8.0);
+		#if defined PLANET_CURVATURE
+			float curvature = length(worldpos.xz) / (16.0*8.0);
 			worldpos.y -= curvature*curvature * CURVATURE_AMOUNT;
 		#endif
 
-		// ensure hand/entities have the same transformations as the spidereyes and enchant glint programs.
-		#if !defined ENTITIES && !defined HAND
-			gl_Position = toClipSpace3(mat3(gbufferModelView) * vec3(worldpos) + gbufferModelView[3].xyz);
-		#endif
+		gl_Position = toClipSpace3(mat3(gbufferModelView) * vec3(worldpos) + gbufferModelView[3].xyz);
 	#endif
 #endif
 

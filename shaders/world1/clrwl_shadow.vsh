@@ -78,9 +78,10 @@ void main() {
 		texcoord.xy = gl_MultiTexCoord0.xy;
 		color = gl_Color;
 
-		// hide lightning and dragon death beams
-		vec3 normal = normalize(gl_NormalMatrix * gl_Normal);
-		if (renderStage == MC_RENDER_STAGE_ENTITIES && (entityId == ENTITY_LIGHTNING || (entityId == 0 && gl_Color.a < 0.2 && abs(normal.y) < 0.2))) LIGHTNING = 1.0;
+		#ifdef PLANET_CURVATURE
+			float curvature = length(feetPlayerPos.xz) / (16*8);
+			feetPlayerPos.y -= curvature*curvature * CURVATURE_AMOUNT;
+		#endif
 
 		gl_Position = customShadowPerspectiveSSBO * customShadowMatrixSSBO * vec4(feetPlayerPos, 1.0);
 	

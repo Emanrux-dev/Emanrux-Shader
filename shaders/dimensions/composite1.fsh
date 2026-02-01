@@ -741,7 +741,7 @@ vec3 ComputeShadowMap_COLOR(in vec3 projectedShadowPosition, float distortFactor
 		}
 	#endif
 
-	#ifdef debug_SHADOWMAP
+	#if DEBUG_VIEW == debug_SHADOWMAP
 		shadowDebug = texture(shadow, projectedShadowPosition).x;
 	#endif
 	// #ifdef TRANSLUCENT_COLORED_SHADOWS

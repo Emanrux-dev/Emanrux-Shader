@@ -141,7 +141,7 @@ void main() {
 
         #ifdef SHADER_GRASS
             #if defined PLANET_CURVATURE && !defined HAND
-                float curvature = length(vertex.xyz) / (16.0*8.0);
+                float curvature = length(vertex.xz) / (16.0*8.0);
                 vertex.y -= curvature*curvature * CURVATURE_AMOUNT;
             #endif
 
@@ -221,7 +221,7 @@ void main() {
         float vertexDist = length(vertex);
 
         #ifdef PLANET_CURVATURE
-            float curvature = vertexDist / (16.0*8.0);
+            float curvature = length(vertex.xz) / (16.0*8.0);
             vertex.y -= curvature*curvature * CURVATURE_AMOUNT;
         #endif
 

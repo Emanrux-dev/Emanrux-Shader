@@ -876,7 +876,7 @@ void main() {
 		} else
 		#endif
 		{
-			#ifdef MC_TEXTURE_FORMAT_LAB_PBR
+			#if EMISSIVE_TYPE == 2 || EMISSIVE_TYPE == 3 || SSS_TYPE == 2 || SSS_TYPE == 3
 				SpecularTex = texture_POMSwitch(specular, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD);
 			#endif
 		}

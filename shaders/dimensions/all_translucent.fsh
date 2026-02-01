@@ -879,7 +879,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 ////////////////////////////////////////////////////////////////////////////////
 
 
-	#ifdef MC_TEXTURE_FORMAT_LAB_PBR
+	#if EMISSIVE_TYPE == 2 || EMISSIVE_TYPE == 3 || SSS_TYPE == 2 || SSS_TYPE == 3
 		vec3 SpecularTex = texture(specular, lmtexcoord.xy, mipmapBias).rga;
 	#else
 		vec3 SpecularTex = vec3(0.0);

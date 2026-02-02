@@ -351,8 +351,12 @@ layout(location = 2) out vec4 OutNormalAO;
 
 #if defined HAND || defined ENTITIES || defined BLOCKENTITIES
 	layout(location = 3) out vec4 OutTranslucents;
-
-	/* RENDERTARGETS:1,8,15,2 */
+	#ifdef VOXY
+		layout(location = 4) out vec4 OutTranslucents2;
+		/* RENDERTARGETS:1,8,15,2,7 */
+	#else
+		/* RENDERTARGETS:1,8,15,2 */
+	#endif
 #else
 	/* RENDERTARGETS:1,8,15 */
 #endif
@@ -720,16 +724,12 @@ void main() {
 		#endif
 	#endif
 
-	#ifdef HAND
-		if (Albedo.a > 0.1){
-			Albedo.a = 0.75;
-			OutTranslucents = vec4(0.0);
-		} else {
-			Albedo.a = 1.0;
-		}
-	#endif
-	#if defined PARTICLE_RENDERING_FIX && (defined ENTITIES || defined BLOCKENTITIES)
+	#if defined ENTITIES || defined BLOCKENTITIES || defined HAND
 		OutTranslucents = vec4(0.0);
+
+		#ifdef VOXY
+			OutTranslucents2 = vec4(0.0);
+		#endif
 	#endif
 
 	// #ifdef COLORWHEEL

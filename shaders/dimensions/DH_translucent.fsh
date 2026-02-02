@@ -507,7 +507,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	if(blockBreak.a > 0.99) {
 		gl_FragData[2] = blockBreak;
 	} else {
-		gl_FragData[2] = vec4(encodeVec2(vec2(0.5)), encodeVec2(GLASS_TINT_COLORS.rg), encodeVec2(GLASS_TINT_COLORS.ba), 0.0);
+		gl_FragData[2] = vec4(0.0, encodeVec2(GLASS_TINT_COLORS.rg), encodeVec2(GLASS_TINT_COLORS.ba), 0.5);
 	}
 
 	gl_FragData[3] = vec4(1, 1, encodeVec2(lightmapCoords.x, lightmapCoords.y), 1);

@@ -596,7 +596,7 @@ void main() {
 
 	////// --------------- UNPACK TRANSLUCENT GBUFFERS --------------- //////
 	vec4 data = texelFetch(colortex11,ivec2(texcoord/texelSize),0).rgba;
-	vec4 unpack0 = vec4(decodeVec2(data.r),decodeVec2(data.g)) ;
+	vec4 unpack0 = vec4(decodeVec2(data.r),decodeVec2(data.g));
 	vec2 unpack1 = decodeVec2(data.b);
 	
 	vec4 albedo = vec4(unpack0.ba,unpack1);
@@ -636,7 +636,9 @@ void main() {
   #if FAKE_REFRACTION_AMOUNT > 0
     vec3 color;
     #if defined DISTANT_HORIZONS || defined VOXY
-    if(isDHrange || hand) {
+
+    bool isLOD = abs(data.a - 0.5) < 0.01;
+    if(isDHrange || hand || isLOD) {
       color = texture(colortex3, texcoord).rgb;
     }
     else

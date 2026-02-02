@@ -1,5 +1,5 @@
 #version 430 compatibility
 
-void main() {
-	discard;
-}
+#define OVERWORLD_SHADER
+
+#include "/dimensions/skybasic.fsh"

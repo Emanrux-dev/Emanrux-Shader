@@ -20,6 +20,13 @@ const int colortex12Format = RGBA16F;				// DISTANT HORIZONS + VANILLA MIXED DEP
 const int colortex13Format = RGBA16F;				// low res VL (composite5->composite15)
 const int colortex14Format = RGBA16;					// rg = SSAO and SS-SSS. a = skylightmap for translucents.
 const int colortex15Format = RGBA8;					// flat normals and vanilla AO
+
+#ifdef VOXY
+	const int colortex16Format = RGBA16F;				// voxy translucent stuff...
+#endif
+#if MAX_COLOR_BUFFERS > 20 || defined VOXY
+	const int colortex17Format = RGBA16F;				// resource pack sky
+#endif
 */
 
 //no need to clear the buffers, saves a few fps
@@ -39,6 +46,12 @@ const bool colortex12Clear = false;
 const bool colortex13Clear = false;
 const bool colortex14Clear = true;
 const bool colortex15Clear = false;
+#ifdef VOXY
+	const bool colortex16Clear = true;
+#endif
+#if MAX_COLOR_BUFFERS > 20 || defined VOXY
+	const bool colortex17Clear = true;
+#endif
 
 
 #ifdef SCREENSHOT_MODE

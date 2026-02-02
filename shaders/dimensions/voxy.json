@@ -6,7 +6,7 @@
     "version": 1,
     "opaqueDrawBuffers": [1, 8, 15],
     "excludeLodsFromVanillaDepth": true,
-    "translucentDrawBuffers": [2, 7, 11, 14],
+    "translucentDrawBuffers": [16, 7, 11, 14],
     #ifdef TAA
     "taaOffset": "{ 
     const vec2[4] offsets = vec2[4](

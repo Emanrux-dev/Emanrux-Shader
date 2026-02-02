@@ -397,7 +397,11 @@ void main() {
 	gl_FragData[2] = vec4(0.0);
 	
 	#ifdef LINES
-		bool selectionBox = renderStage == MC_RENDER_STAGE_OUTLINE;
+		#if MC_VERSION == 12101
+			bool selectionBox = dot(color.rgb,vec3(0.33333)) < 0.00001;
+		#else
+			bool selectionBox = renderStage == MC_RENDER_STAGE_OUTLINE;
+		#endif
 		#ifndef SELECT_BOX
 			if(selectionBox) discard;
 		#endif

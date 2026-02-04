@@ -121,6 +121,14 @@ uniform int heldItemId2;
 
 #undef FLASHLIGHT_BOUNCED_INDIRECT
 
+#if defined VIVECRAFT
+	uniform bool vivecraftIsVR;
+	uniform vec3 vivecraftRelativeMainHandPos;
+	uniform vec3 vivecraftRelativeOffHandPos;
+	uniform mat4 vivecraftRelativeMainHandRot;
+	uniform mat4 vivecraftRelativeOffHandRot;
+#endif
+
 #include "/lib/diffuse_lighting.glsl"
 #include "/lib/sky_gradient.glsl"
 

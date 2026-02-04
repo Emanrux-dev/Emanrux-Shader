@@ -213,6 +213,14 @@ uniform vec3 relativeEyePosition;
 #include "/lib/lpv_buffer.glsl"
 
 #include "/lib/specular.glsl"
+#if defined VIVECRAFT
+	uniform bool vivecraftIsVR;
+	uniform vec3 vivecraftRelativeMainHandPos;
+	uniform vec3 vivecraftRelativeOffHandPos;
+	uniform mat4 vivecraftRelativeMainHandRot;
+	uniform mat4 vivecraftRelativeOffHandRot;
+#endif
+
 #include "/lib/diffuse_lighting.glsl"
 
 #if defined PHYSICSMOD_OCEAN_SHADER

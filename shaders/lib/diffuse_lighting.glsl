@@ -184,14 +184,6 @@ vec3 doIndirectLighting(
 #ifndef VOXY_PROGRAM
 uniform float centerDepthSmooth;
 
-#if defined VIVECRAFT
-	uniform bool vivecraftIsVR;
-	uniform vec3 vivecraftRelativeMainHandPos;
-	uniform vec3 vivecraftRelativeOffHandPos;
-	uniform mat4 vivecraftRelativeMainHandRot;
-	uniform mat4 vivecraftRelativeOffHandRot;
-#endif
-
 vec3 calculateFlashlight(in vec2 texcoord, in vec3 viewPos, in vec3 albedo, in vec3 normal, out vec4 flashLightSpecularData, bool hand){
 
 	// vec3 shiftedViewPos = viewPos + vec3(-0.25, 0.2, 0.0);

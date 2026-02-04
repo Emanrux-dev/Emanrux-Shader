@@ -354,9 +354,6 @@ vec4 bilateralUpsample(vec2 fragcoord, sampler2D colortex, out float outerEdgeRe
   ivec2 UV_COLOR = ivec2(UV*VL_RENDER_SCALE);
   ivec2 UV_NOISE = ivec2(gl_FragCoord.xy*texelSize + 1);
 
-  ivec2 depthCoord = UV_DEPTH + UV_NOISE * SCALE;
-  ivec2 colorCoord = UV_COLOR + UV_NOISE;
-
 	const ivec2 OFFSET[9] = ivec2[9](
     ivec2(-1,-1),
 	 	ivec2( 1, 1),
@@ -369,30 +366,18 @@ vec4 bilateralUpsample(vec2 fragcoord, sampler2D colortex, out float outerEdgeRe
     ivec2(-1, 0)
   );
 
-  const ivec2 OFFSETSCALE[9] = ivec2[9](
-    ivec2(-1,-1)*SCALE,
-	 	ivec2( 1, 1)*SCALE,
-		ivec2(-1, 1)*SCALE,
-		ivec2( 1,-1)*SCALE,
-		ivec2( 0, 0)*SCALE,
-    ivec2( 0, 1)*SCALE,
-    ivec2( 0,-1)*SCALE,
-    ivec2( 1, 0)*SCALE,
-    ivec2(-1, 0)*SCALE
-  );
-
   for(int i = 0; i < samples; i++) {
 
 		#if defined DISTANT_HORIZONS || defined VOXY
-		  float offsetDepth = sqrt(texelFetchOffset(depth, depthCoord, 0, OFFSETSCALE[i])[behindTranslucents]/65000.0);
+      float offsetDepth = sqrt(texelFetch(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0)[behindTranslucents]/65000.0);
     #else
-      float offsetDepth = linearize(texelFetchOffset(depth, depthCoord, 0, OFFSETSCALE[i]).r);
+      float offsetDepth = linearize(texelFetch(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE, 0).r);
     #endif
 
     float edgeDiff = abs(offsetDepth - referenceDepth) < threshold ? 1.0 : 1e-7;
     outerEdgeResults = max(outerEdgeResults, abs(referenceDepth - offsetDepth));
 
-    vec4 offsetColor = texelFetchOffset(colortex, colorCoord, 0, OFFSET[i]);
+    vec4 offsetColor = texelFetch(colortex, UV_COLOR + OFFSET[i] + UV_NOISE, 0);
     colorSum += offsetColor*edgeDiff;
     edgeSum += edgeDiff;
 

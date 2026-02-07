@@ -69,7 +69,6 @@ void main() {
 		if(depthCheck) {
 	#endif
 
-	#if RESOURCEPACK_SKY != 0 && (MAX_COLOR_BUFFERS < 20 && !defined VOXY)
 	#if RESOURCEPACK_SKY != 0
 		gl_FragData[0] = vec4(0.0);
 	#else
@@ -80,6 +79,6 @@ void main() {
 		} else {
 			gl_FragData[0] = texelFetch(colortex16, ivec2(gl_FragCoord.xy), 0);
 		}
-
 	#endif
+
 }

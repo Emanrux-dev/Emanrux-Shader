@@ -410,9 +410,9 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 	#ifdef BASIC_SHADOW_FILTER
 		int samples = int(SHADOW_FILTER_SAMPLE_COUNT * 0.5);
 		#ifdef END_SHADER
-			float rdMul = (4.0*distortFactor*d0*k/shadowMapResolution) * 13.0;
+			float rdMul = 52.0*distortFactor*d0k;
 		#else
-			float rdMul = (4.0*distortFactor*d0*k/shadowMapResolution) * 0.6;
+			float rdMul = 2.4*distortFactor*d0k;
 		#endif
 
 		for(int i = 0; i < samples; i++){

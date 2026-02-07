@@ -23,11 +23,7 @@
 void main() {
 
 	#if RESOURCEPACK_SKY == 1 || RESOURCEPACK_SKY == 2
-		#if MAX_COLOR_BUFFERS > 20 || defined VOXY
-			/* RENDERTARGETS:17 */
-		#else
-			/* RENDERTARGETS:2 */
-		#endif
+		/* RENDERTARGETS:9 */
 
 		bool isStars = renderStage == MC_RENDER_STAGE_STARS;
 
@@ -35,13 +31,13 @@ void main() {
 
 		vec4 COLOR = color;
 
-		vec3 NEWCOLOR = COLOR.rgb * 5.0 * STARS_BRIGHTNESS;
+		vec3 NEWCOLOR = clamp(COLOR.rgb * STARS_BRIGHTNESS, 0.0, 8.0);
 
 		NEWCOLOR.rgb = toLinear(NEWCOLOR.rgb);
 
 		NEWCOLOR.rgb = max(NEWCOLOR.rgb - NEWCOLOR.rgb * interleaved_gradientNoise()*0.05, 0.0);
 		
-		gl_FragData[0] = vec4(NEWCOLOR.rgb*0.1, COLOR.a);
+		gl_FragData[0] = vec4(NEWCOLOR.rgb*0.1, 0.5);
 	#else
 		discard;
 	#endif

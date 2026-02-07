@@ -181,12 +181,13 @@ vec3 worldToView(vec3 worldPos) {
     pos = gbufferModelView * pos;
     return pos.xyz;
 }
-vec4 encode (vec3 n, vec2 lightmaps){
+
+vec2 encodeNormal(vec3 n){
 	n.xy = n.xy / dot(abs(n), vec3(1.0));
 	n.xy = n.z <= 0.0 ? (1.0 - abs(n.yx)) * sign(n.xy) : n.xy;
     vec2 encn = clamp(n.xy * 0.5 + 0.5,-1.0,1.0);
 	
-    return vec4(encn,vec2(lightmaps.x,lightmaps.y));
+    return encn;
 }
 
 //encoding by jodie
@@ -347,18 +348,17 @@ uniform float alphaTestRef;
 
 layout(location = 0) out vec4 OutAlbedo;
 layout(location = 1) out vec4 OutSpecular;
-layout(location = 2) out vec4 OutNormalAO;
 
 #if defined HAND || defined ENTITIES || defined BLOCKENTITIES
-	layout(location = 3) out vec4 OutTranslucents;
+	layout(location = 2) out vec4 OutTranslucents;
 	#ifdef VOXY
-		layout(location = 4) out vec4 OutTranslucents2;
-		/* RENDERTARGETS:1,8,15,2,7 */
+		layout(location = 3) out vec4 OutTranslucents2;
+		/* RENDERTARGETS:1,8,2,7 */
 	#else
-		/* RENDERTARGETS:1,8,15,2 */
+		/* RENDERTARGETS:1,8,2 */
 	#endif
 #else
-	/* RENDERTARGETS:1,8,15 */
+	/* RENDERTARGETS:1,8 */
 #endif
 
 void main() {
@@ -495,22 +495,16 @@ void main() {
 
 	float opaqueMasks = 1.0;
 
-	#ifndef HAND
+	#ifdef HAND
+		opaqueMasks = 0.75;
+	#else
 		#if defined WORLD && !defined ENTITIES
 			if(data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL || data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_LOWER || data_in.blockID == BLOCK_GRASS_TALL_UPPER ) opaqueMasks = 0.60;
 			else if(data_in.blockID == BLOCK_AIR_WAVING) opaqueMasks = 0.55;
 		#endif
 
 		#if defined ENTITIES
-			// try and single out nametag text and then discard nametag background
-			// if( dot(gl_Color.rgb, vec3(1.0/3.0)) < 1.0) vNameTags = 1;
-			// if(gl_Color.a < 1.0) vNameTags = 1;
-			// if(gl_Color.a >= 0.24 && gl_Color.a <= 0.25 ) gl_Position = vec4(10,10,10,1);
-			#ifdef INCLUDE_UNLISTED_ENTITIES
-				opaqueMasks = 0.45;
-			#else
-				if(data_in.blockID == ENTITY_SSS_NONE || data_in.blockID == ENTITY_BOAT || data_in.blockID == ENTITY_SMALLSHIPS || data_in.blockID == ENTITY_SSS_MEDIUM || data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER || data_in.blockID == ENTITY_CURRENT_PLAYER) opaqueMasks = 0.45;
-			#endif
+			opaqueMasks = 0.45;
 		#endif
 
 		#if !defined BLOCKENTITIES && !defined ENTITIES && defined SHADER_GRASS && !defined COLORWHEEL && !defined HAND && !defined CUTOUT
@@ -716,8 +710,7 @@ void main() {
 	#endif
 
 	#ifdef WORLD
-		if (Albedo.a > 0.1) Albedo.a = opaqueMasks;
-		else Albedo.a = 0.0;
+		Albedo.a = opaqueMasks;
 
 		#if defined POM_OFFSET_SHADOW_BIAS && defined POM && (!defined ENTITIES && !defined HAND || defined COLORWHEEL)
 			if(saveDepth > 0) Albedo.a = saveDepth;
@@ -766,6 +759,7 @@ void main() {
 	//////////////////////////////// 				//////////////////////////////// 
 	
 	#ifdef WORLD
+		normal = viewToWorld(normal);
 
 		float SSSAMOUNT = 0.0;
 		#if (SSS_TYPE == 1 || SSS_TYPE == 2) && !defined HAND
@@ -982,17 +976,26 @@ void main() {
 			PackLightmaps = clamp( PackLightmaps + PackLightmaps * (BN-0.5)*0.005,0,1);
 		#endif
 
-		normal = viewToWorld(normal);
-
 		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT
 			if (ShaderGrass) {flatNormals = data_in.normalMat; normal = data_in.texcoordam.xyz;}
 		#endif
 
-		vec4 data1 = clamp( encode(normal, PackLightmaps), 0.0, 1.0);
+		vec4 data1 = clamp(vec4(encodeNormal(normal), PackLightmaps), 0.0, 1.0);
+
+		Albedo = clamp(Albedo, 0.0, 1.0);
 
 		OutAlbedo = vec4(encodeVec2(Albedo.x,data1.x),	encodeVec2(Albedo.y,data1.y),	encodeVec2(Albedo.z,data1.z),	encodeVec2(data1.w,Albedo.w));
 
-		OutNormalAO = vec4(flatNormals * 0.5 + 0.5, vanillaAO);
+		vec4 otherData = clamp(vec4(flatNormals * 0.5 + 0.5, vanillaAO), 0.0, 1.0);
+		OutSpecular = clamp(OutSpecular, 0.0, 1.0);
+
+		OutSpecular = vec4(
+			encodeVec2(OutSpecular.x, otherData.x),
+			encodeVec2(OutSpecular.y, otherData.y),
+			encodeVec2(OutSpecular.z, otherData.z),
+			encodeVec2(OutSpecular.w, otherData.w)
+		);
+
 	#endif
 	
 }

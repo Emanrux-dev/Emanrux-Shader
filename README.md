@@ -8,7 +8,6 @@ Notable changes/additions compared to Bliss unstable:
  + Water wave simulation for the player
  + Shader Grass
  + Aurora & Rainbow
- + Handheld shadows
  + Additional cirrus & cumulonimbus cloud layers (WIP)
  + Distant Horizons chunk fading
  + Moon Texture with phases

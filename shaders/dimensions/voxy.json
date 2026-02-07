@@ -4,7 +4,7 @@
         #include "/lib/res_params.glsl"
     ",
     "version": 1,
-    "opaqueDrawBuffers": [1, 8, 15],
+    "opaqueDrawBuffers": [1, 8],
     "excludeLodsFromVanillaDepth": true,
     "translucentDrawBuffers": [16, 7, 11, 14],
     #ifdef TAA

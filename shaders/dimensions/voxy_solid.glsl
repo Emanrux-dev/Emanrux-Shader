@@ -10,14 +10,13 @@
 
 layout (location = 0) out vec4 gbuffer_data_0;
 layout (location = 1) out vec4 gbuffer_data_1;
-layout (location = 2) out vec4 gbuffer_data_2;
 
-vec4 encode (vec3 n, vec2 lightmaps){
+vec2 encodeNormal(vec3 n){
 	n.xy = n.xy / dot(abs(n), vec3(1.0));
 	n.xy = n.z <= 0.0 ? (1.0 - abs(n.yx)) * sign(n.xy) : n.xy;
     vec2 encn = clamp(n.xy * 0.5 + 0.5,-1.0,1.0);
 	
-    return vec4(encn,vec2(lightmaps.x,lightmaps.y));
+    return encn;
 }
 
 //encoding by jodie
@@ -134,12 +133,25 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 
 	if (normal.z<=-0.9) normal.xy = vec2(-0.0000000000001);
 
-    vec4 data1 = clamp( encode(normal, parameters.lightMap), 0.0, 1.0);
+	vec2 lightmap = parameters.lightMap;
+
+    vec4 data1 = clamp(vec4(encodeNormal(normal), lightmap), 0.0, 1.0);
+
+	Albedo = clamp(Albedo, 0.0, 1.0);
     
     gbuffer_data_0 = vec4(encodeVec2(Albedo.x,data1.x),	encodeVec2(Albedo.y,data1.y),	encodeVec2(Albedo.z,data1.z),	encodeVec2(data1.w,Albedo.w));
 
+	EMISSIVE = clamp(EMISSIVE, 0.0, 0.99);
     gbuffer_data_1 = vec4(0.0, 0.0, SSSAMOUNT, EMISSIVE);
 
-    gbuffer_data_2 = vec4(normal * 0.5 + 0.5, 0.0);
+	vec4 otherData = clamp(vec4(normal * 0.5 + 0.5, 0.0), 0.0, 1.0);
+	gbuffer_data_1 = clamp(gbuffer_data_1, 0.0, 1.0);
+
+	gbuffer_data_1 = vec4(
+		encodeVec2(gbuffer_data_1.x, otherData.x),
+		encodeVec2(gbuffer_data_1.y, otherData.y),
+		encodeVec2(gbuffer_data_1.z, otherData.z),
+		encodeVec2(gbuffer_data_1.w, otherData.w)
+	);
 
 }

@@ -104,7 +104,7 @@ vec4 GetVolumetricFog(
 	//however we still have to send it to curved shadow map space every step
 	vec3 dV = fragposition - start;
 
-	// vec3 nPlayerPos = normalize(playerPos);
+	vec3 rayDir = normalize(playerPos);
 
 	float rayLength = length(dVWorld);
 
@@ -133,12 +133,12 @@ vec4 GetVolumetricFog(
 	// float atmosphereAbsorbance = 1.0;
 	vec3 atmosphereAbsorbance = vec3(1.0);
 
-	float SdotV = dot(sunVector, normalize(playerPos));
+	float SdotV = dot(sunVector, rayDir);
 
 	///// ----- fog lighting
 	//Mie phase + somewhat simulates multiple scattering (Horizon zero down cloud approx)
 	float sunPhase = fogPhase(SdotV)*5.0;
-	float skyPhase = 0.5 + pow(1.0-pow(1.0-clamp(normalize(playerPos).y*0.5+0.5,0.0,1.0),2.0),5.0)*2.0;
+	float skyPhase = 0.5 + pow(1.0-pow(1.0-clamp(rayDir.y*0.5+0.5,0.0,1.0),2.0),5.0)*2.0;
 	float rayL = phaseRayleigh(SdotV);
 
 	vec3 rC = vec3(sky_coefficientRayleighR*1e-6, sky_coefficientRayleighG*1e-5, sky_coefficientRayleighB*1e-5) ;

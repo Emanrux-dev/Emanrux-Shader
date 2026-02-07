@@ -187,8 +187,10 @@ void main() {
 
     // PackLightmaps.y *= 1.05;
     PackLightmaps = min(max(PackLightmaps,0.0)*1.05,1.0);
+
+    normals = viewToWorld(normals);
     
-    vec4 data1 = clamp( encode(viewToWorld(normals), PackLightmaps), 0.0, 1.0);
+    vec4 data1 = clamp( encode(normals, PackLightmaps), 0.0, 1.0);
     
     // alpha is material masks, set it to 0.65 to make a DH LODs mask. 
 	#ifdef DH_NOISE_TEXTURE
@@ -218,6 +220,8 @@ void main() {
     #ifdef WhiteWorld
         Albedo.rgb = vec3(0.5);
     #endif
+
+    Albedo = clamp(Albedo, 0.0, 1.0);
     
     gl_FragData[0] = vec4(encodeVec2(Albedo.x,data1.x),	encodeVec2(Albedo.y,data1.y),	encodeVec2(Albedo.z,data1.z),	encodeVec2(data1.w, materials));
     
@@ -236,4 +240,14 @@ void main() {
 	#else
 		gl_FragData[2].b = SSSAMOUNT;
 	#endif
+
+    vec4 otherData = clamp(vec4(normals * 0.5 + 0.5, 0.0), 0.0, 1.0);
+    gl_FragData[2] = clamp(gl_FragData[2], 0.0, 1.0);
+
+    gl_FragData[2] = vec4(
+        encodeVec2(gl_FragData[2].x, otherData.x),
+        encodeVec2(gl_FragData[2].y, otherData.y),
+        encodeVec2(gl_FragData[2].z, otherData.z),
+        encodeVec2(gl_FragData[2].w, otherData.w)
+    );
 }

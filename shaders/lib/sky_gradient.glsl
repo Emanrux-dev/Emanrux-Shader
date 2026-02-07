@@ -58,10 +58,12 @@ vec3 drawMoon(vec3 PlayerPos, vec3 WorldSunVec, vec3 Color, inout vec3 occludeSt
 vec3 drawRealMoon(vec3 PlayerPos, vec3 WorldSunVec, vec3 Color, inout vec3 occludeStars, float size){
 
 	float Shape = min(max(dot(WorldSunVec,PlayerPos)-size,0.0)/(1.0-size),1.0);
+
+	Shape = pow(Shape, 0.15);
 	
 	occludeStars *= max(1.0-Shape*50.0, 0.0);
 
-	return Shape * Color/4000 * 3.0;
+	return Color/750.0 * Shape;
 }
 
 float w0(float a)

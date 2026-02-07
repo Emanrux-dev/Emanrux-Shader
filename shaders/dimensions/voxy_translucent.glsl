@@ -150,7 +150,7 @@ vec3 rayTrace(vec3 dir, vec3 position, float dither, float fresnel) {
     float maxZ = spos.z;
     
     for (int i = 0; i <= int(quality); i++) {
-		#if DEFERRED_SSR_QUALITY != 1
+		#if FORWARD_SSR_QUALITY != 1
 			if(spos.x < 0 || spos.x > 1 || spos.y < 0 || spos.y > 1) return vec3(1.1);
 		#endif
 

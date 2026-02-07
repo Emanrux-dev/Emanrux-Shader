@@ -42,7 +42,6 @@ uniform sampler2D colortex11;
 uniform sampler2D colortex12;
 uniform sampler2D colortex13;
 uniform sampler2D colortex14;
-uniform sampler2D colortex15;
 uniform vec2 texelSize;
 
 uniform float viewHeight;
@@ -335,9 +334,9 @@ vec4 bilateralUpsample(vec2 fragcoord, sampler2D colortex, out float outerEdgeRe
   vec4 colorSum = vec4(0.0);
   float edgeSum = 0.0;
   #if defined DISTANT_HORIZONS || defined VOXY
-    float threshold = 0.05;
+    const float threshold = 0.05;
   #else
-    float threshold = 0.005;
+    const float threshold = 0.005;
   #endif
 
   #ifdef HQ_CLOUD_UPSAMPLE
@@ -369,7 +368,7 @@ vec4 bilateralUpsample(vec2 fragcoord, sampler2D colortex, out float outerEdgeRe
   for(int i = 0; i < samples; i++) {
 
 		#if defined DISTANT_HORIZONS || defined VOXY
-      float offsetDepth = sqrt(texelFetch(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0)[behindTranslucents]/65000.0);
+      float offsetDepth = sqrt(texelFetch(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0)[behindTranslucents]);
     #else
       float offsetDepth = linearize(texelFetch(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE, 0).r);
     #endif
@@ -616,8 +615,8 @@ void main() {
 
   ////// --------------- get volumetrics
   #if defined DISTANT_HORIZONS || defined VOXY
-	  float DH_mixedLinearZ = sqrt(texelFetch(colortex12,ivec2(gl_FragCoord.xy),0).z/65000.0);
-    vec4 temporallyFilteredVL = VLTemporalFiltering(playerPos, DH_mixedLinearZ, colortex12, hand);
+	  float DH_mixedLinearZ = sqrt(texelFetch(colortex9,ivec2(gl_FragCoord.xy),0).z);
+    vec4 temporallyFilteredVL = VLTemporalFiltering(playerPos, DH_mixedLinearZ, colortex9, hand);
   #else
     vec4 temporallyFilteredVL = VLTemporalFiltering(playerPos, frDepth, depthtex0, hand);
   #endif
@@ -783,8 +782,8 @@ void main() {
   ////// --------------- get volumetrics behind translucents
   float blank = 0.0;
   #if defined DISTANT_HORIZONS || defined VOXY
-    DH_mixedLinearZ = sqrt(texelFetch(colortex12,ivec2(gl_FragCoord.xy),0).a/65000.0);
-    vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, DH_mixedLinearZ, colortex12, hand, 3);
+    DH_mixedLinearZ = sqrt(texelFetch(colortex9,ivec2(gl_FragCoord.xy),0).a);
+    vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, DH_mixedLinearZ, colortex9, hand, 3);
   #else
     vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, linearize(texelFetch(depthtex1, ivec2(refractedCoord/texelSize),0).x), depthtex1, hand, 3);
   #endif
@@ -905,7 +904,7 @@ void main() {
   // (bloomy) rain effect
   #ifdef OVERWORLD_SHADER
     #if RAIN_MODE == 0 // brighten the color behind
-      float rainDrops = texelFetch(colortex9,ivec2(texcoord/texelSize),0).a;
+      float rainDrops = texelFetch(colortex9,ivec2(texcoord/texelSize),0).r;
       if(hand) rainDrops *= (1.0-TranslucentShader.a);
 
       if(rainDrops > 0.01) {
@@ -914,6 +913,7 @@ void main() {
       }
     #else // add albedo of weather particle
       vec4 rainDrops = texelFetch(colortex9,ivec2(texcoord/texelSize),0);
+      rainDrops = vec4(decodeVec2(rainDrops.x), decodeVec2(rainDrops.y));
       if(hand) rainDrops.a *= (1.0-TranslucentShader.a);
 
       if(rainDrops.a > 0.01) {

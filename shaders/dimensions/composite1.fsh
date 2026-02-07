@@ -110,13 +110,12 @@ uniform sampler2D colortex5; //TAA buffer/previous frame
 uniform sampler2D colortex6; //Noise
 uniform sampler2D colortex7; //water?
 uniform sampler2D colortex8; //Specular
-// uniform sampler2D colortex9; //Specular
+uniform sampler2D colortex9;
 uniform sampler2D colortex10;
 uniform sampler2D colortex11;
 uniform sampler2D colortex12;
 uniform sampler2D colortex13;
 uniform sampler2D colortex14;
-uniform sampler2D colortex15; // flat normals(rgb), vanillaAO(alpha)
 
 in DATA {
 	flat vec2 TAA_Offset;
@@ -622,7 +621,7 @@ void doEdgeAwareBlur(
 
 	for(int i = 0; i < 4; i++) {
 		#if defined DISTANT_HORIZONS || defined VOXY
-			float offsetDepth = sqrt(texelFetch(depth, UV + OFFSET[i] + UV_NOISE,0).z/65000.0);
+			float offsetDepth = sqrt(texelFetch(depth, UV + OFFSET[i] + UV_NOISE,0).z);
 		#else
 			float offsetDepth = ld(convertHandDepth_2(texelFetch(depth, UV + OFFSET[i] + UV_NOISE, 0).r,hand));
 		#endif
@@ -688,7 +687,7 @@ vec4 BilateralUpscale_VLFOG(sampler2D tex, sampler2D depth, float referenceDepth
 
 	for(int i = 0; i < samples; i++) {
 		#if defined DISTANT_HORIZONS || defined VOXY
-			float offsetDepth = sqrt(texelFetch(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).a/65000.0);
+			float offsetDepth = sqrt(texelFetch(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE,0).a);
 		#else
 			float offsetDepth = ld(texelFetch(depth, UV_DEPTH + (OFFSET[i] + UV_NOISE) * SCALE, 0).r);
 		#endif
@@ -715,7 +714,7 @@ vec3 ComputeShadowMap_COLOR(in vec3 projectedShadowPosition, float distortFactor
 
 	#ifdef BASIC_SHADOW_FILTER
 		int samples = SHADOW_FILTER_SAMPLE_COUNT;
-		float rdMul = (shadowBlockerDepth*distortFactor*d0*k/shadowMapResolution) * 0.3;
+		float rdMul = (shadowBlockerDepth*distortFactor*d0k) * 0.3;
 		
 		for(int i = 0; i < samples; i++){
 			vec2 offsetS = CleanSample(i, samples - 1, noise) * rdMul;
@@ -976,7 +975,7 @@ void main() {
 		#if defined DISTANT_HORIZONS || defined VOXY
 			bool isDHrange = z >= 1.0;
 
-			float DH_mixedLinearZ = sqrt(texelFetch(colortex12,ivec2(gl_FragCoord.xy), 0).z/65000.0);
+			float DH_mixedLinearZ = sqrt(texelFetch(colortex9,ivec2(gl_FragCoord.xy), 0).z);
 			float DH_depth0 = 0.0;
 			if(isDHrange) DH_depth0 = texelFetch(dhVoxyDepthTex,ivec2(gl_FragCoord.xy), 0).x;
 			float DH_depth1 = texelFetch(dhVoxyDepthTex1,ivec2(gl_FragCoord.xy), 0).x;
@@ -994,12 +993,13 @@ void main() {
 
 			swappedDepth = depthOpaque;
 		#else
-			bool isDHrange = false;
-			float DH_depth0 = 0.0;
-			float DH_depth1 = 0.0;
+			const bool isDHrange = false;
+			const float DH_depth0 = 0.0;
+			const float DH_depth1 = 0.0;
 		#endif
 
 		bool eyeInWater = isEyeInWater == 1;
+		bool isSky = swappedDepth >= 1.0;
 
 	////// --------------- UNPACK OPAQUE GBUFFERS --------------- //////
 	
@@ -1032,20 +1032,21 @@ void main() {
 
 	////// --------------- UNPACK MISC --------------- //////
 	
-		vec4 SpecularTex = texelFetch(colortex8, ivec2(gl_FragCoord.xy), 0);
-		float LabSSS = clamp((-65.0 + SpecularTex.z * 255.0) / 190.0 ,0.0,1.0);	
-		// LabSSS = 1;
+		vec4 SpecularData = texelFetch(colortex8, ivec2(gl_FragCoord.xy), 0);
+		vec4 specdataUnpacked0 = vec4(decodeVec2(SpecularData.x),decodeVec2(SpecularData.y));
+		vec4 specdataUnpacked1 = vec4(decodeVec2(SpecularData.z),decodeVec2(SpecularData.w));
 
-		vec4 normalAndAO = texelFetch(colortex15, ivec2(gl_FragCoord.xy), 0);
-		vec3 FlatNormals = normalize(normalAndAO.rgb * 2.0 - 1.0);
+		vec4 SpecularTex = vec4(specdataUnpacked0.xz, specdataUnpacked1.xz);
+		vec3 FlatNormals = normalize(vec3(specdataUnpacked0.yw,specdataUnpacked1.y) * 2.0 - 1.0);
+		float vanilla_AO = min(max(specdataUnpacked1.w-0.005,0.0)/0.995,1.0);
+
+		float LabSSS = clamp((-65.0 + SpecularTex.z * 255.0) / 190.0 ,0.0,1.0);
+		// float labPorosity = clamp(SpecularTex.z * 255.0, 0.0,64.5)/64.5;
+
 		vec3 slopednormal = normal;
-
-		float vanilla_AO = z < 1.0 ? clamp(normalAndAO.a,0,1) : 0.0;
-		// normalAndAO.a = clamp(pow(normalAndAO.a*5,4),0,1);
 
 		if(isDHrange){
 			FlatNormals = normal;
-			slopednormal = normal;
 		}
 
 
@@ -1083,7 +1084,7 @@ void main() {
 		#if defined POM_OFFSET_SHADOW_BIAS
 			float POM_DEEPNESS = opaqueMasks < 0.43 ? 1.0 - min(max(0.4-opaqueMasks,0.0)/0.4,1.0) : 0.0;
 		#else
-			float POM_DEEPNESS = 0.0;
+			const float POM_DEEPNESS = 0.0;
 		#endif
 		// bool handwater = abs(translucentMasks-0.3) < 0.01 ;
 		// bool blocklights = abs(opaqueMasks-0.8) <0.01;
@@ -1178,8 +1179,6 @@ void main() {
 			shadowColor = DirectLightColor;
 		#endif
 
-		MinimumLightColor = MinimumLightColor + 0.7 * MinimumLightColor * dot(slopednormal, feetPlayerPos_normalized);
-
 	////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////	UNDER WATER SHADING		////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////
@@ -1208,53 +1207,55 @@ void main() {
 		
 		Absorbtion = exp(-totEpsilon * max(Vdiff, minimumAbsorbance));
 
-		// things to note about sunlight in water
-		// sunlight gets absorbed by water on the way down to the floor, and on the way back up to your eye. im gonna ingore the latter part lol
-		// based on the angle of the sun, sunlight will travel through more/less water to reach the same spot. scale absorbtion depth accordingly
-		vec3 sunlightAbsorbtion = exp(-totEpsilon * (estimatedDepth/abs(WsunVec.y)));
+		if(!isSky) {
+			// things to note about sunlight in water
+			// sunlight gets absorbed by water on the way down to the floor, and on the way back up to your eye. im gonna ingore the latter part lol
+			// based on the angle of the sun, sunlight will travel through more/less water to reach the same spot. scale absorbtion depth accordingly
+			vec3 sunlightAbsorbtion = exp(-totEpsilon * (estimatedDepth/abs(WsunVec.y)));
 
-		float percievedWaterDepth = estimatedDepth;
+			float percievedWaterDepth = estimatedDepth;
 
-		if (eyeInWater){
-			estimatedDepth = 1.0;
+			if (eyeInWater){
+				estimatedDepth = 1.0;
 
-			// viewerWaterDepth = max(0.9-lightmap.y,0.0)*3.0;
-	  		float distanceFromWaterSurface = -(worldPos.y - waterEnteredAltitude);//max(-(feetPlayerPos.y + (cameraPosition.y - waterEnteredAltitude)),0.0) ;
+				// viewerWaterDepth = max(0.9-lightmap.y,0.0)*3.0;
+				float distanceFromWaterSurface = -(worldPos.y - waterEnteredAltitude);//max(-(feetPlayerPos.y + (cameraPosition.y - waterEnteredAltitude)),0.0) ;
+				
+				percievedWaterDepth = distanceFromWaterSurface;
+
+				distanceFromWaterSurface = max(distanceFromWaterSurface,0.0);
+
+				Absorbtion = exp(-totEpsilon * distanceFromWaterSurface);
+				
+				sunlightAbsorbtion = exp(-totEpsilon * (distanceFromWaterSurface/abs(WsunVec.y)));
+			} else {
+				// use hardcoded gradient position if the water surface normal does not face upwards.
+				vec3 waterNormal = clamp(normalize(cross(dFdx(playerPos0), dFdy(playerPos0))),0,1); // it uses depth that has POM written to it.
+				percievedWaterDepth = mix(-(feetPlayerPos.y + cameraPosition.y), percievedWaterDepth, waterNormal.y);
+			}
 			
-			percievedWaterDepth = distanceFromWaterSurface;
+			DirectLightColor *= sunlightAbsorbtion;
 
-			distanceFromWaterSurface = max(distanceFromWaterSurface,0.0);
+			if( nightVision > 0.0 ) Absorbtion += exp(-totEpsilon * 25.0) * nightVision;
 
-			Absorbtion = exp(-totEpsilon * distanceFromWaterSurface);
-			
-			sunlightAbsorbtion = exp(-totEpsilon * (distanceFromWaterSurface/abs(WsunVec.y)));
-		} else {
-			// use hardcoded gradient position if the water surface normal does not face upwards.
-	    	vec3 waterNormal = clamp(normalize(cross(dFdx(playerPos0), dFdy(playerPos0))),0,1); // it uses depth that has POM written to it.
-			percievedWaterDepth = mix(-(feetPlayerPos.y + cameraPosition.y), percievedWaterDepth, waterNormal.y);
+			// vec2 causticPos = pos.xz;
+			// causticPos = mix(causticPos, pos.xz, max(FlatNormals.y,0));
+			// causticPos = mix(causticPos, pos.xy, max(-FlatNormals.y,0));
+			// causticPos = mix(causticPos, pos.zy, max(FlatNormals.x,0));
+			// causticPos = mix(causticPos, pos.xy, max(-FlatNormals.z,0));
+			// causticPos = mix(causticPos, pos.xy, max(FlatNormals.x,0));
+			// causticPos = mix(causticPos, pos.xy, max(-FlatNormals.x,0));
+
+			// apply caustics to the lighting, and make sure they dont look weird
+			DirectLightColor *= pow(mix(1.0, waterCaustics(worldPos, WsunVec, percievedWaterDepth)*WATER_CAUSTICS_BRIGHTNESS, clamp(estimatedDepth,0,1)), WATER_CAUSTICS_POWER);
 		}
-		
-		DirectLightColor *= sunlightAbsorbtion;
-
-		if( nightVision > 0.0 ) Absorbtion += exp(-totEpsilon * 25.0) * nightVision;
-
-		// vec2 causticPos = pos.xz;
-		// causticPos = mix(causticPos, pos.xz, max(FlatNormals.y,0));
-		// causticPos = mix(causticPos, pos.xy, max(-FlatNormals.y,0));
-		// causticPos = mix(causticPos, pos.zy, max(FlatNormals.x,0));
-		// causticPos = mix(causticPos, pos.xy, max(-FlatNormals.z,0));
-		// causticPos = mix(causticPos, pos.xy, max(FlatNormals.x,0));
-		// causticPos = mix(causticPos, pos.xy, max(-FlatNormals.x,0));
-
-		// apply caustics to the lighting, and make sure they dont look weird
-		DirectLightColor *= pow(mix(1.0, waterCaustics(worldPos, WsunVec, percievedWaterDepth)*WATER_CAUSTICS_BRIGHTNESS, clamp(estimatedDepth,0,1)), WATER_CAUSTICS_POWER);
 	}
 
 
-	if (swappedDepth < 1.0) {
+	if (!isSky) {
+		MinimumLightColor = MinimumLightColor + 0.7 * MinimumLightColor * dot(slopednormal, feetPlayerPos_normalized);
 
 		// idk why this do
-
 		// this seems to be compensating view bobbing, but why not do this when calculating feetPlayerPos? hmmm
 		feetPlayerPos += gbufferModelViewInverse[3].xyz;
 		worldPos = feetPlayerPos + cameraPosition;
@@ -1263,7 +1264,7 @@ void main() {
 	////////////////////////////////////////////////////////////////////////////////////////////
 
 		#if (defined DISTANT_HORIZONS && defined DH_AMBIENT_OCCLUSION) || (defined VOXY && defined VOXY_AMBIENT_OCCLUSION)
-			doEdgeAwareBlur(colortex3,	colortex14, colortex12, DH_mixedLinearZ, hand, SSAO_SSS, filteredShadow);
+			doEdgeAwareBlur(colortex3,	colortex14, colortex9, DH_mixedLinearZ, hand, SSAO_SSS, filteredShadow);
 		#else
 			doEdgeAwareBlur(colortex3,	colortex14, depthtex0, ld(z0), 	hand, SSAO_SSS, filteredShadow);
 		#endif
@@ -1736,7 +1737,7 @@ void main() {
 								float normalSunLight = dot(worldNormal, unsigned_WsunVec);
 								
 								// smoothstep to boost contrast
-								mask *= smoothstep(-1.0, 1.0, normalSunLight);
+								mask *= smoothstep(-0.5, 0.5, normalSunLight);
 							#else
 								float mask = smoothstep(-0.2, 0.12, sunLight);
 							#endif
@@ -1759,11 +1760,11 @@ void main() {
 
 								moonphaseMult = phase[moonPhase];
 							#endif
-							vec3 moonTex = (1 - vec3(0.0, 0.5, 0.7)*clamp((1-0.5*v)*moonVis, 0.0, 1.0)) * moonphaseMult * texture(moon, moonSphericalUV).rgb;
+							vec3 moonTex = (1.0 - vec3(0.0, 0.5, 0.7)*clamp((1-0.5*v)*moonVis, 0.0, 1.0)) * moonphaseMult * texture(moon, moonSphericalUV).rgb;
 						#endif
 						
 						vec3 moonLightCol = moonColorBase2;
-						Background += pow(moonTex, vec3(3.2)) * 20.0 * drawRealMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background, moonSize);
+						Background += pow(moonTex, vec3(3.2)) * 17.0 * drawRealMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background, moonSize);
 					#else
 						vec3 moonLightCol = moonColorSSBO / 2400.0;
 						Background += drawMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background); 

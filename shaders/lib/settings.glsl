@@ -795,11 +795,6 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #define EMISSIVE_TRIMS 1 // [0 1 2]
 #define EMISSIVE_TRIMS_STRENGTH 0.7 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
 
-// #define INCLUDE_UNLISTED_ENTITIES
-
-#ifdef INCLUDE_UNLISTED_ENTITIES
-#endif
-
 #define HARDCODED_EMISSIVES_APPROX
 
 #ifdef HARDCODED_EMISSIVES_APPROX

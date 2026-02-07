@@ -26,11 +26,7 @@
 void main() {
 
 	#if RESOURCEPACK_SKY != 0
-		#if MAX_COLOR_BUFFERS > 20 || defined VOXY
-			/* RENDERTARGETS:17 */
-		#else
-			/* RENDERTARGETS:2 */
-		#endif
+		/* RENDERTARGETS:9 */
 
 		vec4 COLOR = texture(gtexture, texcoord.xy) * color;
 
@@ -48,9 +44,13 @@ void main() {
 
 		vec3 NEWCOLOR = COLOR.rgb;
 
-		if(isSun) NEWCOLOR.rgb = COLOR.rgb * 10.0;
-		if(isMoon) NEWCOLOR.rgb = COLOR.rgb * 5.0;
-		if(isSkyBox) NEWCOLOR.rgb = COLOR.rgb * 2.0;
+		// if(isSun) NEWCOLOR.rgb = COLOR.rgb * 10.0;
+		// if(isMoon) NEWCOLOR.rgb = COLOR.rgb * 5.0;
+		// if(isSkyBox) NEWCOLOR.rgb = COLOR.rgb * 2.0;
+
+		if(isSun) COLOR.a = 1.0;
+		if(isMoon) COLOR.a = 0.5;
+		if(isSkyBox) COLOR.a = 0.2;
 
 		NEWCOLOR.rgb = toLinear(NEWCOLOR.rgb);
 

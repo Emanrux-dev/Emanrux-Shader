@@ -13,6 +13,10 @@ uniform sampler2D depthtex2;
 uniform sampler2D noisetex;
 uniform sampler2D shadowcolor1;
 
+#ifndef IS_IRIS
+  #include "/lib/text_rendering.glsl"
+#endif
+
 #if DEBUG_VIEW == debug_CLOUDDEPTHTEX && defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
   #extension GL_NV_gpu_shader5 : enable
   #extension GL_ARB_shader_image_load_store : enable
@@ -231,12 +235,23 @@ void main() {
 
   #if DEBUG_VIEW == debug_WATERSIM && WATER_INTERACTION == 2
     if (hideGUI == 1) {
-    gl_FragColor.rgb += vec3(imageLoad(waveSim2, ivec2(gl_FragCoord.xy)*16).x);
+    gl_FragColor.rgb += vec3(imageLoad(waveSim2, ivec2(gl_FragCoord.xy)*5).x);
 
     vec2 offsetCoords = vec2(gl_FragCoord.x-840.0, gl_FragCoord.y);
-    vec2 waveGradients = vec2(imageLoad(waveSim2, ivec2(offsetCoords)*16).zw);
+    vec2 waveGradients = vec2(imageLoad(waveSim2, ivec2(offsetCoords)*5).zw);
     vec3 waveNormals = normalize(vec3(waveGradients.x, waveGradients.y, 0.2));
     if (length(waveNormals.xy) > 0.0) gl_FragColor.rgb += waveNormals;
     }
+  #endif
+
+  #ifndef IS_IRIS
+    gl_FragColor.rgb = vec3(0.0);
+    beginText(ivec2(gl_FragCoord.xy), ivec2(0.05*viewWidth, 0.75*viewHeight));
+    text.fgCol = vec4(1.0, 0.0, 0.0, 1.0);
+    printString((_O, _p, _t, _i, _F, _i, _n, _e, _space, _d, _o, _e, _s, _space, _n, _o, _t, _space, _s, _u, _p, _p, _o, _r, _t, _space, _E, _c, _l, _i, _p, _s, _e, _exclm));
+    printLine();
+    printLine();
+    printString((_U, _s, _e, _space, _I, _r, _i, _s, _space, _i, _n, _s, _t, _e, _a, _d, _exclm));
+    endText(gl_FragColor.rgb);
   #endif
 }

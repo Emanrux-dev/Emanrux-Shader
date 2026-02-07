@@ -110,7 +110,7 @@ float invertLinearizeDepthFast(const in float z) {
 }
 
 
-vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, bool hand, inout float reflectionLength, inout bool depthCheck){
+vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, const bool hand, inout float reflectionLength, inout bool depthCheck){
 
 	const float biasAmount = 0.0001;
 
@@ -200,20 +200,12 @@ vec3 rayTraceSpeculars(vec3 dir, vec3 position, float dither, float quality, boo
 		#endif
 		
 		#if (defined VOXY && defined VOXY_REFLECTIONS) || (defined DISTANT_HORIZONS && defined DH_SCREENSPACE_REFLECTIONS)
-		if (sp > 0.9999999){
-			#ifdef QUARTER_RES_SSR
-				#ifdef FULLRESDEPTH
-					sp = texelFetch(dhVoxyDepthTex, ivec2(spos2.xy/texelSize),0).r;
-				#else
-					sampleDepth = texelFetch(colortex12, ivec2(spos2.xy/texelSize/4.0),0).a/65000.0;
-					sp = DH_invLinZ(sqrt(sampleDepth));
-				#endif
+		if (sp >= 1.0){
+
+			#ifdef FULLRESDEPTH
+				sp = texelFetch(dhVoxyDepthTex, ivec2(spos2.xy/texelSize),0).r;
 			#else
-				#ifdef FULLRESDEPTH
-					sp = texelFetch(dhVoxyDepthTex, ivec2(spos2.xy/texelSize),0).r;
-				#else
-					sp = texelFetch(dhVoxyDepthTex1, ivec2(spos2.xy/texelSize),0).r;
-				#endif
+				sp = texelFetch(dhVoxyDepthTex1, ivec2(spos2.xy/texelSize),0).r;
 			#endif
 
 			if(sp < max(minZ2, maxZ2) && sp > min(minZ2, maxZ2)) {

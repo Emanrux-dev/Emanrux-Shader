@@ -407,34 +407,34 @@ void main() {
 	#endif
 
 		
-	#ifdef AEROCHROME_MODE
-		float gray = dot(Albedo.rgb, vec3(0.2, 1.0, 0.07));
-		if (
-			data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER 
-			|| data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_SSS_STRONG3 || data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_CACTUS
-			|| data_in.blockID == BLOCK_CELESTIUM || data_in.blockID == BLOCK_SNOW_LAYERS
-			|| data_in.blockID >= 10 && data_in.blockID < 80
-		) {
-			// IR Reflective (Pink-red)
-			Albedo.rgb = mix(vec3(gray), aerochrome_color, 0.7);
-		}
-		else if(data_in.blockID == BLOCK_GRASS) {
-		// Special handling for grass block
-			float strength = 1.0 - Color.b;
-			Albedo.rgb = mix(Albedo.rgb, aerochrome_color, strength);
-		}
-		#ifdef AEROCHROME_WOOL_ENABLED
-			else if (data_in.blockID == BLOCK_SSS_WEAK_2 || data_in.blockID == BLOCK_CARPET) {
-			// Wool
-				Albedo.rgb = mix(Albedo.rgb, aerochrome_color, 0.3);
-			}
-		#endif
-		else if(data_in.blockID == BLOCK_WATER || (data_in.blockID >= 300 && data_in.blockID < 400))
-		{
-		// IR Absorbsive? Dark.
-			Albedo.rgb = mix(Albedo.rgb, vec3(0.01, 0.08, 0.15), 0.5);
-		}
-	#endif
+	// #ifdef AEROCHROME_MODE
+	// 	float gray = dot(Albedo.rgb, vec3(0.2, 1.0, 0.07));
+	// 	if (
+	// 		data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER 
+	// 		|| data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_SSS_STRONG3 || data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_CACTUS
+	// 		|| data_in.blockID == BLOCK_CELESTIUM || data_in.blockID == BLOCK_SNOW_LAYERS
+	// 		|| data_in.blockID >= 10 && data_in.blockID < 80
+	// 	) {
+	// 		// IR Reflective (Pink-red)
+	// 		Albedo.rgb = mix(vec3(gray), aerochrome_color, 0.7);
+	// 	}
+	// 	else if(data_in.blockID == BLOCK_GRASS) {
+	// 	// Special handling for grass block
+	// 		float strength = 1.0 - Color.b;
+	// 		Albedo.rgb = mix(Albedo.rgb, aerochrome_color, strength);
+	// 	}
+	// 	#ifdef AEROCHROME_WOOL_ENABLED
+	// 		else if (data_in.blockID == BLOCK_SSS_WEAK_2 || data_in.blockID == BLOCK_CARPET) {
+	// 		// Wool
+	// 			Albedo.rgb = mix(Albedo.rgb, aerochrome_color, 0.3);
+	// 		}
+	// 	#endif
+	// 	else if(data_in.blockID == BLOCK_WATER || (data_in.blockID >= 300 && data_in.blockID < 400))
+	// 	{
+	// 	// IR Absorbsive? Dark.
+	// 		Albedo.rgb = mix(Albedo.rgb, vec3(0.01, 0.08, 0.15), 0.5);
+	// 	}
+	// #endif
 
 	Albedo.a = opaqueMasks;
 

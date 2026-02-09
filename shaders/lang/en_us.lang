@@ -1269,7 +1269,7 @@ screen.VOXY_SETTINGS = Voxy Settings
     option.VOXY_SSS = Sub-Surface Scattering on LOD Chunks
     option.VOXY_REFLECTIONS = Screen-Space Reflections on LOD Chunks
 
-screen.PHOTONICS_SETTINGS = Photonic Settings
+screen.PHOTONICS_SETTINGS = Photonics Settings
     option.PHOTONICS_ENABLED = Enable Photonics
     option.PHOTONICS_INDIRECT_BRIGHTNESS = GI Brightness
     option.PHOTONICS_GI_ONLY = GI Only

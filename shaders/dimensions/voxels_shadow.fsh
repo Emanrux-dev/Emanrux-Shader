@@ -21,7 +21,7 @@ void main() {
         discard;
     #else
         RayJob ray = RayJob(vec3(0), vec3(0), vec3(0), vec3(0), vec3(0), false);
-        ray.origin = worldPos - world_offset - 0.01f * cageNormal;
+        ray.origin = worldPos + cameraPosition - world_offset - 0.01f * cageNormal;
         ray.direction = mat3(shadowModelViewInverse) * vec3(0.0f, 0.0f, -1.0f);
         ray_constraint = ivec3(ray.origin);
         trace_ray(ray);
@@ -30,7 +30,7 @@ void main() {
             discard;
         }
 
-        vec4 shadowColor = vec4(ray.result_color * color, 1.0f);
+        vec4 shadowColor = vec4(ray.result_color, 1.0f);
 
         gl_FragData[0] = shadowColor;
     #endif

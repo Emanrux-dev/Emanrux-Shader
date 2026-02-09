@@ -379,8 +379,8 @@ void main() {
     // if (Color.a < 0.3) Color.a = 1.0; // fix vanilla ao on some custom block models.
 
     RayJob ray = RayJob(vec3(0), vec3(0), vec3(0), vec3(0), vec3(0), false);
-    ray.origin = worldpos + cameraPosition - world_offset - 0.001f * data_in.block_normal;
-    ray.direction = worldpos - gbufferModelViewInverse[3].xyz;
+    ray.origin = worldpos - world_offset - 0.001f * data_in.block_normal;
+    ray.direction = playerpos - gbufferModelViewInverse[3].xyz;
     ray_constraint = ivec3(ray.origin);
     trace_ray(ray);
 

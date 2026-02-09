@@ -1160,10 +1160,17 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 
 // #define PHOTONICS_ENABLED
 
-#ifdef PHOTONICS_ENABLED
+// #define PHOTONICS_GI_ONLY
+
+#if defined PHOTONICS_ENABLED && !defined PHOTONICS_GI_ONLY
 	#undef Hand_Held_lights
 	#undef LPV_ENABLED
 	#undef IS_LPV_ENABLED
+	#undef VOXEL_REFLECTIONS
+	#undef MIRROR_IRON
+#endif
+
+#ifdef PHOTONICS_GI_ONLY
 #endif
 
 #define PHOTONICS_INDIRECT_BRIGHTNESS 1.0 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.5 3.0 3.5 4.0 4.5 5.0]

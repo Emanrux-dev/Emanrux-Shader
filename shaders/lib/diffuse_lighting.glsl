@@ -92,7 +92,7 @@
     }
 #endif
 
-#ifdef PHOTONICS_ENABLED
+#if defined PHOTONICS_ENABLED && !defined PHOTONICS_GI_ONLY
     uniform sampler2D radiosity_direct;
     uniform sampler2D radiosity_direct_soft;
     uniform sampler2D radiosity_handheld;
@@ -168,7 +168,7 @@ vec3 doBlockLightLighting(
         #endif
     #endif
     
-    #ifdef PHOTONICS_ENABLED
+    #if defined PHOTONICS_ENABLED && !defined PHOTONICS_GI_ONLY
         vec3 ph_direct_hand = texture(radiosity_handheld, gl_FragCoord.xy*texelSize).xyz;
         vec3 ph_direct = texture(radiosity_direct, gl_FragCoord.xy*texelSize).xyz;
         vec4 ph_direct_soft = texture(radiosity_direct_soft, gl_FragCoord.xy*texelSize);

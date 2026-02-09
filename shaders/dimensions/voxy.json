@@ -22,7 +22,7 @@
     "renderScale": [SCALE_FACTOR, SCALE_FACTOR],
     #endif
     "blending": {-1:"SRC_ALPHA ONE_MINUS_SRC_ALPHA ONE_MINUS_DST_ALPHA ONE", 2:"off"},
-    "ssbos": {0:"{
+    "ssbos": {6:"{
         mat4 customShadowMatrixSSBO;
 
         vec3 customMoonVecSSBO;

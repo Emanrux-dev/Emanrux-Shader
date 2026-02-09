@@ -92,6 +92,12 @@
     }
 #endif
 
+#ifdef PHOTONICS_ENABLED
+    uniform sampler2D radiosity_direct;
+    uniform sampler2D radiosity_direct_soft;
+    uniform sampler2D radiosity_handheld;
+#endif
+
 vec3 doBlockLightLighting(
     vec3 lightColor, float lightmap,
     vec3 playerPos, vec3 lpvPos
@@ -160,6 +166,17 @@ vec3 doBlockLightLighting(
                     blockLight += handLightCol2;
             }
         #endif
+    #endif
+    
+    #ifdef PHOTONICS_ENABLED
+        vec3 ph_direct_hand = texture(radiosity_handheld, gl_FragCoord.xy*texelSize).xyz;
+        vec3 ph_direct = texture(radiosity_direct, gl_FragCoord.xy*texelSize).xyz;
+        vec4 ph_direct_soft = texture(radiosity_direct_soft, gl_FragCoord.xy*texelSize);
+
+        blockLight = ph_direct_hand * 1.35;
+        blockLight += ph_direct;
+        blockLight = pow(blockLight, vec3(1.45));
+        blockLight += (ph_direct_soft.xyz / max(ph_direct_soft.w, 1.0f));
     #endif
 
     return blockLight * TORCH_AMOUNT;

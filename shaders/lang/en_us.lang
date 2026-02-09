@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 6.2.0
+    value.SHADER_VERSION_LABEL.482 = 6.3.0
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -642,7 +642,7 @@ screen.Climate = Climate Settings
         option.DARKFOREST_G = Green Amount
         option.DARKFOREST_B = Blue Amount
     
-    screen.PALE_GARDEN = Dark Forest
+    screen.PALE_GARDEN = Pale Garden
         option.PALE_GARDEN_ENV = Pale Garden Environment
         option.PALE_GARDEN_UNIFORM_DENSITY = Uniform Fog Density
         option.PALE_GARDEN_CLOUDY_DENSITY = Cloudy Fog Density
@@ -1268,6 +1268,11 @@ screen.VOXY_SETTINGS = Voxy Settings
     option.VOXY_AMBIENT_OCCLUSION = Ambient Occlusion on LOD Chunks
     option.VOXY_SSS = Sub-Surface Scattering on LOD Chunks
     option.VOXY_REFLECTIONS = Screen-Space Reflections on LOD Chunks
+
+screen.PHOTONICS_SETTINGS = Photonic Settings
+    option.PHOTONICS_ENABLED = Enable Photonics
+    option.PHOTONICS_INDIRECT_BRIGHTNESS = Indirect Brightness
+
 
 option.TRANSLUCENT_COLORED_SHADOWS.comment = §bWhat is this?§r This effect allows translucent things like stained glass to color the sunlight as it passes through it. §aPERFORMANCE COST:§r medium
 option.MINIMUM_WATER_ABSORBANCE.comment = §bWhat is this?§r This controls how "clear" the water is in shallow areas. AUTO allows water to be clear outdoors, but adjust to be at a minimum value of 7 when indoors, to make it clearly visible. §dTHIS SETTING DOES NOT IMPACT UNDER-WATER VISUALS.        

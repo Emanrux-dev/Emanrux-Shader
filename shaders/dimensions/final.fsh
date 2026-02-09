@@ -246,7 +246,8 @@ void main() {
 
   #ifndef IS_IRIS
     gl_FragColor.rgb = vec3(0.0);
-    beginText(ivec2(gl_FragCoord.xy), ivec2(0.05*viewWidth, 0.75*viewHeight));
+    const float textSize = 4.0;
+    beginText(ivec2(gl_FragCoord.xy/textSize), ivec2(0.05*viewWidth/textSize, 0.75*viewHeight/textSize));
     text.fgCol = vec4(1.0, 0.0, 0.0, 1.0);
     printString((_O, _p, _t, _i, _F, _i, _n, _e, _space, _d, _o, _e, _s, _space, _n, _o, _t, _space, _s, _u, _p, _p, _o, _r, _t, _space, _E, _c, _l, _i, _p, _s, _e, _exclm));
     printLine();

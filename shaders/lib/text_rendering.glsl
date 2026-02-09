@@ -176,40 +176,31 @@ void endText(inout vec3 fragColor) {
 	fragColor = mix(fragColor.rgb, text.result.rgb, text.result.a);
 }
 
-const int scale = 4;
-
 void printChar(uint character) {
-    ivec2 scaledCharSize = charSize * scale;
-    ivec2 scaledSpaceSize = spaceSize * scale;
+    // Calculate effective spacing that includes current padding settings
+    ivec2 effectiveSpaceSize = spaceSize + text.charPadding * 2;
     
     // Use this effective spacing for positioning
-    ivec2 pos = text.fragPos - text.textPos - scaledSpaceSize * text.charPos * ivec2(1, -1) + ivec2(0, scaledSpaceSize.y);
-
-    ivec2 bgPaddingScaled = text.bgPadding * scale;
-    ivec2 bgArea = scaledSpaceSize + bgPaddingScaled * 2;
+    ivec2 pos = text.fragPos - text.textPos - effectiveSpaceSize * text.charPos * ivec2(1, -1) + ivec2(0, effectiveSpaceSize.y);
 
     // Draw background (larger area with padding)
-    ivec2 bgPos = pos + bgPaddingScaled;
-    if (clamp(bgPos, ivec2(0), bgArea - 1) == bgPos) {
+    ivec2 bgPos = pos + text.bgPadding;
+    if (clamp(bgPos, ivec2(0), effectiveSpaceSize + text.bgPadding * 2 - 1) == bgPos) {
         float bgAlpha = text.result.a;
+        // Only apply background if this pixel hasn't been colored yet
         if (bgAlpha < 0.01) {
             text.result = mix(text.result, text.bgCol, text.bgCol.a);
         }
     }
 
-    vec2 pixelInChar = vec2(pos) / float(scale);
-    
-    if (pixelInChar.x >= 0.0 && pixelInChar.x < float(charWidth) &&
-        pixelInChar.y >= 0.0 && pixelInChar.y < float(charHeight)) {
-        
-        ivec2 originalPixel = ivec2(floor(pixelInChar.x), floor(pixelInChar.y));
-        uint index = uint(charWidth - originalPixel.x + originalPixel.y * charWidth + 1);
-        
-        if ((character >> index & 1u) == 1u) {
-            text.result = mix(text.result, text.fgCol, text.fgCol.a);
-        }
+    // Draw character
+    ivec2 charPos = pos - text.charPadding;
+    if (clamp(charPos, ivec2(0), charSize - 1) == charPos) {
+        uint index = uint(charWidth - charPos.x + charPos.y * charWidth + 1);
+        text.result = mix(text.result, text.fgCol, text.fgCol.a * float(character >> index & 1u));
     }
 
+    // Advance to next character
     text.charPos.x++;
 }
 

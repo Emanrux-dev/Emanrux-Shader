@@ -309,7 +309,7 @@ const float entityShadowDistanceMul = 0.25; // [0.01 0.02 0.03 0.04 0.05 0.10 0.
 
 #if EMISSIVE_TYPE_SETTING == 4
 	#ifdef MC_TEXTURE_FORMAT_LAB_PBR
-		#define EMISSIVE_TYPE 3
+		#define EMISSIVE_TYPE 2
 	#else
 		#define EMISSIVE_TYPE 1
 	#endif
@@ -347,7 +347,7 @@ const float entityShadowDistanceMul = 0.25; // [0.01 0.02 0.03 0.04 0.05 0.10 0.
 
 #if SSS_TYPE_SETTING == 4
 	#ifdef MC_TEXTURE_FORMAT_LAB_PBR
-		#define SSS_TYPE 3
+		#define SSS_TYPE 2
 	#else
 		#define SSS_TYPE 1
 	#endif
@@ -1154,6 +1154,19 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #ifdef VOXY_SSS
 #endif
 
+//////////////////////////////////
+// ----- PHOTONICS SETTINGS ----- //
+//////////////////////////////////
+
+// #define PHOTONICS_ENABLED
+
+#ifdef PHOTONICS_ENABLED
+	#undef Hand_Held_lights
+	#undef LPV_ENABLED
+	#undef IS_LPV_ENABLED
+#endif
+
+#define PHOTONICS_INDIRECT_BRIGHTNESS 1.0 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.5 3.0 3.5 4.0 4.5 5.0]
 
 ////////////////////////////////
 // ----- DEBUG SETTINGS ----- //

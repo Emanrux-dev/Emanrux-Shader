@@ -116,6 +116,7 @@ uniform sampler2D colortex11;
 uniform sampler2D colortex12;
 uniform sampler2D colortex13;
 uniform sampler2D colortex14;
+uniform sampler2D colortex15;
 
 in DATA {
 	flat vec2 TAA_Offset;
@@ -1535,6 +1536,12 @@ void main() {
 	/////////////////////////////	EFFECTS FOR INDIRECT	/////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////
 
+		#ifdef PHOTONICS_ENABLED
+			vec3 gi_color = texture(colortex15, texcoord).xyz;
+
+			Indirect_lighting += gi_color*2.5*PHOTONICS_INDIRECT_BRIGHTNESS;
+		#endif
+
 		float SkySSS = SSAO_SSS.y;
 		vec3 AO = vec3(1.0);
 
@@ -1764,7 +1771,7 @@ void main() {
 						#endif
 						
 						vec3 moonLightCol = moonColorBase2;
-						Background += pow(moonTex, vec3(3.2)) * 17.0 * drawRealMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background, moonSize);
+						Background += pow(moonTex, vec3(3.2)) * 12.0 * drawRealMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background, moonSize);
 					#else
 						vec3 moonLightCol = moonColorSSBO / 2400.0;
 						Background += drawMoon(feetPlayerPos_normalized, WmoonVec, moonLightCol, Background); 

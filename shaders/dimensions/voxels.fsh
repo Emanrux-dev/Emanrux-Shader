@@ -445,107 +445,96 @@ void main() {
     normal = viewToWorld(normal);
 
     float SSSAMOUNT = 0.0;
-    #if (SSS_TYPE == 1 || SSS_TYPE == 2) && !defined HAND
-        #ifdef ENTITIES
-            #ifdef MOB_SSS
-                /////// ----- SSS ON MOBS----- ///////
-                // strong
-                if(data_in.blockID == ENTITY_SSS_MEDIUM) SSSAMOUNT = 0.75;
-        
-                // medium
-        
-                // low
-                else if(data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER || data_in.blockID == ENTITY_CURRENT_PLAYER) SSSAMOUNT = 0.4;
-            #endif
-        #else
-            #if defined SHADER_GRASS && !defined CUTOUT
-                if (ShaderGrass) SSSAMOUNT = 0.65;
-                else
-            #endif
+    // #if (SSS_TYPE == 1 || SSS_TYPE == 2) && !defined HAND
+    //     #ifdef ENTITIES
+    //         #ifdef MOB_SSS
+    //             /////// ----- SSS ON MOBS----- ///////
+    //             // strong
+    //             if(data_in.blockID == ENTITY_SSS_MEDIUM) SSSAMOUNT = 0.75;
+    //     
+    //             // medium
+    //     
+    //             // low
+    //             else if(data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER || data_in.blockID == ENTITY_CURRENT_PLAYER) SSSAMOUNT = 0.4;
+    //         #endif
+    //     #else
+    //         #if defined SHADER_GRASS && !defined CUTOUT
+    //             if (ShaderGrass) SSSAMOUNT = 0.65;
+    //             else
+    //         #endif
+// 
+    //         /////// ----- SSS ON BLOCKS ----- ///////
+    //         // strong
+    //         if (
+    //             data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_SSS_STRONG3 || data_in.blockID == BLOCK_AIR_WAVING || data_in.blockID == BLOCK_SSS_STRONG_2
+    //         ) {
+    //             SSSAMOUNT = 1.0;
+    //         }
+    //         // medium
+    //         else if (
+    //             data_in.blockID == BLOCK_GROUND_WAVING || data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL ||
+    //             data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_UPPER || data_in.blockID == BLOCK_GRASS_TALL_LOWER ||
+    //             data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_CACTUS || data_in.blockID == BLOCK_SSS_WEAK_2 ||
+    //             data_in.blockID == BLOCK_CELESTIUM || (data_in.blockID >= 269 && data_in.blockID <= 274) || data_in.blockID == BLOCK_SNOW_LAYERS || data_in.blockID == BLOCK_CARPET ||
+    //             data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER ||
+    //             data_in.blockID == BLOCK_BAMBOO || data_in.blockID == BLOCK_SAPLING || (data_in.blockID >= BLOCK_VINE_NORTH && data_in.blockID <= BLOCK_VINE_UP) || data_in.blockID == BLOCK_VINE_OTHER
+    //             #ifdef MISC_BLOCK_SSS
+    //             || data_in.blockID == BLOCK_SSS_WEIRD || data_in.blockID == BLOCK_GRASS
+    //             #endif
+    //         ) {
+    //             SSSAMOUNT = 0.5;
+    //         }
+    //     #endif
+// 
+    //     #ifdef BLOCKENTITIES
+    //         /////// ----- SSS ON BLOCK ENTITIES----- ///////
+    //         // strong
+// 
+    //         // medium
+    //         if(data_in.blockID == BLOCK_SSS_WEAK_3) SSSAMOUNT = 0.4;
+// 
+    //         // low
+// 
+    //     #endif
+    // #endif
 
-            /////// ----- SSS ON BLOCKS ----- ///////
-            // strong
-            if (
-                data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_SSS_STRONG3 || data_in.blockID == BLOCK_AIR_WAVING || data_in.blockID == BLOCK_SSS_STRONG_2
-            ) {
-                SSSAMOUNT = 1.0;
-            }
-            // medium
-            else if (
-                data_in.blockID == BLOCK_GROUND_WAVING || data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL ||
-                data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_UPPER || data_in.blockID == BLOCK_GRASS_TALL_LOWER ||
-                data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_CACTUS || data_in.blockID == BLOCK_SSS_WEAK_2 ||
-                data_in.blockID == BLOCK_CELESTIUM || (data_in.blockID >= 269 && data_in.blockID <= 274) || data_in.blockID == BLOCK_SNOW_LAYERS || data_in.blockID == BLOCK_CARPET ||
-                data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER ||
-                data_in.blockID == BLOCK_BAMBOO || data_in.blockID == BLOCK_SAPLING || (data_in.blockID >= BLOCK_VINE_NORTH && data_in.blockID <= BLOCK_VINE_UP) || data_in.blockID == BLOCK_VINE_OTHER
-                #ifdef MISC_BLOCK_SSS
-                || data_in.blockID == BLOCK_SSS_WEIRD || data_in.blockID == BLOCK_GRASS
-                #endif
-            ) {
-                SSSAMOUNT = 0.5;
-            }
-        #endif
-
-        #ifdef BLOCKENTITIES
-            /////// ----- SSS ON BLOCK ENTITIES----- ///////
-            // strong
-
-            // medium
-            if(data_in.blockID == BLOCK_SSS_WEAK_3) SSSAMOUNT = 0.4;
-
-            // low
-
-        #endif
-    #endif
-
-    #if EMISSIVE_TRIMS > 0
-        bool isBrightTrim = currentRenderedItemId == 1026;
-        bool isTrim = isBrightTrim || currentRenderedItemId == 1027;
-    #endif
-
-    #if EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2
-        /////// ----- EMISSIVE STUFF ----- ///////
-        float EMISSIVE = 0.0;
-
-        // if(vNameTags > 0) EMISSIVE = 0.9;
-
-        // normal block lightsources
-        if(data_in.blockID >= 100 && data_in.blockID < 282) {
-            EMISSIVE = 0.5;
-
-            if(data_in.blockID == 266 || (data_in.blockID >= 276 && data_in.blockID <= 281)) EMISSIVE = 0.2; // sculk stuff
-
-            else if(data_in.blockID == 195) EMISSIVE = 2.3; // glow lichen
-
-            else if(data_in.blockID == 185) EMISSIVE = 1.5; // crying obsidian
-
-            else if(data_in.blockID == 105) EMISSIVE = 2.0; // brewing stand
-            
-            else if(data_in.blockID == 236) EMISSIVE = 1.0; // respawn anchor
-
-            else if(data_in.blockID == 101) EMISSIVE = 0.7; // large amethyst bud
-
-            else if(data_in.blockID == 103) EMISSIVE = 1.0; // amethyst cluster
-
-            else if(data_in.blockID == 244) EMISSIVE = 1.5; // soul fire
-        }
-
-        #if EMISSIVE_ORES > 0
-            if(data_in.blockID == 502) {
-                EMISSIVE = EMISSIVE_ORES_STRENGTH;
-
-                #ifndef HARDCODED_EMISSIVES_APPROX
-                    EMISSIVE *= getEmission(Albedo.rgb);
-                #endif
-            }
-        #endif
-
-        #if EMISSIVE_TRIMS > 0
-            if(isTrim) EMISSIVE = EMISSIVE_TRIMS_STRENGTH*getTrimEmission(Albedo.rgb);
-
-            if(isBrightTrim) EMISSIVE *= 0.4;
-        #endif
-    #endif
+    float EMISSIVE = 0.0;
+    // #if EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2
+    //     /////// ----- EMISSIVE STUFF ----- ///////
+// 
+    //     // if(vNameTags > 0) EMISSIVE = 0.9;
+// 
+    //     // normal block lightsources
+    //     if(data_in.blockID >= 100 && data_in.blockID < 282) {
+    //         EMISSIVE = 0.5;
+// 
+    //         if(data_in.blockID == 266 || (data_in.blockID >= 276 && data_in.blockID <= 281)) EMISSIVE = 0.2; // sculk stuff
+// 
+    //         else if(data_in.blockID == 195) EMISSIVE = 2.3; // glow lichen
+// 
+    //         else if(data_in.blockID == 185) EMISSIVE = 1.5; // crying obsidian
+// 
+    //         else if(data_in.blockID == 105) EMISSIVE = 2.0; // brewing stand
+    //         
+    //         else if(data_in.blockID == 236) EMISSIVE = 1.0; // respawn anchor
+// 
+    //         else if(data_in.blockID == 101) EMISSIVE = 0.7; // large amethyst bud
+// 
+    //         else if(data_in.blockID == 103) EMISSIVE = 1.0; // amethyst cluster
+// 
+    //         else if(data_in.blockID == 244) EMISSIVE = 1.5; // soul fire
+    //     }
+// 
+    //     #if EMISSIVE_ORES > 0
+    //         if(data_in.blockID == 502) {
+    //             EMISSIVE = EMISSIVE_ORES_STRENGTH;
+// 
+    //             #ifndef HARDCODED_EMISSIVES_APPROX
+    //                 EMISSIVE *= getEmission(Albedo.rgb);
+    //             #endif
+    //         }
+    //     #endif
+    // #endif
 
 
     vec4 SpecularTex = vec4(0.0);
@@ -563,11 +552,6 @@ void main() {
         }
     #endif
 
-    #if EMISSIVE_TRIMS > 1 && EMISSIVE_TYPE > 1
-        if(isTrim) SpecularTex.a = EMISSIVE_TRIMS_STRENGTH*getTrimEmission(Albedo.rgb);
-
-        if(isBrightTrim) SpecularTex.a *= 0.4;
-    #endif
 
     #if EMISSIVE_TYPE == 2
     bool emissionCheck = SpecularTex.a <= 0.0;
@@ -581,11 +565,7 @@ void main() {
     #endif
 
     #if defined HARDCODED_EMISSIVES_APPROX && (EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2)
-        #if EMISSIVE_TYPE == 2 && EMISSIVE_TRIMS > 0
-        if(emissionCheck && !isTrim)
-        #elif EMISSIVE_TRIMS > 0
-        if(!isTrim)
-        #elif EMISSIVE_TYPE == 2
+        #if EMISSIVE_TYPE == 2
         if(emissionCheck)
         #endif
         {

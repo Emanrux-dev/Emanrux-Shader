@@ -1484,8 +1484,10 @@ void main() {
 					float photonicsFalloff = smoothstep(256.0, 230.0, viewDist);
 				#endif
 
-				vec3 gi_color = texture(colortex15, texcoord).xyz;
-				Indirect_lighting = mix(Indirect_lighting, gi_color*2.5*PHOTONICS_INDIRECT_BRIGHTNESS, photonicsFalloff);
+				vec3 gi_color = texture(colortex15, texcoord).xyz*2.5*PHOTONICS_INDIRECT_BRIGHTNESS;
+				gi_color += mix(MinimumLightColor * (MIN_LIGHT_AMOUNT * 0.004 + nightVision*0.02), MinimumLightColor * (MIN_LIGHT_AMOUNT_INSIDE * 0.004 + nightVision*0.02), 1.0-lightmap.y);
+
+				Indirect_lighting = mix(Indirect_lighting, gi_color, photonicsFalloff);
 			#endif
 		#endif
 

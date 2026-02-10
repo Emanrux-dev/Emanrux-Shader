@@ -25,6 +25,7 @@ const bool colortex5MipmapEnabled = true;
 uniform float nightVision;
 uniform float frameTimeCounter;
 uniform float rainStrength;
+#define PHOTONICS_LIGHT_PASS
 
 #if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
 	const bool shadowHardwareFiltering = true;

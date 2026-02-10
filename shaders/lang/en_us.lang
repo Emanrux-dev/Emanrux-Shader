@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 6.3.0
+    value.SHADER_VERSION_LABEL.482 = 6.3.1
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -1273,6 +1273,7 @@ screen.PHOTONICS_SETTINGS = Photonics Settings
     option.PHOTONICS_ENABLED = Enable Photonics
     option.PHOTONICS_INDIRECT_BRIGHTNESS = GI Brightness
     option.PHOTONICS_GI_ONLY = GI Only
+    option.PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION = Fog Light Propagation (Floodfill!)
 
 
 option.TRANSLUCENT_COLORED_SHADOWS.comment = §bWhat is this?§r This effect allows translucent things like stained glass to color the sunlight as it passes through it. §aPERFORMANCE COST:§r medium

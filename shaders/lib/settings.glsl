@@ -1162,10 +1162,19 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 
 // #define PHOTONICS_GI_ONLY
 
+// #define PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION
+
+#ifdef PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION
+#endif
+
 #if defined PHOTONICS_ENABLED && !defined PHOTONICS_GI_ONLY
+
+	#ifndef PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION
+		#undef IS_LPV_ENABLED
+		#undef LPV_ENABLED
+	#endif
+
 	#undef Hand_Held_lights
-	#undef LPV_ENABLED
-	#undef IS_LPV_ENABLED
 	#undef VOXEL_REFLECTIONS
 	#undef MIRROR_IRON
 #endif

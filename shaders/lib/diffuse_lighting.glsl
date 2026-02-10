@@ -3,7 +3,7 @@
         return (2.0 * _near) / (_far + _near - depth * (_far - _near));
     }
 
-    float SSRT_Handlight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, float noise, vec3 normals, bool hand){
+    float SSRT_Handlight_Shadows(vec3 viewPos, const bool depthCheck, vec3 lightDir, float noise, vec3 normals, bool hand){
         
         if(hand) return 1.0;
 
@@ -116,7 +116,7 @@ vec3 doBlockLightLighting(
     float lightmapCurve = mix(lightmapLight, 2.5, lightmapBrightspot);
     vec3 blockLight = lightmapCurve * lightColor;
     
-    #if defined IS_LPV_ENABLED && defined MC_GL_ARB_shader_image_load_store
+    #if defined IS_LPV_ENABLED && defined MC_GL_ARB_shader_image_load_store && (!defined PHOTONICS_LIGHT_PASS || !defined PHOTONICS_ENABLED)
         vec4 lpvSample = SampleLpvLinear(lpvPos);
         #ifdef VANILLA_LIGHTMAP_MASK
             lpvSample.rgb *= lightmapCurve;
@@ -168,15 +168,29 @@ vec3 doBlockLightLighting(
         #endif
     #endif
     
-    #if defined PHOTONICS_ENABLED && !defined PHOTONICS_GI_ONLY
-        vec3 ph_direct_hand = texture(radiosity_handheld, gl_FragCoord.xy*texelSize).xyz;
-        vec3 ph_direct = texture(radiosity_direct, gl_FragCoord.xy*texelSize).xyz;
-        vec4 ph_direct_soft = texture(radiosity_direct_soft, gl_FragCoord.xy*texelSize);
+    #if defined PHOTONICS_ENABLED && !defined PHOTONICS_GI_ONLY && !defined WEATHER && defined PHOTONICS_LIGHT_PASS
+        #if defined DISTANT_HORIZONS || defined VOXY
+        if(!depthCheck)
+        #endif
+        {
+            vec3 ph_direct_hand = texture(radiosity_handheld, gl_FragCoord.xy*texelSize).xyz;
+            vec3 ph_direct = texture(radiosity_direct, gl_FragCoord.xy*texelSize).xyz;
+            vec4 ph_direct_soft = texture(radiosity_direct_soft, gl_FragCoord.xy*texelSize);
 
-        blockLight = ph_direct_hand * 1.35;
-        blockLight += ph_direct;
-        blockLight = pow(blockLight, vec3(1.45));
-        blockLight += (ph_direct_soft.xyz / max(ph_direct_soft.w, 1.0f));
+            vec3 photonicsLight = ph_direct_hand * 1.35;
+            photonicsLight += ph_direct;
+            photonicsLight = pow(photonicsLight, vec3(1.45));
+            photonicsLight += (ph_direct_soft.xyz / max(ph_direct_soft.w, 1.0f));
+            photonicsLight += lightColor * 2.5 * min(max(lightmap-0.999,0.0)/(1.0-0.999),1.0);
+
+            
+            #if defined DISTANT_HORIZONS || defined VOXY
+                float photonicsFalloff = smoothstep(min(1.0*far, 256.0), min(0.9*far, 230.0), length(playerPos));
+                blockLight = mix(blockLight, photonicsLight, photonicsFalloff);
+            #else
+                blockLight = photonicsLight;
+            #endif
+        }
     #endif
 
     return blockLight * TORCH_AMOUNT;

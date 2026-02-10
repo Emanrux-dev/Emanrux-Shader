@@ -1260,6 +1260,7 @@ void main() {
 		// idk why this do
 		// this seems to be compensating view bobbing, but why not do this when calculating feetPlayerPos? hmmm
 		feetPlayerPos += gbufferModelViewInverse[3].xyz;
+		float viewDist = length(feetPlayerPos);
 		worldPos = feetPlayerPos + cameraPosition;
 	////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////	    FILTER STUFF      //////////////////////////////////
@@ -1292,11 +1293,11 @@ void main() {
 	////////////////////////////////	SHADOWMAP		////////////////////////////////
 		// setup shadow projection
 
-		float shadowMapFalloff = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / (shadowDistance+32.0),0.0)*5.0,1.0));
+		float shadowMapFalloff = smoothstep(0.0, 1.0, min(max(1.0 - viewDist / (shadowDistance+32.0),0.0)*5.0,1.0));
 		#if defined DISTANT_HORIZONS || defined VOXY
-			float shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / min(shadowDistance, max(far-32.0,32.0)),0.0)*5.0,1.0));
+			float shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - viewDist / min(shadowDistance, max(far-32.0,32.0)),0.0)*5.0,1.0));
 		#else
-			float shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - length(feetPlayerPos) / shadowDistance,0.0)*5.0,1.0));
+			float shadowMapFalloff2 = smoothstep(0.0, 1.0, min(max(1.0 - viewDist / shadowDistance,0.0)*5.0,1.0));
 		#endif
 
 		if(eyeInWater){
@@ -1476,6 +1477,16 @@ void main() {
 			
 			Indirect_lighting += doIndirectLighting(AmbientLightColor * skylight, MinimumLightColor, lightmap.y);
 
+			#ifdef PHOTONICS_ENABLED
+				#if defined DISTANT_HORIZONS || defined VOXY
+					float photonicsFalloff = smoothstep(min(far, 128.0), min(0.9*far, 118.0), viewDist);
+				#else
+					float photonicsFalloff = smoothstep(256.0, 230.0, viewDist);
+				#endif
+
+				vec3 gi_color = texture(colortex15, texcoord).xyz;
+				Indirect_lighting = mix(Indirect_lighting, gi_color*2.5*PHOTONICS_INDIRECT_BRIGHTNESS, photonicsFalloff);
+			#endif
 		#endif
 
 		#ifdef NETHER_SHADER
@@ -1536,12 +1547,6 @@ void main() {
 	/////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////	EFFECTS FOR INDIRECT	/////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////
-
-		#ifdef PHOTONICS_ENABLED
-			vec3 gi_color = texture(colortex15, texcoord).xyz;
-
-			Indirect_lighting += gi_color*2.5*PHOTONICS_INDIRECT_BRIGHTNESS;
-		#endif
 
 		float SkySSS = SSAO_SSS.y;
 		vec3 AO = vec3(1.0);

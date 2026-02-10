@@ -183,13 +183,14 @@ vec3 doBlockLightLighting(
             photonicsLight += (ph_direct_soft.xyz / max(ph_direct_soft.w, 1.0f));
             photonicsLight += lightColor * 2.5 * min(max(lightmap-0.999,0.0)/(1.0-0.999),1.0);
 
-            
             #if defined DISTANT_HORIZONS || defined VOXY
-                float photonicsFalloff = smoothstep(min(1.0*far, 256.0), min(0.9*far, 230.0), length(playerPos));
-                blockLight = mix(blockLight, photonicsLight, photonicsFalloff);
-            #else
-                blockLight = photonicsLight;
-            #endif
+				float photonicsFalloff = smoothstep(min(far, 256.0), min(0.9*far, 230.0), length(playerPos));
+			#else
+				float photonicsFalloff = smoothstep(256.0, 230.0, length(playerPos));
+			#endif
+
+            
+            blockLight = mix(blockLight, photonicsLight, photonicsFalloff);
         }
     #endif
 

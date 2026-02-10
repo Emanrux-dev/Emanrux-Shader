@@ -1479,9 +1479,9 @@ void main() {
 
 			#ifdef PHOTONICS_ENABLED
 				#if defined DISTANT_HORIZONS || defined VOXY
-					float photonicsFalloff = smoothstep(min(far, 128.0), min(0.9*far, 118.0), viewDist);
+					float photonicsFalloff = smoothstep(min(far, 128.0), min(0.9*far, 114.0), viewDist);
 				#else
-					float photonicsFalloff = smoothstep(256.0, 230.0, viewDist);
+					float photonicsFalloff = smoothstep(128.0, 114.0, viewDist);
 				#endif
 
 				vec3 gi_color = texture(colortex15, texcoord).xyz*2.5*PHOTONICS_INDIRECT_BRIGHTNESS;

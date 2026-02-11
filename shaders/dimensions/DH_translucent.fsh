@@ -493,7 +493,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	vec4 GLASS_TINT_COLORS = vec4(Albedo, UnchangedAlpha);
 	
 	#ifdef BIOME_TINT_WATER
-		if (isWater) GLASS_TINT_COLORS.rgb = toLinear(gcolor.rgb);
+		if (iswater) GLASS_TINT_COLORS.rgb = toLinear(gcolor.rgb);
 	#endif
 	
 	vec4 blockBreak = texelFetch(colortex11, ivec2(gl_FragCoord.xy), 0);

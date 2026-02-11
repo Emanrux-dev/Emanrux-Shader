@@ -800,7 +800,12 @@ void main() {
 					#endif
 				) {
 					SSSAMOUNT = 0.5;
-				}
+				} 
+				#ifdef CUTOUT
+					else if (data_in.blockID == BLOCK_GRASS) {
+						if(all(lessThan(abs(flatNormals), vec3(0.95, 0.05, 0.95)))) SSSAMOUNT = 0.3;
+					}
+				#endif
 			#endif
 
 			#ifdef BLOCKENTITIES

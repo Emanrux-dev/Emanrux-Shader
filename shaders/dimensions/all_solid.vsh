@@ -285,6 +285,14 @@ void main() {
 		data_out.blockID = int(mc_Entity.x);
 	#endif
 
+	vec3 worldNormals = viewToWorld(data_out.normalMat);
+
+	#if defined CUTOUT
+		if (data_out.blockID == BLOCK_GRASS) {
+			if(all(lessThan(abs(worldNormals), vec3(0.95, 0.05, 0.95)))) data_out.blockID = -BLOCK_GRASS;
+		}
+	#endif
+
 	#if defined WORLD && !defined HAND
 		#ifdef BLOCKENTITIES
 			if(blockEntityId == BLOCK_END_PORTAL || blockEntityId == 187) {
@@ -304,8 +312,6 @@ void main() {
 #ifdef WORLD
 
    	vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
-
-	vec3 worldNormals = viewToWorld(data_out.normalMat);
 
 	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && (defined GRASS_DETECT_FALLOFF || defined GRASS_DETECT_INV_FALLOFF || REPLACE_SHORT_GRASS > 0) && !defined BLOCKENTITIES
 
@@ -378,7 +384,11 @@ void main() {
 		if(	
 			(
 				// these wave off of the ground. the area connected to the ground does not wave.
-				(InterpolateFromBase && (mc_Entity.x == BLOCK_GRASS_TALL_LOWER || mc_Entity.x == BLOCK_GROUND_WAVING || mc_Entity.x == BLOCK_GRASS_SHORT || mc_Entity.x == BLOCK_SAPLING || mc_Entity.x == BLOCK_GROUND_WAVING_VERTICAL)) 
+				(InterpolateFromBase && (mc_Entity.x == BLOCK_GRASS_TALL_LOWER || mc_Entity.x == BLOCK_GROUND_WAVING || mc_Entity.x == BLOCK_GRASS_SHORT || mc_Entity.x == BLOCK_SAPLING || mc_Entity.x == BLOCK_GROUND_WAVING_VERTICAL
+				#if defined CUTOUT && defined WAVING_MULTIPART_GRASS
+				|| data_out.blockID == -BLOCK_GRASS
+				#endif
+				)) 
 
 				// these wave off of the ceiling. the area connected to the ceiling does not wave.
 				|| (!InterpolateFromBase && (mc_Entity.x == BLOCK_VINE_OTHER))

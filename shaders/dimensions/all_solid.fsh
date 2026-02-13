@@ -435,8 +435,8 @@ void main() {
 
 	#if defined DEPTH_WRITE_POM
 		gl_FragDepth = gl_FragCoord.z;
-		float original_depth = gl_FragCoord.z;
-		float final_depth = gl_FragCoord.z;
+		vec3 original_depth = playerpos;
+		vec3 final_depth = fragpos;
 	#endif
 
 	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT
@@ -478,8 +478,8 @@ void main() {
 
 			#if defined DEPTH_WRITE_POM
 				vec3 truePos = fragpos + sumVec*inverseMatrix(tbnMatrix)*interval;
-				final_depth = toClipSpace3(truePos).z;
-				gl_FragDepth = final_depth;
+				final_depth = truePos;
+				gl_FragDepth = toClipSpace3(truePos).z;
 			#endif
 		}
 	}
@@ -706,8 +706,9 @@ void main() {
 		Albedo.a = opaqueMasks;
 
 		#if defined POM_OFFSET_SHADOW_BIAS && defined POM && (!defined ENTITIES && !defined HAND || defined COLORWHEEL)
-			float pom_offset = abs(final_depth-original_depth);
-			if(pom_offset > 0.0) Albedo.a = pom_offset*8.0;
+			final_depth = mat3(gbufferModelViewInverse) * final_depth  + gbufferModelViewInverse[3].xyz;
+			float pom_offset = length(final_depth-original_depth);
+			if(pom_offset > 0.0) Albedo.a = min(pom_offset*0.4, 0.4);
 		#endif
 	#endif
 

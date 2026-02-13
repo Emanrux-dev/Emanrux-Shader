@@ -1305,14 +1305,11 @@ void main() {
 			shadowMapFalloff2 = 1.0;
 		}
 
+
+		vec3 shadowPlayerPos = feetPlayerPos;
+
 		#if defined POM_OFFSET_SHADOW_BIAS && defined POM
-			vec3 viewPos2 = toScreenSpace(vec3(texcoord/RENDER_SCALE - TAA_Offset*texelSize*0.5, z - POM_DEEPNESS / 20.0));
-
-			vec3 feetPlayerPos2 = mat3(gbufferModelViewInverse) * viewPos2 + gbufferModelViewInverse[3].xyz;
-
-			vec3 shadowPlayerPos = feetPlayerPos2;
-		#else
-			vec3 shadowPlayerPos = feetPlayerPos;
+			shadowPlayerPos -= POM_DEEPNESS*normalize(feetPlayerPos);
 		#endif
 
 		#if LIGHTLEAKFIX_MODE == 1

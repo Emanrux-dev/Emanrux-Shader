@@ -412,7 +412,6 @@ void main() {
 
 	vec2 adjustedTexCoord = data_in.lmtexcoord.xy;
 
-	float saveDepth = 0.0;
 #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	// vec2 tempOffset=offsets[framemod8];
 	
@@ -436,6 +435,8 @@ void main() {
 
 	#if defined DEPTH_WRITE_POM
 		gl_FragDepth = gl_FragCoord.z;
+		float original_depth = gl_FragCoord.z;
+		float final_depth = gl_FragCoord.z;
 	#endif
 
 	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT
@@ -464,15 +465,6 @@ void main() {
 			for (int loopCount = 0; (loopCount < MAX_OCCLUSION_POINTS) && (1.0 - pomdepth + pomdepth * readNormal(coord.st).a  ) < coord.p  && coord.p >= 0.0; ++loopCount) {
 				coord = coord + interval  * used_POM_DEPTH; 
 				sumVec += used_POM_DEPTH; 
-
-				#if defined POM_OFFSET_SHADOW_BIAS
-					// absolutely disgusting but works for now
-					if(loopCount > MAX_OCCLUSION_POINTS*0.01 * POM_DEPTH * 30.0) saveDepth = max(0.20,saveDepth);
-					if(loopCount > MAX_OCCLUSION_POINTS*0.02 * POM_DEPTH * 30.0) saveDepth = max(0.25,saveDepth);
-					if(loopCount > MAX_OCCLUSION_POINTS*0.03 * POM_DEPTH * 30.0) saveDepth = max(0.30,saveDepth);
-					if(loopCount > MAX_OCCLUSION_POINTS*0.05 * POM_DEPTH * 30.0) saveDepth = max(0.35,saveDepth);
-					if(loopCount > MAX_OCCLUSION_POINTS*0.06 * POM_DEPTH * 30.0) saveDepth = max(0.40,saveDepth);
-				#endif
 			}
 	
 			if (coord.t < mincoord) {
@@ -486,7 +478,8 @@ void main() {
 
 			#if defined DEPTH_WRITE_POM
 				vec3 truePos = fragpos + sumVec*inverseMatrix(tbnMatrix)*interval;
-				gl_FragDepth = toClipSpace3(truePos).z;
+				final_depth = toClipSpace3(truePos).z;
+				gl_FragDepth = final_depth;
 			#endif
 		}
 	}
@@ -713,7 +706,8 @@ void main() {
 		Albedo.a = opaqueMasks;
 
 		#if defined POM_OFFSET_SHADOW_BIAS && defined POM && (!defined ENTITIES && !defined HAND || defined COLORWHEEL)
-			if(saveDepth > 0) Albedo.a = saveDepth;
+			float pom_offset = abs(final_depth-original_depth);
+			if(pom_offset > 0.0) Albedo.a = pom_offset*8.0;
 		#endif
 	#endif
 

@@ -1071,7 +1071,7 @@ void main() {
 		// bool isReflective = abs(translucentMasks - 0.7) < 0.01 || isWater || isReflectiveEntity;
 		// bool isEntity = abs(translucentMasks - 0.9) < 0.01 || isReflectiveEntity;
 
-		bool lightningBolt = abs(opaqueMasks-0.5) <0.01;
+		// bool lightningBolt = abs(opaqueMasks-0.5) <0.01;
 		// bool isLeaf = abs(opaqueMasks-0.55) <0.01;
 		bool entities = abs(opaqueMasks-0.45) < 0.01;	
 		bool isGrass = abs(opaqueMasks-0.60) < 0.01;
@@ -1084,7 +1084,7 @@ void main() {
 		#endif
 
 		#if defined POM_OFFSET_SHADOW_BIAS
-			float POM_DEEPNESS = opaqueMasks < 0.43 ? 1.0 - min(max(0.4-opaqueMasks,0.0)/0.4,1.0) : 0.0;
+			float POM_DEEPNESS = opaqueMasks < 0.43 ? opaqueMasks*2.5 : 0.0;
 		#else
 			const float POM_DEEPNESS = 0.0;
 		#endif
@@ -1304,8 +1304,16 @@ void main() {
 			shadowMapFalloff = 1.0;
 			shadowMapFalloff2 = 1.0;
 		}
-		
-		vec3 shadowPlayerPos = feetPlayerPos;
+
+		#if defined POM_OFFSET_SHADOW_BIAS && defined POM
+			vec3 viewPos2 = toScreenSpace(vec3(texcoord/RENDER_SCALE - TAA_Offset*texelSize*0.5, z - POM_DEEPNESS / 20.0));
+
+			vec3 feetPlayerPos2 = mat3(gbufferModelViewInverse) * viewPos2 + gbufferModelViewInverse[3].xyz;
+
+			vec3 shadowPlayerPos = feetPlayerPos2;
+		#else
+			vec3 shadowPlayerPos = feetPlayerPos;
+		#endif
 
 		#if LIGHTLEAKFIX_MODE == 1
 			if(!hand) GriAndEminShadowFix(shadowPlayerPos, FlatNormals, lightLeakFix);
@@ -1318,7 +1326,7 @@ void main() {
 				vec3 projectedShadowPosition = mat3(shadowModelView) * shadowPlayerPos + shadowModelView[3].xyz;
 			#endif
 
-			applyShadowBias(projectedShadowPosition, shadowPlayerPos, FlatNormals, POM_DEEPNESS);
+			applyShadowBias(projectedShadowPosition, shadowPlayerPos, FlatNormals);
 			projectedShadowPosition = diagonal3_old(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 
 			// Calclulate distortion factor before bias application
@@ -1336,7 +1344,7 @@ void main() {
 
 		#if defined END_ISLAND_LIGHT && defined END_SHADER
 			vec4 shadowPos = customShadowMatrixSSBO * (gbufferModelViewInverse * vec4(viewPos, 1.0));
-			applyShadowBias(shadowPos.xyz, shadowPlayerPos, FlatNormals, POM_DEEPNESS);
+			applyShadowBias(shadowPos.xyz, shadowPlayerPos, FlatNormals);
 			shadowPos = customShadowPerspectiveSSBO * shadowPos;
 			vec3 projectedShadowPosition = shadowPos.xyz / shadowPos.w;
 		#endif
@@ -1484,7 +1492,7 @@ void main() {
 					float photonicsFalloff = smoothstep(128.0, 114.0, viewDist);
 				#endif
 
-				vec3 gi_color = texture(colortex15, texcoord).xyz*2.5*PHOTONICS_INDIRECT_BRIGHTNESS;
+				vec3 gi_color = texture(colortex15, texcoord).xyz*2.5*PHOTONICS_INDIRECT_BRIGHTNESS* skylight;
 				gi_color += mix(MinimumLightColor * (MIN_LIGHT_AMOUNT * 0.004 + nightVision*0.02), MinimumLightColor * (MIN_LIGHT_AMOUNT_INSIDE * 0.004 + nightVision*0.02), 1.0-lightmap.y);
 
 				Indirect_lighting = mix(Indirect_lighting, gi_color, photonicsFalloff);
@@ -1642,7 +1650,7 @@ void main() {
 
 		Emission(FINAL_COLOR, albedo, SpecularTex.a);
 		
-		if(lightningBolt) FINAL_COLOR = vec3(77.0, 153.0, 255.0);
+		// if(lightningBolt) FINAL_COLOR = vec3(77.0, 153.0, 255.0);
 		
 		#if defined DEFERRED_SPECULAR	
 			vec3 specularNoises = vec3(vec2(blueNoise(), ig_noise), ig_noise);

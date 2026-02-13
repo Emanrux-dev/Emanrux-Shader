@@ -411,7 +411,7 @@ void main() {
 
 	float lightLeakFix = clamp(pow(eyeBrightnessSmooth.y/240. + lightmap.y,2.0) ,0.0,1.0);
 
-	gl_FragData[1] = vec4(0.0,0.0, texelFetch(colortex14, ivec2(gl_FragCoord.xy), 0).b, texelFetch(colortex14,ivec2((floor(gl_FragCoord.xy)/VL_RENDER_SCALE*texelSize+0.5*texelSize)/texelSize),0).a);
+	gl_FragData[1] = vec4(0.0,0.0, texelFetch(colortex14, ivec2(gl_FragCoord.xy), 0).b, 0.0);
 
 	
 	vec4 SpecularData = texelFetch(colortex8, ivec2(gl_FragCoord.xy), 0);

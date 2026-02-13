@@ -1084,7 +1084,7 @@ void main() {
 		#endif
 
 		#if defined POM_OFFSET_SHADOW_BIAS
-			float POM_DEEPNESS = opaqueMasks < 0.43 ? opaqueMasks*2.5 : 0.0;
+			float POM_DEEPNESS = opaqueMasks < 0.44 ? min(max(opaqueMasks/0.44,0.0)*3.0,1.0) : 0.0;
 		#else
 			const float POM_DEEPNESS = 0.0;
 		#endif
@@ -1305,12 +1305,7 @@ void main() {
 			shadowMapFalloff2 = 1.0;
 		}
 
-
 		vec3 shadowPlayerPos = feetPlayerPos;
-
-		#if defined POM_OFFSET_SHADOW_BIAS && defined POM
-			shadowPlayerPos -= POM_DEEPNESS*normalize(feetPlayerPos);
-		#endif
 
 		#if LIGHTLEAKFIX_MODE == 1
 			if(!hand) GriAndEminShadowFix(shadowPlayerPos, FlatNormals, lightLeakFix);
@@ -1334,7 +1329,11 @@ void main() {
 				float distortFactor = 1.0;
 			#endif
 
-			projectedShadowPosition.z += shadowProjection[3].z * 0.0012;
+			#if defined POM_OFFSET_SHADOW_BIAS && defined POM
+				projectedShadowPosition.z += shadowProjection[3].z * (0.0012 + POM_DEEPNESS * mix(0.25,1.0,POM_DEPTH) * 0.025);
+			#else
+				projectedShadowPosition.z += shadowProjection[3].z * 0.0012;
+			#endif
 		#else
 			float distortFactor = 1.0;
 		#endif

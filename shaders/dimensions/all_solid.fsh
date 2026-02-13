@@ -56,6 +56,7 @@ const float maxcoord = 1.0-mincoord;
 const float MAX_OCCLUSION_DISTANCE = MAX_DIST;
 const float MIX_OCCLUSION_DISTANCE = MAX_DIST*0.9;
 const int   MAX_OCCLUSION_POINTS   = MAX_ITERATIONS;
+const float   MAX_OCCLUSION_POINTS_DIV = 1.0 / MAX_OCCLUSION_POINTS;
 
 uniform vec2 texelSize;
 uniform int framemod8;
@@ -412,6 +413,7 @@ void main() {
 
 	vec2 adjustedTexCoord = data_in.lmtexcoord.xy;
 
+	float saveDepth = 0.0;
 #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	// vec2 tempOffset=offsets[framemod8];
 	
@@ -435,8 +437,6 @@ void main() {
 
 	#if defined DEPTH_WRITE_POM
 		gl_FragDepth = gl_FragCoord.z;
-		vec3 original_depth = playerpos;
-		vec3 final_depth = fragpos;
 	#endif
 
 	#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT
@@ -446,26 +446,33 @@ void main() {
 	#endif
 	{
 		float depthmap = readNormal(data_in.texcoord.st).a;
-		float used_POM_DEPTH = 1.0;
-		float pomdepth = POM_DEPTH*falloff;
+		float pomdepth = POM_DEPTH * falloff;
 
  		if ( viewVector.z < 0.0 && depthmap < 0.9999 && depthmap > 0.00001) {	
 			float noise = BN;
 			#ifdef Adaptive_Step_length
-				vec3 interval = (viewVector.xyz / -viewVector.z / MAX_OCCLUSION_POINTS * pomdepth) * clamp(1.0-pow(depthmap,2),0.1,1.0);
-				used_POM_DEPTH = 1.0;
+				depthmap = clamp(1.0 - depthmap * depthmap, 0.1, 1.0);
+				vec3 interval = (viewVector.xyz / -viewVector.z * MAX_OCCLUSION_POINTS_DIV * pomdepth) * depthmap;
 			#else
-				vec3 interval = viewVector.xyz /-viewVector.z/MAX_OCCLUSION_POINTS*pomdepth;
+				vec3 interval = viewVector.xyz /-viewVector.z * MAX_OCCLUSION_POINTS_DIV * pomdepth;
 			#endif
 			vec3 coord = vec3(data_in.texcoord.st , 1.0);
 
-			coord += interval * noise * used_POM_DEPTH;
+			coord += interval * noise;
 
 			float sumVec = noise;
-			for (int loopCount = 0; (loopCount < MAX_OCCLUSION_POINTS) && (1.0 - pomdepth + pomdepth * readNormal(coord.st).a  ) < coord.p  && coord.p >= 0.0; ++loopCount) {
-				coord = coord + interval  * used_POM_DEPTH; 
-				sumVec += used_POM_DEPTH; 
+			for (int loopCount = 0; (loopCount < MAX_OCCLUSION_POINTS) && (1.0 - pomdepth + pomdepth * readNormal(coord.st).a) < coord.p && coord.p >= 0.0; ++loopCount) {
+				coord = coord + interval; 
+				sumVec += 1.0; 
 			}
+
+			#if defined POM_OFFSET_SHADOW_BIAS
+				#ifdef Adaptive_Step_length
+					saveDepth += clamp(MAX_OCCLUSION_POINTS_DIV * depthmap-0.0001, 0.0, 1.0);
+				#else
+					saveDepth += clamp(MAX_OCCLUSION_POINTS_DIV-0.0001, 0.0, 1.0);
+				#endif
+			#endif
 	
 			if (coord.t < mincoord) {
 				if (readTexture(vec2(coord.s,mincoord)).a == 0.0) {
@@ -478,7 +485,6 @@ void main() {
 
 			#if defined DEPTH_WRITE_POM
 				vec3 truePos = fragpos + sumVec*inverseMatrix(tbnMatrix)*interval;
-				final_depth = truePos;
 				gl_FragDepth = toClipSpace3(truePos).z;
 			#endif
 		}
@@ -706,9 +712,7 @@ void main() {
 		Albedo.a = opaqueMasks;
 
 		#if defined POM_OFFSET_SHADOW_BIAS && defined POM && (!defined ENTITIES && !defined HAND || defined COLORWHEEL)
-			final_depth = mat3(gbufferModelViewInverse) * final_depth  + gbufferModelViewInverse[3].xyz;
-			float pom_offset = length(final_depth-original_depth);
-			if(pom_offset > 0.0) Albedo.a = min(pom_offset*0.4, 0.4);
+			if(saveDepth > 0) Albedo.a = clamp(sqrt(saveDepth)*0.44, 0.0, 0.44);
 		#endif
 	#endif
 

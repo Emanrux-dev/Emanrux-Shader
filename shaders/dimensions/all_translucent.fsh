@@ -267,6 +267,7 @@ vec3 getParallaxDisplacement(vec3 waterPos, vec3 playerPos) {
 
 	float largeWaves = texture(noisetex, waterPos.xy / 600.0 ).b;
 	float largeWavesCurved = pow(1.0-pow(1.0-largeWaves,2.5),4.5);
+	largeWavesCurved = mix(1.0-largeWavesCurved, largeWavesCurved, PATCHY_WAVE_BLEND);
 
 	float waterHeight = getWaterHeightmap(waterPos.xy, largeWaves, largeWavesCurved);
 	// waterHeight = exp(-20.0*sqrt(waterHeight));

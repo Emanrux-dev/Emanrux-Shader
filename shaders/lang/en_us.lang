@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 6.3.2
+    value.SHADER_VERSION_LABEL.482 = 6.3.3
 
 # if you're here to translate, this is not a joke, these do what they say
 profile.POTATO=§4Potato 
@@ -685,7 +685,9 @@ screen.World = World
         screen.WATER_SIM_DISCLAIMER = §c Please read descriptions of these settings if using water simulation
         option.WATER_SIM_STRENGTH = Wave Simulation Strength
 
-        option.WAVE_DETAIL = Wave Detail
+        option.PATCHY_WAVE_BLEND = Patchy Wave Blending
+        option.WAVES_A_RADIUS = Wave Radius 1
+        option.WAVES_B_RADIUS = Wave Radius 2
         option.SNELLS_WINDOW = Snell's Window
         option.MINIMUM_WATER_ABSORBANCE = Minimum Water Absorbance
             value.MINIMUM_WATER_ABSORBANCE.-1 = AUTO

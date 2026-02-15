@@ -821,7 +821,7 @@ uniform float wetness;
 
 #ifdef OVERWORLD_SHADER
 	void applyPuddles(
-		in vec3 worldPos, in vec3 flatNormals, in float lightmap, in bool isWater, in bool eyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0, in bool isShaderGrass
+		in vec3 worldPos, in vec3 flatNormals, in float lightmap, in bool eyeInWater, inout vec3 albedo, inout vec3 normals, inout float roughness, inout float f0, in bool isShaderGrass, in float porosity
 	){
 		/* PUDDLE_MODE
 			0 = OFF, NO WETNESS
@@ -859,6 +859,8 @@ uniform float wetness;
 					puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
 
 					float wetnessStages = max(puddles, fullWet) * lightmap;
+					
+					fullWet = fullWet + porosity * fullWet;
 					float wetnessDarkening = max(puddles, fullWet*0.5) * lightmap;
 				#endif
 
@@ -867,17 +869,18 @@ uniform float wetness;
 					puddles = clamp(halfWet - exp(-25.0 * puddles*puddles*puddles*puddles*puddles*Puddle_Size),0.0,1.0);
 
 					float wetnessStages = puddles * lightmap;
-					float wetnessDarkening = wetnessStages;
+					float wetnessDarkening = min(wetnessStages + porosity * fullWet, 1.0);
 				#endif
 
 				#if PUDDLE_MODE == 3
 					float puddles = 0.0;
 					float wetnessStages = fullWet * lightmap;
-					float wetnessDarkening = wetnessStages*0.5;
+
+					fullWet = fullWet + porosity * fullWet;
+					float wetnessDarkening = fullWet*0.5*lightmap;
 				#endif				
 
 				wetnessStages *= effectStrength;
-				if(isWater) wetnessStages = 0.0;
 
 				#ifdef SHADER_GRASS
 				if(!isShaderGrass)
@@ -917,7 +920,7 @@ uniform float wetness;
 				float upnormal = clamp(-(normals / dot(abs(normals),vec3(1.0))).y+clamp(normals.y,minClamp,1.0),0.,1.);
 				float snow = clamp(1.0 - 2.*upnormal - (1.0-effectStrength),0.0,1.0);
 
-				if(isWater || f0 > 229.5/255.0 || eyeInWater) snow = 0.0;
+				if(f0 > 229.5/255.0 || eyeInWater) snow = 0.0;
 
 				vec3 snowA = pow(texture(snowTexA, snowCoords).rgb, vec3(2.0/(ShaderSnowStrength-0.1)));
 				#ifdef SHADER_GRASS
@@ -1043,7 +1046,8 @@ void main() {
 		float vanilla_AO = min(max(specdataUnpacked1.w-0.005,0.0)/0.995,1.0);
 
 		float LabSSS = clamp((-65.0 + SpecularTex.z * 255.0) / 190.0 ,0.0,1.0);
-		// float labPorosity = clamp(SpecularTex.z * 255.0, 0.0,64.5)/64.5;
+
+		float labPorosity = SpecularTex.z * 255.0 <= 64.5 ? clamp(SpecularTex.z * 255.0, 0.0, 64.5)/64.5 : 0.0;
 
 		vec3 slopednormal = normal;
 
@@ -1639,7 +1643,7 @@ void main() {
 		#endif
 
 		#if defined OVERWORLD_SHADER && defined DEFERRED_SPECULAR && (PUDDLE_MODE > 0 || ShaderSnow > 0)
-			if(!hand && !entities) applyPuddles(worldPos, FlatNormals, lightmap.y, isWater, eyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g, isShaderGrass);
+			if(!hand && !entities && !isWater) applyPuddles(worldPos, FlatNormals, lightmap.y, eyeInWater, albedo, normal, SpecularTex.r, SpecularTex.g, isShaderGrass, labPorosity);
 		#endif
 
 		vec3 FINAL_COLOR = (Indirect_lighting + Direct_lighting) * albedo;

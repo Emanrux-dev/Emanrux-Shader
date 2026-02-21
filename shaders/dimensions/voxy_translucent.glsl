@@ -12,7 +12,7 @@ layout (location = 3) out vec4 gbuffer_data_3;
 #include "/lib/TAA_jitter.glsl"
 
 #undef Hand_Held_lights
-#undef PHOTONICS_ENABLED
+#undef PHOTONICS
 #undef IS_LPV_ENABLED
 #include "/lib/diffuse_lighting.glsl"
 

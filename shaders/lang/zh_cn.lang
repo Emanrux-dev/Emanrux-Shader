@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - Bliss 编辑版
     prefix.SHADER_VERSION_LABEL = 版本
-    value.SHADER_VERSION_LABEL.482 = 6.3.3
+    value.SHADER_VERSION_LABEL.482 = 7.0.0
 
 # 如果你是来翻译的，这不是玩笑，这些选项的功能正如其名
 profile.POTATO=§4土豆 (极低配置)
@@ -136,7 +136,7 @@ screen.Foliage = 植被
     option.WAVY_STRENGTH = 摆动强度
     option.WAVY_SPEED = 摆动速度
 
-    option.SHADER_GRASS = 着色器草 §c(Iris 1.7+)
+    option.SHADER_GRASS_SETTING = 着色器草 §c(Iris 1.7+)
     option.GRASS_BASE_THICKNESS = 草叶基础厚度
     option.GRASS_THICKNESS_FALLOFF = 草厚度衰减
         option.GRASS_THICKNESS_FALLOFF.comment = 控制每片草叶变窄的速度。1.0 时，它将保持相同厚度直到叶尖

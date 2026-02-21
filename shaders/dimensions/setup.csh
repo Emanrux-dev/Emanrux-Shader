@@ -11,7 +11,7 @@ const ivec3 workGroups = ivec3(6, 6, 1);
     const vec3 LightColor_Amethyst = vec3(0.464, 0.227, 0.788);
     const vec3 LightColor_Candles = vec3(1.0, 0.4, 0.1);
     const vec3 LightColor_CopperBulb = vec3(1.0, 0.7, 0.6);
-    const vec3 LightColor_LightBlock = vec3(1.0);
+    const vec3 LightColor_LightBlock = vec3(0.7);
     const vec3 LightColor_RedstoneTorch = vec3(0.939, 0.305, 0.164);
     const vec3 LightColor_SeaPickle = vec3(0.283, 0.394, 0.212);
 
@@ -62,7 +62,11 @@ void main() {
         uint mixMask = 0xFFFF;
         vec3 tintColor = vec3(1.0);
 
-        if (blockId == BLOCK_SSS_WEAK || blockId == BLOCK_SSS_WEAK_3 || blockId == BLOCK_SSS_STRONG) {
+        if (blockId == BLOCK_SSS_WEAK || blockId == BLOCK_CACTUS || blockId == BLOCK_SSS_WEAK_3 || blockId == BLOCK_SSS_STRONG || blockId == BLOCK_SSS_STRONG3) {
+            mixWeight = 1.0;
+        }
+
+        if (blockId == BLOCK_BUTTON_FLOOR_NORTH_SOUTH || blockId == BLOCK_BUTTON_FLOOR_EAST_WEST || blockId == BLOCK_BUTTON_WALL_NORTH || blockId == BLOCK_BUTTON_WALL_EAST || blockId == BLOCK_BUTTON_WALL_SOUTH || blockId == BLOCK_BUTTON_WALL_WEST || blockId == BLOCK_BUTTON_CEILING_NORTH_SOUTH || blockId == BLOCK_BUTTON_CEILING_EAST_WEST) {
             mixWeight = 1.0;
         }
 
@@ -500,7 +504,7 @@ void main() {
         if (blockId == BLOCK_END_ROD || blockId == ITEM_END_ROD) {
             lightColor = vec3(0.957, 0.929, 0.875);
             // lightColor = vec3(0.8, 0.3, 1.0);
-            lightRange = 14.0;
+            lightRange = 12.0;
         }
 
         if (blockId == BLOCK_FIRE) {
@@ -535,7 +539,7 @@ void main() {
             lightRange = 12.0;
         }
 
-        if (blockId == BLOCK_GLOW_LICHEN || blockId == ITEM_GLOW_LICHEN) {
+        if (blockId == BLOCK_CELESTIUM || blockId == ITEM_GLOW_LICHEN || blockId == BLOCK_GLOW_LICHEN) {
             lightColor = vec3(0.1, 0.2, 0.12);
             lightRange = 7.0;
         }
@@ -794,7 +798,7 @@ void main() {
         }
 
         if (
-            blockId == BLOCK_COPPER_LANTERN || blockId == ITEM_COPPER_LANTERN
+            blockId == BLOCK_COPPER_LANTERN || blockId == ITEM_COPPER_LANTERN || blockId == BLOCK_COPPER_TORCH
         ) {
             lightColor = vec3(0.1, 0.8, 0.3);
             lightRange = 10.0;
@@ -816,6 +820,8 @@ void main() {
             lightRange = 2.0;
             mixWeight = 0.2;
         }
+
+        if (blockId >= 21 && blockId <= 37) mixWeight = 1.00;
 
         if (blockId >= BLOCK_LAMP_LIT_BLACK && blockId <= BLOCK_LAMP_LIT_YELLOW) {
             lightRange = 15.0;
@@ -965,6 +971,8 @@ void main() {
 
         // LPV shapes
 
+            case BLOCK_SSS_STRONG3:
+            case 88:
             case BLOCK_LPV_IGNORE:
                 mixWeight = 1.00;
                 break;
@@ -983,8 +991,7 @@ void main() {
                 mixWeight = 0.9;
                 break;
             case BLOCK_SCULK_VEIN:
-                mixMask = BuildLpvMask(1u, 1u, 1u, 1u, 1u, 0u);
-                mixWeight = 0.9;
+                mixWeight = 1.00;
                 break;
             case BLOCK_GLOW_LICHEN:
                 mixWeight = 1.00;
@@ -1023,6 +1030,7 @@ void main() {
                 mixWeight = 0.5;
                 break;
             case BLOCK_SLAB_BOTTOM:
+            case BLOCK_DAYLIGHT_DETECTOR:
             case BLOCK_SNOW_LAYERS:
                 mixMask = BuildLpvMask(1u, 1u, 1u, 1u, 1u, 0u);
                 mixWeight = 0.5;

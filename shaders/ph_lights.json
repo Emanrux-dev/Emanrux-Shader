@@ -1,0 +1,378 @@
+{
+  "defines": {
+    "colors": {
+      "generic": "#646464"
+    },
+    "intensities": {
+      "default": 1
+    },
+    "radii": {
+      "default": 1
+    },
+    "falloffs": {
+      "default": 1
+    }
+  },
+  "lights": {
+    "lantern": {
+      "intensity": 40,
+      "radius": 6.5,
+      "falloff": 0.6,
+      "color": "rgb(1.0,0.5,0.25)",
+      "is_traced": true,
+      "blocks": [
+        "*198"
+      ]
+    },
+    "soul_lantern" : {
+      "intensity": 30,
+      "radius": 4.25,
+      "falloff": 0.4,
+      "color": "rgb(0.1, 0.6, 1.0)",
+      "is_traced": true,
+      "blocks": [
+        "*245"
+      ]
+    },
+    "copper_lantern" : {
+      "intensity": 30,
+      "radius": 4.25,
+      "falloff": 0.4,
+      "color": "rgb(0.1, 0.8, 0.3)",
+      "is_traced": true,
+      "blocks": [
+        "*269"
+      ]
+    },
+    "sea_lantern" : {
+      "intensity": 45,
+      "radius": 4.5,
+      "falloff": 0.4,
+      "color": "rgb(0.553, 0.748, 0.859)",
+      "is_traced": true,
+      "blocks": [
+        "*242"
+      ]
+    },
+    "glowstone" : {
+      "intensity": 45,
+      "radius": 4.5,
+      "falloff": 0.4,
+      "color": "rgb(0.747, 0.594, 0.326)",
+      "is_traced": true,
+      "blocks": [
+        "*196"
+      ]
+    },
+    "torch" : {
+      "intensity": 35,
+      "radius": 4.25,
+      "falloff": 0.4,
+      "color": "rgb(1.0,0.5,0.25)",
+      "is_traced": true,
+      "blocks": [
+        "*247"
+      ]
+    },
+    "soul_torch" : {
+      "intensity": 25,
+      "radius": 4.25,
+      "falloff": 0.4,
+      "color": "rgb(0.1, 0.6, 1.0)",
+      "is_traced": true,
+      "blocks": [
+        "*246"
+      ]
+    },
+    "copper_torch" : {
+      "intensity": 25,
+      "radius": 4.25,
+      "falloff": 0.4,
+      "color": "rgb(0.1, 0.8, 0.3)",
+      "is_traced": true,
+      "blocks": [
+        "*268"
+      ]
+    },
+    "redstone_torch" : {
+      "intensity": 25,
+      "radius": 4.25,
+      "falloff": 0.4,
+      "color": "rgb(0.939, 0.305, 0.164)",
+      "is_traced": true,
+      "blocks": [
+        "*219"
+      ]
+    },
+    "crying_obsidian" : {
+      "intensity": 20,
+      "radius": 3.0,
+      "falloff": 0.4,
+      "color": "rgb(0.390, 0.065, 0.646)",
+      "is_traced": true,
+      "blocks": [
+        "*185"
+      ]
+    },
+    "froglight_ochre" : {
+      "intensity": 35,
+      "radius": 4.0,
+      "falloff": 0.4,
+      "color": "rgb(0.768, 0.648, 0.108)",
+      "is_traced": true,
+      "blocks": [
+        "*191"
+      ]
+    },
+    "froglight_pearlescent" : {
+      "intensity": 35,
+      "radius": 4.0,
+      "falloff": 0.4,
+      "color": "rgb(0.737, 0.435, 0.658)",
+      "is_traced": true,
+      "blocks": [
+        "*192"
+      ]
+    },
+    "froglight_verdant" : {
+      "intensity": 35,
+      "radius": 4.0,
+      "falloff": 0.4,
+      "color": "rgb(0.463, 0.763, 0.409)",
+      "is_traced": true,
+      "blocks": [
+        "*193"
+      ]
+    },
+    "glow_lichen" : {
+      "intensity": 50,
+      "radius": 1.5,
+      "falloff": 0.45,
+      "color": "rgb(0.1, 0.2, 0.12)",
+      "is_traced": true,
+      "blocks": [
+        "*270"
+      ]
+    },
+    "end_rod" : {
+      "intensity": 50,
+      "radius": 5.5,
+      "falloff": 0.5,
+      "color": "rgb(0.957, 0.929, 0.875)",
+      "is_traced": true,
+      "blocks": [
+        "*188"
+      ]
+    },
+    "shroomlight" : {
+      "intensity": 45,
+      "radius": 4.5,
+      "falloff": 0.5,
+      "color": "rgb(0.848, 0.469, 0.205)",
+      "is_traced": true,
+      "blocks": [
+        "*243"
+      ]
+    },
+    "fire" : {
+      "intensity": 30,
+      "radius": 3.5,
+      "falloff": 0.5,
+      "color": "rgb(0.864, 0.598, 0.348)",
+      "is_traced": true,
+      "blocks": [
+        "*189"
+      ]
+    },
+    "soul_fire" : {
+      "intensity": 25,
+      "radius": 3.5,
+      "falloff": 0.5,
+      "color": "rgb(0.1, 0.6, 1.0)",
+      "is_traced": true,
+      "blocks": [
+        "*244"
+      ]
+    },
+    "enchanting_table" : {
+      "intensity": 25,
+      "radius": 1.5,
+      "falloff": 0.5,
+      "color": "rgb(0.416, 0.509, 0.979)",
+      "is_traced": true,
+      "blocks": [
+        "*267"
+      ]
+    },
+    "beacon" : {
+      "intensity": 45,
+      "radius": 4.5,
+      "falloff": 0.5,
+      "color": "rgb(1, 1, 1)",
+      "is_traced": true,
+      "blocks": [
+        "*104"
+      ]
+    },
+    "redstone_lamp" : {
+      "intensity": 45,
+      "radius": 4.0,
+      "falloff": 0.4,
+      "color": "rgb(0.953, 0.796, 0.496)",
+      "is_traced": true,
+      "blocks": [
+        "*217"
+      ]
+    },
+    "magma_block" : {
+      "intensity": 15,
+      "radius": 2.0,
+      "falloff": 0.5,
+      "color": "rgb(0.747, 0.323, 0.110)",
+      "is_traced": true,
+      "blocks": [
+        "*215"
+      ]
+    },
+    "brewing_stand" : {
+      "intensity": 18,
+      "radius": 1.0,
+      "falloff": 0.5,
+      "color": "rgb(0.636, 0.509, 0.179)",
+      "is_traced": true,
+      "blocks": [
+        "*105"
+      ]
+    },
+    "candles_lit_1" : {
+      "intensity": 20,
+      "radius": 1.0,
+      "falloff": 0.5,
+      "color": "rgb(1.0, 0.4, 0.1)",
+      "is_traced": true,
+      "blocks": [
+        "*174"
+      ]
+    },
+    "candles_lit_2" : {
+      "intensity": 20,
+      "radius": 2.0,
+      "falloff": 0.5,
+      "color": "rgb(1.0, 0.4, 0.1)",
+      "is_traced": true,
+      "blocks": [
+        "*175"
+      ]
+    },
+    "candles_lit_3" : {
+      "intensity": 20,
+      "radius": 3.0,
+      "falloff": 0.5,
+      "color": "rgb(1.0, 0.4, 0.1)",
+      "is_traced": true,
+      "blocks": [
+        "*176"
+      ]
+    },
+    "candles_lit_4" : {
+      "intensity": 20,
+      "radius": 4.0,
+      "falloff": 0.5,
+      "color": "rgb(1.0, 0.4, 0.1)",
+      "is_traced": true,
+      "blocks": [
+        "*177"
+      ]
+    },
+    "lava" : {
+      "intensity": 40,
+      "radius": 10.0,
+      "falloff": 0.25,
+      "color": "rgb(0.959, 0.302, 0.106)",
+      "is_traced": true,
+      "blocks": [
+        "*199"
+      ]
+    },
+    "nether_portal" : {
+      "intensity": 15,
+      "radius": 4.6,
+      "falloff": 0.3,
+      "color": "rgb(0.502, 0.165, 0.831)",
+      "is_traced": true,
+      "blocks": [
+        "*337"
+      ]
+    },
+    "copper_bulb" : {
+      "intensity": 25,
+      "radius": 15.0,
+      "falloff": 0.45,
+      "color": "rgb(1.0, 0.7, 0.6)",
+      "is_traced": true,
+      "blocks": [
+        "*180"
+      ]
+    },
+    "exposed_copper_bulb" : {
+      "intensity": 25,
+      "radius": 12.0,
+      "falloff": 0.45,
+      "color": "rgb(1.0, 0.7, 0.6)",
+      "is_traced": true,
+      "blocks": [
+        "*181"
+      ]
+    },
+    "oxidized_copper_bulb" : {
+      "intensity": 25,
+      "radius": 4.0,
+      "falloff": 0.45,
+      "color": "rgb(1.0, 0.7, 0.6)",
+      "is_traced": true,
+      "blocks": [
+        "*182"
+      ]
+    },
+    "weathered_copper_bulb" : {
+      "intensity": 25,
+      "radius": 8.0,
+      "falloff": 0.45,
+      "color": "rgb(1.0, 0.7, 0.6)",
+      "is_traced": true,
+      "blocks": [
+        "*183"
+      ]
+    },
+    "cave_berries" : {
+      "intensity": 15,
+      "radius": 4.0,
+      "falloff": 0.35,
+      "color": "rgb(1.0, 1.0, 0.1)",
+      "is_traced": true,
+      "blocks": [
+        "*178"
+      ]
+    },
+    "jack_o_lantern" : {
+      "intensity": 25,
+      "radius": 10.0,
+      "falloff": 0.55,
+      "color": "rgb(0.864, 0.598, 0.348)",
+      "is_traced": true,
+      "blocks": [
+        "*197"
+      ]
+    },
+    "powered_rail" : {
+      "intensity": 20,
+      "radius": 5.0,
+      "falloff": 0.55,
+      "color": "rgb(0.939, 0.305, 0.164)",
+      "is_traced": true,
+      "blocks": [
+        "*216"
+      ]
+    }
+  }
+}

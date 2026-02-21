@@ -609,9 +609,9 @@ void main() {
   float translucentMasks = texelFetch(colortex7, ivec2(gl_FragCoord.xy),0).a;
 
 	bool isWater = translucentMasks > 0.99;
-	bool isReflectiveEntity = abs(translucentMasks - 0.8) < 0.01;
-	bool isReflective = abs(translucentMasks - 0.7) < 0.01 || isWater || isReflectiveEntity;
-	bool isEntity = abs(translucentMasks - 0.9) < 0.01 || isReflectiveEntity;
+	bool isReflectiveEntity = abs(translucentMasks - 0.2) < 0.01;
+	bool isReflective = abs(translucentMasks - 0.1) < 0.01 || isWater || isReflectiveEntity;
+	bool isEntity = abs(translucentMasks - 0.4) < 0.01 || isReflectiveEntity;
 
   ////// --------------- get volumetrics
   #if defined DISTANT_HORIZONS || defined VOXY

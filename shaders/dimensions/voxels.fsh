@@ -345,9 +345,7 @@ void main() {
 	float BN = blueNoise();
 	float R2 = R2_dither();
 
-	vec2 tempOffset = offsets[framemod8];
-
-	vec3 fragpos = toScreenSpace(FragCoord*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize*0.5, 0.0));
+	vec3 fragpos = toScreenSpace(FragCoord*vec3(texelSize/RENDER_SCALE,1.0));
 	vec3 playerpos = mat3(gbufferModelViewInverse) * fragpos  + gbufferModelViewInverse[3].xyz;
 	vec3 worldpos = playerpos + cameraPosition;
 
@@ -359,8 +357,8 @@ void main() {
 
 	float opaqueMasks = 1.0;
 
-	if(data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL || data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_LOWER || data_in.blockID == BLOCK_GRASS_TALL_UPPER ) opaqueMasks = 0.60;
-	else if(data_in.blockID == BLOCK_AIR_WAVING) opaqueMasks = 0.55;
+	// if(data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL || data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_LOWER || data_in.blockID == BLOCK_GRASS_TALL_UPPER ) opaqueMasks = 0.60;
+	// else if(data_in.blockID == BLOCK_AIR_WAVING) opaqueMasks = 0.55;
 	
 
 	//////////////////////////////// 				////////////////////////////////
@@ -378,8 +376,11 @@ void main() {
     // don't fix vanilla ao on some custom block models.
     // if (Color.a < 0.3) Color.a = 1.0; // fix vanilla ao on some custom block models.
 
-    RayJob ray = RayJob(vec3(0), vec3(0), vec3(0), vec3(0), vec3(0), false);
-    ray.origin = worldpos - world_offset - 0.001f * data_in.block_normal;
+    RayJob ray = RayJob(vec3(0), vec3(0), vec3(0), vec3(0), vec3(0), true);
+
+    float normalOffset = mix(0.00015f, 0.025f, clamp(length(playerpos)*0.006, 0.0, 1.0));
+    ray.origin = worldpos - world_offset - normalOffset * data_in.block_normal;
+
     ray.direction = playerpos - gbufferModelViewInverse[3].xyz;
     ray_constraint = ivec3(ray.origin);
     trace_ray(ray);
@@ -544,25 +545,25 @@ void main() {
     OutSpecular = vec4(0.0,0.0,0.0,0.0);
     OutSpecular.rg = SpecularTex.rg;
 
-    #if EMISSIVE_ORES > 1 && EMISSIVE_TYPE > 1
-        if(data_in.blockID == 502) {
-            SpecularTex.a = EMISSIVE_ORES_STRENGTH;
-            
-            SpecularTex.a *= getEmission(Albedo.rgb);
-        }
-    #endif
+    // #if EMISSIVE_ORES > 1 && EMISSIVE_TYPE > 1
+    //     if(data_in.blockID == 502) {
+    //         SpecularTex.a = EMISSIVE_ORES_STRENGTH;
+    //         
+    //         SpecularTex.a *= getEmission(Albedo.rgb);
+    //     }
+    // #endif
 
 
     #if EMISSIVE_TYPE == 2
     bool emissionCheck = SpecularTex.a <= 0.0;
     #endif
 
-    #ifdef MIRROR_IRON
-    if(data_in.blockID == 504 || currentRenderedItemId == 504) {
-        OutSpecular.rg = vec2(1.0, 1.0);
-        Albedo.rgb = vec3(1.0);
-    }
-    #endif
+    // #ifdef MIRROR_IRON
+    // if(data_in.blockID == 504 || currentRenderedItemId == 504) {
+    //     OutSpecular.rg = vec2(1.0, 1.0);
+    //     Albedo.rgb = vec3(1.0);
+    // }
+    // #endif
 
     #if defined HARDCODED_EMISSIVES_APPROX && (EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2)
         #if EMISSIVE_TYPE == 2

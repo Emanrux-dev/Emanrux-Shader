@@ -683,8 +683,8 @@ void main() {
 		float gray = dot(Albedo.rgb, vec3(0.2, 1.0, 0.07));
 		if (
 			data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER 
-			|| data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_SSS_WEAK
-			|| data_in.blockID == BLOCK_GLOW_LICHEN || data_in.blockID == BLOCK_SNOW_LAYERS
+			|| data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_SSS_STRONG3 || data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_CACTUS
+			|| data_in.blockID == BLOCK_CELESTIUM || data_in.blockID == BLOCK_SNOW_LAYERS
 			|| data_in.blockID >= 10 && data_in.blockID < 80
 		) {
 			// IR Reflective (Pink-red)
@@ -782,7 +782,7 @@ void main() {
 				/////// ----- SSS ON BLOCKS ----- ///////
 				// strong
 				if (
-					data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_AIR_WAVING || data_in.blockID == BLOCK_SSS_STRONG_2
+					data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_SSS_STRONG3 || data_in.blockID == BLOCK_AIR_WAVING || data_in.blockID == BLOCK_SSS_STRONG_2
 				) {
 					SSSAMOUNT = 1.0;
 				}
@@ -790,8 +790,8 @@ void main() {
 				else if (
 					data_in.blockID == BLOCK_GROUND_WAVING || data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL ||
 					data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_UPPER || data_in.blockID == BLOCK_GRASS_TALL_LOWER ||
-					data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_SSS_WEAK_2 ||
-					data_in.blockID == BLOCK_GLOW_LICHEN || data_in.blockID == BLOCK_SNOW_LAYERS || data_in.blockID == BLOCK_CARPET ||
+					data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_CACTUS || data_in.blockID == BLOCK_SSS_WEAK_2 ||
+					data_in.blockID == BLOCK_CELESTIUM || (data_in.blockID >= 269 && data_in.blockID <= 274) || data_in.blockID == BLOCK_SNOW_LAYERS || data_in.blockID == BLOCK_CARPET ||
 					data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER ||
 					data_in.blockID == BLOCK_BAMBOO || data_in.blockID == BLOCK_SAPLING || data_in.blockID == BLOCK_VINE || data_in.blockID == BLOCK_VINE_OTHER
 					#ifdef MISC_BLOCK_SSS
@@ -831,26 +831,28 @@ void main() {
 			// if(vNameTags > 0) EMISSIVE = 0.9;
 
 			// normal block lightsources
-			if(data_in.blockID >= 100 && data_in.blockID < 300) EMISSIVE = 0.5;
+			if(data_in.blockID >= 100 && data_in.blockID < 282) {
+				EMISSIVE = 0.5;
 
-			if(data_in.blockID == 266 || data_in.blockID == 497) EMISSIVE = 0.2; // sculk stuff
+				if(data_in.blockID == 266 || (data_in.blockID >= 276 && data_in.blockID <= 281)) EMISSIVE = 0.2; // sculk stuff
 
-			else if(data_in.blockID == 195) EMISSIVE = 2.3; // glow lichen
+				else if(data_in.blockID == 195) EMISSIVE = 2.3; // glow lichen
 
-			else if(data_in.blockID == 185) EMISSIVE = 1.5; // crying obsidian
+				else if(data_in.blockID == 185) EMISSIVE = 1.5; // crying obsidian
 
-			else if(data_in.blockID == 105) EMISSIVE = 2.0; // brewing stand
-			
-			else if(data_in.blockID == 236) EMISSIVE = 1.0; // respawn anchor
+				else if(data_in.blockID == 105) EMISSIVE = 2.0; // brewing stand
+				
+				else if(data_in.blockID == 236) EMISSIVE = 1.0; // respawn anchor
 
-			else if(data_in.blockID == 101) EMISSIVE = 0.7; // large amethyst bud
+				else if(data_in.blockID == 101) EMISSIVE = 0.7; // large amethyst bud
 
-			else if(data_in.blockID == 103) EMISSIVE = 1.0; // amethyst cluster
+				else if(data_in.blockID == 103) EMISSIVE = 1.0; // amethyst cluster
 
-			else if(data_in.blockID == 244) EMISSIVE = 1.5; // soul fire
+				else if(data_in.blockID == 244) EMISSIVE = 1.5; // soul fire
+			}
 
 			#if EMISSIVE_ORES > 0
-				else if(data_in.blockID == 502) {
+				if(data_in.blockID == 502) {
 					EMISSIVE = EMISSIVE_ORES_STRENGTH;
 
 					#ifndef HARDCODED_EMISSIVES_APPROX
@@ -899,6 +901,14 @@ void main() {
 
 		#if EMISSIVE_TYPE == 2
 		bool emissionCheck = SpecularTex.a <= 0.0;
+		#endif
+
+		#ifdef MIRROR_IRON
+		if(data_in.blockID == 504 || currentRenderedItemId == 504) {
+			OutSpecular.rg = vec2(1.0, 1.0);
+			Albedo.rgb = vec3(1.0);
+			// normal = flatNormals;
+		}
 		#endif
 
 		#if defined HARDCODED_EMISSIVES_APPROX && (EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2)

@@ -1,4 +1,4 @@
-layout(std430, binding = 6) buffer SSBO1 {
+layout(std430, binding = 4) buffer SSBO1 {
     mat4 customShadowMatrixSSBO; // 64 bytes
 
     vec3 customMoonVecSSBO; // 12 bytes

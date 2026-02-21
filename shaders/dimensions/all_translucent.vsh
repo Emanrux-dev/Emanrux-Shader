@@ -5,6 +5,7 @@
 
 #include "/lib/SSBOs.glsl"
 
+#include "/lib/blocks.glsl"
 #include "/lib/entities.glsl"
 
 uniform float frameTimeCounter;
@@ -210,22 +211,27 @@ void main() {
 	float mat = 0.0;
 
 	// water mask
-	if(isWater) {
+	if(isWater
+	#if MC_VERSION > 12111
+	 || mc_Entity.x == 505
+	#endif
+	 
+	 ) {
     	mat = 1.0;
   	}
 
 	// translucent entities
 	#if defined ENTITIES || defined BLOCKENTITIES
-		mat = 0.9;
-		if (entityId == 1804) mat = 0.8;
+		mat = 0.4;
+		if (entityId == 1804) mat = 0.2;
 	#endif
 
 	// translucent blocks
-	if (mc_Entity.x >= 301 && mc_Entity.x <= 321) mat = 0.7;
+	if (mc_Entity.x >= 301 && mc_Entity.x <= 338) mat = 0.1;
 
-	if (mc_Entity.x == 320) mat = 0.6;
+	// if (mc_Entity.x == BLOCK_NETHER_PORTAL) mat = 0.6;
 
-	if (mc_Entity.x == 322) lmtexcoord.z = 0.0;
+	if (mc_Entity.x == WISPJELLY) lmtexcoord.z = 0.0;
 
 	#if defined ENTITIES && defined IS_IRIS
 		NAMETAG = 0;

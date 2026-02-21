@@ -13,15 +13,15 @@ const int colortex6Format = R11F_G11F_B10F;			// additional buffer for bloom (co
 const int colortex7Format = RGBA8;					// Final output, transparencies id (gbuffer->composite4)
 const int colortex8Format = RGBA16;					// Specular Texture, flat normals, vanilla AO
 
-const int colortex9Format = RGBA16;				// rain (encoded rg: gbuffers_weather -> composite3), resource pack sky (rgba: gbuffers_skytextured, gbuffers_skybasic -> deferred1), combined depth quarter res (ba: deferred2 -> wherever)
+const int colortex9Format = RGBA16;					// rain (encoded rg: gbuffers_weather -> composite3), resource pack sky (rgba: gbuffers_skytextured, gbuffers_skybasic -> deferred1), combined depth quarter res (ba: composite -> wherever)
 
 const int colortex10Format = RGBA16F;				// cloud history
 const int colortex11Format = RGBA16; 				// unchanged translucents albedo, alpha and tangent normals
-const int colortex12Format = RGBA16F;				// DISTANT HORIZONS + VANILLA MIXED DEPTHs
+const int colortex12Format = RGBA16F;				// empty
 
 const int colortex13Format = RGBA16F;				// low res VL (composite5->composite15)
-const int colortex14Format = RGBA16;					// rg = SSAO and SS-SSS. a = skylightmap for translucents.
-const int colortex15Format = RGBA16F;					// flat normals and vanilla AO
+const int colortex14Format = RGBA16;				// rg = SSAO and SS-SSS. a = skylightmap for translucents.
+const int colortex15Format = R11F_G11F_B10F;		// PHOTONICS GI
 
 #ifdef VOXY
 	const int colortex16Format = RGBA16F;				// voxy translucent stuff...

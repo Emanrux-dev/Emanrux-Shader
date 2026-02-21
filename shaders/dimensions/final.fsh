@@ -6,14 +6,16 @@ uniform sampler2D colortex7;
 uniform sampler2D colortex5;
 uniform sampler2D colortex6;
 uniform sampler2D colortex10;
+uniform sampler2D colortex11;
 uniform sampler2D colortex14;
+uniform sampler2D colortex15;
 uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
 uniform sampler2D depthtex2;
 uniform sampler2D noisetex;
 uniform sampler2D shadowcolor1;
 
-#ifndef IS_IRIS
+#if !defined IS_IRIS || (defined SHADER_GRASS_SETTING && MC_VERSION < 12101 && !defined SHADER_GRASS_UNSUPPORTED_FIX)
   #include "/lib/text_rendering.glsl"
 #endif
 
@@ -153,6 +155,10 @@ float doVignette( in vec2 texcoord, in float noise){
   layout (rgba16f) uniform readonly image2D waveSim2;
 #endif
 
+uniform sampler2D radiosity_direct;
+uniform sampler2D radiosity_direct_soft;
+uniform sampler2D radiosity_handheld;
+
 
 void main() {
   
@@ -244,6 +250,36 @@ void main() {
     }
   #endif
 
+  #if defined SHADER_GRASS_SETTING && MC_VERSION < 12101 && !defined SHADER_GRASS_UNSUPPORTED_FIX
+    const float textSize2 = 4.0;
+    beginText(ivec2(gl_FragCoord.xy/textSize2), ivec2(0.05*viewWidth/textSize2, 0.75*viewHeight/textSize2));
+    text.fgCol = vec4(1.0, 0.0, 0.0, 1.0);
+    printString((_S, _h, _a, _d, _e, _r, _space, _G, _r, _a, _s, _s, _space, _n, _e, _e, _d, _s, _space, _1, _dot, _2, _1, _dot, _1, _space, _o, _r, _space, _h, _i, _g, _h, _e, _r, _exclm));
+    printLine();
+    printString((_D, _i, _s, _a, _b, _l, _e, _space, _i, _t, _exclm));
+    #if MC_VERSION == 12001
+      printLine();
+      printLine();
+      printString((_T, _o, _space, _u, _s, _e, _space, _i, _t, _space, _o, _n, _space, _1, _dot, _2, _0, _dot, _1, _space, _u, _s, _e, _space, _t, _h, _e));
+      printLine();
+      text.fgCol = vec4(0.0, 1.0, 0.0, 1.0);
+      printString((_quote, _E, _c, _l, _i, _p, _s, _e, _space, _S, _h, _a, _d, _e, _r, _space, _G, _r, _a, _s, _s, _space, _C, _o, _m, _p, _a, _t, _quote));
+      printLine();
+      text.fgCol = vec4(1.0, 0.0, 0.0, 1.0);
+      printString((_R, _e, _s, _o, _u, _r, _c, _e, _space, _P, _a, _c, _k, _space, _f, _r, _o, _m, _space, _M, _o, _d, _r, _i, _n, _t, _h, _exclm));
+      printLine();
+      printLine();
+      printString((_A, _d, _d, _i, _t, _i, _o, _n, _a, _l, _l, _y, _space, _e, _n, _a, _b, _l, _e, _space, _t, _h, _e));
+      printLine();
+      text.fgCol = vec4(1.0, 1.0, 0.0, 1.0);
+      printString((_quote, _S, _h, _a, _d, _e, _r, _space, _G, _r, _a, _s, _s, _space, _U, _n, _s, _u, _p, _p, _o, _r, _t, _e, _d, _space, _F, _i, _x, _quote));
+      printLine();
+      text.fgCol = vec4(1.0, 0.0, 0.0, 1.0);
+      printString((_i, _n, _space, _e, _x, _p, _e, _r, _i, _m, _e, _n, _t, _a, _l, _space, _s, _e, _t, _t, _i, _n, _g, _s, _exclm));
+    #endif
+    endText(gl_FragColor.rgb);
+  #endif
+
   #ifndef IS_IRIS
     gl_FragColor.rgb = vec3(0.0);
     const float textSize = 4.0;
@@ -254,5 +290,17 @@ void main() {
     printLine();
     printString((_U, _s, _e, _space, _I, _r, _i, _s, _space, _i, _n, _s, _t, _e, _a, _d, _exclm));
     endText(gl_FragColor.rgb);
+  #endif
+
+  #ifdef PHOTONICS
+    #if DEBUG_VIEW == debug_radiosity_direct
+      gl_FragColor.rgb = vec3(texture(radiosity_direct, texcoord).rgb);
+    #elif DEBUG_VIEW == debug_radiosity_direct_soft
+      gl_FragColor.rgb = vec3(texture(radiosity_direct_soft, texcoord).rgb);
+    #elif DEBUG_VIEW == debug_radiosity_handheld
+      gl_FragColor.rgb = vec3(texture(radiosity_handheld, texcoord).rgb);
+    #elif DEBUG_VIEW == debug_radiosity_GI
+      gl_FragColor.rgb = vec3(texture(colortex15, texcoord).rgb);
+    #endif
   #endif
 }

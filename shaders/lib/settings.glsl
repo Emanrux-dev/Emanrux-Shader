@@ -1037,9 +1037,15 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 
 #define VANILLA_CHUNK_FADING 1 // [0 1 2]
 
-// #define SHADER_GRASS
+// #define SHADER_GRASS_SETTING
 
-#ifdef SHADER_GRASS
+#ifdef SHADER_GRASS_SETTING
+	#define SHADER_GRASS
+#endif
+
+// #define SHADER_GRASS_UNSUPPORTED_FIX
+
+#ifdef SHADER_GRASS_UNSUPPORTED_FIX
 #endif
 
 #define GRASS_BASE_THICKNESS 0.3 // [0.1 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.85 0.9 0.95 1.0]
@@ -1133,6 +1139,9 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 	const float voxelDistance = 64.0;
 #endif
 
+#define VOXEL_REFLECTIONS_TRANSLUCENT
+#define VOXEL_REFLECTIONS_SOLID
+
 // ruining parts of the effect to make it more like vanilla floodfill
 // #define VANILLA_LIGHTMAP_MASK
 
@@ -1165,31 +1174,82 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 // ----- PHOTONICS SETTINGS ----- //
 //////////////////////////////////
 
-// #define PHOTONICS_ENABLED
+#define VOXEL_REFLECTIONS
+#define PHOTONICS_ACTIVE
 
-// #define PHOTONICS_GI_ONLY
+
+#if defined VOXEL_REFLECTIONS && defined PHOTONICS && defined PHOTONICS_ACTIVE
+	#define LPV_ENABLED
+	#define IS_LPV_ENABLED
+#endif
+
+// #define MIRROR_IRON
+#ifdef MIRROR_IRON
+#endif
+
+
+#ifndef PHOTONICS
+#undef PHOTONICS_ACTIVE
+#endif
 
 // #define PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION
 
 #ifdef PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION
 #endif
 
-#if defined PHOTONICS_ENABLED && !defined PHOTONICS_GI_ONLY
+// TODO: THIS IS HORRENDOUS
+#define ENABLE_PHOTONICS_GI
+#define ENABLE_PHOTONICS_BLOCKLIGHT
+#define ENABLE_PHOTONICS_HANDHELD
 
-	#ifndef PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION
+#ifdef ENABLE_PHOTONICS_GI
+#endif
+
+#ifdef ENABLE_PHOTONICS_BLOCKLIGHT
+#endif
+
+#ifdef ENABLE_PHOTONICS_HANDHELD
+#endif
+
+#ifdef PHOTONICS_ACTIVE
+#else
+	#undef ENABLE_PHOTONICS_GI
+	#undef ENABLE_PHOTONICS_BLOCKLIGHT
+	#undef ENABLE_PHOTONICS_HANDHELD
+#endif
+
+
+
+#ifdef IS_LPV_ENABLED
+	#define COLORED_LIGHTS
+	#define COLORED_HANDHELD_LIGHTS
+
+	// TODO: MAKE FLOODFILL USE PHOTONICS VOXEL MAP!
+	#define VOXELIZE
+#endif
+
+#if defined PHOTONICS && defined PHOTONICS_ACTIVE
+	#undef VOXELIZE
+
+	#if !defined PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION && !defined VOXEL_REFLECTIONS && defined PH_ENABLE_BLOCKLIGHT
 		#undef IS_LPV_ENABLED
 		#undef LPV_ENABLED
 	#endif
-
-	#undef Hand_Held_lights
+#else
 	#undef VOXEL_REFLECTIONS
-	#undef MIRROR_IRON
 #endif
 
-#ifdef PHOTONICS_GI_ONLY
-#endif
+#define PHOTONICS_ALPHA_MODE BLOCK // [NONE BLOCK VOXEL]
+#define PHOTONICS_MAX_LIGHTS 1000 // [250 500 750 1000 1250]
+#define PHOTONICS_MAX_SAMPLES 20 // [5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 
 #define PHOTONICS_INDIRECT_BRIGHTNESS 1.0 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.5 3.0 3.5 4.0 4.5 5.0]
+
+#define VOXEL_REFLECTIONS_FOG
+#define VOXEL_REFLECTIONS_LPV_FOG
+
+#ifdef VOXEL_REFLECTIONS_FOG
+#endif
 
 ////////////////////////////////
 // ----- DEBUG SETTINGS ----- //
@@ -1208,7 +1268,11 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #define debug_DEPTHTEX1 10
 #define debug_CLOUDDEPTHTEX 11
 #define debug_WATERSIM 12
-#define DEBUG_VIEW debug_OFF // [debug_OFF debug_SHADOWMAP debug_NORMALS debug_SPECULAR debug_INDIRECT debug_DIRECT debug_VIEW_POSITION debug_DH_WATER_BLENDING debug_FILTERED_STUFF debug_DEPTHTEX0 debug_DEPTHTEX1 debug_CLOUDDEPTHTEX debug_WATERSIM]
+#define debug_radiosity_direct 13
+#define debug_radiosity_direct_soft 14
+#define debug_radiosity_handheld 15
+#define debug_radiosity_GI 16
+#define DEBUG_VIEW debug_OFF // [debug_OFF debug_SHADOWMAP debug_NORMALS debug_SPECULAR debug_INDIRECT debug_DIRECT debug_VIEW_POSITION debug_DH_WATER_BLENDING debug_FILTERED_STUFF debug_DEPTHTEX0 debug_DEPTHTEX1 debug_CLOUDDEPTHTEX debug_WATERSIM debug_radiosity_direct debug_radiosity_direct_soft debug_radiosity_handheld debug_radiosity_GI]
 // #define ISOLATE_RESOURCEPACK_SKY
 
 #if DEBUG_VIEW == debug_DEPTHTEX0 || DEBUG_VIEW == debug_DEPTHTEX1
@@ -1283,7 +1347,7 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #undef SHADER_GRASS
 #endif
 
-#if MC_VERSION < 12101
+#if MC_VERSION < 12101 && !defined SHADER_GRASS_UNSUPPORTED_FIX
 	#undef SHADER_GRASS
 #endif
 

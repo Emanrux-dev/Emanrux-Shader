@@ -258,10 +258,5 @@ void main() {
 	#ifdef TAA_UPSCALING
 		gl_Position.xy = gl_Position.xy * RENDER_SCALE + RENDER_SCALE * gl_Position.w - gl_Position.w;
 	#endif
-	#ifdef TAA
-		vec2 TAA_offsets = offsets[framemod8];
-
-		gl_Position.xy += TAA_offsets * gl_Position.w*texelSize;
-	#endif
 
 }

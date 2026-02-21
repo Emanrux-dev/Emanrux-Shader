@@ -60,7 +60,7 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 		/////// ----- SSS ON BLOCKS ----- ///////
 		// strong
 		if (
-			blockID == BLOCK_SSS_STRONG || blockID == BLOCK_AIR_WAVING || blockID == BLOCK_SSS_STRONG_2
+			blockID == BLOCK_SSS_STRONG || blockID == BLOCK_SSS_STRONG3 || blockID == BLOCK_AIR_WAVING || blockID == BLOCK_SSS_STRONG_2
 		) {
 			SSSAMOUNT = 1.0;
 		}
@@ -72,8 +72,8 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 			SSSAMOUNT = 0.5;
 		}
 		else if (
-			blockID == BLOCK_SSS_WEAK || blockID == BLOCK_SSS_WEAK_2 ||
-			blockID == BLOCK_GLOW_LICHEN || blockID == BLOCK_SNOW_LAYERS || blockID == BLOCK_CARPET ||
+			blockID == BLOCK_SSS_WEAK || blockID == BLOCK_CACTUS || blockID == BLOCK_SSS_WEAK_2 ||
+			blockID == BLOCK_CELESTIUM || blockID == BLOCK_SNOW_LAYERS || blockID == BLOCK_CARPET ||
 			blockID == BLOCK_AMETHYST_BUD_MEDIUM || blockID == BLOCK_AMETHYST_BUD_LARGE || blockID == BLOCK_AMETHYST_CLUSTER ||
 			blockID == BLOCK_BAMBOO || blockID == BLOCK_SAPLING || blockID == BLOCK_VINE || blockID == BLOCK_VINE_OTHER
 		) {
@@ -98,26 +98,28 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
 		// if(vNameTags > 0) EMISSIVE = 0.9;
 
 		// normal block lightsources
-		if(blockID >= 100 && blockID < 300) EMISSIVE = 0.5;
+		if(blockID >= 100 && blockID < 282) {
+			EMISSIVE = 0.5;
 
-		else if(blockID == 266 || blockID == 497) EMISSIVE = 0.2; // sculk stuff
+			if(blockID == 266 || (blockID >= 276 && blockID <= 281)) EMISSIVE = 0.2; // sculk stuff
 
-		else if(blockID == 195) EMISSIVE = 2.3; // glow lichen
+			else if(blockID == 195) EMISSIVE = 2.3; // glow lichen
 
-		else if(blockID == 185) EMISSIVE = 1.5; // crying obsidian
+			else if(blockID == 185) EMISSIVE = 1.5; // crying obsidian
 
-		else if(blockID == 105) EMISSIVE = 2.0; // brewing stand
-		
-		else if(blockID == 236) EMISSIVE = 1.0; // respawn anchor
+			else if(blockID == 105) EMISSIVE = 2.0; // brewing stand
+			
+			else if(blockID == 236) EMISSIVE = 1.0; // respawn anchor
 
-		else if(blockID == 101) EMISSIVE = 0.7; // large amethyst bud
+			else if(blockID == 101) EMISSIVE = 0.7; // large amethyst bud
 
-		else if(blockID == 103) EMISSIVE = 1.0; // amethyst cluster
+			else if(blockID == 103) EMISSIVE = 1.0; // amethyst cluster
 
-		else if(blockID == 244) EMISSIVE = 1.5; // soul fire
+			else if(blockID == 244) EMISSIVE = 1.5; // soul fire
+		}
 
 		#if EMISSIVE_ORES > 0
-			else if(blockID == 502) EMISSIVE = EMISSIVE_ORES_STRENGTH;
+			if(blockID == 502) EMISSIVE = EMISSIVE_ORES_STRENGTH;
 		#endif
 
 		#ifdef HARDCODED_EMISSIVES_APPROX

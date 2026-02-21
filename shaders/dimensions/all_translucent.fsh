@@ -85,6 +85,7 @@ uniform sampler2D depthtex2;
 #endif
 
 uniform sampler2D colortex7;
+uniform sampler2D colortex9;
 uniform sampler2D colortex11;
 uniform sampler2D colortex12;
 uniform sampler2D colortex13;
@@ -188,6 +189,7 @@ uniform float dhVoxyFarPlane;
 	#include "/lib/hsv.glsl"
 	#include "/lib/lpv_common.glsl"
 	#include "/lib/lpv_render.glsl"
+	// #include "/lib/voxel_common.glsl"
 #endif
 
 #define FORWARD_SPECULAR
@@ -207,18 +209,36 @@ uniform float dhVoxyFarPlane;
 
 uniform vec3 relativeEyePosition;
 
+vec2 decodeVec2(float a){
+    const vec2 constant1 = 65535. / vec2( 256., 65536.);
+    const float constant2 = 256. / 255.;
+    return fract( a * constant1 ) * constant2 ;
+}
 
 #include "/lib/blocks.glsl"
 #include "/lib/lpv_blocks.glsl"
 #include "/lib/lpv_buffer.glsl"
 
-#include "/lib/specular.glsl"
 #if defined VIVECRAFT
 	uniform bool vivecraftIsVR;
 	uniform vec3 vivecraftRelativeMainHandPos;
 	uniform vec3 vivecraftRelativeOffHandPos;
 	uniform mat4 vivecraftRelativeMainHandRot;
 	uniform mat4 vivecraftRelativeOffHandRot;
+#endif
+
+#define VOXEL_REFLECTIONS_TRANSLUCENT
+
+#ifdef VOXEL_REFLECTIONS_TRANSLUCENT
+#endif
+
+#ifdef PHOTONICS
+	#ifdef VOXEL_REFLECTIONS
+		// #define VOXEL_REFLECTIONS
+		#define PHOTONICS_INCLUDED
+
+		#include "/photonics/photonics.glsl"
+	#endif
 #endif
 
 #include "/lib/diffuse_lighting.glsl"
@@ -475,16 +495,12 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 }
 #endif
 
+#include "/lib/specular.glsl"
+
 void convertHandDepth(inout float depth) {
     float ndcDepth = depth * 2.0 - 1.0;
     ndcDepth /= MC_HAND_DEPTH;
     depth = ndcDepth * 0.5 + 0.5;
-}
-
-vec2 decodeVec2(float a){
-    const vec2 constant1 = 65535. / vec2( 256., 65536.);
-    const float constant2 = 256. / 255.;
-    return fract( a * constant1 ) * constant2 ;
 }
 
 void Emission(
@@ -611,10 +627,10 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	// bool isHand = abs(MATERIALS - 0.1) < 0.01;
 	bool isWater = MATERIALS > 0.99;
-	bool isReflectiveEntity = abs(MATERIALS - 0.8) < 0.01;
-	bool isReflective = abs(MATERIALS - 0.7) < 0.01 || isWater || isReflectiveEntity;
-	bool isEntity = abs(MATERIALS - 0.9) < 0.01 || isReflectiveEntity;
-	bool isNetherPortal =  abs(MATERIALS - 0.6) < 0.01;
+	bool isReflectiveEntity = abs(MATERIALS - 0.2) < 0.01;
+	bool isReflective = abs(MATERIALS - 0.1) < 0.01 || isWater || isReflectiveEntity;
+	bool isEntity = abs(MATERIALS - 0.4) < 0.01 || isReflectiveEntity;
+	// bool isNetherPortal =  abs(MATERIALS - 0.6) < 0.01;
 
 ////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// ALBEDO /////////////////////////////////////
@@ -1014,10 +1030,11 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#endif
 
 	///////////////////////// BLOCKLIGHT LIGHTING OR LPV LIGHTING OR FLOODFILL COLORED LIGHTING
+	vec3 flatWorldNormal = viewToWorld(normalMat.xyz).xyz;
 	#ifdef IS_LPV_ENABLED
 		vec3 normalOffset = vec3(0.0);
 
-		if (any(greaterThan(abs(viewToWorld(normalMat.xyz).xyz), vec3(1.0e-6))))
+		if (any(greaterThan(abs(flatWorldNormal), vec3(1.0e-6))))
 			normalOffset = 0.5*worldSpaceNormal;
 
 		#if LPV_NORMAL_STRENGTH > 0
@@ -1109,7 +1126,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 				vec3 sunVec = WsunVec;
 			#endif
 			
-			vec3 specularReflections = specularReflections(viewPos, normalize(feetPlayerPos), sunVec, vec3(BN, vec2(interleaved_gradientNoise_temporal())), worldSpaceNormal, roughness, f0, Albedo, FinalColor*gl_FragData[0].a, DirectLightColor * Shadows * Shadows, lightmap.y, isHand, isWater, reflectance, flashLightSpecularData);
+			vec3 specularReflections = specularReflections(viewPos, shadowPlayerPos, normalize(feetPlayerPos), sunVec, vec2(BN, interleaved_gradientNoise_temporal()), flatWorldNormal, worldSpaceNormal, roughness, f0, Albedo, FinalColor*gl_FragData[0].a, DirectLightColor * Shadows * Shadows, lightmap.y, isHand, isWater, reflectance, flashLightSpecularData);
 			
 			gl_FragData[0].a = gl_FragData[0].a + (1.0-gl_FragData[0].a) * reflectance;
 		

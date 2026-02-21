@@ -132,7 +132,7 @@ in DATA {
 
 uniform float sunElevation;
 
-#ifdef IS_LPV_ENABLED
+#if defined IS_LPV_ENABLED || defined PHOTONICS && defined PHOTONICS && !defined PH_ENABLE_HANDHELD_LIGHT
 	uniform usampler1D texBlockData;
 	uniform sampler3D texLpv1;
 	uniform sampler3D texLpv2;
@@ -165,8 +165,23 @@ uniform ivec2 eyeBrightnessSmooth;
 
 uniform vec3 sunVec;
 
+#define VOXEL_REFLECTIONS_SOLID
 
-#ifdef IS_LPV_ENABLED
+#ifdef VOXEL_REFLECTIONS_SOLID
+#endif
+
+#ifdef PHOTONICS
+	#ifdef VOXEL_REFLECTIONS
+		// #define VOXEL_REFLECTIONS
+		#define PHOTONICS_INCLUDED
+
+		#include "/photonics/photonics.glsl"
+	#endif
+#endif
+
+
+
+#if defined IS_LPV_ENABLED || defined PHOTONICS && defined PHOTONICS && !defined PH_ENABLE_HANDHELD_LIGHT
 	uniform int heldItemId;
 	uniform int heldItemId2;
 #endif
@@ -203,7 +218,10 @@ float convertHandDepth_2(in float depth, bool hand) {
 	#include "/lib/volumetricClouds.glsl"
 #endif
 
-#ifdef IS_LPV_ENABLED
+
+#if defined IS_LPV_ENABLED || defined PHOTONICS && defined PHOTONICS && !defined PH_ENABLE_HANDHELD_LIGHT
+	uniform vec3 relativeEyePosition;
+
 	#include "/lib/hsv.glsl"
 	#include "/lib/lpv_common.glsl"
 	#include "/lib/lpv_render.glsl"
@@ -225,11 +243,15 @@ float convertHandDepth_2(in float depth, bool hand) {
 #ifdef DEFERRED_ROUGH_REFLECTION
 #endif
 
-uniform vec3 relativeEyePosition;
 #define MAIN_SHADOW_PASS
 #define FULLRESDEPTH
 
-#include "/lib/specular.glsl"
+vec2 decodeVec2(float a){
+    const vec2 constant1 = 65535. / vec2( 256., 65536.);
+    const float constant2 = 256. / 255.;
+    return fract( a * constant1 ) * constant2 ;
+}
+
 #if defined VIVECRAFT
 	uniform bool vivecraftIsVR;
 	uniform vec3 vivecraftRelativeMainHandPos;
@@ -237,9 +259,13 @@ uniform vec3 relativeEyePosition;
 	uniform mat4 vivecraftRelativeMainHandRot;
 	uniform mat4 vivecraftRelativeOffHandRot;
 #endif
-#include "/lib/diffuse_lighting.glsl"
 
+#include "/lib/diffuse_lighting.glsl"
+#include "/lib/specular.glsl"
+
+#ifdef END_SHADER
 #include "/lib/end_fog.glsl"
+#endif
 
 float ld(float dist) {
     return (2.0 * near) / (far + near - dist * (far - near));
@@ -254,11 +280,6 @@ vec3 decode (vec2 encn){
     return clamp(normalize(n.xyz),-1.0,1.0);
 }
 
-vec2 decodeVec2(float a){
-    const vec2 constant1 = 65535. / vec2( 256., 65536.);
-    const float constant2 = 256. / 255.;
-    return fract( a * constant1 ) * constant2 ;
-}
 float DH_ld(float dist) {
     return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
 }
@@ -948,6 +969,9 @@ uniform float wetness;
 	}
 #endif
 
+uniform ivec3 cameraPositionInt;
+
+
 void main() {
 
 		vec3 DEBUG = vec3(1.0);
@@ -1485,14 +1509,14 @@ void main() {
 			
 			Indirect_lighting += doIndirectLighting(AmbientLightColor * skylight, MinimumLightColor, lightmap.y);
 
-			#ifdef PHOTONICS_ENABLED
+			#if defined PH_ENABLE_GI && defined PHOTONICS && defined ENABLE_PHOTONICS_GI
 				#if defined DISTANT_HORIZONS || defined VOXY
 					float photonicsFalloff = smoothstep(min(far, 128.0), min(0.9*far, 114.0), viewDist);
 				#else
 					float photonicsFalloff = smoothstep(128.0, 114.0, viewDist);
 				#endif
 
-				vec3 gi_color = texture(colortex15, texcoord).xyz*2.5*PHOTONICS_INDIRECT_BRIGHTNESS* skylight;
+				vec3 gi_color = texture(colortex15, texcoord).xyz*2.0*PHOTONICS_INDIRECT_BRIGHTNESS* skylight;
 				gi_color += mix(MinimumLightColor * (MIN_LIGHT_AMOUNT * 0.004 + nightVision*0.02), MinimumLightColor * (MIN_LIGHT_AMOUNT_INSIDE * 0.004 + nightVision*0.02), 1.0-lightmap.y);
 
 				Indirect_lighting = mix(Indirect_lighting, gi_color, photonicsFalloff);
@@ -1653,11 +1677,11 @@ void main() {
 		// if(lightningBolt) FINAL_COLOR = vec3(77.0, 153.0, 255.0);
 		
 		#if defined DEFERRED_SPECULAR	
-			vec3 specularNoises = vec3(vec2(blueNoise(), ig_noise), ig_noise);
+			vec2 specularNoises = vec2(blueNoise(), ig_noise);
     		vec3 specularNormal = normal;
 			if (dot(normal, (feetPlayerPos_normalized)) > 0.0) specularNormal = FlatNormals;
 			
-			FINAL_COLOR = specularReflections(viewPos, feetPlayerPos_normalized, WsunVec, specularNoises, specularNormal, SpecularTex.r, SpecularTex.g, albedo, FINAL_COLOR, DirectLightColor*shadowColor*shadowColor, lightmap.y, hand, flashLightSpecularData);
+			FINAL_COLOR = specularReflections(viewPos, feetPlayerPos, feetPlayerPos_normalized, WsunVec, specularNoises, FlatNormals, specularNormal, SpecularTex.r, SpecularTex.g, albedo, FINAL_COLOR, DirectLightColor*shadowColor*shadowColor, lightmap.y, hand, flashLightSpecularData);
 		#endif
 
 		gl_FragData[0].rgb = FINAL_COLOR;

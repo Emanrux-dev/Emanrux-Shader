@@ -1,4 +1,4 @@
-#ifdef IS_LPV_ENABLED
+#if defined IS_LPV_ENABLED || defined PHOTONICS && defined PHOTONICS && !defined PH_ENABLE_HANDHELD_LIGHT
 	#extension GL_ARB_shader_image_load_store: enable
 	#extension GL_ARB_shading_language_packing: enable
 #endif
@@ -58,7 +58,7 @@ uniform sampler2D gtexture;
 uniform sampler2D noisetex;
 uniform sampler2D colortex4;
 
-#ifdef IS_LPV_ENABLED
+#if defined IS_LPV_ENABLED || defined PHOTONICS && defined PHOTONICS && !defined PH_ENABLE_HANDHELD_LIGHT
 	uniform usampler1D texBlockData;
 	uniform sampler3D texLpv1;
 	uniform sampler3D texLpv2;
@@ -113,7 +113,7 @@ uniform int heldItemId2;
 	#include "/lib/hsv.glsl"
 #endif
 
-#ifdef IS_LPV_ENABLED
+#if defined IS_LPV_ENABLED || defined PHOTONICS && defined PHOTONICS && !defined PH_ENABLE_HANDHELD_LIGHT
 	#include "/lib/lpv_blocks.glsl"
 	#include "/lib/lpv_common.glsl"
 	#include "/lib/lpv_render.glsl"
@@ -486,7 +486,7 @@ void main() {
 			gl_FragData[0].a = color.a;
 		#endif
 		#ifndef BLOOMY_PARTICLES
-			gl_FragData[1].a = 0.0; // for bloomy rain and stuff
+			gl_FragData[1] = vec4(0.0); // for bloomy rain and stuff
 		#endif
 
 		gl_FragData[3] = vec4(0.0,0.0,0.0,0.4);

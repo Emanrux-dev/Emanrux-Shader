@@ -34,6 +34,10 @@ uniform sampler2D colortex7;
 uniform sampler2D colortex10;
 uniform sampler2D colortex14;
 
+#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
+layout (rgba16f) uniform image2D cloudDepthTex;
+#endif
+
 in DATA {
 	flat vec3 WsunVec;
 	flat vec3 WrealSunVec;

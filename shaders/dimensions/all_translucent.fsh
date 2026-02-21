@@ -3,11 +3,6 @@
 	#extension GL_ARB_shading_language_packing: enable
 #endif
 
-#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0 && defined OVERWORLD_SHADER && defined COLORWHEEL
-	#extension GL_NV_gpu_shader5 : enable
-	#extension GL_ARB_shader_image_load_store : enable
-#endif
-
 #include "/lib/settings.glsl"
 
 #include "/lib/SSBOs.glsl"

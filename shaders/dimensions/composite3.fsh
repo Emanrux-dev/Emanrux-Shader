@@ -107,6 +107,10 @@ uniform float sunElevation;
   uniform int worldDay;
 #endif
 
+#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
+layout (rgba16f) uniform image2D cloudDepthTex;
+#endif
+
 #include "/lib/waterBump.glsl"
 #include "/lib/res_params.glsl"
 

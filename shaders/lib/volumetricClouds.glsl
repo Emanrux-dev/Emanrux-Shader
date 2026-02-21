@@ -36,15 +36,6 @@ float lightningFlash = mix(0.1, 2.5, randomSeed);
 #endif
 
 #if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
-	#if !defined COLORWHEEL && !defined VOXY_PROGRAM
-		#extension GL_NV_gpu_shader5 : enable
-		#extension GL_ARB_shader_image_load_store : enable
-	#endif
-
-	#ifndef VOXY_PROGRAM
-	layout (rgba16f) uniform image2D cloudDepthTex;
-	#endif
-
 	float lightningStart = mix(20.0, 1.0, smoothstep(0.0, 0.085, timeInLightning));
 	float lightningMid = smoothstep(0.0, 0.05, timeInLightning) * smoothstep(0.15, 0.066, timeInLightning);
 #endif

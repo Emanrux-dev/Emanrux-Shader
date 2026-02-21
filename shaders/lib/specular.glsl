@@ -2090,8 +2090,6 @@ vec4 photonicsReflection(
 			sampleColor.a *= (1.0 - color.a);
 			color.rgb += sampleColor.rgb * sampleColor.a;
 			color.a += sampleColor.a;
-		} else {
-			backgroundReflectMask = 1.0-color.a;
 		}
 
 		#if defined VOXEL_REFLECTIONS_FOG && defined OVERWORLD_SHADER

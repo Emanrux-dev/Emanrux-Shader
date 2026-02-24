@@ -5,6 +5,7 @@ uniform sampler2D colortex1;// albedo, detailed_normal
 uniform sampler2D colortex8;// flat_normal
 
 uniform vec3 sunPosition;
+uniform vec3 moonPosition;
 uniform float near;
 uniform float far;
 uniform float worldTime;
@@ -15,6 +16,7 @@ uniform mat4 gbufferModelView;
 uniform vec2 texelSize;
 uniform float skyLightLevelSmooth;
 uniform int framemod8;
+uniform float sunElevation;
 
 #include "/lib/res_params.glsl"
 
@@ -97,11 +99,42 @@ void load_fragment_variables(out vec3 albedo, out vec3 world_pos, out vec3 world
     world_pos = load_world_position() - 0.01f * world_normal;
 }
 
-#ifdef SMOOTH_SUN_ROTATION
-    vec3 sun_direction = WsunVecSmooth;
-#else
-    vec3 sun_direction = normalize(mat3(gbufferModelViewInverse) * sunPosition);
-#endif
+
+vec3 getCurrentLightsource() {
+    float lightSourceCheck = float(sunElevation > 1e-5)*2.0 - 1.0;
+
+    #ifdef OVERWORLD
+        #ifdef SMOOTH_SUN_ROTATION
+            vec3 WsunVec = WsunVecSmooth;
+        #else
+            vec3 WsunVec = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+        #endif
+
+        #ifdef CUSTOM_MOON_ROTATION
+            #if LIGHTNING_SHADOWS > 0
+                vec3 WmoonVec = customMoonVec2SSBO;
+            #else	
+                vec3 WmoonVec = customMoonVecSSBO;
+            #endif
+        #else
+            #ifdef SMOOTH_MOON_ROTATION
+                vec3 WmoonVec = WmoonVecSmooth;
+            #else
+                vec3 WmoonVec = normalize(mat3(gbufferModelViewInverse) * moonPosition);
+            #endif
+            if(dot(-WmoonVec, WsunVec) < 0.9999) WmoonVec = -WmoonVec;
+        #endif
+
+        WsunVec = mix(WmoonVec, WsunVec, clamp(lightSourceCheck,0,1));
+    #else
+        vec3 WmoonVec = vec3(0.0, 1.0, 0.0);
+        vec3 WsunVec = vec3(0.0, 1.0, 0.0);
+    #endif
+
+    return WsunVec;
+}
+
+vec3 sun_direction = normalize(getCurrentLightsource());
 
 vec3 AmbientLightColor = averageSkyCol_CloudsSSBO/1200.0;
 vec3 indirect_light_color = AmbientLightColor * ambient_brightness; 

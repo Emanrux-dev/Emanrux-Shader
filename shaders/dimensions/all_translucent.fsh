@@ -229,7 +229,6 @@ vec2 decodeVec2(float a){
 
 #ifdef PHOTONICS
 	#ifdef VOXEL_REFLECTIONS
-		// #define VOXEL_REFLECTIONS
 		#define PHOTONICS_INCLUDED
 
 		#include "/photonics/photonics.glsl"

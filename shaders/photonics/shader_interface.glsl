@@ -75,7 +75,7 @@ vec3 load_world_position() {
     vec3 viewPos = toScreenSpace(vec3(load_tex_coord/RENDER_SCALE - TAA_Offset*texelSize*0.5, z));
 
     vec3 feetPlayerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
-    return feetPlayerPos + cameraPosition;
+    return feetPlayerPos + world_camera_position;
 }
 
 void load_fragment_variables(out vec3 albedo, out vec3 world_pos, out vec3 world_normal, out vec3 world_normal_mapped) {

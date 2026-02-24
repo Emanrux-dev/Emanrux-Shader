@@ -2015,7 +2015,7 @@ vec4 photonicsReflection(
 
 	#if defined PHOTONICS_INCLUDED && defined PHOTONICS && defined VOXEL_REFLECTIONS
 		RayJob ray = RayJob(
-			cameraPosition + origin - world_offset + 0.005f * flatNormal,
+			rt_camera_position + origin + 0.005f * flatNormal,
 			reflectedVector,
 			vec3(0), vec3(0), vec3(0), false
 		);
@@ -2051,8 +2051,8 @@ vec4 photonicsReflection(
 
 		AmbientLightColor *= ambient_brightness / 900.0;
 		
-		vec3 endPosW = ray.result_position + world_offset;
-		vec3 endPos = endPosW - cameraPosition;
+		vec3 endPos = ray.result_position - rt_camera_position;
+		vec3 endPosW = endPos + cameraPosition;
 
 		for (uint i = 0; i < translucentHits; i++) {
 			vec4 sampleColor = translucentHitRays[i].hitColor;

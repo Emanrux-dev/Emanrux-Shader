@@ -263,12 +263,12 @@ vec3 doIndirectLighting(
 #ifndef VOXY_PROGRAM
 uniform float centerDepthSmooth;
 #ifdef IEXT_ENABLED
-uniform bool IEXT_KEY_1;
+uniform bool IEXT_KEY_0;
 #endif
 
 vec3 calculateFlashlight(in vec2 texcoord, in vec3 viewPos, in vec3 albedo, in vec3 normal, out vec4 flashLightSpecularData, bool hand){
     #ifdef IEXT_ENABLED
-    if(!IEXT_KEY_1) return vec3(0.0);
+    if(!IEXT_KEY_0) return vec3(0.0);
     #endif
 
 	// vec3 shiftedViewPos = viewPos + vec3(-0.25, 0.2, 0.0);

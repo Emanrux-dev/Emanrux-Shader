@@ -10,6 +10,9 @@
 
 #define RENDER_SHADOW
 
+uniform float alphaTestRef;
+uniform vec3 previousCameraPosition;
+// #define SAVE_VOXEL_STUFF
 
 /*
 !! DO NOT REMOVE !!
@@ -57,6 +60,23 @@ uniform float shadowMaxProj;
 
 uniform int blockEntityId;
 uniform int entityId;
+
+//encoding by jodie
+float encodeVec2(vec2 a){
+    const vec2 constant1 = vec2( 1., 256.) / 65535.;
+    vec2 temp = floor( a * 255. );
+	return temp.x*constant1.x+temp.y*constant1.y;
+}
+float encodeVec2(float x,float y){
+    return encodeVec2(vec2(x,y));
+}
+vec3 viewToWorld(vec3 viewPos) {
+    vec4 pos;
+    pos.xyz = viewPos;
+    pos.w = 0.0;
+    pos = shadowModelViewInverse * pos;
+    return pos.xyz;
+}
 
 #include "/lib/Shadow_Params.glsl"
 #include "/lib/bokeh.glsl"
@@ -141,13 +161,6 @@ vec4 toClipSpace3(vec3 viewSpacePosition) {
 	// mat4 projection = DH_shadowProjectionTweak(gl_ProjectionMatrix);
 
     return vec4(projMAD(gl_ProjectionMatrix, viewSpacePosition),1.0);
-}
-vec3 viewToWorld(vec3 viewPos) {
-    vec4 pos;
-    pos.xyz = viewPos;
-    pos.w = 0.0;
-    pos = shadowModelViewInverse * pos;
-    return pos.xyz;
 }
 
 // uniform int renderStage;

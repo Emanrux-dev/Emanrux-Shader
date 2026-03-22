@@ -445,7 +445,7 @@ void main() {
 	 if (falloff > 0.0)
 	#endif
 	{
-		float depthmap = readNormal(clamp(data_in.texcoord.st, data_in.texcoordam.st, data_in.texcoordam.st + data_in.texcoordam.pq)).a;
+		float depthmap = readNormal(data_in.texcoord.st).a;
 		float pomdepth = POM_DEPTH * falloff;
 
  		if ( viewVector.z < 0.0 && depthmap < 0.9999 && depthmap > 0.00001) {	
@@ -799,7 +799,9 @@ void main() {
 					#endif
 				) {
 					SSSAMOUNT = 0.5;
-				} 
+				} else if(data_in.blockID == GRASS_BLOCK_SNOWY) {
+					SSSAMOUNT = 0.5 * smoothstep(0.0, 1.0, fract(worldpos.y));
+				}
 				#if defined CUTOUT
 					else if (data_in.blockID == -BLOCK_GRASS) {
 						SSSAMOUNT = 0.3;

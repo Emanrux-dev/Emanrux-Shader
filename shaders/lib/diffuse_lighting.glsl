@@ -7,7 +7,7 @@
         
         if(hand) return 1.0;
 
-        vec3 WlightDir = normalize((gbufferModelViewInverse*vec4(lightDir, 1.0)) .xyz);
+        vec3 WlightDir = normalize((gbufferModelViewInverse*vec4(lightDir, 1.0)).xyz);
 
         float NdotL = dot(normals, WlightDir);
         NdotL = smoothstep(0.0, 0.2, abs(NdotL));
@@ -73,14 +73,13 @@
 #if (defined IS_LPV_ENABLED || defined PHOTONICS && defined PHOTONICS && !defined PH_ENABLE_HANDHELD_LIGHT) && !defined VOXY_PROGRAM
     vec3 GetHandLight(const in int itemId, const in vec3 playerPos, inout float lightRange) {
         vec3 lightFinal = vec3(0.0);
-        vec3 lightColor = vec3(0.0);
 
         uint blockData = imageLoad(imgBlockData, itemId).r;
         vec4 lightColorRange = unpackUnorm4x8(blockData);
-        lightColor = srgbToLinear(lightColorRange.rgb);
         lightRange = lightColorRange.a * 255.0;
 
         if (lightRange > 0.0) {
+            vec3 lightColor = srgbToLinear(lightColorRange.rgb);
             float lightDist = length(playerPos+relativeEyePosition);
             // vec3 lightDir = playerPos / lightDist;
             const float NoL = 1.0;//max(dot(normal, lightDir), 0.0);
@@ -96,6 +95,10 @@
     uniform sampler2D radiosity_direct;
     uniform sampler2D radiosity_direct_soft;
     uniform sampler2D radiosity_handheld;
+#endif
+
+#ifdef BELTBORNE_LANTERNS
+uniform int IEXT_beltborne_lanterns_Id;
 #endif
 
 vec3 doBlockLightLighting(
@@ -136,41 +139,58 @@ vec3 doBlockLightLighting(
         #ifdef Hand_Held_lights
             // create handheld lightsources
 
-            #if !defined ENABLE_PHOTONICS_HANDHELD || !defined PHOTONICS_LIGHT_PASS
-            if (heldItemId > 0){
-                    float lightRange = 0.0;
-                    vec3 handLightCol = GetHandLight(heldItemId, playerPos, lightRange);
+            #if !defined PH_ENABLE_HANDHELD_LIGHT || !defined PHOTONICS_LIGHT_PASS
+                if (heldItemId > 0){
+                        float lightRange = 0.0;
+                        vec3 handLightCol = GetHandLight(heldItemId, playerPos, lightRange);
 
-                    #if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS
-                        if (lightRange > 0.0 && firstPersonCamera) handLightCol *=  SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(-0.25, 0.2, 0.0)), noise, normals, hand);
-                    #endif
+                        #if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS
+                            if (lightRange > 0.0 && firstPersonCamera) handLightCol *=  SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(-0.25, 0.2, 0.0)), noise, normals, hand);
+                        #endif
 
-                    #ifdef WEATHER
-                        handLightCol *= 0.5;
-                    #endif
+                        #ifdef WEATHER
+                            handLightCol *= 0.5;
+                        #endif
 
-                    blockLight += handLightCol;
-            }
-            
+                        blockLight += handLightCol;
+                }
+                
 
-            if (heldItemId2 > 0){
-                    float lightRange2 = 0.0;
-                    vec3 handLightCol2 = GetHandLight(heldItemId2, playerPos, lightRange2);
-                    
-                    #if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS
-                        if (lightRange2 > 0.0 && firstPersonCamera) handLightCol2 *= SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(0.25, 0.2, 0.0)), noise, normals, hand);
-                    #endif
+                if (heldItemId2 > 0){
+                        float lightRange2 = 0.0;
+                        vec3 handLightCol2 = GetHandLight(heldItemId2, playerPos, lightRange2);
+                        
+                        #if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS
+                            if (lightRange2 > 0.0 && firstPersonCamera) handLightCol2 *= SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(0.25, 0.2, 0.0)), noise, normals, hand);
+                        #endif
 
-                    #ifdef WEATHER
-                        handLightCol2 *= 0.5;
-                    #endif
+                        #ifdef WEATHER
+                            handLightCol2 *= 0.5;
+                        #endif
 
-                    blockLight += handLightCol2;
-            }
+                        blockLight += handLightCol2;
+                }
+
+                #ifdef BELTBORNE_LANTERNS
+                    if (IEXT_beltborne_lanterns_Id > 0){
+                            float lightRange2 = 0.0;
+                            vec3 handLightCol2 = GetHandLight(IEXT_beltborne_lanterns_Id, playerPos, lightRange2);
+                            
+                            #if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS
+                                if (lightRange2 > 0.0 && firstPersonCamera) handLightCol2 *= SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(0.125, 0.2, 0.0)), noise, normals, hand);
+                            #endif
+
+                            #ifdef WEATHER
+                                handLightCol2 *= 0.5;
+                            #endif
+
+                            blockLight += handLightCol2;
+                    }
+                #endif
             #endif
 
-            #if defined PH_ENABLE_HANDHELD_LIGHT && !defined PH_ENABLE_BLOCKLIGHT && !defined PHOTONICS_LIGHT_PASS
-                vec3 ph_direct_hand = texture(radiosity_handheld, gl_FragCoord.xy*texelSize/RENDER_SCALE).xyz;
+            #if defined PH_ENABLE_HANDHELD_LIGHT && !defined PH_ENABLE_BLOCKLIGHT && defined PHOTONICS_INCLUDED
+                vec3 ph_direct_hand = sample_photonics_handheld(gl_FragCoord.xy*texelSize/RENDER_SCALE).xyz;
                 blockLight += ph_direct_hand * 1.35;
             #endif
         #endif
@@ -182,13 +202,13 @@ vec3 doBlockLightLighting(
         #endif
         {
             vec3 photonicsLight = vec3(0.0);
+            vec3 handLight = vec3(0.0);
 
             #if defined PH_ENABLE_HANDHELD_LIGHT
-                vec3 ph_direct_hand = texture(radiosity_handheld, gl_FragCoord.xy*texelSize/RENDER_SCALE).xyz;
-                vec3 handLight = ph_direct_hand * 1.35;
+                vec3 ph_direct_hand = sample_photonics_handheld(gl_FragCoord.xy*texelSize/RENDER_SCALE).xyz;
+                handLight = ph_direct_hand * 1.35;
             #else
                 #ifdef Hand_Held_lights
-                    vec3 handLight = vec3(0.0);
                     if (heldItemId > 0){
                             float lightRange = 0.0;
                             vec3 handLightCol = GetHandLight(heldItemId, playerPos, lightRange);
@@ -219,14 +239,29 @@ vec3 doBlockLightLighting(
 
                             handLight += handLightCol2;
                     }
+
+                    #ifdef BELTBORNE_LANTERNS
+                        if (IEXT_beltborne_lanterns_Id > 0){
+                                float lightRange2 = 0.0;
+                                vec3 handLightCol3 = GetHandLight(IEXT_beltborne_lanterns_Id, playerPos, lightRange2);
+                                
+                                #if defined MAIN_SHADOW_PASS && defined LPV_HANDHELD_SHADOWS
+                                    if (lightRange2 > 0.0 && firstPersonCamera) handLightCol3 *= SSRT_Handlight_Shadows(viewPos, depthCheck, -(viewPos + vec3(0.125, 0.2, 0.0)), noise, normals, hand);
+                                #endif
+
+                                #ifdef WEATHER
+                                    handLightCol3 *= 0.5;
+                                #endif
+
+                                handLight += handLightCol3;
+                        }
+                    #endif
                 #endif
             #endif
 
             #ifdef PH_ENABLE_BLOCKLIGHT
-                vec3 ph_direct = texture(radiosity_direct, gl_FragCoord.xy*texelSize/RENDER_SCALE).xyz;
-                vec4 ph_direct_soft = texture(radiosity_direct_soft, gl_FragCoord.xy*texelSize/RENDER_SCALE);
+                vec3 ph_direct = sample_photonics_direct(gl_FragCoord.xy*texelSize/RENDER_SCALE).xyz;
                 photonicsLight += ph_direct;
-                photonicsLight += (ph_direct_soft.xyz / max(ph_direct_soft.w, 1.0f));
                 photonicsLight += lightColor * 2.5 * min(max(lightmap-0.999,0.0)/(1.0-0.999),1.0);
             #endif
 

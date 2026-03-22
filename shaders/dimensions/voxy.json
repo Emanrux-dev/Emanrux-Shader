@@ -25,6 +25,10 @@
     "ssbos": {4:"{
         mat4 customShadowMatrixSSBO;
 
+        #ifdef PHOTONICS
+        mat4 customShadowMatrixInverseSSBO;
+        #endif
+
         vec3 customMoonVecSSBO;
 
         vec3 customMoonVec2SSBO;

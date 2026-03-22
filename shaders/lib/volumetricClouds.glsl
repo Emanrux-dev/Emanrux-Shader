@@ -842,14 +842,14 @@ vec4 raymarchCloud(
 							shadowPos = shadowPos*vec3(0.5,0.5,0.5/6.0)+0.5;
 
 							#ifdef TRANSLUCENT_COLORED_SHADOWS
-								sh = vec3(texture(shadowtex0, shadowPos).x);
+								sh = vec3(texture(shadowtex0HW, shadowPos).x);
 
-								if(texture(shadowtex1, shadowPos).x > shadowPos.z && sh.x < 1.0){
+								if(texture(shadowtex1HW, shadowPos).x > shadowPos.z && sh.x < 1.0){
 									vec4 translucentShadow = texture(shadowcolor0, shadowPos.xy);
 									if(translucentShadow.a < 0.9) sh = normalize(translucentShadow.rgb+0.0001);
 								}
 							#else
-								sh = vec3(texture(shadow, shadowPos).x);
+								sh = vec3(texture(shadowtex0HW, shadowPos).x);
 							#endif
 						}
 					#else

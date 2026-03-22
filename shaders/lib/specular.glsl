@@ -391,10 +391,10 @@ float ComputeVoxelShadowMap(inout vec3 directLightColor, vec3 playerPos, float m
 		#ifdef TRANSLUCENT_COLORED_SHADOWS
 
 			// determine when opaque shadows are overlapping translucent shadows by getting the difference of opaque depth and translucent depth
-			float shadowDepthDiff = pow(clamp((texture(shadowtex1, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
+			float shadowDepthDiff = pow(clamp((texture(shadowtex1HW, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
 
 			// get opaque shadow data to get opaque data from translucent shadows.
-			float opaqueShadow = texture(shadowtex0, projectedShadowPosition).x;
+			float opaqueShadow = texture(shadowtex0HW, projectedShadowPosition).x;
 			shadowmap += max(opaqueShadow, shadowDepthDiff);
 
 			// get translucent shadow data
@@ -411,7 +411,7 @@ float ComputeVoxelShadowMap(inout vec3 directLightColor, vec3 playerPos, float m
 			translucentTint += mix(translucentShadow.rgb, vec3(1.0),  opaqueShadow*shadowDepthDiff);
 
 		#else
-			shadowmap += texture(shadow, projectedShadowPosition).x;
+			shadowmap += texture(shadowtex0HW, projectedShadowPosition.xy).x;
 		#endif
 
 	#ifdef BASIC_SHADOW_FILTER
@@ -1162,10 +1162,10 @@ float ComputePhotonicsShadowMap(inout vec3 directLightColor, vec3 playerPos, flo
 		#ifdef TRANSLUCENT_COLORED_SHADOWS
 
 			// determine when opaque shadows are overlapping translucent shadows by getting the difference of opaque depth and translucent depth
-			float shadowDepthDiff = pow(clamp((texture(shadowtex1, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
+			float shadowDepthDiff = pow(clamp((texture(shadowtex1HW, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
 
 			// get opaque shadow data to get opaque data from translucent shadows.
-			float opaqueShadow = texture(shadowtex0, projectedShadowPosition).x;
+			float opaqueShadow = texture(shadowtex0HW, projectedShadowPosition).x;
 			shadowmap += max(opaqueShadow, shadowDepthDiff);
 
 			// get translucent shadow data
@@ -1182,7 +1182,7 @@ float ComputePhotonicsShadowMap(inout vec3 directLightColor, vec3 playerPos, flo
 			translucentTint += mix(translucentShadow.rgb, vec3(1.0),  opaqueShadow*shadowDepthDiff);
 
 		#else
-			shadowmap += texture(shadow, projectedShadowPosition).x;
+			shadowmap += texture(shadowtex0HW, projectedShadowPosition).x;
 		#endif
 
 	#ifdef BASIC_SHADOW_FILTER
@@ -1223,7 +1223,7 @@ void trace_wsr(inout RayJob job, bool transparency, inout translucentHit[10] tra
 	job.direction = normalize(job.direction);
 
     vec3 direction_inv = 1.0f / job.direction;
-    float t0 = intersects_world(direction_inv, 16.0f * job.origin);
+    float t0 = ph_intersects_world(direction_inv, 16.0f * job.origin);
     if (t0 == -1.0f) {
         job.result_position = vec3(47823934.0f) - world_offset;
         return;
@@ -1260,7 +1260,7 @@ void trace_wsr(inout RayJob job, bool transparency, inout translucentHit[10] tra
         ivec3 w = ivec3(position); // TODO: maybe use uvec3, no negative check neccessary
         // ivec3 block_position = w >> 4;
 
-        if (!is_inside(position)) // outside of world?
+        if (!ph_is_inside(position)) // outside of world?
             return;
 
         // if ((job.result_hit = block_position == ray_target)) { // ray target reached?
@@ -1273,14 +1273,14 @@ void trace_wsr(inout RayJob job, bool transparency, inout translucentHit[10] tra
         int scale = 0;
         int entry = 0;
 
-        new_index.x = get_world_index((w >> 8) & 31);
+        new_index.x = ph_get_world_index((w >> 8) & 31);
         if (new_index.x != old_index.x) { // TODO: CRITICAL! UBOs are too tiny for 32x32x32
             entries.x = root_array[new_index.x];
         }
 
         if (entries.x < 0) { // found chunk?
             ivec3 block_pos = (w >> 4) & 15;
-            new_index.y = -entries.x + get_index(block_pos);
+            new_index.y = -entries.x + ph_get_index(block_pos);
 
             if (new_index.y != old_index.y) {
                 entries.y = cb_array[new_index.y];
@@ -1290,7 +1290,7 @@ void trace_wsr(inout RayJob job, bool transparency, inout translucentHit[10] tra
 					block_index = block_data & 0xfff;
                     block_index = block_index * (ph_byte_size / 4);
 
-					ph_result_sky_brightness = block_data >> 12;
+					ph_result_sky_brightness = block_data >> 13;
                     block_id = cb_array[block_index];
                     voxel_index = block_index + 2;
                 } else {
@@ -1300,7 +1300,7 @@ void trace_wsr(inout RayJob job, bool transparency, inout translucentHit[10] tra
 
             if (block_index != -1) { // found block
                 ivec3 voxel_pos = w & 15;
-                new_index.z = voxel_index + get_index(voxel_pos);
+                new_index.z = voxel_index + ph_get_index(voxel_pos);
                 if (new_index.z != old_index.z) {
                     entries.z = cb_array[new_index.z];
 
@@ -1328,13 +1328,17 @@ void trace_wsr(inout RayJob job, bool transparency, inout translucentHit[10] tra
 						intersection_offset = max(ivec3(ray_direction_sign), 0);
 					} else
 					#endif
-					{
-						if ((-entries.z & 0x7f000000) == 0 || block_id == 85 || block_id == 13) {
+					{	
+						#ifdef TRANSLUCENT_IN_REFLECTIONS
+						if ((-entries.z & 0x7f000000) == 0)
+						#endif
+						{
 							job.result_hit = true;
 							break;
 						}
 
-						vec4 color = unpack_color(-entries.z);
+						#ifdef TRANSLUCENT_IN_REFLECTIONS
+						vec4 color = ph_unpack_color(-entries.z);
 						if (previous_block_id != block_id) {
 							if (color.a > 0.01 && translucentHits < 10u) {
 
@@ -1352,10 +1356,11 @@ void trace_wsr(inout RayJob job, bool transparency, inout translucentHit[10] tra
 
 							previous_block_id = block_id;
 						}
+						#endif
 					}
 
 					scale = 4;
-					entry = to_fake_air_entry(block_pos);					
+					entry = ph_to_fake_air_entry(block_pos);					
 
                 } else { scale = 0; entry = entries.z; }
             } else { scale = 4; entry = entries.y; previous_block_id = -1;}
@@ -1712,14 +1717,14 @@ vec3 doBlockLightLightingVoxel(
 					shadowPos = shadowPos*vec3(0.5,0.5,0.5/6.0)+0.5;
 
 					#ifdef TRANSLUCENT_COLORED_SHADOWS
-						sh = vec3(texture(shadowtex0, shadowPos).x);
+						sh = vec3(texture(shadowtex0HW, shadowPos).x);
 
-						if(texture(shadowtex1, shadowPos).x > shadowPos.z && sh.x < 1.0){
+						if(texture(shadowtex1HW, shadowPos).x > shadowPos.z && sh.x < 1.0){
 							vec4 translucentShadow = texture(shadowcolor0, shadowPos.xy);
 							if(translucentShadow.a < 0.9) sh = normalize(translucentShadow.rgb+0.0001);
 						}
 					#else
-						sh = vec3(texture(shadow, shadowPos).x);
+						sh = vec3(texture(shadowtex0HW, shadowPos).x);
 					#endif
 				}
 
@@ -1851,17 +1856,17 @@ vec3 doBlockLightLightingVoxel(
 				vec3 pos = vec3(spPos.xy*distortFactor, spPos.z);
 				if (abs(pos.x) < 1.0-0.5/2048. && abs(pos.y) < 1.0-0.5/2048){
 					pos = pos*vec3(0.5,0.5,0.5/6.0)+0.5;
-					// sh = texture( shadow, pos).x;
+					// sh = texture( shadowtex0HW, pos).x;
 
 					#ifdef TRANSLUCENT_COLORED_SHADOWS
-						sh = vec3(texture(shadowtex0, pos).x);
+						sh = vec3(texture(shadowtex0HW, pos).x);
 
-						if(texture(shadowtex1, pos).x > pos.z && sh.x < 1.0){
+						if(texture(shadowtex1HW, pos).x > pos.z && sh.x < 1.0){
 							vec4 translucentShadow = texture(shadowcolor0, pos.xy);
 							if(translucentShadow.a < 0.9) sh = normalize(translucentShadow.rgb+0.0001);
 						}
 					#else
-						sh = vec3(texture(shadow, pos).x);
+						sh = vec3(texture(shadowtex0HW, pos).x);
 					#endif
 				}
 
@@ -2021,7 +2026,7 @@ vec4 photonicsReflection(
 		);
 
 		translucentHit[10] translucentHitRays;
-		uint translucentHits;
+		uint translucentHits = 0u;
 		int blockID = 0;
 
 		translucentHitRays[0].hitColor = vec4(0.0);
@@ -2054,6 +2059,7 @@ vec4 photonicsReflection(
 		vec3 endPos = ray.result_position - rt_camera_position;
 		vec3 endPosW = endPos + cameraPosition;
 
+		#ifdef TRANSLUCENT_IN_REFLECTIONS
 		for (uint i = 0; i < translucentHits; i++) {
 			vec4 sampleColor = translucentHitRays[i].hitColor;
 			// return vec4(sampleColor.rgb, 1.0);
@@ -2069,14 +2075,15 @@ vec4 photonicsReflection(
 			if(color.a > 0.995) return color;
 		}
 
-		backgroundTint = mix(normalize(translucentHitRays[0].hitColor.rgb+1e-7), vec3(1.0), min(max(0.1-translucentHitRays[0].hitColor.a,0.0) * 10.0,1.0));
-		
+		if(hitTranslucent) backgroundTint = mix(normalize(translucentHitRays[0].hitColor.rgb+1e-7), vec3(1.0), min(max(0.1-translucentHitRays[0].hitColor.a,0.0) * 10.0,1.0));
+		#endif
+
 		if (ray.result_hit) {
 			vec4 sampleColor = vec4(toLinear(ray.result_color), 1.0);
 
 			photonicsReflectionShading(sampleColor, ray.result_normal, endPosW, noise.y, DirectLightColor, AmbientLightColor, blockID, skylightmap);
 
-			#if defined VOXEL_REFLECTIONS_FOG && defined OVERWORLD_SHADER
+			#if defined VOXEL_REFLECTIONS_FOG && defined OVERWORLD_SHADER && defined TRANSLUCENT_IN_REFLECTIONS
 				if(hitTranslucent && isEyeInWater != 1) {
 					vec4 fog = raymarchWSRfog(translucentHitRays[0].hitPos + world_offset - cameraPosition, endPos, noise, DirectLightColor, indirectLight_fog, indirectLight, 3);
 
@@ -2093,7 +2100,9 @@ vec4 photonicsReflection(
 		}
 
 		#if defined VOXEL_REFLECTIONS_FOG && defined OVERWORLD_SHADER
+			#ifdef TRANSLUCENT_IN_REFLECTIONS
 			if(hitTranslucent && isEyeInWater != 1) endPos = translucentHitRays[0].hitPos + world_offset - cameraPosition;
+			#endif
 
 			#ifdef VOXEL_REFLECTIONS_LPV_FOG
 				vec4 LPVfog = raymarchWSR_LPV(origin, endPos, noise.x);
@@ -2260,7 +2269,7 @@ float getReflectionVisibility(float f0, float roughness){
 
 // derived from N and K from labPBR wiki https://shaderlabs.org/wiki/LabPBR_Material_Standard
 // using ((1.0 - N)^2 + K^2) / ((1.0 + N)^2 + K^2)
-const vec3 HCM_F0 [8] = vec3[](
+const vec3 HCM_F0 [8] = vec3[8](
 	vec3(0.531228825312, 0.51235724246, 0.495828545714),// iron	
 	vec3(0.944229966045, 0.77610211732, 0.373402004593),// gold		
 	vec3(0.912298031535, 0.91385063144, 0.919680580954),// Aluminum
@@ -2294,6 +2303,10 @@ vec3 specularReflections(
 	, bool isWater
 	, inout float reflectanceForAlpha
 	#endif
+	#ifdef DEFERRED_SPECULAR
+	, inout vec4 specularOut
+	, inout float SunReflectionAlpha
+	#endif
 	
 	,in vec4 flashLight_stuff
 
@@ -2326,30 +2339,32 @@ vec3 specularReflections(
 		vec3 reflectedVector_L = reflect(NplayerPos, normal);
 	#endif
 
-	float VdotN = dot(-normalize(viewDir), vec3(0.0,0.0,1.0));
-	float shlickFresnel = shlickFresnelRoughness(VdotN, roughness);
+	#if defined FORWARD_SPECULAR || defined DEFERRED_SPECULAR && !defined DENOISED_REFLECTIONS
+		float VdotN = dot(-normalize(viewDir), vec3(0.0,0.0,1.0));
+		float shlickFresnel = shlickFresnelRoughness(VdotN, roughness);
 
-	// F0 <  230 dialectrics
-	// F0 >= 230 hardcoded metal f0
-	// F0 == 255 use albedo for f0
-	albedo = f0 == 1.0 ? sqrt(albedo) : albedo;
-	vec3 metalAlbedoTint = isMetal ? albedo : vec3(1.0);
-	// get F0 values for hardcoded metals.
-	vec3 hardCodedMetalsF0 = f0 == 1.0 ? albedo : HCM_F0[int(clamp(f0*255.0 - 229.5,0.0,7.0))];
-	vec3 reflectance = isMetal ? hardCodedMetalsF0 : vec3(f0);
-	vec3 F0 = (reflectance + (1.0-reflectance) * shlickFresnel) * metalAlbedoTint;
+		// F0 <  230 dialectrics
+		// F0 >= 230 hardcoded metal f0
+		// F0 == 255 use albedo for f0
+		albedo = f0 == 1.0 ? sqrt(albedo) : albedo;
+		vec3 metalAlbedoTint = isMetal ? albedo : vec3(1.0);
+		// get F0 values for hardcoded metals.
+		vec3 hardCodedMetalsF0 = f0 == 1.0 ? albedo : HCM_F0[int(clamp(f0*255.0 - 229.5,0.0,7.0))];
+		vec3 reflectance = isMetal ? hardCodedMetalsF0 : vec3(f0);
+		vec3 F0 = (reflectance + (1.0-reflectance) * shlickFresnel) * metalAlbedoTint;
 
-	#if defined FORWARD_SPECULAR
-		reflectanceForAlpha = clamp(dot(F0, vec3(0.3333333)), 0.0,1.0);
-				
-		#if defined SNELLS_WINDOW
-			if(isEyeInWater == 1 && isWater){
-				// emulate how mojang did snells window in vibrant visuals because it works nicely tbh
-				float snellsWindow = min(max(0.54 - clamp(1.0 + VdotN,0,1),0.)/0.1,1.);
-				snellsWindow = 1.0-snellsWindow*snellsWindow;
-				snellsWindow *= snellsWindow*snellsWindow;
-				reflectanceForAlpha = f0 + (1.0-f0) * snellsWindow;
-			}
+		#if defined FORWARD_SPECULAR
+			reflectanceForAlpha = clamp(dot(F0, vec3(0.3333333)), 0.0,1.0);
+					
+			#if defined SNELLS_WINDOW
+				if(isEyeInWater == 1 && isWater){
+					// emulate how mojang did snells window in vibrant visuals because it works nicely tbh
+					float snellsWindow = min(max(0.54 - clamp(1.0 + VdotN,0,1),0.)/0.1,1.);
+					snellsWindow = 1.0-snellsWindow*snellsWindow;
+					snellsWindow *= snellsWindow*snellsWindow;
+					reflectanceForAlpha = f0 + (1.0-f0) * snellsWindow;
+				}
+			#endif
 		#endif
 	#endif
 
@@ -2359,6 +2374,10 @@ vec3 specularReflections(
 	
 	vec4 enviornmentReflection = vec4(0.0);
 	float backgroundReflectMask = lightmap;
+
+	#if defined DEFERRED_SPECULAR && defined DENOISED_REFLECTIONS
+		SunReflectionAlpha = backgroundReflectMask;
+	#endif
 
 	#if (defined DEFERRED_BACKGROUND_REFLECTION || defined FORWARD_BACKGROUND_REFLECTION) || (DEFERRED_SSR_QUALITY > 0 || FORWARD_SSR_QUALITY > 0)
 		if(reflectionVisibilty < 1.0){
@@ -2388,6 +2407,10 @@ vec3 specularReflections(
 				#endif
 				// darkening for metals.
 				vec3 DarkenedDiffuseLighting = isMetal ? diffuseLighting * (1.0-enviornmentReflection.a) * (1.0-lightmap) : diffuseLighting;
+
+				#if defined DEFERRED_SPECULAR && defined DENOISED_REFLECTIONS
+					vec3 DarkenedDiffuseLighting2 = isMetal ? vec3(0.0) : diffuseLighting;
+				#endif
 			#else
 				// darkening for metals.
 				vec3 DarkenedDiffuseLighting = isMetal ? diffuseLighting * (1.0-lightmap) : diffuseLighting;
@@ -2402,25 +2425,78 @@ vec3 specularReflections(
 				specularReflections = mix(specularReflections, enviornmentReflection.rgb, enviornmentReflection.a);
 			#endif
 
-			specularReflections = mix(DarkenedDiffuseLighting, specularReflections, F0);
+			#if defined DEFERRED_SPECULAR && defined DENOISED_REFLECTIONS
+				specularOut.rgb = specularReflections;
+				SunReflectionAlpha *= 1.0 - enviornmentReflection.a;
+				// specularOut.a = 1.0 - enviornmentReflection.a;
+				return DarkenedDiffuseLighting2;
+			#endif
+			#if defined FORWARD_SPECULAR || defined DEFERRED_SPECULAR && !defined DENOISED_REFLECTIONS
+				specularReflections = mix(DarkenedDiffuseLighting, specularReflections, F0);
 
-			// lerp back to diffuse lighting if the reflection has not been deemed visible enough
-			specularReflections = mix(specularReflections, diffuseLighting, reflectionVisibilty);
+				// lerp back to diffuse lighting if the reflection has not been deemed visible enough
+				specularReflections = mix(specularReflections, DarkenedDiffuseLighting, reflectionVisibilty);
+			#endif
 		}
 	#endif
-
-	#if defined OVERWORLD_SHADER && SUN_SPECULAR_MULT > 0
-		vec3 lightSourceReflection = backgroundReflectMask*SUN_SPECULAR_MULT * lightColor * GGX(normal, -NplayerPos, lightVec, roughness, reflectance, metalAlbedoTint);
-		#if DEFERRED_SSR_QUALITY > 0 || FORWARD_SSR_QUALITY > 0
-			specularReflections += mix(lightSourceReflection, vec3(0.0), enviornmentReflection.a);
-		#else
-			specularReflections += lightSourceReflection*backgroundReflectMask;
+	
+	#if defined FORWARD_SPECULAR || defined DEFERRED_SPECULAR && !defined DENOISED_REFLECTIONS
+		#if defined OVERWORLD_SHADER && SUN_SPECULAR_MULT > 0
+			vec3 lightSourceReflection = backgroundReflectMask*SUN_SPECULAR_MULT * lightColor * GGX(normal, -NplayerPos, lightVec, roughness, reflectance, metalAlbedoTint);
+			#if DEFERRED_SSR_QUALITY > 0 || FORWARD_SSR_QUALITY > 0
+				specularReflections += lightSourceReflection * (1.0 - enviornmentReflection.a);
+			#else
+				specularReflections += lightSourceReflection;
+			#endif
 		#endif
-	#endif
 
-	#if defined FLASHLIGHT_SPECULAR && (defined DEFERRED_SPECULAR || defined FORWARD_SPECULAR)
-		vec3 flashLightReflection = vec3(FLASHLIGHT_R,FLASHLIGHT_G,FLASHLIGHT_B) * flashLight_stuff.a * GGX(normal, -flashLight_stuff.xyz, -flashLight_stuff.xyz, roughness, reflectance, metalAlbedoTint);
-		specularReflections += flashLightReflection;
+		#if defined FLASHLIGHT_SPECULAR && (defined DEFERRED_SPECULAR || defined FORWARD_SPECULAR)
+			vec3 flashLightReflection = vec3(FLASHLIGHT_R,FLASHLIGHT_G,FLASHLIGHT_B) * flashLight_stuff.a * GGX(normal, -flashLight_stuff.xyz, -flashLight_stuff.xyz, roughness, reflectance, metalAlbedoTint);
+			specularReflections += flashLightReflection;
+		#endif
+
+		if(!isHand && firstPersonCamera) {
+          if (heldItemId > 0){
+            vec3 shiftedViewPos = viewPos + vec3(-0.25, 0.2, 0.0);
+            vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
+
+            float lightRange = 0.0;
+            vec3 handLightCol = GetHandLight(heldItemId, shiftedPlayerPos, lightRange);
+
+            if(lightRange > 0.0) {
+              vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
+              specularReflections += handheldReflection1;
+            }
+          }
+
+          if (heldItemId2 > 0){
+            vec3 shiftedViewPos = viewPos + vec3(0.25, 0.2, 0.0);
+            vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
+
+            float lightRange = 0.0;
+            vec3 handLightCol = GetHandLight(heldItemId2, shiftedPlayerPos, lightRange);
+
+            if(lightRange > 0.0) {
+              vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
+              specularReflections += handheldReflection1;
+            }
+          }
+
+          #ifdef BELTBORNE_LANTERNS
+            if (IEXT_beltborne_lanterns_Id > 0){
+              vec3 shiftedViewPos = viewPos + vec3(0.15, 0.2, 0.0);
+              vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
+
+              float lightRange = 0.0;
+              vec3 handLightCol = GetHandLight(IEXT_beltborne_lanterns_Id, shiftedPlayerPos, lightRange);
+
+              if(lightRange > 0.0) {
+                vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
+                specularReflections += handheldReflection1;
+              }
+            }
+          #endif
+        }
 	#endif
 
 	return specularReflections;

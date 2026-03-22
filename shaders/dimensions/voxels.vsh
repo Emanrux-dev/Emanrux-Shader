@@ -34,7 +34,6 @@ out DATA {
 	#endif
 
     vec3 block_normal;
-    flat int blockID;
 } data_out;
 
 #ifdef MC_NORMAL_MAP
@@ -224,7 +223,6 @@ void main() {
 	gl_Position =  gl_ModelViewProjectionMatrix * gl_Vertex;
 
 	vec3 position = mat3(gl_ModelViewMatrix) * vec3(gl_Vertex) + gl_ModelViewMatrix[3].xyz;
-    data_out.blockID = int(mc_Entity.x);
 
     /////// ----- COLOR STUFF ----- ///////
 	data_out.color = gl_Color;

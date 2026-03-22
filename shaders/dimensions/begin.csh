@@ -221,6 +221,10 @@ void main() {
         customShadowMatrixSSBO = BuildShadowViewMatrix(normalize(END_LIGHT_POS));
         customShadowPerspectiveSSBO = createPerspectiveMatrix();
     #endif
+
+    #ifdef PHOTONICS
+        customShadowMatrixInverseSSBO = inverse(customShadowMatrixSSBO);
+    #endif
     
     #ifdef OVERWORLD_SHADER
         ////////////////////////////////

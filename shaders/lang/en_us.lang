@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §d§lECLIPSE§r - A Bliss Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 7.0.2
+    value.SHADER_VERSION_LABEL.482 = 8.0.0
 
 iris_extension.keybind.key0.name=Flashlight
 
@@ -242,7 +242,7 @@ screen.Direct_Light = Direct Light
         option.LPV_REDSTONE_LIGHTS = Redstone Lights
         option.LPV_COLORED_CANDLES = Colored Candles
         option.LPV_NOSHADOW_HACK = Iris <= 1.7.0 Fix
-        option.LPV_VL_FOG_ILLUMINATION = Fog Light Propagation
+        option.LPV_VL_FOG_ILLUMINATION = Floodfill Fog Light Propagation
             value.LPV_VL_FOG_ILLUMINATION.0 = Off
             value.LPV_VL_FOG_ILLUMINATION.1 = Only Indoors
             value.LPV_VL_FOG_ILLUMINATION.2 = On
@@ -821,6 +821,7 @@ screen.Resource_Pack_Support = Materials / Resource Pack Support
             suffix.DEFERRED_SSR_QUALITY = §§ samples
         option.DEFERRED_BACKGROUND_REFLECTION =^ Background reflections
         option.DEFERRED_ROUGH_REFLECTION =^ Rough reflections
+        option.DENOISED_REFLECTIONS =^ Denoised rough reflections
         option.FORWARD_SPECULAR = Reflections on water, glass
         option.FORWARD_SSR_QUALITY =^ Environment reflections
             value.FORWARD_SSR_QUALITY.0 =§c OFF
@@ -1194,7 +1195,7 @@ screen.Post_Processing.comment = Configure settings for all post processing effe
     screen.TAA_OPTIONS.comment = Configure settings related to anti-aliasing.
         option.SCREENSHOT_MODE.comment = §aTHIS DOES NOT CHANGE GRAPHICS QUALITY IN ANY WAY§r.  Toggle frame accumulation to get a low noise image. §bWhat is this?§r It stacks frames that happend onto the next frame that is generated, so it is like a long exposure photo.
         option.TAA.comment = Toggle temporal anti-aliasing. This removes all jagged edges on things, softens the image, and helps remove noise for many effects. This will cause ghosting or trailing because it uses past frames for extra information on the world. §aPERFORMANCE COST:§r low
-        option.BLEND_FACTOR.comment = Configure how much of frame history is used. high numbers means it relies less on frame history, so it may look flickery and noisy. low numbers rely more on frame history, so it may look less moisy, but more smudged with more trailing.
+        option.BLEND_FACTOR.comment = Configure how much of frame history is used. high numbers means it relies less on frame history, so it may look flickery and noisy. low numbers rely more on frame history, so it may look less noisy, but more smudged with more trailing.
         option.TAA_UPSCALING.comment = Toggle temporal upscaling. This retains a good amount of quality from a lower resolution image when it upscales. so you can still have a high looking resolution compared to typical upsampling and still have better performance.
         option.SCALE_FACTOR.comment = Configure from what fraction of your resolution to upscale from - §abelow 0.50x is not recommended, it is only allowed for fun!§r
 
@@ -1275,9 +1276,21 @@ screen.VOXY_SETTINGS = Voxy Settings
 
 screen.PHOTONICS_SETTINGS = Photonics Settings
     option.PHOTONICS_ACTIVE = Enable Photonics
+    option.ENABLE_PHOTONICS_HANDHELD = Photonics Handheld Lighting
+    option.ENABLE_PHOTONICS_GI = Photonics Global Illumination
+    option.ENABLE_PHOTONICS_BLOCKLIGHT = Photonics Blocklight
     option.PHOTONICS_INDIRECT_BRIGHTNESS = GI Brightness
     option.PHOTONICS_GI_ONLY = GI Only
-    option.PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION = Fog Light Propagation (Floodfill!)
+    option.PHOTONICS_LIGHTING_MODE = Lighting Mode
+    option.PHOTONICS_ALPHA_MODE = Alpha Mode
+    option.PHOTONICS_MAX_SAMPLES = Max Samples
+    option.PHOTONICS_MAX_LIGHTS = Max Lights
+    option.VOXEL_REFLECTIONS_SOLID = World Space Reflections (Terrain)
+    option.VOXEL_REFLECTIONS_TRANSLUCENT = World Space Reflections (Water)
+    option.TRANSLUCENT_IN_REFLECTIONS = Translucents in Reflections
+    option.MIRROR_IRON = Iron Block Mirror
+    option.VOXEL_REFLECTIONS_FOG = Fog in Reflections
+    option.VOXEL_REFLECTIONS_LPV_FOG = Floodfill Fog Light Propagation in Reflections
 
 
 option.TRANSLUCENT_COLORED_SHADOWS.comment = §bWhat is this?§r This effect allows translucent things like stained glass to color the sunlight as it passes through it. §aPERFORMANCE COST:§r medium

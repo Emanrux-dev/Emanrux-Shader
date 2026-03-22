@@ -53,12 +53,11 @@ uniform vec4 entityColor;
 
 #if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
 	const bool shadowHardwareFiltering = true;
-	uniform sampler2DShadow shadow;
+	uniform sampler2DShadow shadowtex0HW;
 	
 	#ifdef TRANSLUCENT_COLORED_SHADOWS
 		uniform sampler2D shadowcolor0;
-		uniform sampler2DShadow shadowtex0;
-		uniform sampler2DShadow shadowtex1;
+		uniform sampler2DShadow shadowtex1HW;
 	#endif
 
 	uniform float lightSign;
@@ -225,6 +224,7 @@ vec2 decodeVec2(float a){
 #define VOXEL_REFLECTIONS_TRANSLUCENT
 
 #ifdef VOXEL_REFLECTIONS_TRANSLUCENT
+	#define VOXEL_REFLECTIONS
 #endif
 
 #ifdef PHOTONICS
@@ -441,10 +441,10 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 		#ifdef TRANSLUCENT_COLORED_SHADOWS
 
 			// determine when opaque shadows are overlapping translucent shadows by getting the difference of opaque depth and translucent depth
-			float shadowDepthDiff = pow(clamp((texture(shadowtex1, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
+			float shadowDepthDiff = pow(clamp((texture(shadowtex1HW, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
 
 			// get opaque shadow data to get opaque data from translucent shadows.
-			float opaqueShadow = texture(shadowtex0, projectedShadowPosition).x;
+			float opaqueShadow = texture(shadowtex0HW, projectedShadowPosition).x;
 			shadowmap += max(opaqueShadow, shadowDepthDiff);
 
 			// get translucent shadow data
@@ -461,7 +461,7 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 			translucentTint += mix(translucentShadow.rgb, vec3(1.0),  opaqueShadow*shadowDepthDiff);
 
 		#else
-			shadowmap += texture(shadow, projectedShadowPosition).x;
+			shadowmap += texture(shadowtex0HW, projectedShadowPosition).x;
 		#endif
 
 	#ifdef BASIC_SHADOW_FILTER

@@ -10,6 +10,7 @@ in DATA {
 	#endif
 };
 
+#include "/lib/util.glsl"
 #include "/lib/res_params.glsl"
 
 uniform sampler2D depthtex0;
@@ -30,8 +31,12 @@ uniform sampler2D depthtex2;
 	#define dhVoxyDepthTex1 vxDepthTexOpaque
 #endif
 
+#include "/lib/Shadow_Params.glsl"
+
 uniform sampler2D colortex1;
 uniform sampler2D colortex3; // Noise
+uniform sampler2D colortex4;
+uniform sampler2D colortex5;
 uniform sampler2D colortex6; // Noise
 uniform sampler2D colortex7; // Noise
 uniform sampler2D colortex8; // Noise
@@ -41,11 +46,13 @@ uniform sampler2D colortex10; // Noise
 uniform sampler2D colortex12; // Noise
 uniform sampler2D colortex13; // Noise
 uniform int isEyeInWater;
-uniform sampler2D shadow;
+
+const bool shadowHardwareFiltering = true;
+uniform sampler2D shadowtex0;
+uniform sampler2DShadow shadowtex0HW;
 
 #ifdef TRANSLUCENT_COLORED_SHADOWS
 	uniform sampler2D shadowcolor0;
-	uniform sampler2D shadowtex0;
 	uniform sampler2D shadowtex1;
 #endif
 
@@ -58,21 +65,9 @@ uniform float rainStrength;
 uniform int frameCounter;
 uniform ivec2 eyeBrightnessSmooth;
 
-
-uniform mat4 gbufferModelViewInverse;
-uniform mat4 gbufferModelView;
-
-
-uniform vec3 cameraPosition;
-uniform mat4 gbufferProjection;
-uniform mat4 gbufferProjectionInverse;
-
 uniform vec3 previousCameraPosition;
-uniform mat4 gbufferPreviousProjection;
 uniform mat4 gbufferPreviousModelView;
 
-uniform mat4 shadowModelView;
-uniform mat4 shadowProjection;
 uniform float viewWidth;
 uniform float aspectRatio;
 uniform float viewHeight;
@@ -81,19 +76,32 @@ uniform float viewHeight;
 uniform float near;
 uniform float dhVoxyFarPlane;
 uniform float dhVoxyNearPlane;
+uniform float nightVision;
 
+#define DEFERRED_SPECULAR
+#define DEFERRED_SSR_QUALITY 30 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 200 300 400 500]
+#define DEFERRED_BACKGROUND_REFLECTION
+#define DEFERRED_ROUGH_REFLECTION
+
+#ifdef DEFERRED_SPECULAR
+#endif
+#if DEFERRED_SSR_QUALITY > -1
+#endif
+#ifdef DEFERRED_BACKGROUND_REFLECTION
+#endif
+#ifdef DEFERRED_ROUGH_REFLECTION
+#endif
+
+uniform float waterEnteredAltitude;
+uniform float sunElevation;
+
+#include "/lib/projections.glsl"
+#include "/lib/DistantHorizons_projections.glsl"
+#include "/lib/color_transforms.glsl"
+#include "/lib/waterBump.glsl"
 #include "/lib/Shadows.glsl"
 
 #define ffstep(x,y) clamp((y - x) * 1e35,0.0,1.0)
-#define diagonal3(m) vec3((m)[0].x, (m)[1].y, m[2].z)
-#define  projMAD(m, v) (diagonal3(m) * (v) + (m)[3].xyz)
-vec3 toScreenSpace(vec3 p) {
-	vec4 iProjDiag = vec4(gbufferProjectionInverse[0].x, gbufferProjectionInverse[1].y, gbufferProjectionInverse[2].zw);
-    vec3 p3 = p * 2. - 1.;
-    vec4 fragposition = iProjDiag * p3.xyzz + gbufferProjectionInverse[3];
-    return fragposition.xyz / fragposition.w;
-}
-
 
 vec3 worldToView(vec3 worldPos) {
     vec4 pos = vec4(worldPos, 0.0);
@@ -178,13 +186,6 @@ vec2 R2_samples(int n){
 	return fract(alpha * n);
 }
 
-
-
-
-
-
-
-
 vec3 viewToWorld(vec3 viewPos) {
     vec4 pos;
     pos.xyz = viewPos;
@@ -193,10 +194,7 @@ vec3 viewToWorld(vec3 viewPos) {
     return pos.xyz;
 }
 
-#include "/lib/Shadow_Params.glsl"
 
-
-const float PI = 3.141592653589793238462643383279502884197169;
 vec2 SpiralSample(
 	int samples, int totalSamples, float rotation, float Xi
 ){
@@ -237,8 +235,6 @@ vec2 CleanSample(
 }
 
 
-
-#include "/lib/DistantHorizons_projections.glsl"
 
 float DH_ld(float dist) {
     return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
@@ -398,7 +394,6 @@ float ld(float dist) {
 /* RENDERTARGETS:3,14,9*/
 
 void main() {
-
 	float noise = R2_dither();
 	vec2 texcoord = gl_FragCoord.xy*texelSize;
 	
@@ -411,7 +406,7 @@ void main() {
 
 	float lightLeakFix = clamp(pow(eyeBrightnessSmooth.y/240. + lightmap.y,2.0) ,0.0,1.0);
 
-	gl_FragData[1] = vec4(0.0,0.0, texelFetch(colortex14, ivec2(gl_FragCoord.xy), 0).b, 0.0);
+	gl_FragData[1] = vec4(0.0);
 
 	
 	vec4 SpecularData = texelFetch(colortex8, ivec2(gl_FragCoord.xy), 0);
@@ -602,7 +597,7 @@ void main() {
 					
 						float weight = 3.0 + (i+noise) * rdMul/SHADOW_FILTER_SAMPLE_COUNT*shadowMapResolution*distortFactor/2.7;
 						
-						float d = texelFetch(shadow, ivec2((projectedShadowPosition.xy+offsetS*rdMul)*shadowMapResolution),0).x;
+						float d = texelFetch(shadowtex0, ivec2((projectedShadowPosition.xy+offsetS*rdMul)*shadowMapResolution),0).x;
 						float b = smoothstep(weight*diffthresh/2.0, weight*diffthresh, projectedShadowPosition.z - d);
 
 						blockerCount += b;

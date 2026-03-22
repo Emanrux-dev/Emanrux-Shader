@@ -41,12 +41,11 @@ in DATA {
 
 #ifdef OVERWORLD_SHADER
 	const bool shadowHardwareFiltering = true;
-	uniform sampler2DShadow shadow;
+	uniform sampler2DShadow shadowtex0HW;
 	
 	#ifdef TRANSLUCENT_COLORED_SHADOWS
 		uniform sampler2D shadowcolor0;
-		uniform sampler2DShadow shadowtex0;
-		uniform sampler2DShadow shadowtex1;
+		uniform sampler2DShadow shadowtex1HW;
 	#endif
 #endif
 
@@ -208,10 +207,10 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 	#ifdef TRANSLUCENT_COLORED_SHADOWS
 
 		// determine when opaque shadows are overlapping translucent shadows by getting the difference of opaque depth and translucent depth
-		float shadowDepthDiff = pow(clamp((texture(shadowtex1, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
+		float shadowDepthDiff = pow(clamp((texture(shadowtex1HW, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
 
 		// get opaque shadow data to get opaque data from translucent shadows.
-		float opaqueShadow = texture(shadowtex0, projectedShadowPosition).x;
+		float opaqueShadow = texture(shadowtex0HW, projectedShadowPosition).x;
 		shadowmap += max(opaqueShadow, shadowDepthDiff);
 
 		// get translucent shadow data
@@ -228,7 +227,7 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 		translucentTint += mix(translucentShadow.rgb, vec3(1.0),  opaqueShadow*shadowDepthDiff);
 
 	#else
-		shadowmap += texture(shadow, projectedShadowPosition).x;
+		shadowmap += texture(shadowtex0HW, projectedShadowPosition).x;
 	#endif
 
 	#ifdef TRANSLUCENT_COLORED_SHADOWS
@@ -345,7 +344,7 @@ void main() {
 		float maxdist = MAX_OCCLUSION_DISTANCE;
 		if (dist < maxdist) {
 
-			float depthmap = readNormal(clamp(texcoord.st, texcoordam.st, texcoordam.st + texcoordam.pq)).a;
+			float depthmap = readNormal(texcoord.st).a;
 			float used_POM_DEPTH = 1.0;
 
 	 		if ( viewVector.z < 0.0 && depthmap < 0.9999 && depthmap > 0.00001) {	

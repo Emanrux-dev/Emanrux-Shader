@@ -1174,11 +1174,17 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 // ----- PHOTONICS SETTINGS ----- //
 //////////////////////////////////
 
-#define VOXEL_REFLECTIONS
+#define VOXEL_REFLECTIONS_TRANSLUCENT
+#define VOXEL_REFLECTIONS_SOLID
+
+#define DENOISED_REFLECTIONS
+#ifdef DENOISED_REFLECTIONS
+#endif
+
 #define PHOTONICS_ACTIVE
 
 
-#if defined VOXEL_REFLECTIONS && defined PHOTONICS && defined PHOTONICS_ACTIVE
+#if defined VOXEL_REFLECTIONS_TRANSLUCENT || defined VOXEL_REFLECTIONS_SOLID && defined PHOTONICS && defined PHOTONICS_ACTIVE
 	#define LPV_ENABLED
 	#define IS_LPV_ENABLED
 #endif
@@ -1192,15 +1198,10 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #undef PHOTONICS_ACTIVE
 #endif
 
-// #define PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION
-
-#ifdef PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION
-#endif
-
 // TODO: THIS IS HORRENDOUS
 #define ENABLE_PHOTONICS_GI
 #define ENABLE_PHOTONICS_BLOCKLIGHT
-#define ENABLE_PHOTONICS_HANDHELD
+// #define ENABLE_PHOTONICS_HANDHELD
 
 #ifdef ENABLE_PHOTONICS_GI
 #endif
@@ -1229,14 +1230,16 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #endif
 
 #if defined PHOTONICS && defined PHOTONICS_ACTIVE
+	#undef DEPTH_WRITE_POM
 	#undef VOXELIZE
 
-	#if !defined PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION && !defined VOXEL_REFLECTIONS && defined PH_ENABLE_BLOCKLIGHT
+	#if !defined LPV_VL_FOG_ILLUMINATION && !defined VOXEL_REFLECTIONS_TRANSLUCENT && !defined VOXEL_REFLECTIONS_SOLID && (defined PH_ENABLE_BLOCKLIGHT || defined ENABLE_PHOTONICS_HANDHELD)
 		#undef IS_LPV_ENABLED
 		#undef LPV_ENABLED
 	#endif
 #else
-	#undef VOXEL_REFLECTIONS
+	#undef VOXEL_REFLECTIONS_TRANSLUCENT
+	#undef VOXEL_REFLECTIONS_SOLID
 #endif
 
 #define PHOTONICS_ALPHA_MODE BLOCK // [NONE BLOCK VOXEL]
@@ -1245,11 +1248,14 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 
 #define PHOTONICS_INDIRECT_BRIGHTNESS 1.0 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.5 3.0 3.5 4.0 4.5 5.0]
 
-#define VOXEL_REFLECTIONS_FOG
-#define VOXEL_REFLECTIONS_LPV_FOG
+// #define VOXEL_REFLECTIONS_FOG
+// #define VOXEL_REFLECTIONS_LPV_FOG
 
 #ifdef VOXEL_REFLECTIONS_FOG
 #endif
+
+#define PHOTONICS_LIGHTING_MODE RESTIR // [BASIC RESTIR]
+// #define TRANSLUCENT_IN_REFLECTIONS
 
 ////////////////////////////////
 // ----- DEBUG SETTINGS ----- //

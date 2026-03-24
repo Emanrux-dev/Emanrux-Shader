@@ -1183,9 +1183,11 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 
 #define PHOTONICS_ACTIVE
 
+#ifndef PHOTONICS
+#undef PHOTONICS_ACTIVE
+#endif
 
-#if defined VOXEL_REFLECTIONS_TRANSLUCENT || defined VOXEL_REFLECTIONS_SOLID && defined PHOTONICS && defined PHOTONICS_ACTIVE
-	#define LPV_ENABLED
+#if (defined VOXEL_REFLECTIONS_TRANSLUCENT || defined VOXEL_REFLECTIONS_SOLID) && defined PHOTONICS && defined PHOTONICS_ACTIVE
 	#define IS_LPV_ENABLED
 #endif
 
@@ -1193,10 +1195,6 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 #ifdef MIRROR_IRON
 #endif
 
-
-#ifndef PHOTONICS
-#undef PHOTONICS_ACTIVE
-#endif
 
 // TODO: THIS IS HORRENDOUS
 #define ENABLE_PHOTONICS_GI
@@ -1219,6 +1217,10 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 	#undef ENABLE_PHOTONICS_HANDHELD
 #endif
 
+#if (!defined ENABLE_PHOTONICS_BLOCKLIGHT || !defined ENABLE_PHOTONICS_HANDHELD) && defined PHOTONICS && defined PHOTONICS_ACTIVE
+	#define IS_LPV_ENABLED
+#endif
+
 
 
 #ifdef IS_LPV_ENABLED
@@ -1235,7 +1237,6 @@ const vec3 aerochrome_color = mix(vec3(1.0, 0.0, 0.0), vec3(0.715, 0.303, 0.631)
 
 	#if !defined LPV_VL_FOG_ILLUMINATION && !defined VOXEL_REFLECTIONS_TRANSLUCENT && !defined VOXEL_REFLECTIONS_SOLID && (defined PH_ENABLE_BLOCKLIGHT || defined ENABLE_PHOTONICS_HANDHELD)
 		#undef IS_LPV_ENABLED
-		#undef LPV_ENABLED
 	#endif
 #else
 	#undef VOXEL_REFLECTIONS_TRANSLUCENT

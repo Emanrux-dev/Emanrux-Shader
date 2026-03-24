@@ -108,9 +108,9 @@ uniform int frameCounter;
 uniform int heldItemId;
 uniform int heldItemId2;
 
-#if defined IS_LPV_ENABLED || RAINBOW_SELECT_BOX > 0
+// #if defined IS_LPV_ENABLED || RAINBOW_SELECT_BOX > 0
 	#include "/lib/hsv.glsl"
-#endif
+// #endif
 
 #if defined IS_LPV_ENABLED || defined PHOTONICS && defined PHOTONICS && !defined PH_ENABLE_HANDHELD_LIGHT
 	#include "/lib/lpv_blocks.glsl"

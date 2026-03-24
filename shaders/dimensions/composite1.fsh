@@ -869,8 +869,8 @@ uniform float wetness;
 
 				vec2 driprate = vec2(0.0,frameTimeCounter)*0.05;
 
-				vec2 UV = mix(worldPos.xz, worldPos.xy*vec2(2.0, 0.5)+driprate, 0.0);
-				UV = mix(UV, worldPos.zy*vec2(2.0, 0.5)+driprate, 0.0);
+				vec2 UV = mix(worldPos.xz, worldPos.xy*vec2(2.0, 0.5)+driprate, abs(flatNormals.z));
+				UV = mix(UV, worldPos.zy*vec2(2.0, 0.5)+driprate, abs(flatNormals.x));
 
 				#ifdef SHADER_GRASS
 				if(isShaderGrass) UV = worldPos.xz;

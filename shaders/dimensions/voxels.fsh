@@ -36,6 +36,9 @@ in DATA {
 	#endif
 
     vec3 block_normal;
+    #if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0
+	float chunkFade;
+	#endif
 } data_in;
 
 const float mincoord = 1.0/4096.0;
@@ -438,6 +441,14 @@ void main() {
 	#endif
 
 	Albedo.a = opaqueMasks;
+
+    #if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		#ifdef TAA
+			if(sqrt(data_in.chunkFade) < BN) discard;
+		#else
+			if(sqrt(data_in.chunkFade) < R2) discard;
+		#endif
+	#endif
 
 	//////////////////////////////// 				////////////////////////////////
 	////////////////////////////////	SPECULAR	////////////////////////////////

@@ -542,7 +542,7 @@ void main() {
         FINAL_COLOR += flashLightReflection;
       #endif
 
-      #if defined Hand_Held_lights && (defined IS_LPV_ENABLED || defined PHOTONICS)
+      #if defined Hand_Held_lights && defined IS_LPV_ENABLED
         if(!hand && firstPersonCamera) {
           if (heldItemId > 0){
             vec3 shiftedViewPos = viewPos + vec3(-0.25, 0.2, 0.0);

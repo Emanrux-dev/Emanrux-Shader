@@ -2455,48 +2455,50 @@ vec3 specularReflections(
 			specularReflections += flashLightReflection;
 		#endif
 
-		if(!isHand && firstPersonCamera) {
-          if (heldItemId > 0){
-            vec3 shiftedViewPos = viewPos + vec3(-0.25, 0.2, 0.0);
-            vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
+		#if defined Hand_Held_lights && defined IS_LPV_ENABLED
+			if(!isHand && firstPersonCamera) {
+			if (heldItemId > 0){
+				vec3 shiftedViewPos = viewPos + vec3(-0.25, 0.2, 0.0);
+				vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
 
-            float lightRange = 0.0;
-            vec3 handLightCol = GetHandLight(heldItemId, shiftedPlayerPos, lightRange);
+				float lightRange = 0.0;
+				vec3 handLightCol = GetHandLight(heldItemId, shiftedPlayerPos, lightRange);
 
-            if(lightRange > 0.0) {
-              vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
-              specularReflections += handheldReflection1;
-            }
-          }
+				if(lightRange > 0.0) {
+				vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
+				specularReflections += handheldReflection1;
+				}
+			}
 
-          if (heldItemId2 > 0){
-            vec3 shiftedViewPos = viewPos + vec3(0.25, 0.2, 0.0);
-            vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
+			if (heldItemId2 > 0){
+				vec3 shiftedViewPos = viewPos + vec3(0.25, 0.2, 0.0);
+				vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
 
-            float lightRange = 0.0;
-            vec3 handLightCol = GetHandLight(heldItemId2, shiftedPlayerPos, lightRange);
+				float lightRange = 0.0;
+				vec3 handLightCol = GetHandLight(heldItemId2, shiftedPlayerPos, lightRange);
 
-            if(lightRange > 0.0) {
-              vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
-              specularReflections += handheldReflection1;
-            }
-          }
+				if(lightRange > 0.0) {
+				vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
+				specularReflections += handheldReflection1;
+				}
+			}
 
-          #ifdef BELTBORNE_LANTERNS
-            if (IEXT_beltborne_lanterns_Id > 0){
-              vec3 shiftedViewPos = viewPos + vec3(0.15, 0.2, 0.0);
-              vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
+			#ifdef BELTBORNE_LANTERNS
+				if (IEXT_beltborne_lanterns_Id > 0){
+				vec3 shiftedViewPos = viewPos + vec3(0.15, 0.2, 0.0);
+				vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
 
-              float lightRange = 0.0;
-              vec3 handLightCol = GetHandLight(IEXT_beltborne_lanterns_Id, shiftedPlayerPos, lightRange);
+				float lightRange = 0.0;
+				vec3 handLightCol = GetHandLight(IEXT_beltborne_lanterns_Id, shiftedPlayerPos, lightRange);
 
-              if(lightRange > 0.0) {
-                vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
-                specularReflections += handheldReflection1;
-              }
-            }
-          #endif
-        }
+				if(lightRange > 0.0) {
+					vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
+					specularReflections += handheldReflection1;
+				}
+				}
+			#endif
+			}
+		#endif
 	#endif
 
 	return specularReflections;

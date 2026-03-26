@@ -615,7 +615,7 @@ void main() {
 		#endif
 	#endif
 	
-	#if defined WORLD && !defined ENTITIES && !defined HAND && defined BLOCKENTITIES && !defined COLORWHEEL
+	#if defined WORLD && !defined ENTITIES && !defined HAND && defined BLOCKENTITIES && !defined COLORWHEEL && !defined CUTOUT
 		bool PORTAL = data_in.blockID == BLOCK_END_PORTAL || data_in.blockID == 187;
 
 		float endPortalEmission = 0.0;

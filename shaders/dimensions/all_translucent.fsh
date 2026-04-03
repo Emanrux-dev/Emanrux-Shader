@@ -21,7 +21,7 @@
 
 in DATA {
 	vec4 lmtexcoord;
-	#ifdef LIGHTNING
+	#if defined LIGHTNING || defined ENTITIES
 		vec4 color;
 	#else
 		vec3 color;
@@ -645,7 +645,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 		gl_FragData[0].rgb *= color.rgb;
 
-		#ifdef LIGHTNING
+		#if defined LIGHTNING || defined ENTITIES
 			gl_FragData[0].a *= color.a;
 		#endif
 	#else

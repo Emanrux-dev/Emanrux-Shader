@@ -262,6 +262,11 @@ vec4 raymarchLPV(
 		#endif
 
 		#if defined FLASHLIGHT && defined FLASHLIGHT_FOG_ILLUMINATION
+
+			#ifdef IEXT_ENABLED
+				if (!IEXT_KEY_0) continue;
+			#endif
+
 			// vec3 shiftedViewPos = mat3(gbufferModelView)*(progressW-cameraPosition) + vec3(-0.25, 0.2, 0.0);
 			// vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos;
 				vec3 shiftedViewPos;
@@ -464,7 +469,7 @@ vec4 waterVolumetrics(vec3 rayStart, vec3 rayEnd, float rayLength, vec2 dither, 
 
 		vec3 Indirectlight = _ambient * WaterAbsorbance;
 
-		#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER
+		#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER && !defined FLASHLIGHT
 			float lightRange = 0.0;
 			vec3 handLightCol = GetHandLight(heldItemId, progressP, lightRange);
 			
@@ -694,7 +699,7 @@ vec4 waterVolumetrics_alt( vec3 rayStart, vec3 rayEnd, float estEndDepth, float 
 			}
 		#endif
 
-		#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER
+		#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER && !defined FLASHLIGHT
 			float lightRange = 0.0;
 			vec3 handLightCol = GetHandLight(heldItemId, progressP, lightRange);
 			

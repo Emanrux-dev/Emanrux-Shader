@@ -849,6 +849,9 @@ void main() {
   // apply multiplicative color blend for glass n stuff
   #ifdef Glass_Tint
     if(
+      #if defined DISTANT_HORIZONS || defined VOXY
+      (isLOD && !hand || !isLOD) &&
+      #endif
       #ifndef BIOME_TINT_WATER
       !isWater &&
       #endif

@@ -30,6 +30,10 @@ layout (location = 3) out vec4 gbuffer_data_3;
 #undef WATER_SUN_SPECULAR
 #endif
 
+#ifdef END_SHADER
+	#include "/lib/end_fog.glsl"
+#endif
+
 float GGX(vec3 n, vec3 v, vec3 l, float r, float f0) {
   r = max(pow(r,2.5), 0.0001);
 
@@ -252,14 +256,40 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
     
     	float skylight = mix(0.08, 1.0, SkylightDir);
     	AmbientLightColor *= skylight;
+
+		vec3 MinimumLightColor = vec3(1.0);
+		Indirect_lighting = doIndirectLighting(AmbientLightColor, MinimumLightColor, parameters.lightMap.y);
     #endif
-	
-    #ifndef OVERWORLD_SHADER
-		vec3 AmbientLightColor = vec3(0.5);
+
+	#ifdef NETHER_SHADER
+		Indirect_lighting = volumetricsFromTex(normal, colortex4, 0).rgb / 1200.0 / 1.5;
 	#endif
 
-    vec3 MinimumLightColor = vec3(1.0);
-	Indirect_lighting = doIndirectLighting(AmbientLightColor, MinimumLightColor, parameters.lightMap.y);
+	#ifdef END_SHADER
+		#ifdef END_LIGHTNING
+			float vortexBounds = clamp(vortexBoundRange - length(feetPlayerPos+cameraPosition), 0.0,1.0);
+		#else
+			float vortexBounds = 1.0;
+		#endif
+
+        vec3 lightPos = LightSourcePosition(feetPlayerPos+cameraPosition, cameraPosition,vortexBounds);
+
+		float lightningflash = texelFetch(colortex4,ivec2(1,1),0).x/150.0;
+		vec3 lightColors = LightSourceColors(vortexBounds, lightningflash);
+		
+		float end_NdotL = clamp(dot(normal, normalize(-lightPos))*0.5+0.5,0.0,1.0);
+		end_NdotL *= end_NdotL;
+
+		float fogShadow = GetEndFogShadow(feetPlayerPos+cameraPosition, lightPos);
+		float endPhase = endFogPhase(lightPos);
+
+		Direct_lighting = lightColors * endPhase * end_NdotL * fogShadow;
+
+		vec3 AmbientLightColor = vec3(AmbientLightEnd_R,AmbientLightEnd_G,AmbientLightEnd_B) ;
+			
+		Indirect_lighting = AmbientLightColor + 0.7 * AmbientLightColor * dot(normal, normalize(feetPlayerPos));
+		Indirect_lighting *= 0.1;
+	#endif
 
 
 	float indoors = min(max(parameters.lightMap.y-0.5,0.0)/0.4,1.0);

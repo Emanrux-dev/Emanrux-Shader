@@ -240,6 +240,9 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 }
 #endif
 
+uniform sampler2D normals;
+uniform sampler2D specular;
+
 #if defined DAMAGE_BLOCK_EFFECT && defined POM	
 	mat3 inverseMatrix(mat3 m) {
 	  float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];
@@ -268,8 +271,6 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 
 	const float mincoord = 1.0/4096.0;
 	const float maxcoord = 1.0-mincoord;
-
-	uniform sampler2D normals;
 
 	vec4 readNormal(in vec2 coord)
 	{
@@ -308,6 +309,35 @@ float luma(vec3 color) {
 	}
 #endif
 
+vec2 encodeNormal(vec3 n){
+	n.xy = n.xy / dot(abs(n), vec3(1.0));
+	n.xy = n.z <= 0.0 ? (1.0 - abs(n.yx)) * sign(n.xy) : n.xy;
+    vec2 encn = clamp(n.xy * 0.5 + 0.5,-1.0,1.0);
+	
+    return encn;
+}
+
+vec3 viewToWorld(vec3 viewPosition) {
+    vec4 pos;
+    pos.xyz = viewPosition;
+    pos.w = 0.0;
+    pos = gbufferModelViewInverse * pos;
+    return pos.xyz;
+}
+vec3 worldToView(vec3 worldPos) {
+    vec4 pos = vec4(worldPos, 0.0);
+    pos = gbufferModelView * pos;
+    return pos.xyz;
+}
+
+vec3 applyBump(mat3 tbnMatrix, vec3 bump){
+	float bumpmult = NORMAL_MAP_MULT;
+	bump = bump * vec3(bumpmult, bumpmult, bumpmult) + vec3(0.0f, 0.0f, 1.0f - bumpmult);
+	return normalize(bump*tbnMatrix);
+}
+
+uniform float alphaTestRef;
+uniform vec3 playerLookVector;
 
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -317,6 +347,10 @@ float luma(vec3 color) {
 
 #ifdef DAMAGE_BLOCK_EFFECT
 	/* RENDERTARGETS:11 */
+#elif defined PARTICLES_SOLID
+	/* RENDERTARGETS:1,8 */
+	layout(location = 0) out vec4 OutAlbedo;
+	layout(location = 1) out vec4 OutSpecular;
 #else
 	/* RENDERTARGETS:2,9,11,7 */
 #endif
@@ -326,7 +360,7 @@ void main() {
 #ifdef DAMAGE_BLOCK_EFFECT
 	vec2 adjustedTexCoord = lmtexcoord.xy;
 	#ifdef POM
-		vec3 fragpos = toScreenSpace(gl_FragCoord.xyz*vec3(texelSize/RENDER_SCALE,1.0)-vec3(0.0));
+		vec3 fragpos = toScreenSpace(gl_FragCoord.xyz*vec3(texelSize/RENDER_SCALE,1.0));
 
 		// vec3 worldpos = mat3(gbufferModelViewInverse) * fragpos  + gbufferModelViewInverse[3].xyz + cameraPosition;
 
@@ -400,7 +434,7 @@ void main() {
 	gl_FragData[0] = vec4(encodeVec2(vec2(0.5)), encodeVec2(Albedo.rg), encodeVec2(vec2(Albedo.b,0.02)), 1.0);
 #endif
 
-#if !defined DAMAGE_BLOCK_EFFECT
+#if !defined DAMAGE_BLOCK_EFFECT && !defined PARTICLES_SOLID
 	gl_FragData[2] = vec4(0.0);
 	
 	#ifdef LINES
@@ -610,5 +644,62 @@ void main() {
 				if (step(ditherFade, R2_dither()) == 0.0) discard;
 		#endif
 	#endif
+#endif
+
+#ifdef PARTICLES_SOLID
+
+	vec4 Albedo = texture(gtexture, lmtexcoord.xy) * color;
+	if(Albedo.a < alphaTestRef){discard; return;}
+
+	vec3 tangent  = normalize(mat3(gbufferModelViewInverse) * vec3(1.0, 0.0,  0.0));
+	vec3 binormal = normalize(mat3(gbufferModelViewInverse) * vec3(0.0, 1.0,  0.0));
+	vec3 normal   = normalize(mat3(gbufferModelViewInverse) * vec3(0.0, 0.0,  1.0));
+
+	mat3 tbnMatrix = mat3(tangent.x,  binormal.x,  normal.x,
+                      tangent.y,  binormal.y,  normal.y,
+                      tangent.z,  binormal.z,  normal.z);
+
+	vec4 NormalTex = texture(normals, lmtexcoord.xy);
+			
+	#if defined MATERIAL_AO && defined MC_TEXTURE_FORMAT_LAB_PBR
+		Albedo.rgb *= NormalTex.b*0.5+0.5;
+	#endif
+
+	NormalTex.xy = NormalTex.xy * 2.0-1.0;
+	NormalTex.z = sqrt(max(1.0 - dot(NormalTex.xy, NormalTex.xy), 0.0));
+
+	normal = applyBump(tbnMatrix, NormalTex.xyz);
+	
+	vec2 lightmap = clamp(lmtexcoord.zw,0.0,1.0);
+	
+	vec4 data1 = vec4(encodeNormal(normal), lightmap);
+
+	Albedo = clamp(vec4(Albedo.rgb,0.85),0.0,1.0);
+	data1 = clamp(data1,0.0,1.0);
+
+	if(tangent.x == 0.0 && tangent.y == 0.0 && tangent.z == 0.0) discard;
+
+	OutAlbedo = vec4(
+		encodeVec2(Albedo.x,data1.x),
+	 	encodeVec2(Albedo.y,data1.y),
+	  	encodeVec2(Albedo.z,data1.z),
+	   	encodeVec2(data1.w,Albedo.w)
+	);
+	
+	#if EMISSIVE_TYPE >= 2 || SSS_TYPE >= 2
+		vec4 specularData = texture(specular, lmtexcoord.xy);
+	#else
+		vec4 specularData = vec4(0.0);
+	#endif
+
+	vec4 otherData = clamp(vec4(normal*0.5+0.5, 1.0),0.0,1.0);
+	
+	OutSpecular = vec4(
+		encodeVec2(specularData.x, otherData.x),
+		encodeVec2(specularData.y, otherData.y),
+		encodeVec2(specularData.z, otherData.z),
+		encodeVec2(specularData.w, otherData.w)
+	);
+
 #endif
 }

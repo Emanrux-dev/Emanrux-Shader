@@ -31,6 +31,9 @@ out DATA {
 	#include "/lib/entities.glsl"
 #endif
 
+#include "/lib/blocks.glsl"
+
+
 #if defined IS_LPV_ENABLED || (WATER_INTERACTION == 2 && IRIS_VERSION < 11004)  || defined SHADER_GRASS
 	in vec4 mc_Entity;
 	#ifdef IRIS_FEATURE_BLOCK_EMISSION_ATTRIBUTE
@@ -46,11 +49,9 @@ out DATA {
     uniform int currentRenderedItemId;
 	uniform int blockEntityId;
 
-	#include "/lib/blocks.glsl"
 	#include "/lib/voxel_common.glsl"
 	#include "/lib/voxel_write.glsl"
 #endif
-
 
 //#include "/lib/Shadow_Params.glsl"
 
@@ -90,6 +91,8 @@ void main() {
 		gl_Position = customShadowPerspectiveSSBO * customShadowMatrixSSBO * vec4(feetPlayerPos, 1.0);
 	
   		gl_Position.z /= 6.0;
+
+		if(mc_Entity.x == BLOCK_WATER) gl_Position = vec4(-1.0);
 	#else
 		gl_Position = vec4(-1.0);
 	#endif

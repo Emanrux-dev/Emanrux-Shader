@@ -423,7 +423,7 @@ void main() {
 	// bool translucent4 = abs(dataUnpacked1.w-0.65) <0.01;	// Weak translucency
 	// bool entities = abs(dataUnpacked1.w-0.45) < 0.01;	
 	bool hand = abs(dataUnpacked1.w-0.75) < 0.01;
-	// bool blocklights = abs(dataUnpacked1.w-0.8) <0.01;
+	bool opaqueParticles  = abs(dataUnpacked1.w-0.85) <0.01;
 
 	float z = texelFetch(depthtex1,ivec2(gl_FragCoord.xy),0).x;
 	float z0 = texelFetch(depthtex0,ivec2(gl_FragCoord.xy),0).x;
@@ -494,7 +494,7 @@ void main() {
 
 		vec2 SSAO_SSS = vec2(1.0,0.0);
 
-		if(!isSky) {
+		if(!isSky && !opaqueParticles) {
 			SSAO_SSS = SSAO(viewPos, worldToView(normal), worldToView(FlatNormals), hand, noise);
 			SSAO_SSS.y = clamp(SSAO_SSS.y + 0.5 * lightmap.y*lightmap.y,0.0,1.0);
 		}
@@ -516,6 +516,7 @@ void main() {
 		float LabSSS = clamp((-64.0 + SpecularTex.z * 255.0) / 191.0 ,0.0,1.0);
 
 		float NdotL = clamp(dot(normal, sunVec),0.0,1.0);
+		if(opaqueParticles) NdotL = mix(0.5, 1.0, NdotL);
 
 		#ifdef END_SHADER
 			float minshadowfilt = Min_Shadow_Filter_Radius_END;

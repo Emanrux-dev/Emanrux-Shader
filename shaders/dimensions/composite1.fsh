@@ -1139,7 +1139,7 @@ void main() {
 			const float POM_DEEPNESS = 0.0;
 		#endif
 		// bool handwater = abs(translucentMasks-0.3) < 0.01 ;
-		// bool blocklights = abs(opaqueMasks-0.8) <0.01;
+		bool opaqueParticles = abs(opaqueMasks-0.85) <0.01;
 
 		if(hand){
 			convertHandDepth(z);
@@ -1339,6 +1339,10 @@ void main() {
 
 		// NdotL = 1;
 		float flatNormNdotL = clamp((-15 + dot((FlatNormals), WsunVec)*255.0) / 240.0  ,0.0,1.0);
+		if(opaqueParticles) {
+			flatNormNdotL = mix(0.5, 1.0, flatNormNdotL);
+			NdotL = mix(0.5, 1.0, NdotL);
+		}
 		
 	////////////////////////////////	SHADOWMAP		////////////////////////////////
 		// setup shadow projection
@@ -1441,7 +1445,7 @@ void main() {
 					SS_directLight.r = mix(1.0, SS_directLight.r, 1.0-shadowMapFalloff);
 				#endif
 
-				shadowColor *= SS_directLight.r;			
+				if(!opaqueParticles) shadowColor *= SS_directLight.r;			
 			#else
 				vec2 SS_directLight = vec2(1,0);
 				ShadowBlockerDepth = max(ShadowBlockerDepth, (1.0-shadowMapFalloff2) * 10.0);

@@ -460,6 +460,7 @@ void main() {
       float opaqueMasks = dataUnpacked1.w;
       bool hand = abs(opaqueMasks-0.75) < 0.01;
       bool entities = abs(opaqueMasks-0.45) < 0.01;
+      bool opaqueParticles = abs(opaqueMasks-0.85) <0.01;
       #ifdef SHADER_GRASS
         bool isShaderGrass = abs(opaqueMasks-0.80) < 0.01;
       #else
@@ -523,7 +524,7 @@ void main() {
 
       vec3 denoisedReflections = currentFrame.rgb;
 
-      if(roughness > 0.005 && alpha < 0.9999 && !hand && !entities
+      if(roughness > 0.005 && alpha < 0.9999 && !hand && !entities && !opaqueParticles
         #if defined DISTANT_HORIZONS || defined VOXY
           && z < 1.0
         #endif

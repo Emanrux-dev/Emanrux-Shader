@@ -56,14 +56,14 @@ Main changes:
 
 <img width="3840" height="2160" alt="11" src="https://github.com/user-attachments/assets/85a6fba0-db78-4897-83a9-eae2ebc248b1" />
 
-
-
-
 SPECIAL THANKS:
+
 Chocapic13, for the base shader.
+
 https://www.curseforge.com/minecraft/customization/chocapic13-shaders
 
-Xonk, for developing the incredible Bliss shader.
+Xonk, for developing the incredible Bliss shader
+
 https://github.com/X0nk/Bliss-Shader
 
 Merlin1809, for the fabulous Eclipse shaders.

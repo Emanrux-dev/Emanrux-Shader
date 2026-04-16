@@ -1,81 +1,80 @@
-# Eclipse - A Bliss Edit
+Emanrux Shader - An Edition of Eclipse
+------------------------------------------
+Eclipse is already an excellent shader; the work of Chocapic13, modified by Xonk and then further modified by Merlin1809 is incredible. 
+I added and adjusted features that I always wanted to have in a shader.
 
-Bliss is already one of the best and most feature rich shaders out there, yet I still wanted more...  
-It started out with smaller features, but then the additions just kept piling up.
+It started as a personal project for my friends and me, but after posting it on Reddit I realized many people were interested. 
+So, I decided to release an official version. 
+I value optimization that does not compromise visual fidelity, so my goal has always been the balance between quality and performance.
 
-Notable changes/additions compared to Bliss unstable:
- + Custom moon orbit with possible eclipses
- + Water wave simulation for the player
- + Shader Grass
- + Aurora & Rainbow
- + Additional cirrus & cumulonimbus cloud layers (WIP)
- + Distant Horizons chunk fading
- + Moon Texture with phases
- + Snow Overlay and Rain Ripples
- + Better mod support
- + Better shader-side (hardcoded) emissives
- + Lightsource with shadows on the main end island
- + Better lightning strikes with clouds lighting up and shadows
- + Photonics, Colorwheel, Caelum (Arda Craft) support
- + 1.21.11 Chunk Fade In support
- + Emissive Ores and Trims
+This shader is currently under testing and is not a final version by any means. There are still bugs to fix and more features to add, so stay tuned for future updates and improvements.
 
-Note: With default settings there is at least one guaranteed eclipse per ingame year.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Main changes:
 
-## Eclipses <sub>(why else would I call the shader Eclipse??)</sub>
+- Dynamic Rain on Glass: Raindrops that slide down realistically.
 
-<img width="2560" height="1440" alt="2025-08-12_02 16 11" src="https://github.com/user-attachments/assets/8b2a1161-8bb5-4003-b04c-16a9c6f01494" />
+- Frosted Glass: Frost effects on windows in snowy biomes.
 
-## Overhauled end lighting for the main island
+- Borderless Connected Glass: Clearer glass without needing a texture pack.
 
-<img width="2560" height="1440" alt="2025-08-12_01 31 12" src="https://github.com/user-attachments/assets/a1a408cc-ed2a-46a3-a465-4b09d0d00660" />
+- Reflections on Key Blocks: Added to blocks like quartz or purpur.
 
-## Water wave simulation
+- Emissive Blocks: Improved glow for blocks like Redstone.
 
-<img width="1920" height="1080" alt="2025-09-02_00 29 28" src="https://github.com/user-attachments/assets/87cbd02c-1149-4764-9ff0-7da521b0273a" />
+- Fixed Luminosity: Corrected lighting for missing block textures.
 
-## Shader Snow
+- Enhanced Ores: Brighter and more visible ores.
 
-<img width="1920" height="1080" alt="2025-08-13_13 38 18" src="https://github.com/user-attachments/assets/31e5102e-d872-4aec-a606-39ae88385d45" />
+- Custom Nether Portal: Added a unique spiral effect.
 
-## Shader Grass
+- Galaxy Sky: Featuring stars, planets, and black holes.
 
-<img width="1920" height="1080" alt="2025-10-06_01 34 47" src="https://github.com/user-attachments/assets/47dfabab-51cf-4490-9247-35f7879a3690" />
+- Cinematic Dark Mode: A more immersive, high-contrast visual style.
 
-## Lightning Shadows
+- Cloud Optimization: Reduced excessive cloud layers for better light passage and effects.
 
-<img width="2560" height="1440" alt="2025-08-12_02 52 02" src="https://github.com/user-attachments/assets/5f8c484f-2574-4a07-857b-9347c4b459c2" />
+- Code Cleanup: Performance optimization and removal of redundant features without reducing visual quality.
 
-## Moon Texture with physically correct lighting
+- Performance Boost: Removed "Shader Grass" to ensure higher FPS.
 
-<img width="1920" height="1080" alt="2025-08-16_23 14 00" src="https://github.com/user-attachments/assets/1e92cf5f-9a28-47a0-8737-36853034ff68" />
+- Added compatibility with Any Size Portals Mod
 
-## Rainbows
+- Added support for multiple languages in Emanrux Settings, including English, Spanish, French, German, Portuguese, Russian, and Chinese.
 
-<img width="1920" height="1080" alt="2025-08-16_21 34 11" src="https://github.com/user-attachments/assets/618bf00e-d4f6-4336-87d9-79fb65e18775" />
-
-
-### SPECIAL THANKS:
-+ Chocapic13, for the base shader
-+ Xonk, for developing the great Bliss shader
-+ WoMspace, for spending alot of time creating a DOF overhaul
-+ Null, for doing a huge amount of work creating the voxel floodfill colored lighting
-+ Emin, and Gri573, for teaching me how to stop alot of light leaking
-+ RRe36 and Sixthsurge, for the great ideas to steal
-### [Want to support Xonk? Consider donating](https://ko-fi.com/xonkdev)
-
-### [You can contact me by joining Xonk's discord server and using the Eclipse channel!](https://discord.gg/8nVt56H9zH)
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+<img width="3840" height="2160" alt="2" src="https://github.com/user-attachments/assets/c491c72c-9d9c-4ff3-8742-3d81f266ce50" />
+<img width="1360" height="768" alt="1" src="https://github.com/user-attachments/assets/07e08c06-0692-4cfd-a020-287b7f1cfd2f" />
+<img width="3840" height="2160" alt="11" src="https://github.com/user-attachments/assets/54600c77-cdd5-451f-ab3d-2e019f6d2a23" />
+<img width="3840" height="2160" alt="10" src="https://github.com/user-attachments/assets/0ce2f38c-069f-4b00-8d12-5abcde602774" />
+<img width="3840" height="2160" alt="9" src="https://github.com/user-attachments/assets/e8e0b958-1566-4855-b492-3c5028386937" />
+<img width="3840" height="2160" alt="8" src="https://github.com/user-attachments/assets/1dc7b10d-14a2-457c-a958-0659485b70b2" />
+<img width="3840" height="2160" alt="7" src="https://github.com/user-attachments/assets/a9b60ebc-f613-4d91-a6f5-a8b0185e213c" />
+<img width="3840" height="2160" alt="6" src="https://github.com/user-attachments/assets/44c59bb2-a055-4770-99ba-ab5c89293f9b" />
+<img width="3840" height="2160" alt="5" src="https://github.com/user-attachments/assets/c565f20b-99fe-40fe-8779-2ce6336b69bf" />
+<img width="3840" height="2160" alt="4" src="https://github.com/user-attachments/assets/87c419b9-d38e-482f-8bf1-92c429550e47" />
+<img width="3840" height="2160" alt="3" src="https://github.com/user-attachments/assets/be44323c-68b9-468c-a5e9-19519baee252" />
 
 
-# How to download the latest version:
- - locate the `green "code" button` on this page. this button is NOT in the `releases` page.
- - click the `green "code" button` and select `"download zip"`.
- - once the zip file finishes downloading, install it like a normal shader. you do NOT need to unzip/extract/decompress.
+SPECIAL THANKS:
+Chocapic13, for the base shader.
+https://www.curseforge.com/minecraft/customization/chocapic13-shaders
 
-# You want MOAR performance?
-> [!NOTE]  
-> My "[Iris Extension](https://modrinth.com/mod/iris-extension)" mod automatically does this when shader grass is disabled, there is no need to manually delete the files if you are using my mod!
+Xonk, for developing the incredible Bliss shader.
+https://github.com/X0nk/Bliss-Shader
 
- Delete the "gbuffers_terrain.gsh", "gbuffers_terrain.tcs" and "gbuffers_terrain.tes" files for all world folders in the shader.
- This will make the shader grass setting non functional BUT will increase performance, especially with high vanilla render distances!
- (If you're wondering why, Iris does NOT allow me to disable these files once they're there. So even when Shader Grass is disabled these execute and harm performance!)
+Merlin1809, for the fabulous Eclipse shaders.
+https://github.com/Merlin1809/Eclipse-Shader
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Compatibility
+- Iris Shaders
+- Tested in Minecraft 1.21+
+- Distant Horizon
+- Voxy
+
+How to download the latest version:
+Look for the green "Code" button at the top of this page.
+
+Click the button and select "Download ZIP".
+
+Once the download is complete, install it like any normal shader. There is no need to unzip the file.

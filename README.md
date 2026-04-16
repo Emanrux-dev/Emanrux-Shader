@@ -1,3 +1,5 @@
+In maintenance, do not download
+
 Emanrux Shader - An Edition of Eclipse
 ------------------------------------------
 Eclipse is already an excellent shader; the work of Chocapic13, modified by Xonk and then further modified by Merlin1809 is incredible. 

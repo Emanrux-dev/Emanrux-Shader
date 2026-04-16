@@ -1,3 +1,14 @@
+# Thanks from Emanrux
+
+Credits to Merlin1809, creator of Eclipse shaders, his additions inspired me to take Eclipse as a starting point for
+add my features.
+
+Eclipse Shader by Merlin1809:
+https://github.com/Merlin1809/Eclipse-Shader
+
+
+# Thanks from Merlin1809
+
 Credit to the creators of the entire shader that Eclipse is an edit of:
 
 	Xonk / https://github.com/X0nk/Bliss-Shader

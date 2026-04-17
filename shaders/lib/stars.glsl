@@ -1,3 +1,6 @@
+#ifndef STARS_GLSL
+#define STARS_GLSL
+
 //Original star code : https://www.shadertoy.com/view/Md2SR3 , optimised
 
 
@@ -90,13 +93,72 @@ float starbox(vec3 dir, out vec3 starColor) {
 	return sqrt(color);
 }
 
+#ifdef GALAXY_SKY
+#ifndef GALAXY_TEX_UNIFORM
+#define GALAXY_TEX_UNIFORM
+uniform sampler2D galaxyTex;
+#endif
+#endif
+
+// Galaxy rendering logic
+void CalculateGalaxy(vec3 viewPos, out float galaxyBrightness, out vec3 galaxyColor) {
+    vec3 dir = normalize(viewPos);
+    
+    // Rotation for better alignment
+    float a1 = 1.25;
+    float a2 = 0.65;
+    float s1 = sin(a1), c1 = cos(a1);
+    float s2 = sin(a2), c2 = cos(a2);
+    dir.xz *= mat2(c1, s1, -s1, c1);
+    dir.xy *= mat2(c2, s2, -s2, c2);
+
+    // Spherical mapping for the galaxy texture
+    vec2 uv = vec2(atan(dir.z, dir.x) / (2.0 * PI) + 0.5, acos(dir.y) / PI);
+    
+    #ifdef GALAXY_SKY
+    vec4 tex = texture2D(galaxyTex, uv);
+    galaxyColor = tex.rgb;
+    
+    // Calculate brightness from luminance and alpha
+    float luminance = dot(galaxyColor, vec3(0.2126, 0.7152, 0.0722));
+    
+    // Smoothly fade the galaxy in/out during transitions (night, rain)
+    float nightFactor = clamp(sunElevation * -10.0, 0.0, 1.0); // Simple night detection
+    float rainFactor = clamp(1.0 - rainStrength, 0.0, 1.0);
+    
+    galaxyBrightness = luminance * tex.a * rainFactor * nightFactor * 0.75;
+    
+    // Enhance contrast without overexposing
+    galaxyBrightness = smoothstep(0.0, 1.0, galaxyBrightness);
+    galaxyBrightness = pow(galaxyBrightness, 1.2);
+    #else
+    galaxyColor = vec3(0.0);
+    galaxyBrightness = 0.0;
+    #endif
+}
+
 float stars(vec3 viewPos, out vec3 starColor){
+    #ifdef GALAXY_SKY
+    float gBright = 0.0;
+    vec3 gCol = vec3(0.0);
+    CalculateGalaxy(viewPos, gBright, gCol);
+    #endif
+
     #ifdef OLD_STARS
         starColor = vec3(1.0);
         float stars = max(1.0 - StableStarField(viewPos*300.0 , 0.99),0.0);
-        return STARS_BRIGHTNESS * exp( stars  * -20.0 * (1.0/STARS_AMOUNT));
+        float starVal = STARS_BRIGHTNESS * exp( stars  * -20.0 * (1.0/STARS_AMOUNT));
     #else
         float stars = max(1.0 - starbox(viewPos, starColor),0.0);
-        return 75.0 * STARS_BRIGHTNESS * exp( stars  * -20.0 * (1.0/STARS_AMOUNT));
+        float starVal = 75.0 * STARS_BRIGHTNESS * exp( stars  * -20.0 * (1.0/STARS_AMOUNT));
+    #endif
+
+    #ifdef GALAXY_SKY
+    starColor = mix(starColor * starVal, gCol * gBright * 0.5, gBright / (starVal + gBright + 1e-6));
+    return starVal + gBright * 0.4;
+    #else
+    return starVal;
     #endif
 }
+
+#endif

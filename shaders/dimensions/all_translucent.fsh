@@ -21,11 +21,7 @@
 
 in DATA {
 	vec4 lmtexcoord;
-	#if defined LIGHTNING || defined ENTITIES
-		vec4 color;
-	#else
-		vec3 color;
-	#endif
+	vec4 color;
 
 	vec3 viewVector;
 
@@ -57,11 +53,12 @@ uniform vec4 entityColor;
 
 #if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
 	const bool shadowHardwareFiltering = true;
-	uniform sampler2DShadow shadowtex0HW;
+	uniform sampler2DShadow shadow;
 	
 	#ifdef TRANSLUCENT_COLORED_SHADOWS
 		uniform sampler2D shadowcolor0;
-		uniform sampler2DShadow shadowtex1HW;
+		uniform sampler2DShadow shadowtex0;
+		uniform sampler2DShadow shadowtex1;
 	#endif
 
 	uniform float lightSign;
@@ -71,6 +68,8 @@ uniform sampler2D noisetex;
 uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
 uniform sampler2D depthtex2;
+uniform float snowAmount;
+uniform bool isSnowBiome;
 
 #ifdef DISTANT_HORIZONS
 	uniform sampler2D dhDepthTex1;
@@ -101,6 +100,7 @@ uniform sampler2D normals;
 	uniform usampler1D texBlockData;
 	uniform sampler3D texLpv1;
 	uniform sampler3D texLpv2;
+	uniform sampler3D texVoxelMask;
 #endif
 
 uniform vec3 sunVec;
@@ -187,7 +187,7 @@ uniform float dhVoxyFarPlane;
 	#include "/lib/hsv.glsl"
 	#include "/lib/lpv_common.glsl"
 	#include "/lib/lpv_render.glsl"
-	// #include "/lib/voxel_common.glsl"
+        #include "/lib/voxel_common.glsl"
 #endif
 
 #define FORWARD_SPECULAR
@@ -228,7 +228,6 @@ vec2 decodeVec2(float a){
 #define VOXEL_REFLECTIONS_TRANSLUCENT
 
 #ifdef VOXEL_REFLECTIONS_TRANSLUCENT
-	#define VOXEL_REFLECTIONS
 #endif
 
 #ifdef PHOTONICS
@@ -445,10 +444,10 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 		#ifdef TRANSLUCENT_COLORED_SHADOWS
 
 			// determine when opaque shadows are overlapping translucent shadows by getting the difference of opaque depth and translucent depth
-			float shadowDepthDiff = pow(clamp((texture(shadowtex1HW, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
+			float shadowDepthDiff = pow(clamp((texture(shadowtex1, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
 
 			// get opaque shadow data to get opaque data from translucent shadows.
-			float opaqueShadow = texture(shadowtex0HW, projectedShadowPosition).x;
+			float opaqueShadow = texture(shadowtex0, projectedShadowPosition).x;
 			shadowmap += max(opaqueShadow, shadowDepthDiff);
 
 			// get translucent shadow data
@@ -465,7 +464,7 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 			translucentTint += mix(translucentShadow.rgb, vec3(1.0),  opaqueShadow*shadowDepthDiff);
 
 		#else
-			shadowmap += texture(shadowtex0HW, projectedShadowPosition).x;
+			shadowmap += texture(shadow, projectedShadowPosition).x;
 		#endif
 
 	#ifdef BASIC_SHADOW_FILTER
@@ -598,13 +597,16 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	#ifdef TAA
 		vec2 tempOffset = offsets[framemod8];
-		vec3 viewPos = toScreenSpace(FragCoord*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize*0.5, 0.0));
+		vec3 viewPos = toScreenSpace(FragCoord*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize, 0.0));
 	#else
 		vec3 viewPos = toScreenSpace(FragCoord*vec3(texelSize/RENDER_SCALE,1.0));
 	#endif
 
-	vec3 feetPlayerPos = mat3(gbufferModelViewInverse) * viewPos;
+	// Use mat4 multiplication to include the translation part (eye height, etc.)
+	vec3 feetPlayerPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz;
 	vec3 worldPos = feetPlayerPos + cameraPosition;
+	vec3 normalMatWorld = viewToWorld(normalMat.xyz);
+
 ////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// MATERIAL MASKS ////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -626,9 +628,15 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	// bool isHand = abs(MATERIALS - 0.1) < 0.01;
 	bool isWater = MATERIALS > 0.99;
 	bool isReflectiveEntity = abs(MATERIALS - 0.2) < 0.01;
+	bool isPanelGlass = false;
+	#ifdef IS_LPV_ENABLED
+	uint _panelCheck = imageLoad(imgVoxelMask, ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)))).r;
+	isPanelGlass = (_panelCheck >= 301u && _panelCheck <= 317u) || _panelCheck == 516u;
+	#endif
 	bool isReflective = abs(MATERIALS - 0.1) < 0.01 || isWater || isReflectiveEntity;
+	if(isPanelGlass) isReflective = true;
 	bool isEntity = abs(MATERIALS - 0.4) < 0.01 || isReflectiveEntity;
-	// bool isNetherPortal =  abs(MATERIALS - 0.6) < 0.01;
+	bool isNetherPortal =  abs(MATERIALS - 0.6) < 0.01;
 
 ////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// ALBEDO /////////////////////////////////////
@@ -639,15 +647,124 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#ifndef COLORWHEEL
 		#ifdef IRIS_FEATURE_TEXTURE_FILTERING
 		gl_FragData[0] = textureFilteringMode == 1 ? sampleRGSS(gtexture, lmtexcoord.xy, 1.0 / vec2(textureSize(gtexture, 0))) : sampleNearest(gtexture, lmtexcoord.xy, 1.0 / vec2(textureSize(gtexture, 0)));
+		gl_FragData[0] *= color;
 		#else
-		gl_FragData[0] = texture(gtexture, lmtexcoord.xy, mipmapBias);
+		gl_FragData[0] = texture(gtexture, lmtexcoord.xy, mipmapBias) * color;
+		#endif
+#ifdef IS_LPV_ENABLED
+	if(normalMat.w < 0.99 && normalMat.w > 0.05) {
+		vec3 lpvPos = GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1);
+ivec3 voxelPos = ivec3(floor(lpvPos));
+
+uint _aPX = imageLoad(imgVoxelMask, voxelPos + ivec3( 1,0,0)).r;
+uint _aNX = imageLoad(imgVoxelMask, voxelPos + ivec3(-1,0,0)).r;
+uint _aPZ = imageLoad(imgVoxelMask, voxelPos + ivec3( 0,0, 1)).r;
+uint _aNZ = imageLoad(imgVoxelMask, voxelPos + ivec3( 0,0,-1)).r;
+uint _aPY = imageLoad(imgVoxelMask, voxelPos + ivec3( 0, 1,0)).r;
+uint _aNY = imageLoad(imgVoxelMask, voxelPos + ivec3( 0,-1,0)).r;
+bool adjPX = _aPX == 301u || _aPX == 516u;
+bool adjNX = _aNX == 301u || _aNX == 516u;
+bool adjPZ = _aPZ == 301u || _aPZ == 516u;
+bool adjNZ = _aNZ == 301u || _aNZ == 516u;
+bool adjPY = _aPY == 301u || _aPY == 516u;
+bool adjNY = _aNY == 301u || _aNY == 516u;
+
+vec3 worldNormal = normalMatWorld;
+		vec3 absNormal = abs(worldNormal);
+		bool facingX = absNormal.x > 0.5;
+		bool facingZ = absNormal.z > 0.5;
+		bool facingY = absNormal.y > 0.5;
+
+		vec3 blockFract = fract(worldPos);
+		vec2 uv;
+		if(facingY) uv = blockFract.xz;
+		else if(facingX) uv = blockFract.zy;
+		else uv = blockFract.xy;
+
+		float borderSize = 0.6;
+		float maskLeft  = 1.0;
+		float maskRight = 1.0;
+		float maskDown  = 1.0;
+		float maskUp    = 1.0;
+
+		if(facingY) {
+			if(adjPX) maskRight = smoothstep(1.0, 1.0 - borderSize, uv.x);
+			if(adjNX) maskLeft  = smoothstep(0.0, borderSize, uv.x);
+			if(adjPZ) maskDown  = smoothstep(1.0, 1.0 - borderSize, uv.y);
+			if(adjNZ) maskUp    = smoothstep(0.0, borderSize, uv.y);
+		} else if(facingX) {
+			if(adjPZ) maskRight = smoothstep(1.0, 1.0 - borderSize, uv.x);
+			if(adjNZ) maskLeft  = smoothstep(0.0, borderSize, uv.x);
+			if(adjPY) maskDown  = smoothstep(1.0, 1.0 - borderSize, uv.y);
+			if(adjNY) maskUp    = smoothstep(0.0, borderSize, uv.y);
+		} else if(facingZ) {
+			if(adjPX) maskRight = smoothstep(1.0, 1.0 - borderSize, uv.x);
+			if(adjNX) maskLeft  = smoothstep(0.0, borderSize, uv.x);
+			if(adjPY) maskDown  = smoothstep(1.0, 1.0 - borderSize, uv.y);
+			if(adjNY) maskUp    = smoothstep(0.0, borderSize, uv.y);
+		}
+float borderMask = maskLeft * maskRight * maskUp * maskDown;
+		uint voxelID = imageLoad(imgVoxelMask, voxelPos).r;
+		#ifdef CONNECTED_GLASS
+		if(voxelID == 301u) {
+			float invBorder = 1.0 - borderMask;
+			gl_FragData[0].rgb *= borderMask;
+			gl_FragData[0].a = mix(gl_FragData[0].a, 0.0, invBorder);
+		}
 		#endif
 
-		gl_FragData[0].rgb *= color.rgb;
-
-		#if defined LIGHTNING || defined ENTITIES
-			gl_FragData[0].a *= color.a;
+		#ifdef IS_LPV_ENABLED
+		if(imageLoad(imgVoxelMask, ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)))).r == 516u) {
+			#ifdef CONNECTED_GLASS
+			vec3 _absNormal = abs(normalMatWorld);
+			if(_absNormal.y > 0.5) {
+				discard;
+			} else {
+				ivec3 _voxelPos = ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)));
+				uint _rPX = imageLoad(imgVoxelMask, _voxelPos + ivec3( 1,0,0)).r;
+				uint _rNX = imageLoad(imgVoxelMask, _voxelPos + ivec3(-1,0,0)).r;
+				uint _rPZ = imageLoad(imgVoxelMask, _voxelPos + ivec3( 0,0, 1)).r;
+				uint _rNZ = imageLoad(imgVoxelMask, _voxelPos + ivec3( 0,0,-1)).r;
+				uint _rPY = imageLoad(imgVoxelMask, _voxelPos + ivec3( 0, 1,0)).r;
+				uint _rNY = imageLoad(imgVoxelMask, _voxelPos + ivec3( 0,-1,0)).r;
+				bool solidPX = _rPX > 0u && _rPX != 516u && _rPX != 301u;
+				bool solidNX = _rNX > 0u && _rNX != 516u && _rNX != 301u;
+				bool solidPZ = _rPZ > 0u && _rPZ != 516u && _rPZ != 301u;
+				bool solidNZ = _rNZ > 0u && _rNZ != 516u && _rNZ != 301u;
+				bool solidPY = _rPY > 0u && _rPY != 516u && _rPY != 301u;
+				bool solidNY = _rNY > 0u && _rNY != 516u && _rNY != 301u;
+				vec3 _worldPos = feetPlayerPos + cameraPosition;
+				vec3 _blockFract = fract(_worldPos);
+				vec2 _uv;
+				if(_absNormal.x > 0.5) _uv = _blockFract.zy;
+				else _uv = _blockFract.xy;
+				float _borderSize = 0.15;
+				float _mask = 0.0;
+				if(_absNormal.x > 0.5) {
+					if(solidPZ) _mask = max(_mask, smoothstep(_borderSize, 0.0, 1.0 - _uv.x));
+					if(solidNZ) _mask = max(_mask, smoothstep(_borderSize, 0.0, _uv.x));
+					if(solidPY) _mask = max(_mask, smoothstep(_borderSize, 0.0, 1.0 - _uv.y));
+					if(solidNY) _mask = max(_mask, smoothstep(_borderSize, 0.0, _uv.y));
+				} else {
+					if(solidPX) _mask = max(_mask, smoothstep(_borderSize, 0.0, 1.0 - _uv.x));
+					if(solidNX) _mask = max(_mask, smoothstep(_borderSize, 0.0, _uv.x));
+					if(solidPY) _mask = max(_mask, smoothstep(_borderSize, 0.0, 1.0 - _uv.y));
+					if(solidNY) _mask = max(_mask, smoothstep(_borderSize, 0.0, _uv.y));
+				}
+				float savedAlpha = gl_FragData[0].a;
+				gl_FragData[0].a = max(_mask, savedAlpha > 0.05 ? savedAlpha : 0.0);
+				if(_mask < 0.001) {
+					gl_FragData[0].a = 0.0;
+					gl_FragData[0].rgb = vec3(0.0);
+				} else {
+					gl_FragData[0].rgb *= _mask;
+				}
+			}
+			#endif
+		}
 		#endif
+	}
+#endif
 	#else
 		vec4 _color = texture(gtexture, lmtexcoord.xy, mipmapBias);
 		float ao;
@@ -1033,7 +1150,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#endif
 
 	///////////////////////// BLOCKLIGHT LIGHTING OR LPV LIGHTING OR FLOODFILL COLORED LIGHTING
-	vec3 flatWorldNormal = viewToWorld(normalMat.xyz).xyz;
+	vec3 flatWorldNormal = normalMatWorld;
 	#ifdef IS_LPV_ENABLED
 		vec3 normalOffset = vec3(0.0);
 
@@ -1076,12 +1193,227 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		Indirect_lighting += flashlightshadows * calculateFlashlight(FragCoord.xy*texelSize/RENDER_SCALE, viewPos, vec3(0.0), worldSpaceNormal, flashLightSpecularData, false);
 	#endif
 
-	vec3 FinalColor = (Indirect_lighting + Direct_lighting) * Albedo;
+
+vec3 FinalColor = (Indirect_lighting + Direct_lighting) * Albedo;
+
+	///////////////////////////////////////////////////////
+////////////////////////	EMANRUX		////////////////////////
+	///////////////////////////////////////////////////////
+
+bool hasFrost = false;
+
+#ifdef FROST_ON_GLASS
+#ifdef IS_LPV_ENABLED
+if(isSnowBiome && rainStrength > 0.05)
+{
+    vec3 absNormal = abs(normalMatWorld);
+    if(absNormal.y < 0.5)
+    {
+        uint frostID = imageLoad(imgVoxelMask,
+        ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld*0.1)))).r;
+        if((frostID >= 301u && frostID <= 317u) || frostID == 516u)
+        {
+
+            vec3 worldNormal = normalMatWorld;
+            vec2 frostUV;
+            if(abs(worldNormal.x) > 0.5) frostUV = worldPos.zy;
+            else if(abs(worldNormal.z) > 0.5) frostUV = worldPos.xy;
+            else frostUV = worldPos.xz;
+            frostUV *= 0.25;
+            float growth = rainStrength; 
+            float frost = 0.0;
+            for(int i=0;i<12;i++)
+            {
+                float scale = 10.0 + float(i)*6.0;
+                vec2 uv = frostUV * scale;
+                vec2 cell = floor(uv);
+                vec2 local = fract(uv) - 0.5;
+                float rand =
+                fract(sin(dot(cell,vec2(127.1,311.7)))*43758.5453);
+                float rand2 =
+                fract(sin(dot(cell,vec2(269.5,183.3)))*23421.631);
+                float angle = rand * 6.28318;
+                vec2 dir = vec2(cos(angle),sin(angle));
+                float branch = dot(local,dir);
+                float thickness = abs(dot(local,vec2(-dir.y,dir.x)));
+                float trunk =
+                smoothstep(0.03,0.0,thickness) *
+                smoothstep(-0.1,0.4,branch);
+                float side =
+                sin(branch*18.0 + rand*20.0) *
+                smoothstep(0.02,0.0,thickness*1.8);
+                float crystal = trunk + side*0.5;
+                float subAngle = angle + rand2*2.0 - 1.0;
+                vec2 subDir = vec2(cos(subAngle),sin(subAngle));
+                float subBranch = dot(local,subDir);
+                float subThick = abs(dot(local,vec2(-subDir.y,subDir.x)));
+                float subCrystal =
+                smoothstep(0.02,0.0,subThick) *
+                smoothstep(0.0,0.35,subBranch);
+                crystal += subCrystal*0.6;
+                frost = max(frost,crystal*(1.0-float(i)*0.07));
+            }
+            frost *= growth;
+            float baseFill = texture(noisetex, frostUV * 0.3).r * 0.25 * growth;
+            frost = max(frost, baseFill);
+            frost = clamp(frost,0.0,1.0);
+            if(frost > 0.02)
+            {
+                hasFrost = true;
+                vec3 frostColor = mix(vec3(0.7,0.8,1.0), vec3(0.95,0.97,1.0), frost);
+                vec3 lighting = Direct_lighting + Indirect_lighting;
+                float sparkle = pow(max(0.0, dot(normalMat.xyz,vec3(0.0,1.0,0.0))),24.0);
+                vec3 final = frostColor*(lighting + sparkle*0.6);
+                FinalColor = mix(FinalColor, final, frost*0.85);
+                if(frost > 0.3) gl_FragData[0].a = min(gl_FragData[0].a, 0.95);    
+                gl_FragData[0].a = max(gl_FragData[0].a,frost*0.7);
+            }
+        }
+    }
+}
+#endif
+#endif
+
+#ifdef RAIN_ON_GLASS
+	#ifdef IS_LPV_ENABLED
+	if(rainStrength > 0.05 && !isSnowBiome){
+
+		vec3 _absNormal = abs(normalMatWorld);
+		if(_absNormal.y < 0.5) {
+			uint _glassID = imageLoad(imgVoxelMask, ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)))).r;
+			if((_glassID >= 301u && _glassID <= 317u) || _glassID == 516u) {
+				vec3 _worldNormal = normalMatWorld;
+				vec2 dropUV = worldPos.xz;
+				if(abs(_worldNormal.x) > 0.5) dropUV = worldPos.zy;
+				else if(abs(_worldNormal.z) > 0.5) dropUV = worldPos.xy;
+				else dropUV = worldPos.xz;
+				vec2 scaledUV = dropUV * 8.0;
+				vec2 cellID = floor(scaledUV);
+				vec2 cellUV = fract(scaledUV);
+				float rand  = fract(sin(dot(cellID, vec2(127.1, 311.7))) * 43758.5453);
+				float rand2 = fract(sin(dot(cellID, vec2(269.5, 183.3))) * 12345.6789);
+				float rand3 = fract(sin(dot(cellID, vec2(53.7, 251.3))) * 77777.7777);
+				if(rand3 < RAIN_DENSITY && lightmap.y > 0.78) {
+				float speed = RAIN_SPEED + rand * RAIN_SPEED_VARIANCE;
+					float timeOffset = rand2 * 10.0;
+					float dropX = rand;
+					float dropY = 1.0 - fract(frameTimeCounter * speed * 0.1 + timeOffset);
+					vec2 diff = cellUV - vec2(dropX, dropY);
+					diff.y *= (1.0 - RAIN_TRAIL);
+					float dist = length(diff);
+					float tipDist = abs(diff.x) + abs(diff.y + 0.04) * 0.5;
+					float tip = smoothstep(0.0, 0.06, diff.y + 0.04) * smoothstep(0.1, 0.0, tipDist);
+					float drop = max(smoothstep(RAIN_SIZE, 0.0, dist), tip);
+					drop *= rainStrength;
+					FinalColor += drop * RAIN_BRIGHTNESS * (Indirect_lighting + Direct_lighting);
+					gl_FragData[0].a = max(gl_FragData[0].a, drop * 0.7);
+				}
+			}
+		}
+	}
+	#endif
+	#endif
+
 
 	#if EMISSIVE_TYPE == 2 || EMISSIVE_TYPE == 3
 		Emission(FinalColor, Albedo, SpecularTex.b);
 	#endif
 
+#ifdef CUSTOM_NETHER_PORTAL
+if(isNetherPortal) {
+    float t = frameTimeCounter;
+
+    // --- Voxel-based Center Detection ---
+    ivec3 baseVoxel = ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)));
+    
+    // Initial bounds (current block center)
+    float minX = floor(worldPos.x) + 0.5, maxX = floor(worldPos.x) + 0.5;
+    float minY = floor(worldPos.y) + 0.5, maxY = floor(worldPos.y) + 0.5;
+    float minZ = floor(worldPos.z) + 0.5, maxZ = floor(worldPos.z) + 0.5;
+
+    bool facingZ = abs(normalMatWorld.z) > 0.5;
+    bool facingX = abs(normalMatWorld.x) > 0.5;
+
+    // Scan for edges (limit 21 blocks for vanilla portals)
+    if (facingZ) {
+        for(int i=1; i<=21; i++) {
+            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(i, 0, 0)).r == 337u) maxX = floor(worldPos.x) + i + 0.5;
+            else break;
+        }
+        for(int i=1; i<=21; i++) {
+            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(i, 0, 0)).r == 337u) minX = floor(worldPos.x) - i + 0.5;
+            else break;
+        }
+        for(int i=1; i<=21; i++) {
+            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(0, i, 0)).r == 337u) maxY = floor(worldPos.y) + i + 0.5;
+            else break;
+        }
+        for(int i=1; i<=21; i++) {
+            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(0, i, 0)).r == 337u) minY = floor(worldPos.y) - i + 0.5;
+            else break;
+        }
+    } else if (facingX) {
+        for(int i=1; i<=21; i++) {
+            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(0, 0, i)).r == 337u) maxZ = floor(worldPos.z) + i + 0.5;
+            else break;
+        }
+        for(int i=1; i<=21; i++) {
+            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(0, 0, i)).r == 337u) minZ = floor(worldPos.z) - i + 0.5;
+            else break;
+        }
+        for(int i=1; i<=21; i++) {
+            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(0, i, 0)).r == 337u) maxY = floor(worldPos.y) + i + 0.5;
+            else break;
+        }
+        for(int i=1; i<=21; i++) {
+            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(0, i, 0)).r == 337u) minY = floor(worldPos.y) - i + 0.5;
+            else break;
+        }
+    }
+
+    vec2 p;
+    float spread;
+    if (facingZ) {
+        vec2 portalCenter = vec2((minX + maxX) * 0.5, (minY + maxY) * 0.5);
+        p = worldPos.xy - portalCenter;
+        spread = max(maxX - minX, maxY - minY) * 0.5 + 0.5;
+    } else {
+        vec2 portalCenter = vec2((minZ + maxZ) * 0.5, (minY + maxY) * 0.5);
+        p = worldPos.zy - portalCenter;
+        spread = max(maxZ - minZ, maxY - minY) * 0.5 + 0.5;
+    }
+
+    float dist = length(p);
+    float angle = atan(p.y, p.x);
+
+    // Dynamic density: tighter for small portals, original for big ones
+    float twist = mix(4.5, 1.5, smoothstep(1.5, 4.0, spread));
+    angle += (t * 0.6) + (dist * twist);
+    vec2 polarP = vec2(cos(angle), sin(angle)) * dist;
+
+    float noiseDensity = mix(4.0, 2.0, smoothstep(1.5, 4.0, spread));
+    float noise = 0.5 + 0.5 * sin(polarP.x * noiseDensity + t) * cos(polarP.y * noiseDensity - t);
+    noise += 0.25 * sin(dist * (noiseDensity * 2.0) - t * 1.5);
+    noise = clamp(noise, 0.0, 1.0);
+
+    vec3 colorFondo  = vec3(0.002, 0.0, 0.005);
+    vec3 colorNebula = vec3(0.25, 0.0, 0.5);
+    vec3 colorBrillo = vec3(0.4, 0.0, 0.7);
+
+    float darkCenter = smoothstep(0.0, spread * 0.75, dist);
+
+    vec3 finalPortal = mix(colorFondo, colorNebula, noise * darkCenter);
+    finalPortal = mix(finalPortal, colorBrillo, (1.0 - noise) * 0.15 * darkCenter);
+	gl_FragData[0].a = max(gl_FragData[0].a, 0.98);
+
+    float stars = fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+    stars = smoothstep(0.997, 1.0, stars);
+    finalPortal += stars * 1.5 * darkCenter;
+
+    finalPortal *= 0.7;
+    FinalColor = mix(FinalColor, finalPortal, 0.98);
+}
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// SPECULAR LIGHTING /////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1103,8 +1435,9 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 		// detect if the specular texture is used, if it is, overwrite hardcoded values
 		if(SpecularTex.r > 0.0 && SpecularTex.g <= 1.0) specularValues = SpecularTex.rg;
-		
+
 		float f0 = isReflective ? max(specularValues.g, harcodedF0) : specularValues.g;
+		if(isPanelGlass) f0 = 0.1;
 		bool isHand = false;
 
 		#ifdef HAND
@@ -1115,7 +1448,10 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		float roughness = specularValues.r; 
 
 		if(UnchangedAlpha <= 0.0 && !isReflective) f0 = 0.0;
-
+		if(isPanelGlass) {
+			f0 = 0.1;
+			roughness = 0.0;
+		}
 		if (f0 > 0.0){
 			if(isReflective) f0 = max(f0, harcodedF0);
 			
@@ -1166,9 +1502,10 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		}
 	#endif
 
-	if(gl_FragData[0].a == 0.0) discard;
-
 	gl_FragData[1] = vec4(Albedo, MATERIALS);
+
+
+
 
 	#if DEBUG_VIEW == debug_DH_WATER_BLENDING
 		if(gl_FragCoord.x*texelSize.x < 0.47) gl_FragData[0] = vec4(0.0);
@@ -1184,19 +1521,17 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		gl_FragData[0].rgb = Direct_lighting * 0.1;
 	#endif
 
-	gl_FragData[3] = vec4(1, 1, encodeVec2(lightmap.x, lightmap.y), 1);
+	float weatherMask = 1.0;
+	if (MATERIALS > 0.05 && MATERIALS < 0.9) weatherMask = 0.0; // Mark translucents as 'non-solid' for rain occlusion
+	gl_FragData[3] = vec4(weatherMask, 1, encodeVec2(lightmap.x, lightmap.y), 1);
 
 	#if defined ENTITIES && defined IS_IRIS && !defined COLORWHEEL
 		if(NAMETAG > 0) {
-			//  WHY DO THEY HAVE TO AHVE LIGHTING AAAAAAUGHAUHGUAHG
 			#ifndef OVERWORLD_SHADER
 				lightmap.y = 0.0;
 			#endif
-			
 			vec3 nameTagLighting = Albedo.rgb * max(max(lightmap.y*lightmap.y*lightmap.y , lightmap.x*lightmap.x*lightmap.x), 0.025);
-			
-			// in vanilla they have a special blending mode/no blending, or something. i cannot change the buffer blend mode without changing the rest of the entities :/
-			gl_FragData[0] = vec4(nameTagLighting.rgb * 0.1, UnchangedAlpha  * 0.75);
+			gl_FragData[0] = vec4(nameTagLighting.rgb * 0.1, UnchangedAlpha * 0.75);
 		}
 	#endif
 }

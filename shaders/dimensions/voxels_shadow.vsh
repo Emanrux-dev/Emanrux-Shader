@@ -52,12 +52,14 @@ vec4 toClipSpace3(vec3 viewSpacePosition) {
 void main() {
 	color = gl_Color.rgb;
 	
-	worldPos = vec3(0.0);
-	cageNormal = gl_Normal;
-	
-	gl_Position = vec4(-1.0);
+	#ifdef NETHER_SHADER
+		worldPos = vec3(0.0);
+		cageNormal = vec3(0.0);
+		
+		gl_Position = vec4(-1.0);
+	#else
+		cageNormal = gl_Normal;
 
-	#if defined OVERWORLD_SHADER
 		vec3 position = mat3(gl_ModelViewMatrix) * vec3(gl_Vertex) + gl_ModelViewMatrix[3].xyz;
 
 		worldPos = mat3(shadowModelViewInverse) * position + shadowModelViewInverse[3].xyz;
@@ -74,19 +76,6 @@ void main() {
 			gl_Position = toClipSpace3(position);
 		#endif
 		
-		gl_Position.z /= 6.0;
-
-	#elif defined END_SHADER && defined END_ISLAND_LIGHT
-		vec3 shadowViewPos = mat3(gl_ModelViewMatrix) * vec3(gl_Vertex) + gl_ModelViewMatrix[3].xyz;
-		worldPos = mat3(shadowModelViewInverse) * shadowViewPos + shadowModelViewInverse[3].xyz;
-
-		#ifdef PLANET_CURVATURE
-			float curvature = length(worldPos.xz) / (16*8);
-			worldPos.y -= curvature*curvature * CURVATURE_AMOUNT;
-		#endif
-
-		gl_Position = customShadowPerspectiveSSBO * customShadowMatrixSSBO * vec4(worldPos, 1.0);
-	
 		gl_Position.z /= 6.0;
 	#endif
 }

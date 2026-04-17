@@ -493,8 +493,17 @@ void main() {
 
         if (blockId == BLOCK_CRYING_OBSIDIAN) {
             lightColor = vec3(0.390, 0.065, 0.646);
-            lightRange = 10.0;
+            lightRange = 15.0;
         }
+	///////////////////////////////////////////////////////////
+/////////////////////////////EMANRUX/////////////////////////////////////////
+	////////////////////////////////////////////////////////////
+#ifdef EXTRA_BLOCK_LIGHTS
+if (blockId == 513u) {
+    lightColor = vec3(0.95, 0.1, 0.05);
+    lightRange = 8.0;
+}
+/////////////////////////////&&&&&&&/////////////////////////////////////////
 
         if (blockId == BLOCK_END_GATEWAY) {
             lightColor = vec3(1.0);
@@ -1218,5 +1227,7 @@ void main() {
         tintColorMask |= mixMask << 24;
 
         imageStore(imgBlockData, blockId, uvec4(lightColorRange, tintColorMask, 0u, 0u));
+
+
     #endif
 }

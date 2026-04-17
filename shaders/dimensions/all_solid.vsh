@@ -463,7 +463,7 @@ void main() {
 		YearCycleColor(data_out.color.rgb, gl_Color.rgb, mc_Entity.x == BLOCK_AIR_WAVING, true);
 	#endif
 
-	#if DOF_QUALITY == 5 && ((defined SHADER_GRASS && (defined ENTITIES || defined HAND || defined CUTOUT || defined BLOCKENTITIES)) || !defined SHADER_GRASS)
+	#if DOF_QUALITY == 5 && ((defined SHADER_GRASS && (defined ENTITIES || defined HAND || defined CUTOUT || defined BLOCKENTIIES)) || !defined SHADER_GRASS)
 		vec2 jitter = clamp(jitter_offsets[frameCounter % 64], -1.0, 1.0);
 		jitter = rotate(radians(float(frameCounter))) * jitter;
 		jitter.y *= aspectRatio;

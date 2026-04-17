@@ -25,15 +25,17 @@ const bool colortex5MipmapEnabled = true;
 uniform float nightVision;
 uniform float frameTimeCounter;
 uniform float rainStrength;
+uniform float sunElevation;
 #define PHOTONICS_LIGHT_PASS
 
 #if defined OVERWORLD_SHADER || (defined END_ISLAND_LIGHT && defined END_SHADER)
 	const bool shadowHardwareFiltering = true;
-	uniform sampler2DShadow shadowtex0HW;
+	uniform sampler2DShadow shadow;
 
 	#ifdef TRANSLUCENT_COLORED_SHADOWS
 		uniform sampler2D shadowcolor0;
-		uniform sampler2DShadow shadowtex1HW;
+		uniform sampler2DShadow shadowtex0;
+		uniform sampler2DShadow shadowtex1;
 	#endif
 
 	#if ShaderSnow > 0
@@ -117,8 +119,6 @@ uniform sampler2D colortex12;
 uniform sampler2D colortex13;
 uniform sampler2D colortex14;
 uniform sampler2D colortex15;
-uniform sampler2D colortex17;
-uniform sampler2D colortex18;
 
 in DATA {
 	flat vec2 TAA_Offset;
@@ -131,9 +131,10 @@ in DATA {
 };
 
 
-uniform float sunElevation;
 
-#if defined IS_LPV_ENABLED || defined PHOTONICS
+// uniform float sunElevation; (Moved up)
+
+#if defined IS_LPV_ENABLED || defined PHOTONICS && defined PHOTONICS && !defined PH_ENABLE_HANDHELD_LIGHT
 	uniform usampler1D texBlockData;
 	uniform sampler3D texLpv1;
 	uniform sampler3D texLpv2;
@@ -169,13 +170,14 @@ uniform vec3 sunVec;
 #define VOXEL_REFLECTIONS_SOLID
 
 #ifdef VOXEL_REFLECTIONS_SOLID
-	#define VOXEL_REFLECTIONS
 #endif
 
 #ifdef PHOTONICS
-	#define PHOTONICS_INCLUDED
+	#ifdef VOXEL_REFLECTIONS
+		#define PHOTONICS_INCLUDED
 
-	#include "/photonics/photonics.glsl"
+		#include "/photonics/photonics.glsl"
+	#endif
 #endif
 
 
@@ -240,10 +242,6 @@ float convertHandDepth_2(in float depth, bool hand) {
 #ifdef DEFERRED_BACKGROUND_REFLECTION
 #endif
 #ifdef DEFERRED_ROUGH_REFLECTION
-#endif
-
-#ifndef DEFERRED_ROUGH_REFLECTION
-	#undef DENOISED_REFLECTIONS
 #endif
 
 #define MAIN_SHADOW_PASS
@@ -750,8 +748,8 @@ vec3 ComputeShadowMap_COLOR(in vec3 projectedShadowPosition, float distortFactor
 	#endif
 
 	#ifdef TRANSLUCENT_COLORED_SHADOWS
-		float opaqueShadow = texture(shadowtex0HW, projectedShadowPosition).x;
-		float opaqueShadowT = texture(shadowtex1HW, projectedShadowPosition).x;
+		float opaqueShadow = texture(shadowtex0, projectedShadowPosition).x;
+		float opaqueShadowT = texture(shadowtex1, projectedShadowPosition).x;
 		vec4 translucentShadow = texture(shadowcolor0, projectedShadowPosition.xy);
 
 		float shadowAlpha = pow(1.0-pow(1.0-translucentShadow.a,2.0),5.0);
@@ -764,8 +762,8 @@ vec3 ComputeShadowMap_COLOR(in vec3 projectedShadowPosition, float distortFactor
 		translucentTint += mix(translucentShadow.rgb, vec3(1.0), max(opaqueShadow, backface * (shadowAlpha < 1.0 ? 0.0 : 1.0)));
 		FUNNYSHADOW += ((1.0-shadowAlpha) * opaqueShadowT)/samples;
 	#else
-		// shadowColor += directLightColor * texture(shadowtex0HW, projectedShadowPosition).x;
-		shadowColor += vec3(1.0) * texture(shadowtex0HW, projectedShadowPosition).x;
+		// shadowColor += directLightColor * texture(shadow, projectedShadowPosition).x;
+		shadowColor += vec3(1.0) * texture(shadow, projectedShadowPosition).x;
 	#endif
 
 
@@ -774,7 +772,7 @@ vec3 ComputeShadowMap_COLOR(in vec3 projectedShadowPosition, float distortFactor
 	#endif
 
 	#if DEBUG_VIEW == debug_SHADOWMAP
-		shadowDebug = texture(shadowtex0HW, projectedShadowPosition).x;
+		shadowDebug = texture(shadow, projectedShadowPosition).x;
 	#endif
 	// #ifdef TRANSLUCENT_COLORED_SHADOWS
 	// 	// directLightColor *= mix(vec3(1.0), translucentTint.rgb / samples, maxDistFade);
@@ -918,7 +916,7 @@ uniform float wetness;
 							vec3 ripple = ripples(1.2 * worldPos.xz);
 							
 							ripple = ripple.xzy;
-							rippleNormal = mix(flatNormals, ripple, smoothstep(35., 10., viewDist) * rainStrength * smoothstep(0.0, 1.0, rippleAmount));
+							rippleNormal = mix(flatNormals, ripple, clamp((1.0 - smoothstep(10.0, 35.0, viewDist)) * rainStrength * smoothstep(0.0, 1.0, rippleAmount) * 3.0, 0.0, 1.0));
 						}
 
 						normals = mix(normals, rippleNormal, wetnessStages * clamp(flatNormals.y,0.0,1.0));
@@ -972,30 +970,8 @@ uniform float wetness;
 	}
 #endif
 
-//encoding by jodie
-float encodeVec2(vec2 a){
-    const vec2 constant1 = vec2( 1., 256.) / 65535.;
-    vec2 temp = floor( a * 255. );
-	return temp.x*constant1.x+temp.y*constant1.y;
-}
-float encodeVec2(float x,float y){
-    return encodeVec2(vec2(x,y));
-}
-
-vec2 encodeNormal(vec3 n){
-	n.xy = n.xy / dot(abs(n), vec3(1.0));
-	n.xy = n.z <= 0.0 ? (1.0 - abs(n.yx)) * sign(n.xy) : n.xy;
-    vec2 encn = clamp(n.xy * 0.5 + 0.5,-1.0,1.0);
-	
-    return encn;
-}
-
 void main() {
-		#if defined DEFERRED_SPECULAR && defined DENOISED_REFLECTIONS
-		gl_FragData[1] = vec4(0.0);
-		gl_FragData[2] = vec4(0.0);
-		gl_FragData[3] = vec4(0.0);
-		#endif
+
 		vec3 DEBUG = vec3(1.0);
 
 	////// --------------- SETUP STUFF --------------- //////
@@ -1139,7 +1115,7 @@ void main() {
 			const float POM_DEEPNESS = 0.0;
 		#endif
 		// bool handwater = abs(translucentMasks-0.3) < 0.01 ;
-		bool opaqueParticles = abs(opaqueMasks-0.85) <0.01;
+		// bool blocklights = abs(opaqueMasks-0.8) <0.01;
 
 		if(hand){
 			convertHandDepth(z);
@@ -1339,10 +1315,6 @@ void main() {
 
 		// NdotL = 1;
 		float flatNormNdotL = clamp((-15 + dot((FlatNormals), WsunVec)*255.0) / 240.0  ,0.0,1.0);
-		if(opaqueParticles) {
-			flatNormNdotL = mix(0.5, 1.0, flatNormNdotL);
-			NdotL = mix(0.5, 1.0, NdotL);
-		}
 		
 	////////////////////////////////	SHADOWMAP		////////////////////////////////
 		// setup shadow projection
@@ -1445,7 +1417,7 @@ void main() {
 					SS_directLight.r = mix(1.0, SS_directLight.r, 1.0-shadowMapFalloff);
 				#endif
 
-				if(!opaqueParticles) shadowColor *= SS_directLight.r;			
+				shadowColor *= SS_directLight.r;			
 			#else
 				vec2 SS_directLight = vec2(1,0);
 				ShadowBlockerDepth = max(ShadowBlockerDepth, (1.0-shadowMapFalloff2) * 10.0);
@@ -1706,17 +1678,8 @@ void main() {
 			vec2 specularNoises = vec2(blueNoise(), ig_noise);
     		vec3 specularNormal = normal;
 			if (dot(normal, (feetPlayerPos_normalized)) > 0.0) specularNormal = FlatNormals;
-
-			vec4 reflections = vec4(0.0,0.0,0.0,1.0);
-			float SunReflectionAlpha = 0.0;
 			
-			FINAL_COLOR = specularReflections(viewPos, feetPlayerPos, feetPlayerPos_normalized, WsunVec, specularNoises, FlatNormals, specularNormal, SpecularTex.r, SpecularTex.g, albedo, FINAL_COLOR, DirectLightColor*shadowColor*shadowColor, lightmap.y, hand, reflections, SunReflectionAlpha, isShaderGrass, flashLightSpecularData);
-
-			#if defined DEFERRED_SPECULAR && defined DENOISED_REFLECTIONS
-			gl_FragData[1] = reflections;
-			gl_FragData[2].rgb = DirectLightColor*shadowColor*shadowColor*SunReflectionAlpha;
-			gl_FragData[3] = vec4(encodeNormal(specularNormal), SpecularTex.r, SpecularTex.g);
-			#endif
+			FINAL_COLOR = specularReflections(viewPos, feetPlayerPos, feetPlayerPos_normalized, WsunVec, specularNoises, FlatNormals, specularNormal, SpecularTex.r, SpecularTex.g, albedo, FINAL_COLOR, DirectLightColor*shadowColor*shadowColor, lightmap.y, hand, flashLightSpecularData);
 		#endif
 
 		gl_FragData[0].rgb = FINAL_COLOR;
@@ -1925,9 +1888,5 @@ void main() {
 		// }
 	#endif
 
-	#if defined DEFERRED_SPECULAR && defined DENOISED_REFLECTIONS
-	/* RENDERTARGETS:3,0,15,8 */
-	#else
 	/* RENDERTARGETS:3 */
-	#endif
 }

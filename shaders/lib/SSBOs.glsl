@@ -1,10 +1,6 @@
 layout(std430, binding = 4) buffer SSBO1 {
     mat4 customShadowMatrixSSBO; // 64 bytes
 
-    #ifdef PHOTONICS
-    mat4 customShadowMatrixInverseSSBO;
-    #endif
-
     vec3 customMoonVecSSBO; // 12 bytes
 
     vec3 customMoonVec2SSBO; // 12 bytes

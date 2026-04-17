@@ -364,6 +364,7 @@ layout(location = 1) out vec4 OutSpecular;
 
 void main() {
 	vec3 FragCoord = gl_FragCoord.xyz;
+        float emissiveMask = 0.0;
 
 	#ifdef HAND
 		convertHandDepth(FragCoord.z);
@@ -382,25 +383,25 @@ void main() {
 		bool ShaderGrass = false;
 	#endif
 
-	bool SIGN = data_in.blockID == BLOCK_SIGN;
-
+	// OPT: removed redundant pre-init; declared directly in each branch
 	#ifdef ENTITIES
 		// disallow POM to work on item frames.
-		SIGN = data_in.blockID == ENTITY_ITEM_FRAME;
+		bool SIGN = data_in.blockID == ENTITY_ITEM_FRAME;
 	#else
-		SIGN = data_in.blockID == BLOCK_SIGN;
+		bool SIGN = data_in.blockID == BLOCK_SIGN;
 	#endif
 
 	if(SIGN) ifPOM = false;
-
 	vec3 normal = data_in.normalMat;
-
-	#ifdef MC_NORMAL_MAP
-		vec3 binormal = normalize(cross(data_in.tangent.rgb,normal)*data_in.tangent.w);
-		mat3 tbnMatrix = mat3(data_in.tangent.x, binormal.x, normal.x,
-							  data_in.tangent.y, binormal.y, normal.y,
-							  data_in.tangent.z, binormal.z, normal.z);
-	#endif
+#ifdef MC_NORMAL_MAP
+    vec3 tangent = data_in.tangent.xyz;
+    vec3 binormal = normalize(cross(tangent, normal) * data_in.tangent.w);
+    mat3 tbnMatrix = mat3(
+        tangent.x, binormal.x, normal.x,
+        tangent.y, binormal.y, normal.y,
+        tangent.z, binormal.z, normal.z
+    );
+#endif
 
 	float BN = blueNoise();
 	float R2 = R2_dither();
@@ -412,7 +413,11 @@ void main() {
 	vec3 worldpos = playerpos + cameraPosition;
 
 	vec2 adjustedTexCoord = data_in.lmtexcoord.xy;
+	// OPT: removed duplicate emissiveMask = 0.0 (already initialized above)
 
+#if defined(MC_NORMAL_MAP)
+    emissiveMask = 1.0 - texture(normals, adjustedTexCoord).a;
+#endif
 	float saveDepth = 0.0;
 #if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	// vec2 tempOffset=offsets[framemod8];
@@ -445,34 +450,35 @@ void main() {
 	 if (falloff > 0.0)
 	#endif
 	{
-		float depthmap = readNormal(data_in.texcoord.st).a;
+		float depthmap;
+
+if(data_in.blockID == 508 || data_in.blockID == 515) {
+    vec4 albedoSample = readTexture(data_in.texcoord.st);
+    float lum = dot(albedoSample.rgb, vec3(0.299, 0.587, 0.114));
+    depthmap = (data_in.blockID == 515) ? 1.0 - lum : lum;
+} else {
+    depthmap = readNormal(data_in.texcoord.st).a;
+}
 		float pomdepth = POM_DEPTH * falloff;
+		if(data_in.blockID == 515) pomdepth *= 0.9;
 
- 		if ( viewVector.z < 0.0 && depthmap < 0.9999 && depthmap > 0.00001) {	
-			float noise = BN;
-			#ifdef Adaptive_Step_length
-				depthmap = clamp(1.0 - depthmap * depthmap, 0.1, 1.0);
-				vec3 interval = (viewVector.xyz / -viewVector.z * MAX_OCCLUSION_POINTS_DIV * pomdepth) * depthmap;
-			#else
-				vec3 interval = viewVector.xyz /-viewVector.z * MAX_OCCLUSION_POINTS_DIV * pomdepth;
-			#endif
-			vec3 coord = vec3(data_in.texcoord.st , 1.0);
-
-			coord += interval * noise;
-
-			float sumVec = noise;
-			for (int loopCount = 0; (loopCount < MAX_OCCLUSION_POINTS) && (1.0 - pomdepth + pomdepth * readNormal(coord.st).a) < coord.p && coord.p >= 0.0; ++loopCount) {
-				coord = coord + interval; 
-				sumVec += 1.0; 
-			}
-
-			#if defined POM_OFFSET_SHADOW_BIAS
-				#ifdef Adaptive_Step_length
-					saveDepth += clamp(MAX_OCCLUSION_POINTS_DIV * depthmap-0.0001, 0.0, 1.0);
-				#else
-					saveDepth += clamp(MAX_OCCLUSION_POINTS_DIV-0.0001, 0.0, 1.0);
-				#endif
-			#endif
+if ( viewVector.z < 0.0 && depthmap < 0.9999 && depthmap > 0.00001) {	
+    float noise = BN;
+    #ifdef Adaptive_Step_length
+        depthmap = clamp(1.0 - depthmap * depthmap, 0.1, 1.0);
+        vec3 interval = (viewVector.xyz / -viewVector.z * MAX_OCCLUSION_POINTS_DIV * pomdepth) * depthmap;
+    #else
+        vec3 interval = viewVector.xyz /-viewVector.z * MAX_OCCLUSION_POINTS_DIV * pomdepth;
+    #endif
+    vec3 coord = vec3(data_in.texcoord.st , 1.0);
+    coord += interval * noise;
+    float sumVec = noise;
+    // OPT: hoist constant blockID check outside the loop
+    bool isLumBlock = (data_in.blockID == 508 || data_in.blockID == 515);
+    for (int loopCount = 0; (loopCount < MAX_OCCLUSION_POINTS) && (1.0 - pomdepth + pomdepth * (isLumBlock ? (1.0 - dot(readTexture(coord.st).rgb, vec3(0.299, 0.587, 0.114))) : readNormal(coord.st).a)) < coord.p && coord.p >= 0.0 && coord.s >= 0.0 && coord.s <= 1.0 && coord.t >= 0.0 && coord.t <= 1.0; ++loopCount) {
+        coord = coord + interval; 
+        sumVec += 1.0; 
+    }
 	
 			if (coord.t < mincoord) {
 				if (readTexture(vec2(coord.s,mincoord)).a == 0.0) {
@@ -480,9 +486,8 @@ void main() {
 					discard;
 				}
 			}
-			
-			adjustedTexCoord = mix(fract(coord.st)*data_in.texcoordam.pq+data_in.texcoordam.st, adjustedTexCoord, max(dist-MIX_OCCLUSION_DISTANCE,0.0)/(MAX_OCCLUSION_DISTANCE-MIX_OCCLUSION_DISTANCE));
-
+			vec2 clampedCoord = clamp(coord.st, 0.0, 1.0);
+adjustedTexCoord = mix(fract(clampedCoord)*data_in.texcoordam.pq+data_in.texcoordam.st, adjustedTexCoord, max(dist-MIX_OCCLUSION_DISTANCE,0.0)/(MAX_OCCLUSION_DISTANCE-MIX_OCCLUSION_DISTANCE));
 			#if defined DEPTH_WRITE_POM
 				vec3 truePos = fragpos + sumVec*inverseMatrix(tbnMatrix)*interval;
 				gl_FragDepth = toClipSpace3(truePos).z;
@@ -566,8 +571,12 @@ void main() {
 
 			if(step(ditherFade, R2) == 0.0) discard;
 	#endif
-	
-	if(Albedo.a < alphaTestRef) discard;
+
+	#ifdef CUTOUT
+		if (Albedo.a < 0.5) discard;
+	#else
+		if (Albedo.a < 0.01) discard;
+	#endif
 	
 	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
 		#ifdef TAA
@@ -615,7 +624,7 @@ void main() {
 		#endif
 	#endif
 	
-	#if defined WORLD && !defined ENTITIES && !defined HAND && defined BLOCKENTITIES && !defined COLORWHEEL && !defined CUTOUT
+	#if defined WORLD && !defined ENTITIES && !defined HAND && defined BLOCKENTITIES && !defined COLORWHEEL
 		bool PORTAL = data_in.blockID == BLOCK_END_PORTAL || data_in.blockID == 187;
 
 		float endPortalEmission = 0.0;
@@ -673,7 +682,9 @@ void main() {
 			
 		}
 	#endif
-	
+		if(data_in.blockID == 199) {
+			Albedo.rgb = mix(Albedo.rgb, vec3(0.8, 0.05, 0.0), 0.4);
+		}
 	#ifdef WhiteWorld
 		Albedo.rgb = vec3(0.5);
 	#endif
@@ -739,7 +750,7 @@ void main() {
 		#endif
 		{
 			vec4 NormalTex = texture_POMSwitch(normals, adjustedTexCoord.xy, vec4(dcdx,dcdy), ifPOM,textureLOD).xyzw;
-			
+			emissiveMask = 1.0 - NormalTex.w;
 			#if defined MATERIAL_AO && defined MC_TEXTURE_FORMAT_LAB_PBR
 				Albedo.rgb *= NormalTex.b*0.5+0.5;
 			#endif
@@ -799,9 +810,7 @@ void main() {
 					#endif
 				) {
 					SSSAMOUNT = 0.5;
-				} else if(data_in.blockID == GRASS_BLOCK_SNOWY) {
-					SSSAMOUNT = 0.5 * smoothstep(0.0, 1.0, fract(worldpos.y));
-				}
+				} 
 				#if defined CUTOUT
 					else if (data_in.blockID == -BLOCK_GRASS) {
 						SSSAMOUNT = 0.3;
@@ -830,47 +839,79 @@ void main() {
 			/////// ----- EMISSIVE STUFF ----- ///////
 			float EMISSIVE = 0.0;
 
-			// if(vNameTags > 0) EMISSIVE = 0.9;
-
 			// normal block lightsources
-			if(data_in.blockID >= 100 && data_in.blockID < 282) {
-				EMISSIVE = 0.5;
-
+			if(data_in.blockID == 513 || data_in.blockID == 514 || (data_in.blockID >= 100 && data_in.blockID < 282)) {
+   			if(data_in.blockID != 513 && data_in.blockID != 514) EMISSIVE = 0.5;
+				if(data_in.blockID == 199) EMISSIVE = 1;
 				if(data_in.blockID == 266 || (data_in.blockID >= 276 && data_in.blockID <= 281)) EMISSIVE = 0.2; // sculk stuff
-
 				else if(data_in.blockID == 195) EMISSIVE = 2.3; // glow lichen
-
-				else if(data_in.blockID == 185) EMISSIVE = 1.5; // crying obsidian
-
+				else if(data_in.blockID == 185) EMISSIVE = 1.0; // crying obsidian
 				else if(data_in.blockID == 105) EMISSIVE = 2.0; // brewing stand
-				
 				else if(data_in.blockID == 236) EMISSIVE = 1.0; // respawn anchor
-
 				else if(data_in.blockID == 101) EMISSIVE = 0.7; // large amethyst bud
-
 				else if(data_in.blockID == 103) EMISSIVE = 1.0; // amethyst cluster
-
+			     // else if(data_in.blockID == 514) EMISSIVE = 4.0; // Nether Wood
 				else if(data_in.blockID == 244) EMISSIVE = 1.5; // soul fire
-			}
+			       #ifdef EXTRA_EMISSIVE_BLOCKS
+			       if(data_in.blockID == 513) EMISSIVE = 2.5; // Redstone_block
+			       if(data_in.blockID == 514) EMISSIVE = 4.0; // Nether Wood
+			       if(data_in.blockID == 185) EMISSIVE = 1.5; // Crying Obsidian
+			       #endif
+}			       
 
-			#if EMISSIVE_ORES > 0
-				if(data_in.blockID == 502) {
-					EMISSIVE = EMISSIVE_ORES_STRENGTH;
+#ifdef BRIGHT_ORES
+    if(data_in.blockID == 502 || data_in.blockID == 520 || data_in.blockID == 519 || data_in.blockID == 506 || data_in.blockID == 507 || data_in.blockID == 521 || data_in.blockID == 522) {
+        
+        if(data_in.blockID == 502) {
+            float brightness = dot(Albedo.rgb, vec3(0.299, 0.587, 0.114));
+            vec3 hsv = RgbToHsv(Albedo.rgb);
+            float saturationMask = smoothstep(0.25, 0.6, hsv.y);
+            float brightnessMask = smoothstep(0.15, 0.45, brightness);
+            EMISSIVE = saturationMask * brightnessMask * 1.8;
+        } else if(data_in.blockID == 520) {
+            float brightness = dot(Albedo.rgb, vec3(0.299, 0.587, 0.114));
+            vec3 hsv = RgbToHsv(Albedo.rgb);
+            float saturationMask = smoothstep(0.15, 0.5, hsv.y);
+            float brightnessMask = smoothstep(0.08, 0.35, brightness);
+            EMISSIVE = saturationMask * brightnessMask * 2.40;
+        } else if(data_in.blockID == 506) {
+            float brightness = dot(Albedo.rgb, vec3(0.299, 0.587, 0.114));
+            float coalMask = smoothstep(0.30, 0.05, brightness);
+            
+            EMISSIVE = coalMask * 0.9;
+        } else if(data_in.blockID == 507) {
+            float brightness = dot(Albedo.rgb, vec3(0.299, 0.587, 0.114));
+            float coalMask = smoothstep(0.24, 0.04, brightness);
+            
+            EMISSIVE = coalMask * 0.7;
+        } else if(data_in.blockID == 519) {
+            float brightness = dot(Albedo.rgb, vec3(0.299, 0.587, 0.114));
+            float mask = smoothstep(0.3, 1.2, brightness);
+            EMISSIVE = mask * 1.20;
+        } else if(data_in.blockID == 521 || data_in.blockID == 522) {
+            float brightness = dot(Albedo.rgb, vec3(0.299, 0.587, 0.114));
+            vec3 hsv = RgbToHsv(Albedo.rgb);
+            float ironMask = smoothstep(0.12, 0.5, hsv.y) * smoothstep(0.3, 0.7, brightness);
+            if (ironMask > 0.01) {
+                Albedo.rgb = mix(Albedo.rgb, vec3(1.1, 1.1, 1.2) * brightness, ironMask * 0.9);
+                EMISSIVE = ironMask * 10.0;
+            } else {
+                EMISSIVE = 0.0;
+            }
+        } else {
+            EMISSIVE = EMISSIVE_ORES_STRENGTH * getEmission(Albedo.rgb);
+        }
+    }
+#endif
 
-					#ifndef HARDCODED_EMISSIVES_APPROX
-						EMISSIVE *= getEmission(Albedo.rgb);
-					#endif
-				}
-			#endif
+
 
 			#if EMISSIVE_TRIMS > 0
-				if(isTrim) EMISSIVE = EMISSIVE_TRIMS_STRENGTH*getTrimEmission(Albedo.rgb);
-
+				if(isTrim) EMISSIVE = EMISSIVE_TRIMS_STRENGTH * getTrimEmission(Albedo.rgb);
 				if(isBrightTrim) EMISSIVE *= 0.4;
 			#endif
+
 		#endif
-
-
 		vec4 SpecularTex = vec4(0.0);
 		#if !defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT
 		if (ShaderGrass) {
@@ -905,25 +946,42 @@ void main() {
 		bool emissionCheck = SpecularTex.a <= 0.0;
 		#endif
 
-		#ifdef MIRROR_IRON
-		if(data_in.blockID == 504 || currentRenderedItemId == 504) {
-			OutSpecular.rg = vec2(1.0, 1.0);
-			Albedo.rgb = vec3(1.0);
-			// normal = flatNormals;
-		}
-		#endif
+		//#ifdef MIRROR_IRON
+		//if(data_in.blockID == 504 || currentRenderedItemId == 504) {
+		//	OutSpecular.rg = vec2(0.9, 2);
+		//	Albedo.rgb = vec3(1.0);
+		//	// normal = flatNormals;
+		//}
+// Quartz/Stairs
+if(data_in.blockID == 509 || data_in.blockID == 510 || data_in.blockID == 79) {
+    OutSpecular.r = 1.2;
+    OutSpecular.g = 0.8;
+}		
+// Mineral Blocks
+if(data_in.blockID == 511) {
+    OutSpecular.r = 1;
+    OutSpecular.g = 0.3;
+}
+// Purpur Blocks
+if(data_in.blockID == 517) {
+    OutSpecular.r = 1;
+    OutSpecular.g = 0.3;
+}
+// Copper Blocks
+if(data_in.blockID == 512) {
+    OutSpecular.r = 0.4;
+    OutSpecular.g = 0.1;
+}
+// Iron Block
+if(data_in.blockID == 504) {
+    OutSpecular.r = 1;
+    OutSpecular.g = 0.8;
+}
+// Glass Pane
 
-		#if defined HARDCODED_EMISSIVES_APPROX && (EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2)
-			#if EMISSIVE_TYPE == 2 && EMISSIVE_TRIMS > 0
-			if(emissionCheck && !isTrim)
-			#elif EMISSIVE_TRIMS > 0
-			if(!isTrim)
-			#elif EMISSIVE_TYPE == 2
-			if(emissionCheck)
-			#endif
-			{
+if(data_in.blockID != 506 && data_in.blockID != 507 && data_in.blockID != 502 && data_in.blockID != 199) {
 			EMISSIVE *= getEmission(Albedo.rgb);
-			}
+		}
 		#endif
 
 		#if EMISSIVE_TYPE == 0
@@ -975,6 +1033,33 @@ void main() {
 	#ifdef COLORWHEEL
 		Albedo.rgb = mix(Albedo.rgb, overlayColor.rgb, overlayColor.a);
 	#endif
+
+//////////////////////////////// EMANRUX ////////////////////////////////
+
+#ifdef CUSTOM_REFLECTIONS
+if(data_in.blockID == 509 || data_in.blockID == 510 || data_in.blockID == 79 || data_in.blockID == 517) {
+    OutSpecular.r = 1.2;
+    OutSpecular.g = 0.2;
+}
+if(data_in.blockID == 511) {
+    OutSpecular.r = 1.0;
+    OutSpecular.g = 0.3;
+}
+if(data_in.blockID == 504) {
+    OutSpecular.r = 1.0;
+    OutSpecular.g = 0.8;
+}
+#else
+if(data_in.blockID == 509 || data_in.blockID == 516 || data_in.blockID == 517 || data_in.blockID == 510 || data_in.blockID == 511 || data_in.blockID == 79 || data_in.blockID == 504 || data_in.blockID == 512) {
+    OutSpecular.r = 0.0;
+    OutSpecular.g = 0.0;
+}
+#endif
+
+
+
+
+
 
 	//////////////////////////////// 				////////////////////////////////
 	////////////////////////////////	FINALIZE	////////////////////////////////

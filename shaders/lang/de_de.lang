@@ -1,0 +1,1356 @@
+option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Eine Eclipse-Bearbeitung
+    prefix.SHADER_VERSION_LABEL = V
+    value.SHADER_VERSION_LABEL.482 = 0.1.0-beta
+
+profile.POTATO=§4Kartoffel 
+profile.VERY_LOW=§cSehr Niedrig 
+profile.LOW=§aNiedrig 
+profile.MEDIUM=§2Mittel §6§l(Empfohlen)
+profile.ALTERNATE_MEDIUM=§2Mittel §7(Alternativer Stil)
+profile.HIGH=§bHoch §6§l(Empfohlen)
+profile.ALTERNATE_HIGH=§bHoch §7(Alternativer Stil)
+profile.HIGH_GRASS=§bHoch + Shader-Gras
+profile.ALTERNATE_HIGH_GRASS=§bHoch + Shader-Gras §7(Alt. Stil)
+profile.VERY_HIGH=§9Sehr Hoch
+profile.ULTRA=§dUltra
+profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lEMANRUX §6§lEINSTELLUNGEN §r§l«§4§l◆
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+screen.Emanrux_Settings=Emanrux-Einstellungen
+screen.POM_Settings=POM-Einstellungen
+screen.Emanrux_Configs=Emanrux-Konfigurationen
+option.CUSTOM_REFLECTIONS=BENUTZERDEFINIERTE REFLEXIONEN
+option.EXTRA_EMISSIVE_BLOCKS=EXTRA EMISSIVE BLÖCKE
+option.CONNECTED_GLASS=VERBUNDENES GLAS
+screen.Rain_on_Glass_Settings=Regen-auf-Glas-Einstellungen
+option.RAIN_ON_GLASS=REGEN AUF GLAS
+option.RAIN_SPEED=Regengeschwindigkeit
+option.RAIN_SPEED_VARIANCE=Varianz der Regengeschwindigkeit
+option.RAIN_DENSITY=Regendichte
+option.RAIN_TRAIL=Regentropfen-Spurlänge
+option.RAIN_SIZE=Regentropfengröße
+
+screen.Rain_on_Glass_Settings.comment=Aussehen und Verhalten der Regentropfen auf Glas konfigurieren
+screen.Emanrux_Configs.comment=Benutzerdefinierte Einstellungen von Emanrux 
+screen.POM_Settings.comment=Tiefe und Qualität des Parallax-Occlusion-Mappings konfigurieren
+
+option.CUSTOM_REFLECTIONS.comment=Aktiviert benutzerdefinierte bildschirmraumbasierte Reflexionen auf Oberflächen. §aLEISTUNGSKOSTEN: §emittel
+option.EXTRA_EMISSIVE_BLOCKS.comment=Fügt zusätzlichen emissiven Glanz zu weiteren Blocktypen hinzu. §aLEISTUNGSKOSTEN: §aniedrig
+option.CONNECTED_GLASS.comment=Aktiviert nahtlose verbundene Texturen auf Glasblöcken. §aLEISTUNGSKOSTEN: §aniedrig
+
+option.RAIN_ON_GLASS.comment=Aktiviert animierte Regentropfen auf Glasoberflächen. §eNur bei Regenwetter sichtbar. §aLEISTUNGSKOSTEN: §aniedrig
+option.RAIN_SPEED.comment=Steuert die Fallgeschwindigkeit der Regentropfen auf Glas. §7Höhere Werte lassen Tropfen schneller fallen. §aLEISTUNGSKOSTEN: §2keine
+option.RAIN_SPEED_VARIANCE.comment=Fügt jedem Tropfen individuelle Zufälligkeit hinzu. §7Höhere Werte erzeugen abwechslungsreichere Bewegungen. §aLEISTUNGSKOSTEN: §2keine
+option.RAIN_DENSITY.comment=Steuert die Anzahl der Regentropfen auf der Glasoberfläche. §7Höhere Werte erzeugen einen stärkeren Regeneffekt. §aLEISTUNGSKOSTEN: §aniedrig
+option.RAIN_TRAIL.comment=Länge der verblassenden Spur hinter jedem Regentropfen. §7Niedrigere Werte erzeugen kürzere, rundere Tropfen. §aLEISTUNGSKOSTEN: §2keine
+option.RAIN_SIZE.comment=Größe der einzelnen Regentropfen auf dem Glas. §7Kleinere Werte wirken realistischer. §aLEISTUNGSKOSTEN: §2keine
+
+screen.Frost_on_Glass_Settings=Frost-auf-Glas-Einstellungen
+option.FROST_ON_GLASS=FROST AUF GLAS
+option.FROST_ON_GLASS.comment=Aktiviert den Eiskristalleffekt auf Glasoberflächen während Schneefall. §aLEISTUNGSKOSTEN: §aniedrig
+
+option.EXTRA_BLOCK_LIGHTS=EXTRA BLOCKLICHTER
+option.EXTRA_BLOCK_LIGHTS.comment=Aktiviert echte LPV-Lichtemission von zusätzlichen Blöcken wie Redstoneblöcken. §aLEISTUNGSKOSTEN: §emittel
+
+option.CUSTOM_NETHER_PORTAL=BENUTZERDEFINIERTES NETHER-PORTAL
+option.CUSTOM_NETHER_PORTAL.comment=Fügt einen benutzerdefinierten animierten Wirbeleffekt zu Nether-Portalen hinzu. §aLEISTUNGSKOSTEN: §aniedrig
+
+option.BRIGHT_ORES=HELLERE ERZE
+option.BRIGHT_ORES.comment=Lässt Erze im Dunkeln intensiver leuchten (einschließlich Kohle). §aLEISTUNGSKOSTEN: §aniedrig
+
+option.GALAXY_SKY=GALAXIENHIMMEL
+option.GALAXY_SKY.comment=Fügt eine realistische Galaxie zum Nachthimmel hinzu. §aLEISTUNGSKOSTEN: §aniedrig
+
+option.CINEMATIC_MODE=Kinomodus
+option.CINEMATIC_MODE.comment=Fügt Letterbox-Balken, Entsättigung, Abdunklung und Vignette für einen kinematischen Look hinzu. §cLEISTUNGSKOSTEN: §aniedrig
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+option.OLD_LIGHTLEAK_FIX = Alter Lichtleck-Fix
+option.CAVE_DETECTION = Höhlenerkennung
+    value.CAVE_DETECTION.0 = AN
+    value.CAVE_DETECTION.1 = Y < 62.0
+    value.CAVE_DETECTION.2 = AUS
+option.sunPathRotation = Sonnenwinkel
+suffix.sunPathRotation = °
+option.sun_illuminance = Sonnenhelligkeit
+option.moon_illuminance = Mondhelligkeit
+option.MOONPHASE_BASED_MOONLIGHT = Mondphasenbasierte Helligkeitsstufen
+option.LIGHTLEAKFIX_MODE = "Lichtleck-Fix"-Modus
+    value.LIGHTLEAKFIX_MODE.0 = Keiner. §cSonnenlicht wird durch Wände dringen§r
+    value.LIGHTLEAKFIX_MODE.1 = Lückenfüllung/Zoom. §cMacht Schatten eckig§r
+    value.LIGHTLEAKFIX_MODE.2 = Himmelslichtmap-Werte verwenden. §cKein Sonnenlicht bei niedrigen Lichtkartenwerten§r
+
+option.colortype = Färbungsmodus
+    value.colortype.1 = RGB-Farbe (oben)
+        option.sunColorR = Sonnenfarbe: Rot
+        option.sunColorG = Sonnenfarbe: Grün
+        option.sunColorB = Sonnenfarbe: Blau
+        option.moonColorR = Mondfarbe: Rot
+        option.moonColorG = Mondfarbe: Grün
+        option.moonColorB = Mondfarbe: Blau
+
+    value.colortype.2 = Kelvin-Temperatur (unten)
+        option.Sun_temp = Sonnentemperatur
+        suffix.Sun_temp = K
+        option.Moon_temp = Mondtemperatur
+        suffix.Moon_temp = K
+screen.MoonOptions = Mondeinstellungen
+    option.SMOOTH_MOON_ROTATION = Gleichmäßige Mondbewegung
+screen.SunOptions = Sonneneinstellungen
+    option.SMOOTH_SUN_ROTATION = Gleichmäßige Sonnenbewegung
+screen.Smoothing_Settings = Glättungseinstellungen
+screen.SMOOTHING_DISCLAIMER = §c BEI VERWENDUNG EINES TAGESZEIT-ÄNDERUNGS-MODS: AUF DIE GLEICHEN WERTE WIE DER MOD SETZEN
+screen.SMOOTHING_DISCLAIMER2 = §c ANDERNFALLS NICHT ÄNDERN 
+screen.CUSTOM_MOON_SETTINGS = Benutzerdefinierte Mondeinstellungen
+    option.REALMOON = Realistische Mondtextur
+    option.MOON_NORMALS = Realistische Mondnormalen §c(erfordert benutzerdefinierte Mondrotation!)§r
+    option.CUSTOM_MOON_ROTATION = Benutzerdefinierte Mondrotation
+    option.CAELUM_SUPPORT = Caelum (ArdaCraft)-Unterstützung
+        option.CAELUM_SUPPORT.comment = §cERFORDERT BENUTZERDEFINIERTE MONDROTATION.§r Ändert das von Sonne/Mond ausgestrahlte Licht auf die von Caelum angegebene Position.
+    option.MOON_SIZE_SETTING = Mondgröße
+    option.MOON_LATITUDE = Breitengrad
+        suffix.MOON_LATITUDE = °
+    option.MONTH_LENGTH = Monatslänge
+        value.MONTH_LENGTH.6 = 6 Tage
+        value.MONTH_LENGTH.7 = 7 Tage
+        value.MONTH_LENGTH.8 = 8 Tage
+        value.MONTH_LENGTH.9 = 9 Tage
+        value.MONTH_LENGTH.10 = 10 Tage
+        value.MONTH_LENGTH.11 = 11 Tage
+        value.MONTH_LENGTH.12 = 12 Tage
+        value.MONTH_LENGTH.13 = 13 Tage
+        value.MONTH_LENGTH.14 = 14 Tage
+        value.MONTH_LENGTH.15 = 15 Tage
+        value.MONTH_LENGTH.16 = 16 Tage
+    option.EARTH_ROTATION_TILT = Erdrotationsneigung
+        suffix.EARTH_ROTATION_TILT = °
+    screen.CUSTOM_MOON_ROTATION_DISCLAIMER = §cDas Ändern der folgenden Werte kann Finsternisse verhindern!§r
+    screen.CUSTOM_MOON_ROTATION_DISCLAIMER2 = §cDas Ändern des Sonnenwinkels kann Finsternisse verhindern!§r
+    screen.CUSTOM_MOON_ROTATION_DISCLAIMER3 = §cEine Finsternis pro Spieljahr garantiert bei -35° und -45°!§r
+    option.MOON_TIME_OFFSET = Mondzeitversatz (Ticks)
+    option.CUSTOM_SHADOWS_QUALITY = Benutzerdefiniertes Schatten-Culling
+        value.CUSTOM_SHADOWS_QUALITY.0 = Aus
+        value.CUSTOM_SHADOWS_QUALITY.1 = Schnell
+        value.CUSTOM_SHADOWS_QUALITY.2 = Aufwendig
+        option.CUSTOM_SHADOWS_QUALITY.comment = Gibt das Culling benutzerdefinierter Lichtpositionen an (Mond, Blitz, Ende). Kann dazu führen, dass einige Schatten ausgeblendet werden, die es nicht sollten
+screen.EndLighting = Ende-Beleuchtung
+    option.END_ISLAND_LIGHT = Hauptlicht der Ende-Insel
+    option.Max_Filter_Depth_END = Lichtgrößenfaktor
+    option.Min_Shadow_Filter_Radius_END = Minimaler Schattenfilterradius
+
+option.STARS_AMOUNT = Sternenmenge
+option.STARS_BRIGHTNESS = Sternenhelligkeit
+screen.Misc_Settings = Sonstige Einstellungen
+screen.EXPERIMENTAL_STUFF = Experimentelles
+    value.MAX_COLORS_PER_CHANNEL.0 = Unbegrenzt
+
+screen.DEBUG_STUFF = §cDebug-Einstellungen§r
+screen.LEGACY_STUFF = Veraltete Einstellungen
+screen.Mod_support = Einstellungen für unterstützte Mods
+
+option.RESOURCEPACK_SKY = Ressourcenpaket-Himmel - §cWARNUNG:§r Beschreibung lesen!
+    value.RESOURCEPACK_SKY.0 = Nicht verwenden
+    value.RESOURCEPACK_SKY.1 = Himmel + Shader-Sonne/Mond
+    value.RESOURCEPACK_SKY.2 = Vollständiger Himmel
+    value.RESOURCEPACK_SKY.3 = Shader-Himmel + RP-Sonne/Mond
+
+screen.Foliage = Laub
+    option.WAVY_PLANTS = Wedelnde Pflanzen
+    option.WAVY_STRENGTH = Wedelstärke
+    option.WAVY_SPEED = Wedelgeschwindigkeit
+
+    option.SHADER_GRASS_SETTING = Shader-Gras §c(1.21.1+)
+    option.GRASS_BASE_THICKNESS = Basisdicke der Grashalme
+    option.GRASS_THICKNESS_FALLOFF = Dickenabnahme des Grases
+        option.GRASS_THICKNESS_FALLOFF.comment = Steuert, wie schnell jeder Grashalm schmaler wird. Bei 1.0 bleibt er bis zur Spitze gleich dick
+    option.BASE_GRASS_HEIGHT = Basis-Grashöhe
+        option.BASE_GRASS_HEIGHT.comment = Die Grashöhe von normalem Gras
+    option.SHORT_GRASS_HEIGHT = Kurzes Grashöhe
+        option.SHORT_GRASS_HEIGHT.comment = Die Grashöhe des ersetzten Vanilla-Kurzgrases
+    option.REPLACE_SHORT_GRASS = Vanilla-Kurzgras ersetzen
+        option.REPLACE_SHORT_GRASS.comment = Steuern, wie Vanilla-Kurzgras behandelt werden soll
+        value.REPLACE_SHORT_GRASS.0 = Nein
+        value.REPLACE_SHORT_GRASS.1 = Ja
+        value.REPLACE_SHORT_GRASS.2 = Nur Kurzgras
+    option.GRASS_DETECT_FALLOFF = Gras-Bodenerkennnung
+        option.GRASS_DETECT_FALLOFF.comment = Verkürzt die Halmlänge von Gras an Grasrändern
+    option.GRASS_DETECT_INV_FALLOFF = Gras-Seitenerkennung
+        option.GRASS_DETECT_INV_FALLOFF.comment = Erhöht die Halmlänge, wenn ein Block oder Kurzgras daneben ist
+    option.GRASS_DENSITY = Grasdichte
+        value.GRASS_DENSITY.0 = Niedrig
+        value.GRASS_DENSITY.1 = Mittel
+        value.GRASS_DENSITY.2 = Hoch
+        value.GRASS_DENSITY.3 = Sehr Hoch
+    option.GRASS_QUALITY = Grasqualität
+        option.GRASS_QUALITY.comment = Steuert die maximale Dreiecksanzahl pro Grashalm. Niedrig: 3 Dreiecke. Mittel: 5 Dreiecke. Hoch: 7 Dreiecke
+        value.GRASS_QUALITY.0 = Niedrig
+        value.GRASS_QUALITY.1 = Mittel
+        value.GRASS_QUALITY.2 = Hoch
+    option.GRASS_RANGE = Maximale Grasreichweite
+    option.GRASS_WAVY_STRENGTH = Gras-Wedelstärke
+    option.GRASS_RANDOMNESS = Gras-Zufälligkeit
+    option.GRASS_NOISE1_SCALE = Gras-Zufälligkeitsrauschen 1 Skala
+    option.GRASS_NOISE2_SCALE = Gras-Zufälligkeitsrauschen 2 Skala
+
+
+screen.Direct_Light = Direktes Licht
+    screen.Shadows = Schatten
+        option.TRANSLUCENT_COLORED_SHADOWS = Farbige Schatten
+        option.SCREENSPACE_CONTACT_SHADOWS = Bildschirmraum-Schatten
+            value.SCREENSPACE_CONTACT_SHADOWS.0 = Aus
+            value.SCREENSPACE_CONTACT_SHADOWS.1 = Außerhalb der Schattenweite
+            value.SCREENSPACE_CONTACT_SHADOWS.2 = An
+        option.RENDER_ENTITY_SHADOWS = Schatten für Entitäten
+        option.RENDER_PLAYER_SHADOWS = Schatten für den Spieler
+        option.shadowMapResolution = Schattenauflösung
+        option.shadowDistance = Schattenweite
+            value.shadowDistance.32.0 = 2 Chunks
+            value.shadowDistance.48.0 = 3 Chunks
+            value.shadowDistance.64.0 = 4 Chunks
+            value.shadowDistance.80.0 = 5 Chunks
+            value.shadowDistance.96.0 = 6 Chunks
+            value.shadowDistance.112.0 = 7 Chunks
+            value.shadowDistance.128.0 = 8 Chunks
+            value.shadowDistance.144.0 = 9 Chunks
+            value.shadowDistance.160.0 = 10 Chunks
+            value.shadowDistance.176.0 = 11 Chunks
+            value.shadowDistance.192.0 = 12 Chunks
+            value.shadowDistance.208.0 = 13 Chunks
+            value.shadowDistance.224.0 = 14 Chunks
+            value.shadowDistance.240.0 = 15 Chunks
+            value.shadowDistance.256.0 = 16 Chunks
+            value.shadowDistance.272.0 = 17 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.288.0 = 18 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.304.0 = 19 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.320.0 = 20 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.336.0 = 21 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.352.0 = 22 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.368.0 = 23 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.384.0 = 24 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.512.0 = 32 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.768.0 = 48 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.1024.0 = 64 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.1536.0 = 96 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.2048.0 = 128 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.4096.0 = 256 Chunks §cNICHT EMPFOHLEN§r
+            value.shadowDistance.8192.0 = 512 Chunks §cNICHT EMPFOHLEN§r
+
+        option.entityShadowDistanceMul = Entitäts-Schattenweite
+            value.entityShadowDistanceMul.0.01 = 1% der Schattenweite
+            value.entityShadowDistanceMul.0.02 = 2% der Schattenweite
+            value.entityShadowDistanceMul.0.03 = 3% der Schattenweite
+            value.entityShadowDistanceMul.0.04 = 4% der Schattenweite
+            value.entityShadowDistanceMul.0.05 = 5% der Schattenweite
+            value.entityShadowDistanceMul.0.10 = 10% der Schattenweite
+            value.entityShadowDistanceMul.0.15 = 15% der Schattenweite
+            value.entityShadowDistanceMul.0.20 = 20% der Schattenweite
+            value.entityShadowDistanceMul.0.25 = 25% der Schattenweite
+            value.entityShadowDistanceMul.0.30 = 30% der Schattenweite
+            value.entityShadowDistanceMul.0.35 = 35% der Schattenweite
+            value.entityShadowDistanceMul.0.40 = 40% der Schattenweite
+            value.entityShadowDistanceMul.0.45 = 45% der Schattenweite
+            value.entityShadowDistanceMul.0.50 = 50% der Schattenweite
+            value.entityShadowDistanceMul.0.75 = 75% der Schattenweite
+            value.entityShadowDistanceMul.1.00 = 100% der Schattenweite
+
+        option.LIGHTNING_SHADOWS = Blitzschatten
+            value.LIGHTNING_SHADOWS.0 = Aus
+            value.LIGHTNING_SHADOWS.1 = Nur nachts
+            value.LIGHTNING_SHADOWS.2 = An
+        
+        option.LIGHTNING_SHADOWS.comment = Lässt Blitze Schatten werfen. Ersetzt Mond- und/oder Sonnenschatten, während Blitze aktiv sind. §cERFORDERT BENUTZERDEFINIERTE MONDROTATION§r
+
+    screen.Sun_and_Moon_Colors = Sonne/Mond-Farben
+	option.Sun_temp = Sonnentemperatur
+	option.Moon_temp = Mondtemperatur
+
+    screen.Filtering = Schattenfilter-Einstellungen
+	option.BASIC_SHADOW_FILTER = Einfacher Schattenfilter
+        option.SHADOW_FILTER_SAMPLE_COUNT = Einfache Schattenfilter-Proben
+        option.Min_Shadow_Filter_Radius = Minimaler Schattenfilterradius
+        option.Variable_Penumbra_Shadows = Variable Halbschatten
+        option.VPS_Search_Samples = VPS-Filterproben
+        option.Max_Shadow_Filter_Radius = Maximaler Schattenfilterradius
+        option.Max_Filter_Depth = Sonnengrößenfaktor
+        
+    screen.LPV = Flutfüllung (Farbige Lichter)
+        option.LPV_ENABLED = Aktiviert
+        option.LPV_SIZE = Größe
+            value.LPV_SIZE.6 = Klein [64]
+            value.LPV_SIZE.7 = Mittel [128]
+            value.LPV_SIZE.8 = Groß [256]
+        option.LPV_SATURATION = Lichtsättigung
+            suffix.LPV_SATURATION=%
+        option.LPV_TINT_SATURATION = Tönung-Sättigung
+            suffix.LPV_TINT_SATURATION=%
+        option.LPV_NORMAL_STRENGTH = Normalenstärke
+            suffix.LPV_NORMAL_STRENGTH = %
+            value.LPV_NORMAL_STRENGTH.0 = AUS
+        option.LPV_ENTITY_LIGHTS = Entitätslichter
+        option.LPV_REDSTONE_LIGHTS = Redstone-Lichter
+        option.LPV_COLORED_CANDLES = Farbige Kerzen
+        option.LPV_NOSHADOW_HACK = Iris <= 1.7.0 Fix
+        option.LPV_VL_FOG_ILLUMINATION = Nebellichtvermehrung
+            value.LPV_VL_FOG_ILLUMINATION.0 = Aus
+            value.LPV_VL_FOG_ILLUMINATION.1 = Nur drinnen
+            value.LPV_VL_FOG_ILLUMINATION.2 = An
+        option.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS = Nebellichtvermehrungs-Helligkeit
+            suffix.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS=%
+        option.LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER = Wassernebel-Handlicht-Ausbreitung
+	    option.VANILLA_LIGHTMAP_MASK = Vanilla-Lichtkarten-Maske
+        option.LPV_HANDHELD_SHADOWS = Handgehaltene Schatten
+        option.LPV_HANDHELD_SHADOWS_STRENGTH = Stärke handgehaltener Schatten
+        option.LPV_HANDHELD_SHADOWS_QUALITY = Qualität handgehaltener Schatten
+            value.LPV_HANDHELD_SHADOWS_QUALITY.0 = Niedrig
+            value.LPV_HANDHELD_SHADOWS_QUALITY.1 = Hoch
+
+
+screen.Ambient_light = Umgebungslicht
+    option.AO_Strength = AO-Multiplikator
+    option.GI_Strength = GI-Multiplikator
+    option.HQ_SSGI = Weitreichendes Marschieren
+    option.UseQuarterResDepth = 1/4-Auflösungstiefe abtasten
+    option.Hand_Held_lights = Handgehaltenes Licht
+    option.SKY_CONTRIBUTION_IN_SSRT = Hochqualitatives Umgebungslicht
+    option.ambientOcclusionLevel = Vanilla-AO-Menge
+    option.ambient_brightness = Umgebungslichthelligkeit
+    option.MIN_LIGHT_AMOUNT = Minimale Lichthelligkeit draußen
+    option.MIN_LIGHT_AMOUNT_INSIDE = Minimale Lichthelligkeit drinnen
+    option.indirect_effect = Indirekte Beleuchtung
+            value.indirect_effect.VANILLA_AO = Vanilla AO
+            value.indirect_effect.SSAO_FILTERED = SSAO
+            value.indirect_effect.SSAO_HQ = HQ SSAO
+            value.indirect_effect.GTAO = GTAO
+            value.indirect_effect.SSRT_AO = SSRT (nur AO) - §cVISUELLES RAUSCHEN§r
+            value.indirect_effect.SSRT_AO_GI = SSRT (AO + GI) - §cVISUELLES RAUSCHEN§r
+    option.RAY_COUNT = Strahlanzahl
+        option.RAY_COUNT.comment = Hilft, visuelles Rauschen von SSRT zu reduzieren. §aLEISTUNGSKOSTEN:§r Hoch
+    option.RAY_STEPS = Strahlschritte
+	option.HANDHELD_LIGHT_RANGE = Handlicht-Reichweite
+    option.GTAO_SLICES = GTAO-Qualität
+
+    screen.SSRT_SETTINGS = SSRT-Einstellungen
+
+    screen.Ambient_Colors = Umgebungslichtfarbe
+        option.AmbientLight_R = Rotanteil
+        option.AmbientLight_G = Grünanteil
+        option.AmbientLight_B = Blauanteil
+        option.SeparateAmbientColorRain = Separate Umgebungslichtfarbe bei Regen/Gewitter
+        option.AmbientLightRain_R = Rot (Regen)
+        option.AmbientLightRain_G = Grün (Regen)
+        option.AmbientLightRain_B = Blau (Regen)
+        option.AmbientLightThunder_R = Rot (Gewitter)
+        option.AmbientLightThunder_G = Grün (Gewitter)
+        option.AmbientLightThunder_B = Blau (Gewitter)
+        option.AmbientLightEnd_R = Rot (Ende)
+        option.AmbientLightEnd_G = Grün (Ende)
+        option.AmbientLightEnd_B = Blau (Ende)
+        option.ambient_colortype = Färbungstyp
+            value.ambient_colortype.0 = Temperatur
+            value.ambient_colortype.1 = RGB
+    
+    screen.Torch_Colors = Fackelfarbe
+        option.TORCH_AMOUNT = Fackellichtverstärker
+        option.TORCH_R = Rotanteil
+        option.TORCH_G = Grünanteil
+        option.TORCH_B = Blauanteil
+        
+
+screen.Fog = Nebeleinstellungen
+    option.VL_RENDER_SCALE = Volumetrische Auflösungsskalierung
+    option.VL_SAMPLES = Nebelproben
+    option.FOG_START_HEIGHT = Nebelstarthöhe
+    option.BLOOMY_FOG = Blühender Nebelmultiplikator
+    option.UNDERWATER_BLOOMY_FOG = Blühender Nebelmultiplikator Unterwasser
+    option.Haze_amount = Atmosphärische Dunstdichte
+    option.RainFog_amount = Regennebelmultiplikator
+    option.BorderFog = Chunk-Grenz-Nebel
+
+    screen.TOD_fog = Tageszeit-Nebel
+        option.TOD_Fog_mult = Nebeldichtemultiplikator
+        option.Morning_Uniform_Fog = Morgennebeldichte
+        option.Noon_Uniform_Fog = Mittagsnebeldichte
+        option.Evening_Uniform_Fog = Abendnebeldichte
+        option.Night_Uniform_Fog = Nachtnebeldichte
+        option.Morning_Cloudy_Fog = Morgenbewölkter Nebeldichte
+        option.Noon_Cloudy_Fog = Mittagsbewölkter Nebeldichte
+        option.Evening_Cloudy_Fog = Abendbewölkter Nebeldichte
+        option.Night_Cloudy_Fog = Nachtbewölkter Nebeldichte
+
+        option.PER_BIOME_ENVIRONMENT = Biom-spezifische Umgebungen
+
+    screen.Cave_Fog = Höhlennebel
+        option.Cave_Fog = Höhlennebel
+        option.CaveFogFallOff = Nebelabfall
+        option.CaveFogColor_R = Nebel R
+        option.CaveFogColor_G = Nebel G
+        option.CaveFogColor_B = Nebel B
+
+    screen.END_AND_NETHER_FOG = Nether/Ende-Nebel
+        option.END_STORM_DENSTIY = Ende-Sturmdichte
+        option.END_LIGHTNING = Ende-Blitze im Nebel
+        option.END_HAZE_DENSTIY = Ende-Dunstdichte
+        option.NETHER_PLUME_DENSITY = Nether-Rauchdichte
+        option.NETHER_CEILING_SMOKE_DENSITY = Nether-Deckenrauchdichte
+        option.NETHER_HAZE_DENSITY = Nether-Dunstdichte
+        
+        screen.FOG_LIGHTING_COLORS = Nebelfarben
+            option.VORTEX_LIGHT_COL_R = Ende-Hauptinsel-Nebel/Licht Rot
+            option.VORTEX_LIGHT_COL_G = Ende-Hauptinsel-Nebel/Licht Grün
+            option.VORTEX_LIGHT_COL_B = Ende-Hauptinsel-Nebel/Licht Blau
+            option.END_LIGHTNING_COL_R = Ende-Blitz Rot
+            option.END_LIGHTNING_COL_G = Ende-Blitz Grün
+            option.END_LIGHTNING_COL_B = Ende-Blitz Blau
+
+screen.Clouds = Wolkeneinstellungen
+    option.VOLUMETRIC_CLOUDS = Volumetrische Wolken
+    option.HQ_CLOUD_UPSAMPLE = Genaueres Hochskalieren
+    option.HQ_CLOUD_UPSAMPLE.comment = Verringert Lichtverluste an Kanten. §aLEISTUNGSKOSTEN:§r niedrig
+    option.CLOUDS_QUALITY = Wolkenauflösungsskalierung
+    option.CLOUDS_SHADOWS = Wolkenschatten
+    option.CLOUD_SHADOW_AMOUNT = Wolkenschattenstärke
+        suffix.CLOUD_SHADOW_AMOUNT = %
+    option.CLOUD_MOVEMENT_TYPE = Wolkenbewegung
+        value.CLOUD_MOVEMENT_TYPE.0 = Spielzeit-basiert
+        value.CLOUD_MOVEMENT_TYPE.1 = Echtzeit-basiert
+    option.Cloud_Speed = Wolkengeschwindigkeitsmultiplikator
+    option.Rain_coverage = Zusätzliche Regenbedeckung
+    option.Thunder_coverage = Zusätzliche Gewitterbedeckung
+    option.Daily_Weather = Tägliches Wetter
+    value.CLOUD_PHASE.0 = Henyey-Greenstein
+    value.CLOUD_PHASE.1 = Cornette-Shanks
+    value.CLOUD_PHASE.2 = Henyey-Greenstein-Draine
+
+    option.TERRAIN_SHADOW_ON_CLOUDS = Geländeschatten auf Wolken
+        option.TERRAIN_SHADOW_ON_CLOUDS.comment = Ob Gelände Schatten auf Kumuluswolken werfen kann. §aLEISTUNGSKOSTEN:§r niedrig bis mittel
+    option.CLOUD_SAMPLES = Wolkenproben
+        option.CLOUD_SAMPLES.comment = Ändert die Probenmenge der volumetrischen Wolken. Besonders nützlich, um weniger Rauschen bei Geländeschatten auf Wolken zu erzielen. §aLEISTUNGSKOSTEN:§r niedrig bis sehr hoch
+
+    screen.CumulusClouds        = Kumuluswolken
+        option.CloudLayer0          = Kleine Kumuluswolken
+        option.CloudLayer0_coverage = Bedeckung
+        option.CloudLayer0_density  = Dichte
+        option.CloudLayer0_height   = Höhe
+        option.CloudLayer0_tallness = Höhe (vertikal)
+        option.CloudLayer0_scale    = Skala
+        option.CloudLayer0_detail   = Detail
+        option.CloudLayer0_distance = Entfernung
+
+        option.CloudLayer1          = Große Kumuluswolken
+        option.CloudLayer1_coverage = Bedeckung
+        option.CloudLayer1_density  = Dichte
+        option.CloudLayer1_height   = Höhe
+        option.CloudLayer1_tallness = Höhe (vertikal)
+        option.CloudLayer1_scale    = Skala
+        option.CloudLayer1_detail   = Detail
+        option.CloudLayer1_distance = Entfernung
+
+        option.CUMULONIMBUS = Kumulonimbuswolken
+            value.CUMULONIMBUS.0 = Aus
+            value.CUMULONIMBUS.1 = Während/Nach Gewitter
+            value.CUMULONIMBUS.2 = Immer an
+        option.CUMULONIMBUS_FADE_TIME = Ausblendzeit
+            value.CUMULONIMBUS_FADE_TIME.0.0 = Keine
+            value.CUMULONIMBUS_FADE_TIME.0.25 = 15 Sekunden
+            value.CUMULONIMBUS_FADE_TIME.0.5 = 30 Sekunden
+            value.CUMULONIMBUS_FADE_TIME.0.75 = 45 Sekunden
+            value.CUMULONIMBUS_FADE_TIME.1.0 = 60 Sekunden
+            value.CUMULONIMBUS_FADE_TIME.1.25 = 75 Sekunden
+            value.CUMULONIMBUS_FADE_TIME.1.5 = 90 Sekunden
+            value.CUMULONIMBUS_FADE_TIME.1.75 = 105 Sekunden 
+            value.CUMULONIMBUS_FADE_TIME.2.0 = 2 Minuten
+            value.CUMULONIMBUS_FADE_TIME.3.0 = 3 Minuten
+            value.CUMULONIMBUS_FADE_TIME.4.0 = 4 Minuten
+            value.CUMULONIMBUS_FADE_TIME.5.0 = 5 Minuten
+            value.CUMULONIMBUS_FADE_TIME.6.0 = 6 Minuten
+            value.CUMULONIMBUS_FADE_TIME.7.0 = 7 Minuten
+            value.CUMULONIMBUS_FADE_TIME.8.0 = 8 Minuten
+            value.CUMULONIMBUS_FADE_TIME.9.0 = 9 Minuten
+            value.CUMULONIMBUS_FADE_TIME.10.0 = 10 Minuten
+
+        option.CUMULONIMBUS_LIGHTNING = Kumulonimbus-Blitze
+        option.CUMULONIMBUS_LIGHTNING_BRIGHTNESS = Blitzhelligkeit
+            suffix.CUMULONIMBUS_LIGHTNING_BRIGHTNESS = %
+        option.CUMULONIMBUS_LIGHTNING_DELAY = Blitzverzögerung
+            suffix.CUMULONIMBUS_LIGHTNING_DELAY = s
+
+            screen.CUSTOM_LIGHTNING = Benutzerdefinierter Blitz
+                option.CUSTOM_LIGHTNING_POS = Benutzerdefinierte Position
+                //option.CUSTOM_LIGHTNING_POS_X = X
+                //option.CUSTOM_LIGHTNING_POS_Y = Y
+                //option.CUSTOM_LIGHTNING_POS_Z = Z
+                option.CUSTOM_LIGHTNING_R = R
+                option.CUSTOM_LIGHTNING_G = G
+                option.CUSTOM_LIGHTNING_B = B
+                option.CUSTOM_LIGHTNING_SCALE = Skala
+                option.CUSTOM_LIGHTNING_TEX = Textur
+                    value.CUSTOM_LIGHTNING_TEX.0 = Zufällig
+
+                screen.READ_DESCRIPTION = BESCHREIBUNG LESEN
+                    screen.READ_DESCRIPTION.comment = Benutzerdefinierte Positionswerte in der Shader-Konfiguration festlegen!
+
+    screen.HighAltitudeClouds   = Hochlagenwolken
+        option.CloudLayer2          = Altostratiwolken
+        option.CloudLayer2_coverage = Bedeckung
+        option.CloudLayer2_density  = Dichte
+        option.CloudLayer2_height   = Höhe
+        option.CloudLayer2_scale    = Skala
+        option.CloudLayer2_distance = Entfernung
+
+        option.CloudLayer3          = Zirruswolken
+        option.CloudLayer3_coverage = Bedeckung
+        option.CloudLayer3_density  = Dichte
+        option.CloudLayer3_height   = Höhe
+        option.CloudLayer3_scale    = Skala
+        option.CloudLayer3_distance = Entfernung
+
+screen.DAILY_WEATHER = Tägliche Wettereinstellungen
+option.CHOOSE_RANDOM_WEATHER_PROFILE = Zufälliges Wetterprofil
+    screen.DAY0_WEATHER = Wetterprofil Tag 0
+        option.DAY0_l0_coverage = Kleine Kumulus-Bedeckung
+        option.DAY0_l0_density = Kleine Kumulus-Dichte
+        option.DAY0_l1_coverage = Große Kumulus-Bedeckung
+        option.DAY0_l1_density = Große Kumulus-Dichte
+        option.DAY0_l2_coverage = Altostratus-Wolken-Bedeckung
+        option.DAY0_l2_density = Altostratus-Wolken-Dichte
+        option.DAY0_l3_coverage = Zirrus-Wolken-Bedeckung
+        option.DAY0_l3_density = Zirrus-Wolken-Dichte
+        option.DAY0_ufog_density = Gleichmäßige Nebeldichte
+        option.DAY0_cfog_density = Bewölkte Nebeldichte
+        
+    screen.DAY1_WEATHER = Wetterprofil Tag 1
+        option.DAY1_l0_coverage = Kleine Kumulus-Bedeckung
+        option.DAY1_l0_density = Kleine Kumulus-Dichte
+        option.DAY1_l1_coverage = Große Kumulus-Bedeckung
+        option.DAY1_l1_density = Große Kumulus-Dichte
+        option.DAY1_l2_coverage = Altostratus-Wolken-Bedeckung
+        option.DAY1_l2_density = Altostratus-Wolken-Dichte
+        option.DAY1_l3_coverage = Zirrus-Wolken-Bedeckung
+        option.DAY1_l3_density = Zirrus-Wolken-Dichte
+        option.DAY1_ufog_density = Gleichmäßige Nebeldichte
+        option.DAY1_cfog_density = Bewölkte Nebeldichte
+        
+    screen.DAY2_WEATHER = Wetterprofil Tag 2
+        option.DAY2_l0_coverage = Kleine Kumulus-Bedeckung
+        option.DAY2_l0_density = Kleine Kumulus-Dichte
+        option.DAY2_l1_coverage = Große Kumulus-Bedeckung
+        option.DAY2_l1_density = Große Kumulus-Dichte
+        option.DAY2_l2_coverage = Altostratus-Wolken-Bedeckung
+        option.DAY2_l2_density = Altostratus-Wolken-Dichte
+        option.DAY2_l3_coverage = Zirrus-Wolken-Bedeckung
+        option.DAY2_l3_density = Zirrus-Wolken-Dichte
+        option.DAY2_ufog_density = Gleichmäßige Nebeldichte
+        option.DAY2_cfog_density = Bewölkte Nebeldichte
+
+    screen.DAY3_WEATHER = Wetterprofil Tag 3
+        option.DAY3_l0_coverage = Kleine Kumulus-Bedeckung
+        option.DAY3_l0_density = Kleine Kumulus-Dichte
+        option.DAY3_l1_coverage = Große Kumulus-Bedeckung
+        option.DAY3_l1_density = Große Kumulus-Dichte
+        option.DAY3_l2_coverage = Altostratus-Wolken-Bedeckung
+        option.DAY3_l2_density = Altostratus-Wolken-Dichte
+        option.DAY3_l3_coverage = Zirrus-Wolken-Bedeckung
+        option.DAY3_l3_density = Zirrus-Wolken-Dichte
+        option.DAY3_ufog_density = Gleichmäßige Nebeldichte
+        option.DAY3_cfog_density = Bewölkte Nebeldichte
+
+    screen.DAY4_WEATHER = Wetterprofil Tag 4
+        option.DAY4_l0_coverage = Kleine Kumulus-Bedeckung
+        option.DAY4_l0_density = Kleine Kumulus-Dichte
+        option.DAY4_l1_coverage = Große Kumulus-Bedeckung
+        option.DAY4_l1_density = Große Kumulus-Dichte
+        option.DAY4_l2_coverage = Altostratus-Wolken-Bedeckung
+        option.DAY4_l2_density = Altostratus-Wolken-Dichte
+        option.DAY4_l3_coverage = Zirrus-Wolken-Bedeckung
+        option.DAY4_l3_density = Zirrus-Wolken-Dichte
+        option.DAY4_ufog_density = Gleichmäßige Nebeldichte
+        option.DAY4_cfog_density = Bewölkte Nebeldichte
+
+    screen.DAY5_WEATHER = Wetterprofil Tag 5
+        option.DAY5_l0_coverage = Kleine Kumulus-Bedeckung
+        option.DAY5_l0_density = Kleine Kumulus-Dichte
+        option.DAY5_l1_coverage = Große Kumulus-Bedeckung
+        option.DAY5_l1_density = Große Kumulus-Dichte
+        option.DAY5_l2_coverage = Altostratus-Wolken-Bedeckung
+        option.DAY5_l2_density = Altostratus-Wolken-Dichte
+        option.DAY5_l3_coverage = Zirrus-Wolken-Bedeckung
+        option.DAY5_l3_density = Zirrus-Wolken-Dichte
+        option.DAY5_ufog_density = Gleichmäßige Nebeldichte
+        option.DAY5_cfog_density = Bewölkte Nebeldichte
+
+    screen.DAY6_WEATHER = Wetterprofil Tag 6
+        option.DAY6_l0_coverage = Kleine Kumulus-Bedeckung
+        option.DAY6_l0_density = Kleine Kumulus-Dichte
+        option.DAY6_l1_coverage = Große Kumulus-Bedeckung
+        option.DAY6_l1_density = Große Kumulus-Dichte
+        option.DAY6_l2_coverage = Altostratus-Wolken-Bedeckung
+        option.DAY6_l2_density = Altostratus-Wolken-Dichte
+        option.DAY6_l3_coverage = Zirrus-Wolken-Bedeckung
+        option.DAY6_l3_density = Zirrus-Wolken-Dichte
+        option.DAY6_ufog_density = Gleichmäßige Nebeldichte
+        option.DAY6_cfog_density = Bewölkte Nebeldichte
+
+    screen.DAY7_WEATHER = Wetterprofil Tag 7
+        option.DAY7_l0_coverage = Kleine Kumulus-Bedeckung
+        option.DAY7_l0_density = Kleine Kumulus-Dichte
+        option.DAY7_l1_coverage = Große Kumulus-Bedeckung
+        option.DAY7_l1_density = Große Kumulus-Dichte
+        option.DAY7_l2_coverage = Altostratus-Wolken-Bedeckung
+        option.DAY7_l2_density = Altostratus-Wolken-Dichte
+        option.DAY7_l3_coverage = Zirrus-Wolken-Bedeckung
+        option.DAY7_l3_density = Zirrus-Wolken-Dichte
+        option.DAY7_ufog_density = Gleichmäßige Nebeldichte
+        option.DAY7_cfog_density = Bewölkte Nebeldichte
+
+    screen.DAY8_WEATHER = Wetterprofil Tag 8
+        option.DAY8_l0_coverage = Kleine Kumulus-Bedeckung
+        option.DAY8_l0_density = Kleine Kumulus-Dichte
+        option.DAY8_l1_coverage = Große Kumulus-Bedeckung
+        option.DAY8_l1_density = Große Kumulus-Dichte
+        option.DAY8_l2_coverage = Altostratus-Wolken-Bedeckung
+        option.DAY8_l2_density = Altostratus-Wolken-Dichte
+        option.DAY8_l3_coverage = Zirrus-Wolken-Bedeckung
+        option.DAY8_l3_density = Zirrus-Wolken-Dichte
+        option.DAY8_ufog_density = Gleichmäßige Nebeldichte
+        option.DAY8_cfog_density = Bewölkte Nebeldichte
+
+    screen.DAY9_WEATHER = Wetterprofil Tag 9
+        option.DAY9_l0_coverage = Kleine Kumulus-Bedeckung
+        option.DAY9_l0_density = Kleine Kumulus-Dichte
+        option.DAY9_l1_coverage = Große Kumulus-Bedeckung
+        option.DAY9_l1_density = Große Kumulus-Dichte
+        option.DAY9_l2_coverage = Altostratus-Wolken-Bedeckung
+        option.DAY9_l2_density = Altostratus-Wolken-Dichte
+        option.DAY9_l3_coverage = Zirrus-Wolken-Bedeckung
+        option.DAY9_l3_density = Zirrus-Wolken-Dichte
+        option.DAY9_ufog_density = Gleichmäßige Nebeldichte
+        option.DAY9_cfog_density = Bewölkte Nebeldichte
+        
+
+screen.Climate = Klimaeinstellungen
+    option.Seasons = Saisonale Farben
+    option.Season_Length = Saisonlänge (in Tagen)
+	option.Start_Season = Startsaison
+		value.Start_Season.0 = Sommer (Standard)
+		value.Start_Season.1 = Herbst
+		value.Start_Season.2 = Winter
+		value.Start_Season.3 = Frühling
+    option.Snowy_Winter = Schnee im Winter
+    screen.Summer_colors = Sommerfarben
+        option.Summer_R = Rotanteil
+        option.Summer_G = Grünanteil
+        option.Summer_B = Blauanteil
+        option.Summer_Leaf_R = Rotanteil (für Blätter)
+        option.Summer_Leaf_G = Grünanteil (für Blätter)
+        option.Summer_Leaf_B = Blauanteil (für Blätter)
+
+    screen.Fall_colors = Herbstfarben
+        option.Fall_R = Rotanteil
+        option.Fall_G = Grünanteil
+        option.Fall_B = Blauanteil
+        option.Fall_Leaf_R = Rotanteil (für Blätter)
+        option.Fall_Leaf_G = Grünanteil (für Blätter)
+        option.Fall_Leaf_B = Blauanteil (für Blätter)
+
+    screen.Winter_colors = Winterfarben
+        option.Winter_R = Rotanteil
+        option.Winter_G = Grünanteil
+        option.Winter_B = Blauanteil
+        option.Winter_Leaf_R = Rotanteil (für Blätter)
+        option.Winter_Leaf_G = Grünanteil (für Blätter)
+        option.Winter_Leaf_B = Blauanteil (für Blätter)
+
+    screen.Spring_colors = Frühlingsfarben
+        option.Spring_R = Rotanteil
+        option.Spring_G = Grünanteil
+        option.Spring_B = Blauanteil
+        option.Spring_Leaf_R = Rotanteil (für Blätter)
+        option.Spring_Leaf_G = Grünanteil (für Blätter)
+        option.Spring_Leaf_B = Blauanteil (für Blätter)
+        
+    screen.SWAMP = Sumpf
+        option.SWAMP_ENV = Sumpfumgebung
+        option.SWAMP_UNIFORM_DENSITY = Gleichmäßige Nebeldichte
+        option.SWAMP_CLOUDY_DENSITY = Bewölkte Nebeldichte
+        option.SWAMP_R = Rotanteil
+        option.SWAMP_G = Grünanteil
+        option.SWAMP_B = Blauanteil
+
+    screen.JUNGLE = Dschungel
+        option.JUNGLE_ENV = Dschungelumgebung
+        option.JUNGLE_UNIFORM_DENSITY = Gleichmäßige Nebeldichte
+        option.JUNGLE_CLOUDY_DENSITY = Bewölkte Nebeldichte
+        option.JUNGLE_R = Rotanteil
+        option.JUNGLE_G = Grünanteil
+        option.JUNGLE_B = Blauanteil
+
+    screen.DARKFOREST = Dunkler Wald
+        option.DARKFOREST_ENV = Dunkler-Wald-Umgebung
+        option.DARKFOREST_UNIFORM_DENSITY = Gleichmäßige Nebeldichte
+        option.DARKFOREST_CLOUDY_DENSITY = Bewölkte Nebeldichte
+        option.DARKFOREST_R = Rotanteil
+        option.DARKFOREST_G = Grünanteil
+        option.DARKFOREST_B = Blauanteil
+    
+    screen.PALE_GARDEN = Blasser Garten
+        option.PALE_GARDEN_ENV = Blasser-Garten-Umgebung
+        option.PALE_GARDEN_UNIFORM_DENSITY = Gleichmäßige Nebeldichte
+        option.PALE_GARDEN_CLOUDY_DENSITY = Bewölkte Nebeldichte
+        option.PALE_GARDEN_R = Rotanteil
+        option.PALE_GARDEN_G = Grünanteil
+        option.PALE_GARDEN_B = Blauanteil
+
+screen.World = Welt
+    screen.Sky_coefficients = Himmelskoeffizienten
+    screen.Water = Wassereinstellungen
+        option.FAKE_REFRACTION_EFFECT = Brechung in Wasser/Glas
+        option.FAKE_DISPERSION_EFFECT = Dispersion in Wasser
+        option.REFRACTION_SMUDGE = Brechungsunschärfe
+        option.Dirt_Amount = Schmutzanteil
+        option.Water_Top_Layer = Ozean-Y-Koordinate
+        option.WATER_WAVE_STRENGTH = Wellenstärke
+        option.WATER_WAVE_SPEED = Wellengeschwindigkeit
+        option.WATER_INTERACTION = Spieler-Wasser-Interaktion
+            option.WATER_INTERACTION.comment = Gibt an, wie der Spieler mit Wasser interagieren soll. §aEinfach§r: Kleiner Welleneffekt wenn die Kamera Wasser betritt/verlässt. §aWellensimulation§r: Bewegung des Spielers (auch im Boot) erzeugt Wellen auf dem Wasser.
+            value.WATER_INTERACTION.0 = Aus
+            value.WATER_INTERACTION.1 = Einfach
+            value.WATER_INTERACTION.2 = Wellensimulation
+        option.WATER_SIM_SCALE = Wellensimulationsauflösung
+            option.WATER_SIM_SCALE.comment = Die Gesamtauflösung der Wellensimulation. §aLEISTUNGSKOSTEN:§r mittel bis hoch
+            value.WATER_SIM_SCALE.0 = 50%
+            value.WATER_SIM_SCALE.1 = 100%
+            value.WATER_SIM_SCALE.2 = 200%
+        option.WATER_SIM_DISTANCE = Wellensimulationsreichweite
+            option.WATER_SIM_DISTANCE.comment = Die Entfernung vom Spieler, bei der Wellen simuliert werden. §aLEISTUNGSKOSTEN:§r niedrig bis hoch
+            value.WATER_SIM_DISTANCE.1 = 50%
+            value.WATER_SIM_DISTANCE.2 = 100%
+            value.WATER_SIM_DISTANCE.3 = 150%
+            value.WATER_SIM_DISTANCE.4 = 200%
+        option.WATER_SIM_FRAMERATE = Wellensimulations-Bildrate
+            option.WATER_SIM_FRAMERATE.comment = Die Bildrate, mit der die Simulation berechnet wird. Bei 30 FPS wird die Genauigkeit verringert. §cFALLS DIE INGAME-BILDRATE NICHT MITHALTEN KANN, VERLANGSAMT SICH DIE SIMULATION. §cBITTE AUF EINE BILDRATE SETZEN, DIE DAS SPIEL IMMER ERREICHT. §aLEISTUNGSKOSTEN:§r niedrig bis mittel
+            value.WATER_SIM_FRAMERATE.30 = 30 FPS
+            value.WATER_SIM_FRAMERATE.60 = 60 FPS
+        option.PIXELATED_WAVES = Pixelierte Wellensimulation
+            option.PIXELATED_WAVES.comment = Ob die Wellen glatt sein sollen oder nicht §aLEISTUNGSKOSTEN:§r keine
+        screen.WATER_SIM_DISCLAIMER = §c Beschreibungen dieser Einstellungen lesen, wenn Wellensimulation verwendet wird
+        option.WATER_SIM_STRENGTH = Wellensimulationsstärke
+
+        option.PATCHY_WAVE_BLEND = Fleckige Wellenüberblendung
+        option.WAVES_A_RADIUS = Wellenradius 1
+        option.WAVES_B_RADIUS = Wellenradius 2
+        option.SNELLS_WINDOW = Snellsches Fenster
+        option.MINIMUM_WATER_ABSORBANCE = Minimale Wasserabsorption
+            value.MINIMUM_WATER_ABSORBANCE.-1 = AUTO
+
+        option.FAKE_REFRACTION_AMOUNT = Brechungsmenge
+        value.FAKE_REFRACTION_AMOUNT.0 = AUS
+           value.FAKE_REFRACTION_AMOUNT.1 = 0,25x
+           value.FAKE_REFRACTION_AMOUNT.2 = 0,50x
+           value.FAKE_REFRACTION_AMOUNT.3 = 0,75x
+           value.FAKE_REFRACTION_AMOUNT.4 = 1,00x
+           value.FAKE_REFRACTION_AMOUNT.5 = 1,25x
+           value.FAKE_REFRACTION_AMOUNT.6 = 1,50x
+           value.FAKE_REFRACTION_AMOUNT.7 = 1,75x
+           value.FAKE_REFRACTION_AMOUNT.8 = 2,00x
+
+        option.FAKE_DISPERSION_AMOUNT = Dispersionsmenge
+        value.FAKE_DISPERSION_AMOUNT.0 = AUS
+           value.FAKE_DISPERSION_AMOUNT.1 = 0,25x
+           value.FAKE_DISPERSION_AMOUNT.2 = 0,50x
+           value.FAKE_DISPERSION_AMOUNT.3 = 0,75x
+           value.FAKE_DISPERSION_AMOUNT.4 = 1,00x
+           value.FAKE_DISPERSION_AMOUNT.5 = 1,25x
+           value.FAKE_DISPERSION_AMOUNT.6 = 1,50x
+           value.FAKE_DISPERSION_AMOUNT.7 = 1,75x
+           value.FAKE_DISPERSION_AMOUNT.8 = 2,00x
+
+        option.REFRACTION_SMUDGE_AMOUNT = Unschärfemenge
+        value.REFRACTION_SMUDGE_AMOUNT.0 = AUS
+           value.REFRACTION_SMUDGE_AMOUNT.1 = 0,25x
+           value.REFRACTION_SMUDGE_AMOUNT.2 = 0,50x
+           value.REFRACTION_SMUDGE_AMOUNT.3 = 0,75x
+           value.REFRACTION_SMUDGE_AMOUNT.4 = 1,00x
+           value.REFRACTION_SMUDGE_AMOUNT.5 = 1,25x
+           value.REFRACTION_SMUDGE_AMOUNT.6 = 1,50x
+           value.REFRACTION_SMUDGE_AMOUNT.7 = 1,75x
+           value.REFRACTION_SMUDGE_AMOUNT.8 = 2,00x
+
+        screen.Water_fog_color = Wassernebel-Einstellungen
+            option.Dirt_Scatter_R = Streuung Rot (Schmutz)
+            option.Dirt_Scatter_G = Streuung Grün (Schmutz)
+            option.Dirt_Scatter_B = Streuung Blau (Schmutz)
+            option.Dirt_Absorb_R = Absorption Rot (Schmutz)
+            option.Dirt_Absorb_G = Absorption Grün (Schmutz)
+            option.Dirt_Absorb_B = Absorption Blau (Schmutz)
+            option.Water_Absorb_R = Absorption Rot (Wasser)
+            option.Water_Absorb_G = Absorption Grün (Wasser)
+            option.Water_Absorb_B = Absorption Blau (Wasser)
+
+
+screen.Post_Processing = Nachbearbeitung
+    option.TONEMAP = Tonemapping-Operator
+    screen.Exposure = Belichtungseinstellungen
+        option.Manual_exposure_value = Manuelle Belichtungsstufe §a(AUTO-BELICHTUNG DEAKTIVIEREN, UM DIES ZU VERWENDEN)
+        option.EXPOSURE_MULTIPLIER = Belichtungsmultiplikator
+        option.AUTO_EXPOSURE = Auto-Belichtung
+        option.Exposure_Speed = Anpassungsgeschwindigkeit der Auto-Belichtung
+        option.EXPOSURE_DARKENING = Abdunklungsstärke
+        option.EXPOSURE_BRIGHTENING = Aufhellungsstärke
+    screen.DepthOfField = Schärfentiefe-Einstellungen
+    screen.Purkinje_effect = Purkinje-Effekt-Einstellungen
+    option.FILM_GRAIN = Filmkorn
+    option.SHARPENING = Schärfungsmenge
+        suffix.SHARPENING = %
+        value.SHARPENING.0 = AUS
+    option.BLOOM_STRENGTH = Bloom-Multiplikator
+    screen.TAA_OPTIONS = Anti-Aliasing-Einstellungen
+        option.SCREENSHOT_MODE = Screenshot-Modus
+        option.TAA = TAA
+        option.RESPONSIVE_TAA = Reaktionsfähiges TAA §a(BEI TEMPORALEM HOCHSKALIEREN DEAKTIVIEREN)
+        option.BLEND_FACTOR = Überblendungsfaktor
+        option.BLEND_FACTOR_DURING_MOVEMENT = Überblendungsfaktor bei Kamerabewegung
+        option.TAA_UPSCALING = Temporales Hochskalieren
+        option.SCALE_FACTOR = Skalierungsfaktor
+            prefix.SCALE_FACTOR = §fHochskalieren von 
+            suffix.SCALE_FACTOR = x §fder Fensterauflösung
+	screen.COLOR_GRADING = Farbkorrektur
+		option.LUMINANCE_CURVE = Tonkurve
+		option.LOWER_CURVE = Untere Kurve
+		option.UPPER_CURVE = Obere Kurve
+		option.COLOR_GRADING_ENABLED=Farbkorrektur
+		option.SHADOWS_GRADE_R = Schatten §cRot
+		option.SHADOWS_GRADE_G = Schatten §aGrün
+		option.SHADOWS_GRADE_B = Schatten §9Blau
+		option.SHADOWS_GRADE_MUL = Schattenhelligkeit
+		option.MIDS_GRADE_R = Mitteltöne §cRot
+		option.MIDS_GRADE_G = Mitteltöne §aGrün
+		option.MIDS_GRADE_B = Mitteltöne §9Blau
+		option.MIDS_GRADE_MUL = Mitteltonhelligkeit
+		option.HIGHLIGHTS_GRADE_R = Lichter §cRot
+		option.HIGHLIGHTS_GRADE_G = Lichter §aGrün
+		option.HIGHLIGHTS_GRADE_B = Lichter §9Blau
+		option.HIGHLIGHTS_GRADE_MUL = Lichterhelligkeit
+
+    screen.Color_Processing = Farbverarbeitung
+        option.SATURATION = Sättigung
+            value.SATURATION.0.0 = 0,0 (Neutral)
+        option.CROSSTALK = Übersprechen
+            value.CROSSTALK.0.0 = 0,0 (Neutral)
+        option.WHITE_BALANCE = Weißabgleich
+            value.WHITE_BALANCE.6500 = 6500 (Neutral)
+    screen.Camera_Settings = Kameraeinstellungen
+        option.CAMERA_GRIDLINES = Kamerarasterlinien
+    option.MOTION_BLUR = Bewegungsunschärfe
+    option.MOTION_BLUR_STRENGTH = Bewegungsunschärfemenge
+    option.CHROMATIC_ABERRATION = Chromatische Aberration
+    option.CHROMATIC_ABERRATION_STRENGTH = Chromatische Aberrationsmenge
+    option.VIGNETTE = Vignette
+    option.VIGNETTE_STRENGTH = Vignettenmenge
+    screen.FLASHLIGHT_SETTING = Taschenlampen-Einstellungen
+
+    screen.GAMEPLAY_EFFECTS = Gameplay-Bildschirmeffekte
+    option.MOTION_AMOUNT = Bewegungsmenge in allen Gameplay-Effekten
+    option.WATER_ON_CAMERA_EFFECT = Wasser-Betreten/Verlassen-Effekt
+    option.DAMAGE_TAKEN_EFFECT = Schadenseffekt
+    option.ON_FIRE_DISTORT_EFFECT = Feuer-Effekt
+    option.ON_FIRE_DISTORT_EFFECT_STRENGTH = Feuer-Effekt-Stärke
+    option.LOW_HEALTH_EFFECT = Niedrige-Gesundheit-Effekte
+    option.LOW_HEALTH_EFFECT_START = Mindestgesundheit für Niedrige-Gesundheit-Effekt
+    option.CRITICALLY_LOW_HEALTH_EFFECT_START = Mindestgesundheit für Kritisch-niedrige-Gesundheit-Effekt
+    option.DROWNING_EFFECT = Ertrinkungseffekt
+
+
+screen.Resource_Pack_Support = Materialien / Ressourcenpaket-Unterstützung
+    screen.SPECULAR = Spiegelreflexionen
+        option.DEFERRED_SPECULAR = Reflexionen auf Gelände
+        option.DEFERRED_SSR_QUALITY =^ Umgebungsreflexionen
+            value.DEFERRED_SSR_QUALITY.0 =§c AUS
+            value.DEFERRED_SSR_QUALITY.1 = Gespiegelter Ansichtsmodus
+            suffix.DEFERRED_SSR_QUALITY = §§ Proben
+        option.DEFERRED_BACKGROUND_REFLECTION =^ Hintergrundreflexionen
+        option.DEFERRED_ROUGH_REFLECTION =^ Raue Reflexionen
+        option.FORWARD_SPECULAR = Reflexionen auf Wasser, Glas
+        option.FORWARD_SSR_QUALITY =^ Umgebungsreflexionen
+            value.FORWARD_SSR_QUALITY.0 =§c AUS
+            value.FORWARD_SSR_QUALITY.1 = Gespiegelter Ansichtsmodus
+            suffix.FORWARD_SSR_QUALITY = §§ Proben
+        option.FORWARD_BACKGROUND_REFLECTION =^ Hintergrundreflexionen
+        option.FORWARD_ROUGH_REFLECTION =^ Raue Reflexionen
+        option.SUN_SPECULAR_MULT = Sonne/Mond-Reflexion
+            value.SUN_SPECULAR_MULT.0 =§c AUS
+            value.SUN_SPECULAR_MULT.1 = AN
+            suffix.SUN_SPECULAR_MULT =x heller
+        option.ROUGHNESS_THRESHOLD = Reflexionssichtbarkeitsschwelle
+            suffix.ROUGHNESS_THRESHOLD = %
+            value.ROUGHNESS_THRESHOLD.0.0 = keine Schwelle
+        option.QUARTER_RES_SSR = 1/4-Auflösungstiefe abtasten
+
+    screen.Emissives = Emissive / Leuchtende Texturen
+        option.Emissive_Brightness = Emissionsmultiplikator
+        option.Emissive_Curve = Emissionskurve
+        option.EMISSIVE_TYPE_SETTING = Emissionsmodus
+            value.EMISSIVE_TYPE_SETTING.0 = Keine Emission
+            value.EMISSIVE_TYPE_SETTING.1 = Nur hardcodiert
+            value.EMISSIVE_TYPE_SETTING.2 = Hardcodiert + Lab-Emission
+            value.EMISSIVE_TYPE_SETTING.3 = Nur Lab-Emission
+            value.EMISSIVE_TYPE_SETTING.4 = Auto
+
+
+screen.POM = Parallax-Occlusion-Mapping / POM
+    option.POM = Parallax-Occlusion-Mapping
+    option.MAX_ITERATIONS = Qualität
+    option.POM_DEPTH = Tiefe
+    option.MAX_DIST = Maximale Entfernung
+    option.Adaptive_Step_length = Dynamische Qualität
+    option.Horrible_slope_normals = Schlechte Hangflächen-Normalen
+
+screen.Subsurface_Scattering = Subsurface-Scattering
+    option.LabSSS_Curve = LabSSS-Kurve
+    option.MISC_BLOCK_SSS = SSS für zufällige Blöcke
+    option.MOB_SSS = SSS für Mobs
+    option.Ambient_SSS = SSS vom Himmel
+    option.ambientsss_brightness = Himmel-SSS-Helligkeit
+    option.SSS_TYPE_SETTING = SSS-Modus
+        value.SSS_TYPE_SETTING.0 = Keiner
+        value.SSS_TYPE_SETTING.1 = Nur hardcodiert
+        value.SSS_TYPE_SETTING.2 = Hardcodiert + LabSSS
+        value.SSS_TYPE_SETTING.3 = Nur LabSSS
+        value.SSS_TYPE_SETTING.4 = Auto
+    option.sss_density_multiplier = SSS-Dichtemultiplikator
+    option.sss_absorbance_multiplier = SSS-Absorptionsmultiplikator
+
+screen.Porosity = Porosität / Pfützen
+    option.Porosity = Porosität
+
+screen.Rainbow_Settings = Regenbogen-Einstellungen
+    option.RAINBOW = Regenbogen
+        value.RAINBOW.0 = Aus
+        value.RAINBOW.1 = Nach Regen
+        value.RAINBOW.2 = Immer an
+    option.RAINBOW_BRIGHTNESS = Regenbogenhelligkeit
+    option.RAINBOW_DISTANCE = Regenbogenentfernung
+    option.RAINBOW_TIME = Regenbogen-Ausblendzeit (Sekunden)
+    option.RAINBOW_ONLY_BELOW_CLOUDS = Regenbogen über Wolken
+
+option.RAIN_BRIGHTNESS = Regenhelligkeit
+option.RAIN_MODE = Regenmodus
+    option.RAIN_MODE.comment = Gibt an, wie Vanilla-Regenpartikel dem Bild hinzugefügt werden.
+    value.RAIN_MODE.0 = Helligkeit erhöhen (Bliss)
+    value.RAIN_MODE.1 = Partikel-Albedo verwenden
+
+screen.AURORA_SETTINGS = Polarlichter-Einstellungen
+    option.AURORA_LOCATION = Polarlichter
+        value.AURORA_LOCATION.0 = Aus
+        value.AURORA_LOCATION.1 = Nur in schneebedeckten Biomen
+        value.AURORA_LOCATION.2 = Immer an
+    option.AURORA_MOON = Polarlichter nur wenn der Mond unter dem Horizont ist
+    option.AURORA_CHANCE = Polarlichter-Wahrscheinlichkeit
+        suffix.AURORA_CHANCE = %
+    option.AURORA_BRIGHTNESS = Polarlichterhelligkeit
+    option.AURORA_R = Polarlichter Rot
+    option.AURORA_G = Polarlichter Grün
+    option.AURORA_B = Polarlichter Blau
+
+option.MATERIAL_AO = Material-Umgebungsokklusion
+option.NORMAL_MAP_MULT = Normalkarten-Multiplikator
+value.NORMAL_MAP_MULT.1.0 = Standard 1.0 §aRessourcenpakete erwarten diesen Wert
+suffix.NORMAL_MAP_MULT = §c Ressourcenpakete erwarten DIESEN Wert NICHT
+
+option.DOF_QUALITY=Schärfentiefe
+    value.DOF_QUALITY.-1=Aus
+    value.DOF_QUALITY.0=Sechseckig
+    value.DOF_QUALITY.1=Niedrig
+    value.DOF_QUALITY.2=Mittel
+    value.DOF_QUALITY.3=Hoch
+    value.DOF_QUALITY.4=Ultra
+    value.DOF_QUALITY.5=Jitter §aAUTOFOKUS DEAKTIVIEREN & SCREENSHOT-MODUS AKTIVIEREN §c(VOXY NICHT UNTERSTÜTZT!)
+	option.MANUAL_FOCUS=Fokus
+    option.DOF_ANAMORPHIC_RATIO=Anamorphisches Verhältnis
+    value.MANUAL_FOCUS.-2=Auto-Fokus
+	value.MANUAL_FOCUS.-1=Helligkeitsregler
+    option.focal = Brennweite
+    option.fstop = Blende
+    option.DoF_Adaptation_Speed = Auto-Fokus-Geschwindigkeit
+    option.FAR_BLUR_ONLY = Unschärfe nah der Kamera deaktivieren
+    option.REMOVE_HAND_BLUR = Unschärfe auf Spielerhand deaktivieren
+    option.DOF_DISPERSION_MULT = Chromatische Aberration Versatz
+
+	screen.JITTER_DOF=Jitter-Schärfentiefe-Einstellungen
+		option.JITTER_STRENGTH=Jitter-Stärke
+		option.FOCUS_LASER_COLOR=Fokus
+		value.FOCUS_LASER_COLOR.0=Rot
+		value.FOCUS_LASER_COLOR.1=Grün
+		value.FOCUS_LASER_COLOR.2=Blau
+		value.FOCUS_LASER_COLOR.3=Pink
+		value.FOCUS_LASER_COLOR.4=Gelb
+		value.FOCUS_LASER_COLOR.5=Weiß
+
+option.AEROCHROME_MODE=Aerochrome-Modus
+option.AEROCHROME_PINKNESS=Aerochrome Rot:Pink-Verhältnis
+option.AEROCHROME_WOOL_ENABLED=Aerochrome Wolle
+
+option.AEROCHROME_MODE.comment = Infrarotfilm. Google "Aerochrome" für eine Vorstellung davon, was es macht.
+option.AEROCHROME_PINKNESS.comment = Höher = Pink. Niedriger = Rot
+option.AEROCHROME_WOOL_ENABLED.comment = Technisch gesehen sollten Wollsachen betroffen sein, aber es ruiniert viele Gebäude. Aktivieren für mehr technische Korrektheit.
+
+option.EMISSIVE_ORES = Emissive Erze
+    value.EMISSIVE_ORES.0 = Aus
+    value.EMISSIVE_ORES.1 = An (labPBR-Emission nicht überschreiben)
+    value.EMISSIVE_ORES.2 = An (labPBR-Emission überschreiben)
+option.EMISSIVE_ORES_STRENGTH = Emissive Erze Helligkeit
+
+option.EMISSIVE_TRIMS = Emissive Zierleisten
+    value.EMISSIVE_TRIMS.0 = Aus
+    value.EMISSIVE_TRIMS.1 = An (labPBR-Emission nicht überschreiben)
+    value.EMISSIVE_TRIMS.2 = An (labPBR-Emission überschreiben)
+option.EMISSIVE_TRIMS_STRENGTH = Emissive Zierleisten Helligkeit
+
+option.PLANET_CURVATURE = Planetenkrümmung §c(VOXY NICHT UNTERSTÜTZT!)
+option.CURVATURE_AMOUNT = Krümmungsmenge
+
+option.VANILLA_CHUNK_FADING = Chunks Einblenden §c(Iris 1.10.3+)
+value.VANILLA_CHUNK_FADING.0 = Aus
+value.VANILLA_CHUNK_FADING.1 = Einblenden
+value.VANILLA_CHUNK_FADING.2 = Einblenden + Hineingleiten
+
+option.FISHEYE_EFFECT = Fischauge-Effekt
+option.FISHEYE_STRENGTH = Fischauge-Stärke
+
+screen.selection_box_outline = Auswahlrahmen-Umriss
+option.SELECT_BOX = Auswahlrahmen
+option.RAINBOW_SELECT_BOX = Regenbogen-Auswahlrahmen
+    value.RAINBOW_SELECT_BOX.0 = Aus
+    value.RAINBOW_SELECT_BOX.1 = Statisch
+    value.RAINBOW_SELECT_BOX.2 = Animiert
+
+option.SELECT_BOX_COL_R = Auswahlrahmen Rot
+option.SELECT_BOX_COL_G = Auswahlrahmen Grün
+option.SELECT_BOX_COL_B = Auswahlrahmen Blau
+
+option.USE_CUSTOM_DIFFUSE_LIGHTING_COLORS = Benutzerdefinierte Diffusfarben
+option.DIRECTLIGHT_DIFFUSE_R = Sonne R
+option.DIRECTLIGHT_DIFFUSE_G = Sonne G
+option.DIRECTLIGHT_DIFFUSE_B = Sonne B
+option.INDIRECTLIGHT_DIFFUSE_R = Umgebung R
+option.INDIRECTLIGHT_DIFFUSE_G = Umgebung G
+option.INDIRECTLIGHT_DIFFUSE_B = Umgebung B
+option.USE_CUSTOM_CLOUD_LIGHTING_COLORS = Benutzerdefinierte Wolkenfarben
+option.DIRECTLIGHT_CLOUDS_R = Sonne R
+option.DIRECTLIGHT_CLOUDS_G = Sonne G
+option.DIRECTLIGHT_CLOUDS_B = Sonne B
+option.INDIRECTLIGHT_CLOUDS_R = Umgebung R
+option.INDIRECTLIGHT_CLOUDS_G = Umgebung G
+option.INDIRECTLIGHT_CLOUDS_B = Umgebung B
+option.USE_CUSTOM_FOG_LIGHTING_COLORS = Benutzerdefinierte Nebelfarben
+option.DIRECTLIGHT_FOG_R = Sonne R
+option.DIRECTLIGHT_FOG_G = Sonne G
+option.DIRECTLIGHT_FOG_B = Sonne B
+option.INDIRECTLIGHT_FOG_R = Umgebung R
+option.INDIRECTLIGHT_FOG_G = Umgebung G
+option.INDIRECTLIGHT_FOG_B = Umgebung B
+option.USE_CUSTOM_SKY_GROUND_LIGHTING_COLORS = Benutzerdefinierte Himmelbodenfarbe
+option.SKY_GROUND_R = Boden R
+option.SKY_GROUND_G = Boden G
+option.SKY_GROUND_B = Boden B
+
+screen.Misc_Settings.comment = Zufällige Einstellungen zum DEBUGGEN oder für anderen Spaß.
+screen.Sun_and_Moon_Colors.comment = Farbe von Sonne oder Mond konfigurieren.
+option.sunPathRotation.comment = Winkel von Sonne oder Mond konfigurieren
+option.sun_illuminance.comment = Helligkeit der Sonne konfigurieren
+option.moon_illuminance.comment = Helligkeit des Mondes konfigurieren
+
+screen.Direct_Light.comment = Einstellungen für Sonne und Schatten konfigurieren.
+
+screen.Shadows.comment = Schatten von der Sonne nach Belieben konfigurieren.
+    option.SCREENSPACE_CONTACT_SHADOWS.comment = §bWas ist das?§r Dies sind Schatten für weit entfernte Dinge und kleine Details in der Nähe. §aLEISTUNGSKOSTEN:§r niedrig bis mittel; bei höheren Auflösungen teurer.
+    option.RENDER_ENTITY_SHADOWS.comment = §bWas ist das?§r Schatten auf alle Arten von Entitäten, wie Mobs, Truhen, Banner oder Schilder. §aLEISTUNGSKOSTEN:§r niedrig bis hoch; sehr teuer bei vielen Entitäten in der Nähe.
+    option.shadowMapResolution.comment = Die Qualität der Schatten von der Sonne, die von Dingen in der Welt geworfen werden. §aLEISTUNGSKOSTEN:§r mittel bis sehr hoch; Schatten müssen die 3D-Welt ein zweites Mal aus der Perspektive der Sonne rendern, weshalb die Leistung halbiert wird.
+    option.shadowDistance.comment = Die maximale Entfernung, die die Schattenkarte rendern kann. §aLEISTUNGSKOSTEN:§r mittel bis sehr hoch; Bei hoher Chunk-Renderweite werden die Schatten teurer.
+    screen.Filtering.comment = Filtereffekte für die Schatten konfigurieren.
+        option.SHADOW_FILTER_SAMPLE_COUNT.comment = Die Qualität des einfachen Schattenfilters. Dieser Filter weicht die Schatten nur ab. §aLEISTUNGSKOSTEN:§r niedrig bis mittel; Eine Erhöhung sollte etwas Rauschen an den Schattenrändern reduzieren.
+        option.Min_Shadow_Filter_Radius.comment = Die maximale Weichheit des einfachen Schattenfilters.
+        option.Variable_Penumbra_Shadows.comment = Dieser Effekt weicht die Schatten umso mehr ab, je weiter der Schatten von dem entfernt ist, was ihn geworfen hat. Dieser Effekt wird verwendet, um qualitativ hochwertigere Schatten und Subsurface-Scattering zu erstellen. §aLEISTUNGSKOSTEN:§r niedrig bis hoch;
+        option.VPS_Search_Samples.comment = Die Qualität des variablen Halbschatten-Filters. §aLEISTUNGSKOSTEN:§r niedrig bis hoch; Eine Erhöhung sollte etwas Rauschen im Subsurface-Scattering und sehr weichen Schatten reduzieren.
+        option.Max_Shadow_Filter_Radius.comment = Die maximale Weichheit, die Schatten erreichen können, wenn sie weit von dem entfernt sind, was sie geworfen hat.
+        option.Max_Filter_Depth.comment = Die Größe der Sonne konfigurieren. Bei einer größeren Sonne werden Schatten näher an dem, was sie wirft, weicher.
+
+screen.Ambient_light.comment = Einstellungen für die Beleuchtung in schattigen Bereichen konfigurieren
+    option.AO_Strength.comment = Die Stärke der Umgebungsokklusion durch SSAO, GTAO und SSRT konfigurieren. §bWas ist das?§r Umgebungsokklusion sind die kleinen weichen Schatten in Ecken und ähnlichem.
+    option.GI_Strength.comment = Die Stärke der globalen Beleuchtung durch SSRT konfigurieren. §bWas ist das?§r Globale Beleuchtung in diesem Szenario ist speziell das Licht, das von einer Oberfläche reflektiert und auf einen anderen Bereich geworfen wird.
+    option.HQ_SSGI.comment = Weitreichendes bildschirmraum-Raytracing umschalten. Dies ermöglicht SSRT-Beleuchtung, innerhalb der Szene VIEL weiter zu wandern, von wo sie prallt/Schatten wirft. §aLEISTUNGSKOSTEN:§r sehr hoch
+    option.Hand_Held_lights.comment = Shader-seitige handgehaltene Lichtquellen umschalten. §aLEISTUNGSKOSTEN:§r sehr niedrig
+    option.SKY_CONTRIBUTION_IN_SSRT.comment = Dem SSRT ermöglichen, den gesamten Himmel und Nebel zu berücksichtigen, um hochwertige Beleuchtung für schattige Bereiche zu erstellen. Dies kann mehr Rauschen einführen. §aLEISTUNGSKOSTEN:§r mittel
+
+    option.ambientOcclusionLevel.comment = Die Stärke der Umgebungsokklusion von Vanilla-Minecraft konfigurieren. §bWas ist das?§r Diese Umgebungsokklusion ist in Minecraft auch ohne aktivierte Shader vorhanden.
+    option.ambient_brightness.comment = Die Helligkeit der Beleuchtung in schattigen Bereichen konfigurieren
+    option.MIN_LIGHT_AMOUNT.comment = Die Mindestlichtmenge in schattigen Bereichen draußen konfigurieren.
+    option.MIN_LIGHT_AMOUNT_INSIDE.comment = Die Mindestlichtmenge in schattigen Bereichen drinnen konfigurieren.
+    option.indirect_effect.comment = Verschiedene Effekttypen umschalten, um die Beleuchtung in schattigen Bereichen hochwertiger zu machen. §aLEISTUNGSKOSTEN:§r. Vanilla AO: sehr niedrig. SSAO: niedrig bis mittel. HQ SSAO: mittel. GTAO: mittel bis hoch. SSRT: hoch bis sehr hoch - GI ist langsamer
+
+    screen.Ambient_Colors.comment = Die Farbe des Lichts in schattigen Bereichen konfigurieren.
+    screen.Torch_Colors.comment = Die Farbe des Lichts von Fackeln oder anderen platzierten Lichtquellen konfigurieren.
+
+    option.LPV_SIZE.comment = Konfiguriert die Größe (in Blöcken) des Volumens für farbiges Licht.
+    option.LPV_SATURATION.comment = Konfiguriert die Intensität des farbigen Lichts.
+    option.LPV_TINT_SATURATION.comment = Konfiguriert die Intensität der Tönung durch transluzente Blöcke auf farbiges Licht.
+    option.LPV_NORMAL_STRENGTH.comment = Konfiguriert, wie stark Oberflächennormalen die Lichtrichtung beeinflussen.
+    option.LPV_ENTITY_LIGHTS.comment = Erlaubt Entitäten, zum farbigen Licht beizutragen.
+    option.LPV_REDSTONE_LIGHTS.comment = Erlaubt Redstoneblöcken, zum farbigen Licht beizutragen.
+    option.LPV_COLORED_CANDLES.comment = Erlaubt farbigen Kerzen, passendes farbiges Licht auszustrahlen.
+    option.LPV_NOSHADOW_HACK.comment = Fix für Iris 1.7.0 und älter! Ermöglicht Flutfüllung im Nether & Ende, deaktiviert aber Entitäts- & fallengelassene Gegenstandslichter.
+    option.LPV_VL_FOG_ILLUMINATION.comment = Das farbige Licht ermöglichen, die Luft um es herum zu beleuchten. Das Aktivieren für draußen kann mit niedrigen Nebelproben seltsam aussehen.
+    option.LPV_VL_FOG_ILLUMINATION_BRIGHTNESS.comment = Die Helligkeit des beleuchteten Nebels konfigurieren.
+    
+screen.Resource_Pack_Support.comment = Eine Handvoll Effekte, die Informationen eines Ressourcenpakets verwenden.
+    screen.SPECULAR.comment = Die Reflexionen konfigurieren. Sie können Informationen eines LabPBR-Ressourcenpakets verwenden.
+        option.DEFERRED_SPECULAR.comment = Detaillierte Reflexionen auf allen festen Objekten umschalten. §bWas ist das?§r "Fest" bedeutet alles, durch das man nicht sehen kann, wie Stein, Holz, Gras, Blätter
+        option.FORWARD_SPECULAR.comment = Detaillierte Reflexionen auf allen transluzenten Objekten umschalten. §bWas ist das?§r "Transluzent" bedeutet Dinge, durch die man sehen kann, wie Glas, Wasser, Eis, Schleim
+        
+        option.DEFERRED_SSR_QUALITY.comment = Die Qualität der Reflexionen der Umgebung konfigurieren, die auf Gelände sichtbar sind. §bWas ist das?§r Konfigurieren, wie viele Proben der SSR/bildschirmraumbasierte Reflexionen nehmen, um eine Reflexion der Welt zu erstellen. §b"Gespiegelter Ansichtsmodus"§r ist buchstäblich das gesehene Bild, aber auf jeder Oberfläche gespiegelt - EXTREM niedrige Qualität. §aLEISTUNGSKOSTEN:§r niedrig bis sehr hoch
+        option.FORWARD_SSR_QUALITY.comment = Die Qualität der Reflexionen der Umgebung konfigurieren, die auf Wasser, Glas und anderen transluzenten Dingen sichtbar sind. §bWas ist das?§r Konfigurieren, wie viele Proben der SSR/bildschirmraumbasierte Reflexionen nehmen, um eine Reflexion der Welt zu erstellen. §b"Gespiegelter Ansichtsmodus"§r ist buchstäblich das gesehene Bild, aber auf jeder Oberfläche gespiegelt - EXTREM niedrige Qualität. §aLEISTUNGSKOSTEN:§r niedrig bis sehr hoch
+
+        option.DEFERRED_BACKGROUND_REFLECTION.comment = Die Reflexionen von Himmel, Wolken oder Nebel umschalten, die auf Gelände sichtbar sind. §bWas ist das?§r Reflexionen von Dingen wie Himmel, Wolken und Nebel. §aLEISTUNGSKOSTEN:§r niedrig
+        option.FORWARD_BACKGROUND_REFLECTION.comment = Die Reflexionen von Himmel, Wolken oder Nebel umschalten, die auf Wasser, Glas und anderen transluzenten Dingen sichtbar sind. §bWas ist das?§r Reflexionen von Dingen wie Himmel, Wolken und Nebel. §aLEISTUNGSKOSTEN:§r niedrig
+       
+        option.DEFERRED_ROUGH_REFLECTION.comment = Raue Reflexionen umschalten, die auf Gelände sichtbar sind. §bWas ist das?§r Dies ist, wie "verteilt" eine Reflexion basierend darauf ist, wie "glatt" eine Oberfläche ist; sehr unebene Oberflächen streuen Reflexionen viel, während glatte Oberflächen wie Spiegel aussehen. §aLEISTUNGSKOSTEN:§r mittel
+        option.FORWARD_ROUGH_REFLECTION.comment = Raue Reflexionen umschalten, die auf Wasser, Glas und anderen transluzenten Dingen sichtbar sind. §bWas ist das?§r Dies ist, wie "verteilt" eine Reflexion basierend darauf ist, wie "glatt" eine Oberfläche ist; sehr unebene Oberflächen streuen Reflexionen viel, während glatte Oberflächen wie Spiegel aussehen. §aLEISTUNGSKOSTEN:§r mittel
+        
+        option.ROUGHNESS_THRESHOLD.comment = Eine Schwelle konfigurieren, ab der Umgebungs- und Hintergrundreflexionen nicht mehr sichtbar sind. §bDies beeinflusst keine Sonne/Mond-Reflexionen§r. §aLEISTUNGSKOSTEN:§r hohe Schwellen können die Leistung verbessern - niedrige Schwellen können die Leistung verschlechtern
+        option.SUN_SPECULAR_MULT.comment = Die Reflexion von Sonne oder Mond umschalten oder heller machen. §bBleibt sichtbar, auch wenn Umgebungs- und Hintergrundreflexionen deaktiviert sind§r. §aLEISTUNGSKOSTEN:§r sehr niedrig
+        
+
+screen.Subsurface_Scattering.comment = §bWas ist das?§r Subsurface-Scattering ist das, was passiert, wenn man ein helles Licht auf die Hand hält und sie zu leuchten beginnt. Die Sonne macht dasselbe mit Pflanzen, Stoff, Haut und anderen Dingen.
+    option.SSS_TYPE_SETTING.comment = Konfigurieren, wie Subsurface-Scattering auf die Welt angewendet wird. §bHardcodiert:§r Der Shader entscheidet, was es erhält. §bLabSSS:§r Das Ressourcenpaket entscheidet, was es erhält. §aLEISTUNGSKOSTEN:§r sehr niedrig
+    option.MOB_SSS.comment = Subsurface-Scattering für Mobs umschalten. Spieler sind eingeschlossen. §aLEISTUNGSKOSTEN:§r sehr niedrig
+    option.MISC_BLOCK_SSS.comment = Subsurface-Scattering für zufällige Blöcke umschalten, für die es möglicherweise nicht passt. Dies ist hauptsächlich für Gras und Sand. §aLEISTUNGSKOSTEN:§r sehr niedrig
+    option.Ambient_SSS.comment = §bWas ist das?§r Subsurface-Scattering von Licht, das vom Himmel kommt, anstatt von der Sonne. §aLEISTUNGSKOSTEN:§r sehr niedrig bis mittel; wenn SSAO aktiviert ist, kostet dies sehr wenig, kostet aber mehr, wenn SSAO AUS ist
+    option.ambientsss_brightness.comment = Die Helligkeit des Subsurface-Scatterings vom Himmelslicht konfigurieren
+
+screen.Emissives.comment = §bWas ist das?§r Emissivität ist einfach, wie viel Licht etwas ausstrahlt, oder wie sehr etwas leuchtet.
+    option.Emissive_Brightness.comment = Konfigurieren, wie hell die Texturemission sein soll.
+    option.EMISSIVE_TYPE_SETTING.comment = Konfigurieren, wie Texturemission auf die Welt angewendet wird. §bHardcodiert:§r Der Shader entscheidet, was es erhält. §bLabSSS:§r Das Ressourcenpaket entscheidet, was es erhält. §aLEISTUNGSKOSTEN:§r sehr niedrig
+    option.Emissive_Curve.comment = Dies bestimmt, wie schnell die emissive Textur ihren hellsten Punkt erreicht. 1.0 ist linear.
+
+screen.POM.comment = Einstellungen für Parallax-Occlusion-Mapping konfigurieren, das Informationen eines Ressourcenpakets verwendet.
+    option.POM.comment = §bWas ist das?§r Dieser Effekt versucht, 3D-Geometrie zu erstellen, wo zuvor keine war, indem ein spezielles Bild eines Ressourcenpakets verwendet wird. Dieser Effekt drückt grundsätzlich nur nach innen, daher können bei steilen Winkeln einige Artefakte auftreten. §aLEISTUNGSKOSTEN:§r mittel bis hoch
+    option.MAX_ITERATIONS.comment = Die Qualität des Parallax-Occlusion-Mapping-Effekts konfigurieren. Wenn beim Nahsehen einzelne Schichten sichtbar sind, macht eine Erhöhung mehr Schichten, sodass sie schwerer zu erkennen sind. §aLEISTUNGSKOSTEN:§r hoch
+    option.POM_DEPTH.comment = Wie tief der Parallax-Occlusion-Mapping-Effekt in eine Oberfläche eindringen kann. §aLEISTUNGSKOSTEN:§r sehr niedrig
+    option.MAX_DIST.comment = Die maximale Entfernung von der Kamera, bei der der Parallax-Occlusion-Mapping-Effekt rendern kann. §aLEISTUNGSKOSTEN:§r hoch
+    option.Adaptive_Step_length.comment = Dies erhöht die visuelle Qualität, ohne die tatsächliche Qualität erhöhen zu müssen. Dies verursacht einige Artefakte, wenn man sehr nah schaut oder eine sehr unruhige Höhenkarte mit stark variierenden Höhen hat.
+    option.Horrible_slope_normals.comment = Dies ist eine schlecht umgesetzte Implementierung, um den Seiten des Parallax-Occlusion-Mappings eine Oberfläche zu geben. Ich empfehle dies nicht. §aLEISTUNGSKOSTEN:§r niedrig
+    
+screen.Porosity.comment = Einstellungen für Nässe und Pfützen konfigurieren
+    option.Porosity.comment = §bWas ist das?§r Porosität beschreibt, wie porös ein Material ist, oder im Wesentlichen, wie viel Wasser es aufnehmen kann. Zum Beispiel sind Schwämme sehr porös; Wasser wird darin gespeichert und dunkelt es dadurch ab. §aLEISTUNGSKOSTEN:§r niedrig
+    option.PUDDLE_MODE.comment = Pfützen für Regen umschalten. §aLEISTUNGSKOSTEN:§r niedrig
+    option.Puddle_Size.comment = Die Größe der Pfützen konfigurieren.
+
+option.FAKE_REFRACTION_AMOUNT.comment = Die Menge der Verzerrung durch Brechung konfigurieren. §bWas ist das?§r Brechung kann man sich als Licht vorstellen, das sich beim Durchgang durch Wasser oder Glas biegt, sodass die dadurch betrachteten Dinge gestreckt, gestaucht oder verzerrt wirken. §aLEISTUNGSKOSTEN:§r sehr niedrig
+option.FAKE_DISPERSION_AMOUNT.comment = Die Dispersionsmenge innerhalb der Brechung konfigurieren. §bWas ist das?§r Bei Brechung erhalten stark verzerrte Teile eine "chromatische Aberration", die das Aussehen eines Regenbogens oder Lichtprismas fälscht. §aLEISTUNGSKOSTEN:§r sehr niedrig
+option.REFRACTION_SMUDGE_AMOUNT.comment = Die Unschärfemenge innerhalb der Brechung konfigurieren. §bWas ist das?§r Bei Brechung werden stark verzerrte Teile unscharf. §cVerursacht visuelles Rauschen innerhalb der Brechung. §aLEISTUNGSKOSTEN:§r sehr niedrig
+
+screen.Fog.comment = Einstellungen für den raygemarchten volumetrischen Nebel oder entfernungsbasierten Nebel konfigurieren.
+    option.VL_RENDER_SCALE.comment = Die Auflösung von volumetrischem Nebel und Wolken konfigurieren. §aLEISTUNGSKOSTEN:§r hoch
+        suffix.VL_RENDER_SCALE = x
+    option.VL_SAMPLES.comment = Die Qualität des volumetrischen Nebels konfigurieren. §aLEISTUNGSKOSTEN:§r hoch
+    option.BLOOMY_FOG.comment = Die Stärke des Bloom konfigurieren, der auf Nebel angewendet wird. §bWas ist das?§r Dieser Effekt lässt den Nebel weich wirken und hilft, etwas Rauschen zu verbergen. Kann sichtbares Flimmern an detaillierten Kanten verursachen. §aLEISTUNGSKOSTEN:§r sehr niedrig
+    option.Haze_amount.comment = Konfigurieren, wie dicht die Atmosphäre um einen herum ist. §bWas ist das?§r Dies ist der blaue Dunst, den man in der Ferne sieht.
+    option.RainFog_amount.comment = Konfigurieren, wie dicht der Nebel bei Regen wird.
+    option.RAYMARCH_CLOUDS_WITH_FOG.comment = §cWARNUNG§r: Diese Einstellung ist experimentell und nicht sehr gut gemacht! Die Nebelproben müssen erhöht werden, damit sie den normalen Wolken entsprechen. Detaillierten Nebel umschalten, wenn man sich in oder um eine Wolke bewegt. §aLEISTUNGSKOSTEN:§r hoch.
+    option.BorderFog.comment = §bWas ist das?§r Einen Nebel umschalten, der versucht, die ladenden Chunks zu verbergen. Da der Himmel überall zu finden ist, ist es schwierig, dies gut umzusetzen. §aLEISTUNGSKOSTEN:§r sehr sehr niedrig
+
+    screen.TOD_fog.comment = Die Dichte des Nebels konfigurieren, der zu bestimmten Tageszeiten erscheint.
+        option.TOD_Fog_mult.comment = Konfigurieren, wie viel Gesamtnebel zu bestimmten Tageszeiten erscheint. Dies beeinflusst nicht den atmosphärischen Dunst.
+
+    screen.Cave_Fog.comment = Einstellungen für Nebel konfigurieren, der in sehr dunklen Bereichen wie Höhlen erscheint.
+        option.Cave_Fog.comment = Den Nebel umschalten, der in dunklen Bereichen erscheint. Es ist unmöglich, mit einem Shader genau zu erkennen, wann man in einer Höhle ist, daher kann dieser Nebel an Orten erscheinen, die keine Höhle sind. §aLEISTUNGSKOSTEN:§r niedrig
+        option.CaveFogFallOff.comment = Konfigurieren, wie schnell der Nebelgradient seinen hellsten Teil erreicht.
+
+screen.Clouds.comment = Einstellungen für die raygemarchten volumetrischen Wolken konfigurieren.
+    option.VOLUMETRIC_CLOUDS.comment = Die Wolken umschalten. §aLEISTUNGSKOSTEN:§r mittel bis hoch
+    option.CLOUDS_QUALITY.comment = Die Auflösung der volumetrischen Wolken konfigurieren. §aLEISTUNGSKOSTEN:§r hoch
+    option.CLOUDS_SHADOWS.comment = Schatten umschalten, die von den Wolken auf den Boden und darunter liegenden Nebel geworfen werden. §aLEISTUNGSKOSTEN:§r niedrig bis mittel
+    option.Daily_Weather.comment = Das täglich wechselnde Wetter umschalten. §bWas ist das?§r Es gibt 10 Wetterprofile, durch die der Shader täglich wechselt. Wenn dies aktiviert ist, können keine Wolkenbedeckungseinstellungen geändert werden. §aLEISTUNGSKOSTEN:§r niedrig
+    option.CHOOSE_RANDOM_WEATHER_PROFILE.comment = §bWas ist das?§r Den Shader konfigurieren, das Wetter zufällig aus einem der unten stehenden Tage auszuwählen. Wenn dies deaktiviert ist, wählt der Shader den Tag der Reihe nach aus.
+    option.Cloud_Speed.comment = Konfigurieren, wie schnell sich die Wolken im Laufe des Tages bewegen.
+    option.Rain_coverage.comment = Wolkenbedeckung bei Regen hinzufügen.
+    option.Thunder_coverage.comment = Wolkenbedeckung bei Gewitter hinzufügen. (Regenbedeckung wird ebenfalls hinzugefügt!)
+
+
+screen.World.comment = Einstellungen für verschiedene Dinge in der Welt konfigurieren, von wedelnden Pflanzen bis zu wasserbezogenen Einstellungen.
+    screen.Water.comment = Einstellungen für das Wasser konfigurieren.
+        option.Dirt_Amount.comment = Konfigurieren, wie viel Schmutz im Wasser ist. Dies steuert die Dichte des Nebels im Wasser.
+        option.Water_Top_Layer.comment = Die Y-Koordinate konfigurieren, bei der der Ozean in der Welt sein soll.
+    screen.Water_fog_color.comment = Farben des Wassernebels konfigurieren.
+
+    screen.Weather_Effects = Wettereffekte
+        option.PUDDLE_MODE = Pfützen
+            value.PUDDLE_MODE.0 = Keine Nässe
+            value.PUDDLE_MODE.1 = Pfützen + Komplett nass
+            value.PUDDLE_MODE.2 = Nur Pfützen
+            value.PUDDLE_MODE.3 = Nur komplette Nässe
+        option.Puddle_Size = Pfützengrößenmultiplikator
+        option.Puddle_Reflection_Sharpness = Pfützenreflexionsschärfe
+        option.Puddle_Reflection_Sharpness.comment = Steuert die Unschärfe von Pfützen. 1.0 bedeutet spiegelähnlich
+        option.ShaderSnow = Shader-Schneeeffekt
+            value.ShaderSnow.0 = Aus
+            value.ShaderSnow.1 = Beim Schneien
+            value.ShaderSnow.2 = In schneebedecktem Biom
+            value.ShaderSnow.3 = Immer an
+        option.ShaderSnowStrength = Shader-Schneestärke
+        option.RIPPLE_WATER = Wellen auf Wasser
+        option.RIPPLE_PUDDLES = Wellen auf Pfützen
+        option.RIPPLE_INTENSITY = Wellenintensität
+        option.RIPPLE_STRENGTH = Wasserweллenstärke
+
+screen.Climate.comment = Einstellungen für das Klima konfigurieren, wie saisonale Farben, tägliches Wetter und biomspezifischen Nebel.
+    screen.Seasons.comment = Saisonale Farben, die durch Sommer, Herbst, Winter und Frühling wechseln.
+        option.Seasons.comment = Saisonale Farben, die durch Sommer, Herbst, Winter und Frühling wechseln. §aLEISTUNGSKOSTEN:§r niedrig
+        option.Season_Length.comment = Steuern, wie lange eine einzelne Saison dauert, in Minecraft-Tagen.
+        option.Snowy_Winter.comment = Schnee im Winter umschalten. §aLEISTUNGSKOSTEN:§r niedrig
+        screen.Summer_colors.comment = Die Farben der Vegetation im Sommer konfigurieren.
+        screen.Fall_colors.comment = Die Farben der Vegetation im Herbst konfigurieren.
+        screen.Winter_colors.comment = Die Farben der Vegetation im Winter konfigurieren.
+        screen.Spring_colors.comment = Die Farben der Vegetation im Frühling konfigurieren.
+    
+    option.PER_BIOME_ENVIRONMENT.comment = Alle speziellen Umgebungen umschalten, die nur in einigen Biomen erscheinen. §aLEISTUNGSKOSTEN:§r niedrig
+
+        screen.SWAMP.comment = Die Umgebung in diesem Biomtyp konfigurieren.
+            option.SWAMP_ENV.comment = Die Umgebung nur für diesen Biomtyp umschalten. Die anderen Biomumgebungen bleiben aktiv, auch wenn diese deaktiviert ist.
+
+        screen.JUNGLE.comment = Die Umgebung in diesem Biomtyp konfigurieren.
+            option.JUNGLE_ENV.comment = Die Umgebung nur für diesen Biomtyp umschalten. Die anderen Biomumgebungen bleiben aktiv, auch wenn diese deaktiviert ist.
+
+        screen.DARKFOREST.comment = Die Umgebung in diesem Biomtyp konfigurieren.
+            option.DARKFOREST_ENV.comment = Die Umgebung nur für diesen Biomtyp umschalten. Die anderen Biomumgebungen bleiben aktiv, auch wenn diese deaktiviert ist.
+
+        screen.PALE_GARDEN.comment = Die Umgebung in diesem Biomtyp konfigurieren.
+            option.PALE_GARDEN_ENV.comment = Die Umgebung nur für diesen Biomtyp umschalten. Die anderen Biomumgebungen bleiben aktiv, auch wenn diese deaktiviert ist.
+
+
+screen.Foliage.comment = Einstellungen für Laub konfigurieren.
+    option.WAVY_PLANTS.comment = Wedelnde Pflanzen umschalten. §aLEISTUNGSKOSTEN:§r sehr niedrig
+    option.WAVY_STRENGTH.comment = Die Menge konfigurieren, mit der die Pflanzen wedeln.
+    option.WAVY_SPEED.comment = Die Geschwindigkeit konfigurieren, mit der die Pflanzen wedeln.
+
+screen.Post_Processing.comment = Einstellungen für alle Nachbearbeitungseffekte konfigurieren, von Anti-Aliasing bis Tonemapping.
+    screen.Tonemapping.comment = Einstellungen für Farbe und Tonemapping konfigurieren.
+    screen.Exposure.comment = Einstellungen für die Belichtung konfigurieren.
+    screen.DepthOfField.comment = Einstellungen für die Schärfentiefe konfigurieren.
+    screen.Purkinje_effect.comment = Einstellungen für den Purkinje-Effekt konfigurieren.
+    option.SHARPENING.comment = Die Menge der kontrastan passiven Schärfung konfigurieren, die auf das Bild angewendet wird. Dies kann wirklich verlorene Details aus Anti-Aliasing oder Hochskalieren hervorheben.
+    option.BLOOM_STRENGTH.comment = Die Bloom-Menge konfigurieren, die auf das Bild angewendet wird. §bWas ist das?§r Bloom ist das weiche Leuchten auf allem, um anzuzeigen, dass etwas hell ist oder nicht.
+    screen.TAA_OPTIONS.comment = Einstellungen für Anti-Aliasing konfigurieren.
+        option.SCREENSHOT_MODE.comment = §aDIES ÄNDERT DIE GRAFIKQUALITÄT IN KEINER WEISE§r. Frame-Akkumulation umschalten, um ein rauscharmes Bild zu erhalten. §bWas ist das?§r Es stapelt Frames aufeinander, sodass es wie eine Langzeitbelichtung ist.
+        option.TAA.comment = Temporales Anti-Aliasing umschalten. Dies entfernt alle gezackten Kanten an Dingen, weicht das Bild ab und hilft, Rauschen für viele Effekte zu reduzieren. Dies verursacht Geisterbilder oder Schlieren, weil es vergangene Frames für zusätzliche Informationen über die Welt verwendet. §aLEISTUNGSKOSTEN:§r niedrig
+        option.BLEND_FACTOR.comment = Konfigurieren, wie viel der Frame-Historie verwendet wird. Hohe Zahlen bedeuten weniger Verlassen auf die Frame-Historie, sodass es flimmrig und rauschig wirken kann. Niedrige Zahlen verlassen sich mehr auf die Frame-Historie, sodass es weniger rauschig wirken kann, aber mehr verwischt mit mehr Schlieren.
+        option.TAA_UPSCALING.comment = Temporales Hochskalieren umschalten. Dies erhält eine gute Qualitätsmenge aus einem niedrigauflösenden Bild beim Hochskalieren. Man kann also immer noch eine hochauflösend aussehende Auflösung im Vergleich zu typischem Hochskalieren haben und dennoch bessere Leistung erzielen.
+        option.SCALE_FACTOR.comment = Konfigurieren, von welchem Bruchteil der Auflösung hochskaliert werden soll - §aUnter 0,50x wird nicht empfohlen, es ist nur zum Spaß erlaubt!§r
+
+        
+	screen.COLOR_GRADING.comment = Erweiterte Farbkorrekturoptionen
+		option.LUMINANCE_CURVE.comment = Die Tonkurve aktivieren. Dies ist unabhängig von der Farbkorrektur und wird zuerst angewendet.
+		option.COLOR_GRADING_ENABLED.comment = Farbkorrektur aktivieren. Die RGB-Regler beeinflussen nicht die Helligkeit. Dies wird nach der Tonkurve angewendet.
+
+option.RESOURCEPACK_SKY.comment = §cWARNUNG: Inkompatibel mit benutzerdefinierter Mondrotation! §r. Ressourcenpaket-Himmelunterstützung umschalten. Einstellungen konfigurieren, um den gesamten Ressourcenpaket-Himmel zu verwenden oder Shader-Sonne und -Mond beizubehalten. §aLEISTUNGSKOSTEN:§r sehr niedrig
+option.SKY_GROUND = Atmosphärenboden
+
+option.MATERIAL_AO.comment = Die Verwendung von Umgebungsokklusion basierend auf dem, was das Ressourcenpaket bereitstellt, umschalten. §aLEISTUNGSKOSTEN:§r sehr niedrig
+option.WATER_WAVE_STRENGTH.comment = Konfigurieren, wie stark die Wellen erscheinen.
+option.MOONPHASE_BASED_MOONLIGHT.comment = §bWas ist das?§r Jede Nacht hat der Mond unterschiedliche Beleuchtung. Diese Einstellung passt die Mondlichthelligkeit basierend darauf an, wie viel vom Mond leuchtet. Diese Einstellung hat keinen Effekt, wenn "Benutzerdefinierte Mondrotation" aktiviert ist. §aLEISTUNGSKOSTEN:§r fast nichts
+
+option.END_STORM_DENSTIY.comment = §bWas ist das?§r Dies ist der dunkle wolkige Nebel im Ende. Die Dichte des Endesturms konfigurieren.
+option.NETHER_PLUME_DENSITY.comment = §bWas ist das?§r Dies sind die dicken, leuchtenden Rauchtürme im Nether. Die Dichte des Nether-Rauchs konfigurieren.
+
+option.CloudLayer0.comment          = Die Schicht kleiner Wolken umschalten. §aLEISTUNGSKOSTEN:§r mittel
+option.CloudLayer0_coverage.comment = Konfigurieren, wie viel des Himmels diese Wolken bedecken.
+option.CloudLayer0_density.comment  = Konfigurieren, wie dicht oder dick diese Wolken sind.
+option.CloudLayer0_height.comment   = Die Höhe konfigurieren, in der diese Wolken fliegen.
+
+option.CloudLayer1.comment          = Die Schicht großer Wolken umschalten. §aLEISTUNGSKOSTEN:§r mittel
+option.CloudLayer1_coverage.comment = Konfigurieren, wie viel des Himmels diese Wolken bedecken.
+option.CloudLayer1_density.comment  = Konfigurieren, wie dicht oder dick diese Wolken sind.
+option.CloudLayer1_height.comment   = Die Höhe konfigurieren, in der diese Wolken fliegen. §cDIESE KÖNNEN NICHT UNTER DEN KLEINEN WOLKEN SEIN§r
+
+option.CloudLayer2.comment          = Die Schicht sehr hoher und dünner Wolken umschalten. §aLEISTUNGSKOSTEN:§r niedrig
+option.CloudLayer2_coverage.comment = Konfigurieren, wie viel des Himmels diese Wolken bedecken.
+option.CloudLayer2_density.comment  = Konfigurieren, wie dicht oder dick diese Wolken sind.
+option.CloudLayer2_height.comment   = Die Höhe konfigurieren, in der diese Wolken fliegen. §cDIESE KÖNNEN NICHT UNTER DEN GROSSEN WOLKEN SEIN§r
+
+option.SKY_GROUND.comment = §bWas ist das?§r Dies ist die dunkle untere Hälfte des Himmels, die der Boden WÄRE, wenn Minecraft eine unendliche Renderweite hätte. §aLEISTUNGSKOSTEN:§r sehr sehr niedrig. §cDas Deaktivieren ist aufgrund zusätzlicher Berechnungen etwas langsamer als das Aktivieren.§r
+option.SNELLS_WINDOW.comment = §bWas ist das?§r Dies ist der dunkle reflektierende Kreis, den man unter Wasser sieht. Dies ist eine Annäherung an ein Phänomen der Realität, bekannt als "Totalreflexion". §aLEISTUNGSKOSTEN:§r sehr sehr sehr gering.
+option.entityShadowDistanceMul.comment = §bWas ist das?§r Konfigurieren, wie weit Schatten für Entitäten funktionieren sollen. Dies ist nützlich, wenn man Entitätsschatten behalten und die Leistung in Bereichen mit vielen Entitäten verbessern möchte.
+
+screen.PHYSICS_MOD_OCEAN = Physics Mod - §cBESCHREIBUNG DES BUTTONS LESEN§r
+screen.PHYSICS_MOD_OCEAN.comment = Der Ozean des Physics Mods wird unterstützt. Der Mod hat eigene Einstellungen dafür unter §bSpieloptionen -> Physikeinstellungen -> Ozean§r
+
+screen.DISTANT_HORIZONS_SETTINGS = Distant Horizons
+option.DH_OVERDRAW_PREVENTION = Überzeichnungsverhinderung
+option.OVERDRAW_MAX_DISTANCE = Maximale Entfernung für Überzeichnungsverhinderung
+    value.OVERDRAW_MAX_DISTANCE.0 = Unbegrenzt
+    value.OVERDRAW_MAX_DISTANCE.32 = 2 Chunks
+    value.OVERDRAW_MAX_DISTANCE.48 = 3 Chunks
+    value.OVERDRAW_MAX_DISTANCE.64 = 4 Chunks
+    value.OVERDRAW_MAX_DISTANCE.80 = 5 Chunks
+    value.OVERDRAW_MAX_DISTANCE.96 = 6 Chunks
+    value.OVERDRAW_MAX_DISTANCE.112 = 7 Chunks
+    value.OVERDRAW_MAX_DISTANCE.128 = 8 Chunks
+    value.OVERDRAW_MAX_DISTANCE.144 = 9 Chunks
+    value.OVERDRAW_MAX_DISTANCE.160 = 10 Chunks
+    value.OVERDRAW_MAX_DISTANCE.176 = 11 Chunks
+    value.OVERDRAW_MAX_DISTANCE.192 = 12 Chunks
+    value.OVERDRAW_MAX_DISTANCE.208 = 13 Chunks
+    value.OVERDRAW_MAX_DISTANCE.224 = 14 Chunks
+    value.OVERDRAW_MAX_DISTANCE.240 = 15 Chunks
+    value.OVERDRAW_MAX_DISTANCE.256 = 16 Chunks
+option.DH_CHUNK_FADING = Chunk-Einblenden
+    value.DH_CHUNK_FADING.0 = Aus
+    value.DH_CHUNK_FADING.1 = Gelände
+    value.DH_CHUNK_FADING.2 = Gelände + Schatten
+
+option.DH_AMBIENT_OCCLUSION = Umgebungsokklusion auf LOD-Chunks
+option.DH_SUBSURFACE_SCATTERING = Subsurface-Scattering auf LOD-Chunks
+option.DH_SCREENSPACE_REFLECTIONS = Bildschirmraum-Reflexionen auf LOD-Chunks
+
+option.DISTANT_HORIZONS_SHADOWMAP = §c(NICHT VERWENDEN, WENN MAN NICHT WEISS, WAS DAS IST)§r DH-Schattenkarten-Unterstützung
+option.DISTANT_HORIZONS_SHADOWMAP.comment = §cDIESE EINSTELLUNG WIRD DIE LEISTUNG ZERSTÖREN. SCHATTEN WERDEN ECKIG, FLIMMERND UND DETAILARM.§r Schattenweite auf 32 Chunks (oder mehr) setzen. Schattenauflösung auf 4096 (oder mehr) setzen.
+option.TOGGLE_VL_FOG = Volumetrischen Nebel umschalten
+option.TOGGLE_VL_FOG.comment = Ein großer Knopf, um einfach den gesamten Nebel auszuschalten.
+
+screen.VOXY_SETTINGS = Voxy-Einstellungen
+    option.VOXY_AMBIENT_OCCLUSION = Umgebungsokklusion auf LOD-Chunks
+    option.VOXY_SSS = Subsurface-Scattering auf LOD-Chunks
+    option.VOXY_REFLECTIONS = Bildschirmraum-Reflexionen auf LOD-Chunks
+
+screen.PHOTONICS_SETTINGS = Photonics-Einstellungen
+    option.PHOTONICS_ACTIVE = Photonics aktivieren
+    option.PHOTONICS_INDIRECT_BRIGHTNESS = GI-Helligkeit
+    option.PHOTONICS_GI_ONLY = Nur GI
+    option.PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION = Nebel-Lichtausbreitung (Flutfüllung!)
+
+
+option.TRANSLUCENT_COLORED_SHADOWS.comment = §bWas ist das?§r Dieser Effekt ermöglicht es transluzenten Dingen wie buntem Glas, das Sonnenlicht beim Durchgang zu färben. §aLEISTUNGSKOSTEN:§r mittel
+option.MINIMUM_WATER_ABSORBANCE.comment = §bWas ist das?§r Dies steuert, wie "klar" das Wasser in flachen Bereichen ist. AUTO ermöglicht klares Wasser draußen, passt sich aber auf einen Mindestwert von 7 drinnen an, um es deutlich sichtbar zu machen. §dDIESE EINSTELLUNG BEEINFLUSST NICHT DIE UNTERWASSERVISUALS.        
+
+option.SATURATION.comment = §bWas ist das?§r Dies steuert, wie "farbenfroh" das Bild ist. Negative Werte entfernen Farben - positive Werte machen sie intensiver.
+option.CROSSTALK.comment = §bWas ist das?§r Dies ist ein Modifikator der Sättigung - es verschiebt die Sättigung der HELLEN Teile des Bildes.
+option.WHITE_BALANCE.comment = §bWas ist das?§r Dies steuert, wie warm oder kühl das Bild wirkt - es balanciert Blau und Rot.
+option.TAA_MODE.comment = §bStandard:§r hat die beste Anti-Aliasing-Fähigkeit - verwendet mehr Jitter-Versätze, benötigt aber mehr Frame-Historie (Überblendungsfaktor niedriger setzen), es flimmert mehr und hat mehr Bewegungsartefakte. §bReaktionsfähig:§r hat die schlechteste Anti-Aliasing-Fähigkeit - verwendet weniger Jitter-Versätze, benötigt weniger Frame-Historie (Überblendungsfaktor höher setzen), kann also weniger Bewegungsartefakte haben. §bTemporales Hochskalieren:§r Den Shader bei einer niedrigeren Fensterauflösung rendern und dann wieder auf die Bildschirmgröße hochskalieren für bessere Leistung - hat VIELE Artefakte.
+option.MOTION_BLUR.comment = §bWas ist das?§r Dieser Effekt lässt den gesamten Bildschirm in der Richtung verwischen, in die die Kamera bewegt wird, oder wohin man sich in der Welt bewegt. §aLEISTUNGSKOSTEN:§r sehr niedrig
+option.CHROMATIC_ABERRATION.comment = §bWas ist das?§r Dieser Effekt erzeugt an den Bildschirmrändern eine Farbverschiebung von Rot und Blau. §aLEISTUNGSKOSTEN:§r sehr sehr niedrig
+option.VIGNETTE.comment = §bWas ist das?§r Dieser Effekt lässt die Bildschirmränder zunehmend dunkler werden, je näher man zu den Rändern kommt. §aLEISTUNGSKOSTEN:§r sehr sehr niedrig
+option.TONEMAP.comment = §bWas ist das?§r Dies passt den internen HDR oder die Farbbandbreite des Shaders an, um auf einem SDR-Monitor gut auszusehen. Es steuert die allgemeine Farbverarbeitung - Kontrast, Sättigung, Weißpunkt, Schwarzpunkt, Farbtonverschiebung, Weg zum Weiß usw. - jeder hat ein anderes Aussehen
+option.DOF_QUALITY.comment= §bWas ist das?§r Dies ist die "Entfokus"-Unschärfe im Hinter- und Vordergrund, wenn eine Kamera ihr Objektiv auf etwas fokussiert, manchmal als "Bokeh" bezeichnet. §aLEISTUNGSKOSTEN:§r niedrig bis hoch
+option.MANUAL_FOCUS.comment= §bWas ist das?§r Steuern, wie das Kameraobjektiv fokussiert. "Auto-Fokus" fokussiert auf das, was man betrachtet. "Helligkeitsregler" ermöglicht manuelles Fokussieren mit der Helligkeitseinstellung in den Videoeinstellungen. "Manueller Fokus" fokussiert nur auf einen festen Punkt in einem bestimmten Abstand von der Kamera in Metern.
+option.DOF_ANAMORPHIC_RATIO.comment= §bWas ist das?§r Dies ist eine Nachbildung der anamorphen Objektivverzerrung, bei der die Unschärfe/das Bokeh gestreckt wird.
+option.focal.comment = 
+option.aperture.comment =
+option.DoF_Adaptation_Speed.comment = §bWas ist das?§r Dies steuert, wie schnell der Auto-Fokus sich an den Blickpunkt anpasst.
+option.FAR_BLUR_ONLY.comment = §bWas ist das?§r Dafür sorgen, dass keine Entfokus-Unschärfe auf nahe Objekte angewendet wird, nur auf weit entfernte.
+option.REMOVE_HAND_BLUR.comment = §bWas ist das?§r Alle Unschärfe auf der Hand entfernen.
+option.DOF_DISPERSION_MULT.comment = §bWas ist das?§r Dies fügt einen Farbversatz für Rot und Blau hinzu, für einen coolen Effekt.

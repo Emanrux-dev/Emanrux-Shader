@@ -18,8 +18,6 @@ uniform float skyLightLevelSmooth;
 uniform int framemod8;
 uniform float sunElevation;
 
-#include "/photonics/photonics.glsl"
-
 #include "/lib/res_params.glsl"
 
 #include "/lib/util.glsl"

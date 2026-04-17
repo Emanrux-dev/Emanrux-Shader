@@ -2,15 +2,10 @@
 
 #include "/lib/SSBOs.glsl"
 
-#ifdef OVERWORLD_SHADER
-  in DATA {
-    flat vec3 WsunVec;
-    flat vec3 WmoonVec;
-  };
-#endif
+#define EXCLUDE_WRITE_TO_LUT
 
-#define DEFERRED_SPECULAR
-#define DEFERRED_SSR_QUALITY 30 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 200 300 400 500]
+uniform float skyLightLevelSmooth;
+
 
 uniform sampler2D noisetex;
 uniform sampler2D depthtex0;
@@ -31,200 +26,661 @@ uniform sampler2D depthtex1;
 #endif
 
 uniform sampler2D colortex0;
-uniform sampler2D colortex1;
 uniform sampler2D colortex2;
 uniform sampler2D colortex3;
-uniform sampler2D colortex4;
-uniform sampler2D colortex5;
+// uniform sampler2D colortex4;
 uniform sampler2D colortex6;
 uniform sampler2D colortex7;
-uniform sampler2D colortex8;
-uniform sampler2D colortex9;
 uniform sampler2D colortex10;
-uniform sampler2D colortex11;
-uniform sampler2D colortex12;
-uniform sampler2D colortex13;
 uniform sampler2D colortex14;
-uniform sampler2D colortex15;
-uniform vec2 texelSize;
 
-uniform float viewHeight;
-uniform float viewWidth;
-uniform float nightVision;
-uniform float fogEnd;
-uniform vec3 fogColor;
+#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
+layout (rgba16f) uniform image2D cloudDepthTex;
+#endif
+
+in DATA {
+	flat vec3 WsunVec;
+	flat vec3 WrealSunVec;
+	flat vec3 WmoonVec;
+};
+
 uniform vec3 sunVec;
-uniform float frameTimeCounter;
-uniform int frameCounter;
-uniform float far;
-uniform float near;
-uniform float farPlane;
-uniform float dhVoxyNearPlane;
-uniform float dhVoxyFarPlane;
-
-uniform mat4 gbufferModelViewInverse;
-uniform mat4 gbufferModelView;
-uniform mat4 gbufferPreviousModelView;
-uniform mat4 gbufferProjectionInverse;
-uniform mat4 gbufferProjection;
-uniform mat4 gbufferPreviousProjection;
-uniform vec3 cameraPosition;
-uniform vec3 previousCameraPosition;
-
-uniform int hideGUI;
-uniform int dhVoxyRenderDistance;
-uniform int isEyeInWater;
-uniform ivec2 eyeBrightnessSmooth;
-uniform ivec2 eyeBrightness;
-uniform float rainStrength;
-uniform float blindness;
-uniform float darknessFactor;
-uniform float darknessLightFactor;
-uniform float caveDetection;
 uniform float sunElevation;
 
-#include "/lib/res_params.glsl"
+// uniform float far;
+uniform float near;
+uniform float dhVoxyFarPlane;
+uniform float dhVoxyNearPlane;
 
+uniform mat4 gbufferPreviousModelView;
+uniform vec3 previousCameraPosition;
+uniform vec3 relativeEyePosition;
+
+#if defined VIVECRAFT
+	uniform bool vivecraftIsVR;
+	uniform vec3 vivecraftRelativeMainHandPos;
+	uniform vec3 vivecraftRelativeOffHandPos;
+	uniform mat4 vivecraftRelativeMainHandRot;
+	uniform mat4 vivecraftRelativeOffHandRot;
+#endif
+
+uniform int frameCounter;
+uniform float frameTimeCounter;
+
+uniform vec2 texelSize;
+
+uniform int isEyeInWater;
+uniform float rainStrength;
+uniform ivec2 eyeBrightnessSmooth;
+uniform float eyeAltitude;
+uniform float caveDetection;
+
+// uniform int dhVoxyRenderDistance;
+#define DHVLFOG
 #define diagonal3(m) vec3((m)[0].x, (m)[1].y, m[2].z)
 #define  projMAD(m, v) (diagonal3(m) * (v) + (m)[3].xyz)
-vec3 toScreenSpace(vec3 p) {
-	vec4 iProjDiag = vec4(gbufferProjectionInverse[0].x, gbufferProjectionInverse[1].y, gbufferProjectionInverse[2].zw);
-    vec3 p3 = p * 2. - 1.;
-    vec4 fragposition = iProjDiag * p3.xyzz + gbufferProjectionInverse[3];
-    return fragposition.xyz / fragposition.w;
+
+#include "/lib/color_transforms.glsl"
+#include "/lib/color_dither.glsl"
+#include "/lib/projections.glsl"
+#include "/lib/res_params.glsl"
+#include "/lib/sky_gradient.glsl"
+#include "/lib/Shadow_Params.glsl"
+#include "/lib/waterBump.glsl"
+
+#include "/lib/DistantHorizons_projections.glsl"
+
+float DH_ld(float dist) {
+    return (2.0 * dhVoxyNearPlane) / (dhVoxyFarPlane + dhVoxyNearPlane - dist * (dhVoxyFarPlane - dhVoxyNearPlane));
+}
+float DH_inv_ld (float lindepth){
+	return -((2.0*dhVoxyNearPlane/lindepth)-dhVoxyFarPlane-dhVoxyNearPlane)/(dhVoxyFarPlane-dhVoxyNearPlane);
 }
 
-float linearize(float dist) {
-  return (2.0 * near) / (far + near - dist * (far - near));
+float linearizeDepthFast(const in float depth, const in float near, const in float far) {
+    return (near * far) / (depth * (near - far) + far);
 }
 
-vec3 toClipSpace3Prev(vec3 viewSpacePosition) {
-    return projMAD(gbufferPreviousProjection, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
+uniform float nightVision;
+
+#ifdef OVERWORLD_SHADER
+	uniform float auroraAmount;
+	const bool shadowHardwareFiltering = true;
+	uniform sampler2DShadow shadow;
+
+	#ifdef TRANSLUCENT_COLORED_SHADOWS
+		uniform sampler2D shadowcolor0;
+		uniform sampler2DShadow shadowtex0;
+		uniform sampler2DShadow shadowtex1;
+	#endif
+	
+	
+	#include "/lib/scene_controller.glsl"
+
+	#define TIMEOFDAYFOG
+	#include "/lib/lightning_stuff.glsl"
+
+	#include "/lib/volumetricClouds.glsl"
+
+	#include "/lib/climate_settings.glsl"
+	#include "/lib/overworld_fog.glsl"
+#endif
+#ifdef NETHER_SHADER
+uniform sampler2D colortex4;
+	#include "/lib/nether_fog.glsl"
+#endif
+#ifdef END_SHADER
+uniform sampler2D colortex4;
+	#include "/lib/end_fog.glsl"
+#endif
+
+#define IS_LPV_ENABLED
+
+#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED
+	#extension GL_ARB_shader_image_load_store: enable
+	#extension GL_ARB_shading_language_packing: enable
+
+	uniform usampler1D texBlockData;
+	uniform sampler3D texLpv1;
+	uniform sampler3D texLpv2;
+
+	#include "/lib/hsv.glsl"
+	#include "/lib/lpv_blocks.glsl"
+	#include "/lib/lpv_common.glsl"
+	#include "/lib/lpv_render.glsl"
+
+	#if defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER || defined LPV_VL_FOG_ILLUMINATION_HANDHELD
+		uniform int heldItemId;
+		uniform int heldItemId2;
+
+		#include "/lib/util.glsl"
+		#include "/lib/diffuse_lighting.glsl"
+	#endif
+	#ifdef LPV_VL_FOG_ILLUMINATION_HANDHELD
+	#endif
+#endif
+
+bool eyeInWater = isEyeInWater == 1;
+
+vec4 raymarchLPV(
+	in vec3 viewPos,
+	in float dither
+){
+	#if (!defined LPV_VL_FOG_ILLUMINATION || !defined IS_LPV_ENABLED) && (!defined FLASHLIGHT_FOG_ILLUMINATION || !defined FLASHLIGHT)
+		return vec4(0.0);
+	#endif
+
+	const int SAMPLECOUNT = 8;
+	float minimumDensity = 0.000025;
+	if(eyeInWater) minimumDensity = 0.00006;
+	const float fadeLength = 10.0; // in blocks
+
+	vec3 LPVrayStartPos = mat3(gbufferModelViewInverse) * viewPos;
+	
+	// ensure the max marching distance is the voxel distance, or the render distance if the voxels go farther than it
+	float LPVRayLength = length(LPVrayStartPos);
+	#if LPV_SIZE == 8
+		LPVrayStartPos *= min(LPVRayLength, min(256.0,far))/LPVRayLength;
+	#elif LPV_SIZE == 7
+		LPVrayStartPos *= min(LPVRayLength, min(128.0,far))/LPVRayLength;
+	#elif LPV_SIZE == 6
+		LPVrayStartPos *= min(LPVRayLength, min(64.0,far))/LPVRayLength;
+	#endif
+	LPVRayLength = length(LPVrayStartPos);
+
+	vec3 rayProgress = vec3(0.0);
+	vec4 color = vec4(0.0,0.0,0.0,1.0);
+	const float expFactor = 11.0;
+
+	for (int i = 0; i < SAMPLECOUNT; i++) {
+		float d = (pow(expFactor, float(i+dither)/float(SAMPLECOUNT))/expFactor - 1.0/expFactor)/(1.0-1.0/expFactor);
+		float dd = pow(expFactor, float(i+dither)/float(SAMPLECOUNT)) * log(expFactor) / float(SAMPLECOUNT)/(expFactor-1.0);
+
+		rayProgress = gbufferModelViewInverse[3].xyz + d*LPVrayStartPos;
+
+		float density;
+		float _minimumDensity = minimumDensity;
+
+		#ifdef OVERWORLD_SHADER
+			if(caveDetection < 0.9999) density = cloudVol(rayProgress + cameraPosition, 0.0) * (1.0 - caveDetection);
+
+			_minimumDensity += caveDetection * minimumDensity;
+		#elif defined NETHER_SHADER
+			vec3 progressW = rayProgress + cameraPosition;
+			density = cloudVol(progressW);
+
+			float dist = length(rayProgress);
+			float clearArea = 1.0 - min(max(1.0 - dist / 24.0,0.0),1.0);
+
+			float plumeDensity = min(density * pow(min(max(100.0-progressW.y,0.0)/30.0,1.0),4.0), pow(clamp(1.0 - dist/far,0.0,1.0),5.0));
+			plumeDensity *= NETHER_PLUME_DENSITY;
+
+			float ceilingSmokeDensity = 0.001 * pow(min(max(progressW.y-40.0,0.0)/50.0,1.0),3.0);
+			ceilingSmokeDensity *= NETHER_CEILING_SMOKE_DENSITY;
+
+			density = plumeDensity + ceilingSmokeDensity;
+		#elif defined END_SHADER
+			float volumeDensity = fogShape(rayProgress + cameraPosition);
+			float clearArea =  1.0-min(max(1.0 - length(rayProgress) / 100,0.0),1.0);
+			density = min(volumeDensity, clearArea*clearArea * END_STORM_DENSTIY);
+		#endif
+		
+		density = max(density/1000.0, _minimumDensity);
+
+		// density = 0.0001;
+
+		float volumeCoeff = exp(-dd*density*LPVRayLength);
+
+		#if defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION
+			vec3 lpvPos = GetLpvPosition(rayProgress);
+
+			vec3 cubicRadius = clamp(min(((LpvSize3-1.0) - lpvPos)/fadeLength, lpvPos/fadeLength), 0.0, 1.0);
+			float LpvFadeF = cubicRadius.x*cubicRadius.y*cubicRadius.z;
+
+			if(LpvFadeF < 0.01) break;
+
+			vec3 sampleColor = SampleLpvLinear(lpvPos).rgb;
+			#ifdef VANILLA_LIGHTMAP_MASK
+				vec3 lighting = sampleColor * LPV_VL_FOG_ILLUMINATION_BRIGHTNESS * 25. * exp(-10 * (1.0-luma(sampleColor)));
+			#else
+				vec3 lighting = sampleColor * LPV_VL_FOG_ILLUMINATION_BRIGHTNESS * 25. * exp(-5 * (1.0-luma(sampleColor)));
+			#endif
+
+			if(eyeInWater) lighting *= 2.5;
+
+			#ifdef LPV_VL_FOG_ILLUMINATION_HANDHELD
+				float lightRange = 0.0;
+				vec3 handLightCol = GetHandLight(heldItemId, rayProgress, lightRange);
+				
+				vec3 handLightCol2 = GetHandLight(heldItemId2, rayProgress, lightRange);
+
+				lighting += (handLightCol + handLightCol2) * TORCH_AMOUNT * LPV_VL_FOG_ILLUMINATION_BRIGHTNESS * 0.04;
+			#endif
+
+			color.rgb += (lighting - lighting * volumeCoeff) * color.a;
+		#endif
+
+		#if defined FLASHLIGHT && defined FLASHLIGHT_FOG_ILLUMINATION
+			// vec3 shiftedViewPos = mat3(gbufferModelView)*(progressW-cameraPosition) + vec3(-0.25, 0.2, 0.0);
+			// vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos;
+				vec3 shiftedViewPos;
+				vec3 shiftedPlayerPos;
+				float forwardOffset;
+
+				#ifdef VIVECRAFT
+					if (vivecraftIsVR) {
+						forwardOffset = 0.0;
+						shiftedPlayerPos = (rayProgress) + ( vivecraftRelativeMainHandPos);
+						shiftedViewPos = shiftedPlayerPos * mat3(vivecraftRelativeMainHandRot);
+					} else
+				#endif
+				{
+					forwardOffset = 0.5;
+					shiftedViewPos = mat3(gbufferModelView)*(rayProgress) + vec3(-0.25, 0.2, 0.0);
+					shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos;
+				}
+
+			vec2 scaledViewPos = shiftedViewPos.xy / max(-shiftedViewPos.z - forwardOffset, 1e-7);
+			float linearDistance = length(shiftedPlayerPos);
+			float shiftedLinearDistance = length(scaledViewPos);
+
+			float lightFalloff = 1.0 - clamp(1.0-linearDistance/FLASHLIGHT_RANGE, -0.999,1.0);
+			lightFalloff = max(exp(-10.0 * FLASHLIGHT_BRIGHTNESS_FALLOFF_MULT * lightFalloff),0.0);
+			float projectedCircle = clamp(1.0 - shiftedLinearDistance*FLASHLIGHT_SIZE,0.0,1.0);
+
+			vec3 flashlightGlow = 25.0 * vec3(FLASHLIGHT_R,FLASHLIGHT_G,FLASHLIGHT_B) * lightFalloff * projectedCircle * FLASHLIGHT_BRIGHTNESS_MULT;
+
+			color.rgb += (flashlightGlow - flashlightGlow * volumeCoeff) * color.a;
+		#endif
+
+		color.a *= volumeCoeff;
+	}
+	return color;
 }
 
-vec3 bilateralUpsample2(vec2 fragcoord, sampler2D colortex, out float outerEdgeResults, float referenceDepth, sampler2D depth, bool hand){
-
-  vec3 colorSum = vec3(0.0);
-  float edgeSum = 0.0;
-
-  const float threshold = 0.005;
-
-
-  const int samples = 5;
-  
-  vec2 coord = fragcoord - 1.5;
-
-  vec2 UV = coord;
-  const ivec2 SCALE = ivec2(1.0);
-  ivec2 UV_COLOR = ivec2(UV);
-  ivec2 UV_NOISE = ivec2(gl_FragCoord.xy*texelSize + 1);
-
-	const ivec2 OFFSET[5] = ivec2[5](
-    ivec2(-1,-1),
-	 	ivec2( 1, 1),
-		ivec2(-1, 1),
-		ivec2( 1,-1),
-		ivec2( 0, 0)
-    // ,ivec2( 0, 1),
-    // ivec2( 0,-1),
-    // ivec2( 1, 0),
-    // ivec2(-1, 0)
-  );
-
-  for(int i = 0; i < samples; i++) {
-    float offsetDepth = linearize(texelFetch(depth, UV_COLOR + (OFFSET[i] + UV_NOISE), 0).r);
-
-    float edgeDiff = abs(offsetDepth - referenceDepth) < threshold ? 1.0 : 1e-7;
-    outerEdgeResults = max(outerEdgeResults, abs(referenceDepth - offsetDepth));
-
-    vec3 offsetColor = texelFetch(colortex, UV_COLOR + OFFSET[i] + UV_NOISE, 0).rgb;
-    colorSum += offsetColor*edgeDiff;
-    edgeSum += edgeDiff;
-
-  }
-
-  outerEdgeResults = outerEdgeResults > (hand ? 0.005 : referenceDepth*0.05 + 0.1) ? 1.0 : 0.0;
-  
-  return colorSum / edgeSum;
+float invLinZ (float lindepth){
+	return -((2.0*near/lindepth)-far-near)/(far-near);
 }
 
-vec3 VLTemporalFiltering2(vec2 texcoord, vec3 playerPosIn, in float referenceDepth, sampler2D depth, bool hand, vec3 currentFrame, float roughness){  
-	// get previous frames position stuff for UV
-	vec3 playerPos = playerPosIn + (cameraPosition - previousCameraPosition);
-	vec3 previousPosition = mat3(gbufferPreviousModelView) * playerPos + gbufferPreviousModelView[3].xyz;
-	previousPosition = toClipSpace3Prev(previousPosition);
+/*
+from https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
+Copyright 2019 Alan Wolfe
 
-	vec2 velocity = previousPosition.xy - texcoord;
-	previousPosition.xy = texcoord + velocity;
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-  // return vec4(outerEdgeResults,0,0,1);
-  // return upsampledCurrentFrame;
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-  if (previousPosition.x < 0.0 || previousPosition.y < 0.0 || previousPosition.x > 1.0 || previousPosition.y > 1.0 || hand) return currentFrame.rgb;
-
-  // to fill pixel gaps in geometry edges, do a bilateral upsample.
-  // pass a mask to only show upsampled color around the edges of blocks. this is so it doesnt blur reprojected results.
-  float outerEdgeResults = 0.0;
-  vec3 upsampledCurrentFrame = bilateralUpsample2(gl_FragCoord.xy , colortex0, outerEdgeResults, referenceDepth, depth, hand);
-  //return currentFrame;
-  // vec4 upsampledCurrentFrame = BilateralUpscale(colortex0, depth, gl_FragCoord.xy - 1.5, referenceDepth);
-  // /*
-
-  vec4 frameHistoryTex = texture(colortex12, previousPosition.xy*RENDER_SCALE);
-  float prevDepth = frameHistoryTex.a;
-  float linPrevDepth = linearize(previousPosition.z);
-
-  vec3 frameHistory = frameHistoryTex.rgb;
-
-  vec3 reprojectFrame = currentFrame.rgb;
-
-  if(!(frameHistory.r == 0.0 && frameHistory.g == 0.0 && frameHistory.b == 0.0) && (abs(prevDepth-linPrevDepth) < max(linPrevDepth * 0.02, 0.001))) {
-    vec3 col1 = texture(colortex0, texcoord + vec2( texelSize.x,  texelSize.y)).rgb;
-    vec3 col2 = texture(colortex0, texcoord + vec2( texelSize.x, -texelSize.y)).rgb;
-    vec3 col3 = texture(colortex0, texcoord + vec2(-texelSize.x, -texelSize.y)).rgb;
-    vec3 col4 = texture(colortex0, texcoord + vec2(-texelSize.x,  texelSize.y)).rgb;
-    vec3 col5 = texture(colortex0, texcoord + vec2( 0.0,			    texelSize.y)).rgb;
-    vec3 col6 = texture(colortex0, texcoord + vec2( 0.0,			   -texelSize.y)).rgb;
-    vec3 col7 = texture(colortex0, texcoord + vec2(-texelSize.x,  		    0.0)).rgb;
-    vec3 col8 = texture(colortex0, texcoord + vec2( texelSize.x,  		    0.0)).rgb;
-
-    vec3 colMax = max(currentFrame.rgb,max(col1,max(col2,max(col3, max(col4, max(col5, max(col6, max(col7, col8))))))));
-    vec3 colMin = min(currentFrame.rgb,min(col1,min(col2,min(col3, min(col4, min(col5, min(col6, min(col7, col8))))))));
-    
-    vec3 clampedFrameHistory = clamp(frameHistory, colMin, colMax);
-
-    float blendingFactor = mix(0.025, 1.0, smoothstep(0.05, 0.25, length(cameraPosition-previousCameraPosition)));
-    blendingFactor = mix(1.0, blendingFactor, smoothstep(0.0, 0.1, roughness));
-    reprojectFrame = mix(clampedFrameHistory, currentFrame.rgb, blendingFactor);
-  }
-
-  // return clamp(reprojectFrame,0.0,65000.0);
-  return clamp(mix(reprojectFrame, upsampledCurrentFrame, outerEdgeResults),0.0,65000.0);
-  // */
-
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+float interleaved_gradientNoise_temporal(){
+	vec2 coord = gl_FragCoord.xy + 5.588238 * float(frameCounter%64);
+	float noise = fract(52.9829189*fract(0.06711056*coord.x + 0.00583715*coord.y)) ;
+	return noise;
+}
+float interleaved_gradientNoise(){
+	vec2 coord = gl_FragCoord.xy;
+	float noise = fract(52.9829189*fract(0.06711056*coord.x + 0.00583715*coord.y));
+	return noise;
 }
 
 float blueNoise(){
-	#ifdef TAA
-  		return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
-	#else
-		return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887);
-	#endif
+  return fract(texelFetch(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter );
 }
 
-float interleaved_gradientNoise_temporal(){
-	// #ifdef TAA
-	// 	return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y ) + 1.0/1.6180339887 * frameCounter);
+float R2_dither(){
+  	// #ifdef TAA
+		vec2 coord = gl_FragCoord.xy + (frameCounter%40000) * 2.0;
 	// #else
-	// 	return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y ) + 1.0/1.6180339887);
+	// 	vec2 coord = gl_FragCoord.xy;
 	// #endif
+	vec2 alpha = vec2(0.75487765, 0.56984026);
+	return fract(alpha.x * coord.x + alpha.y * coord.y ) ;
+}
 
-	vec2 coord = gl_FragCoord.xy;
-	#ifdef TAA
-		coord += (frameCounter%40000) * 2.0;
+uniform float waterEnteredAltitude;
+float lightSourceCheck = float(sunElevation > 1e-5)*2.0 - 1.0;
+
+vec4 waterVolumetrics(vec3 rayStart, vec3 rayEnd, float rayLength, vec2 dither, vec3 waterCoefs, vec3 scatterCoef, vec3 ambient, vec3 lightSource, float VdotL, vec3 LPV){
+	const int spCount = 8;
+
+	vec3 start = toShadowSpaceProjected(rayStart);
+	vec3 end = toShadowSpaceProjected(rayEnd);
+	vec3 dV = (end-start);
+
+	//limit ray length at 32 blocks for performance and reducing integration error
+	//you can't see above this anyway
+	float maxZ = min(rayLength,32.0)/(1e-8+rayLength);
+	
+	dV *= maxZ;
+	rayLength *= maxZ;
+
+	vec3 dVWorld = mat3(gbufferModelViewInverse) * (rayEnd - rayStart) * maxZ;
+
+	vec3 absorbance = vec3(1.0);
+	vec3 vL = vec3(0.0);
+	
+	#ifdef OVERWORLD_SHADER
+		float phase = fogPhase(VdotL) * 5.0;
+	#else
+		const float phase = 0.0;
 	#endif
 
-	return fract(52.9829189*fract(0.06711056*coord.x + 0.00583715*coord.y ) + 1.0/1.6180339887);
+	float thing = -normalize(dVWorld).y;
+	thing = clamp(thing + 0.333,0.0,1.0);
+	thing = pow(1.0-pow(1.0-thing,2.0),2.0);
+	thing *= 15.0;
+
+	const float expFactor = 11.0;
+	for (int i=0;i<spCount;i++) {
+		float d = (pow(expFactor, float(i+dither.x)/float(spCount))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);		// exponential step position (0-1)
+		float dd = pow(expFactor, float(i+dither.y)/float(spCount)) * log(expFactor) / float(spCount)/(expFactor-1.0);	//step length (derivative)
+		
+		vec3 progressP = gbufferModelViewInverse[3].xyz + d*dVWorld;
+		vec3 progressW = progressP + cameraPosition;
+		
+		float distanceFromWaterSurface = max(-(progressW.y - waterEnteredAltitude),0.0);
+
+		vec3 sh = vec3(1.0);
+		#ifdef OVERWORLD_SHADER
+			vec3 spPos = start.xyz + dV*d;
+
+			//project into biased shadowmap space
+			#if defined DISTORT_SHADOWMAP && defined OVERWORLD_SHADER
+				float distortFactor = calcDistort(spPos.xy);
+			#else
+				float distortFactor = 1.0;
+			#endif
+
+			vec3 pos = vec3(spPos.xy*distortFactor, spPos.z);
+			if (abs(pos.x) < 1.0-0.5/2048. && abs(pos.y) < 1.0-0.5/2048){
+				pos = pos*vec3(0.5,0.5,0.5/6.0)+0.5;
+				// sh = texture( shadow, pos).x;
+
+				#ifdef TRANSLUCENT_COLORED_SHADOWS
+					sh = vec3(texture(shadowtex0, pos).x);
+
+					if(texture(shadowtex1, pos).x > pos.z && sh.x < 1.0){
+						vec4 translucentShadow = texture(shadowcolor0, pos.xy);
+						if(translucentShadow.a < 0.9) sh = normalize(translucentShadow.rgb+0.0001);
+					}
+				#else
+					sh = vec3(texture(shadow, pos).x);
+				#endif
+			}
+
+			sh *= GetCloudShadow(progressW, WsunVec * lightSourceCheck);
+
+		#endif
+
+		float bubble = exp2(-10.0 * clamp(1.0 - length(d*dVWorld) / 16.0, 0.0,1.0));
+		float caustics = max(max(waterCaustics(progressW, WsunVec, -(progressW.y - waterEnteredAltitude)), phase*0.5) * mix(0.5, 1.5, bubble), phase);
+
+		vec3 sunAbsorbance = exp(-waterCoefs * (distanceFromWaterSurface/abs(WsunVec.y)));
+		vec3 WaterAbsorbance = exp(-waterCoefs * (distanceFromWaterSurface + thing));
+
+		vec3 Directlight = lightSource * sh * phase * caustics * sunAbsorbance;
+
+		vec3 _ambient = ambient;
+
+		#ifdef OVERWORLD_SHADER
+			float horizontalDist = length((progressP.xz) - lightningBoltPosition.xz);
+			if (horizontalDist < 250.0 && lightningBoltPosition.w > 0.0) {
+				float lightningIntensity = exp(-horizontalDist * 0.02) * lightningFlash;
+				_ambient = mix(_ambient, vec3(1.3,1.5,3.0) * sh, lightningIntensity);
+			}
+		#endif
+
+		vec3 Indirectlight = _ambient * WaterAbsorbance;
+
+		#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER
+			float lightRange = 0.0;
+			vec3 handLightCol = GetHandLight(heldItemId, progressP, lightRange);
+			
+			vec3 handLightCol2 = GetHandLight(heldItemId2, progressP, lightRange);
+
+			Indirectlight += (handLightCol + handLightCol2) * TORCH_AMOUNT * (LPV_VL_FOG_ILLUMINATION_BRIGHTNESS / 100.0) * 0.2 * exp(-waterCoefs * (length(progressP) + 0.05 * thing));
+		#endif
+
+
+		vec3 light = (Indirectlight + Directlight + LPV) * scatterCoef;
+		
+		vec3 volumeCoeff = exp(-waterCoefs * length(dd*dVWorld));
+		vL += (light - light * volumeCoeff) / waterCoefs * absorbance;
+		absorbance *= volumeCoeff;
+
+	}
+
+	return vec4(vL, dot(absorbance,vec3(0.333333)));
+}
+
+vec4 blueNoise(vec2 coord){
+  return texelFetch(colortex6, ivec2(coord)%512 , 0) ;
+}
+vec2 R2_samples(int n){
+	vec2 alpha = vec2(0.75487765, 0.56984026);
+	return fract(alpha * n);
+}
+
+float fogPhase2(float lightPoint){
+	float linear = 1.0 - clamp(lightPoint*0.5+0.5,0.0,1.0);
+	float linear2 = 1.0 - clamp(lightPoint,0.0,1.0);
+
+	float exponential = exp2(pow(linear,0.3) * -15.0 ) * 1.5;
+	exponential += sqrt(exp2(sqrt(linear) * -12.5));
+
+	return exponential;
+}
+//encoding by jodie
+float encodeVec2(vec2 a){
+    const vec2 constant1 = vec2( 1., 256.) / 65535.;
+    vec2 temp = floor( a * 255. );
+	return temp.x*constant1.x+temp.y*constant1.y;
+}
+
+
+
+uniform int framemod8;
+#include "/lib/TAA_jitter.glsl"
+
+float convertHandDepth(float depth) {
+    float ndcDepth = depth * 2.0 - 1.0;
+    ndcDepth /= MC_HAND_DEPTH;
+    return ndcDepth * 0.5 + 0.5;
+}
+
+float swapperlinZ(float depth, float _near, float _far) {
+    return (2.0 * _near) / (_far + _near - depth * (_far - _near));
+	// l = (2*n)/(f+n-d(f-n))
+	// f+n-d(f-n) = 2n/l
+	// -d(f-n) = ((2n/l)-f-n)
+	// d = -((2n/l)-f-n)/(f-n)
+
+}
+
+
+vec3 alterCoords(in vec3 coords, bool lighting){
+
+	float theDistance = length(coords + (lighting ? vec3(0.0) : cameraPosition));
+
+	coords.x = coords.x*3;
+
+	coords.y = coords.y;
+
+	coords.z = coords.z*3;
+	
+	return coords;
+}
+
+uniform float viewHeight;
+uniform float viewWidth;
+float godrayTest( in vec3 viewPos, in vec3 lightDir, float noise, float vanilladepth){
+
+	// return 1.0;1
+
+	float godrays = 0.0;
+	float samples = 8.0;
+
+	float _near = near; float _far = far*4.0;
+
+	// #ifdef DISTANT_HORIZONS
+	// 	bool depthCheck = true;
+	// #else
+	// 	bool depthCheck = false;
+	// #endif
+
+	bool depthCheck = true;
+
+	if (depthCheck) {
+		_near = dhVoxyNearPlane;
+		_far = dhVoxyFarPlane;
+	}
+    
+    float lightRange = pow(clamp(-dot(normalize(viewPos), lightDir)+0.65,0.0,1.0),2.0);
+    vec3 position = toClipSpace3_DH(viewPos, depthCheck) ;
+	
+	//prevents the ray from going behind the camera
+	float rayLength = ((viewPos.z + lightDir.z * _far * sqrt(3.)) > -_near) ? (-_near - viewPos.z) / lightDir.z : _far * sqrt(3.);
+
+    vec3 direction = toClipSpace3_DH(viewPos + lightDir*rayLength, depthCheck) - position;
+
+	direction.xyz = direction.xyz / max(max(abs(direction.x)/0.0005, abs(direction.y)/0.0005),500.0);	//fixed step size
+	direction *= 60.0;
+	
+	position.xy *= RENDER_SCALE;
+	direction.xy *= RENDER_SCALE;
+	
+	vec3 newPos = position + direction*noise;
+
+  	vec2 screenEdges = 2.0/vec2(viewWidth, viewHeight);
+
+	for (int i = 0; i < int(samples); i++) { 
+		newPos.xy = clamp(newPos.xy, screenEdges, 1.0-screenEdges);
+
+		float sampleDepth = invLinZ(sqrt(texelFetch(colortex4, ivec2(newPos.xy/texelSize/4.0),0).a/65000.0));
+		
+		#ifdef DISTANT_HORIZONS
+			if(depthCheck) sampleDepth = texelFetch(dhDepthTex1, ivec2(newPos.xy/texelSize),0).x;
+		#endif
+		
+		godrays += (swapperlinZ(sampleDepth, _near, _far) > 1.0 ? 1.0 : lightRange);
+		newPos += direction;
+	}
+
+	return godrays/samples;
+}
+
+vec4 waterVolumetrics_alt( vec3 rayStart, vec3 rayEnd, float estEndDepth, float estSunDepth, float rayLength, float dither, vec3 waterCoefs, vec3 scatterCoef, vec3 ambient, vec3 lightSource, float VdotL){
+	int spCount = rayMarchSampleCount;
+
+	vec3 start = toShadowSpaceProjected(rayStart);
+	vec3 end = toShadowSpaceProjected(rayEnd);
+	vec3 dV = (end-start);
+
+	//limit ray length at 32 blocks for performance and reducing integration error
+	//you can't see above this anyway
+	float maxZ = min(rayLength,12.0)/(1e-8+rayLength);
+	dV *= maxZ;
+	rayLength *= maxZ;
+	estEndDepth *= maxZ;
+	estSunDepth *= maxZ;
+	
+	vec3 dVWorld = mat3(gbufferModelViewInverse) * rayStart;
+	vec3 wpos = dVWorld + gbufferModelViewInverse[3].xyz;
+	
+    #ifdef OVERWORLD_SHADER
+		float phase = fogPhase(VdotL) * 5.0;
+	#else
+		const float phase = 1.0;
+	#endif
+
+	vec3 absorbance = vec3(1.0);
+	vec3 vL = vec3(0.0);
+	
+	float expFactor = 11.0;
+	vec3 sh = vec3(1.0);
+
+	// do this outside raymarch loop, masking the water surface is good enough
+	#if defined OVERWORLD_SHADER
+		sh *= GetCloudShadow(wpos+cameraPosition, WsunVec);
+	#endif
+	
+	float thing = -normalize(dVWorld).y;
+	thing = clamp(thing - 0.333,0.0,1.0);
+	thing = pow(1.0-pow(1.0-thing,2.0),2.0);
+	thing *= 15.0;
+
+	for (int i=0;i<spCount;i++) {
+		float d = (pow(expFactor, float(i+dither)/float(spCount))/expFactor - 1.0/expFactor)/(1-1.0/expFactor);
+		float dd = pow(expFactor, float(i+dither)/float(spCount)) * log(expFactor) / float(spCount)/(expFactor-1.0);
+
+		#if defined OVERWORLD_SHADER || (defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER)
+			vec3 progressP = gbufferModelViewInverse[3].xyz + d*dVWorld + dVWorld;
+		#endif
+
+		vec3 sh2 = sh;
+
+		#ifdef OVERWORLD_SHADER
+			vec3 spPos = start.xyz + dV*d;
+
+			//project into biased shadowmap space
+			#ifdef DISTORT_SHADOWMAP
+				float distortFactor = calcDistort(spPos.xy);
+			#else
+				float distortFactor = 1.0;
+			#endif
+
+			vec3 pos = vec3(spPos.xy*distortFactor, spPos.z);
+			if (abs(pos.x) < 1.0-0.5/2048. && abs(pos.y) < 1.0-0.5/2048.){
+				pos = pos*vec3(0.5,0.5,0.5/6.0)+0.5;
+				// sh = texture( shadow, pos).x;
+
+				#ifdef TRANSLUCENT_COLORED_SHADOWS
+					sh2 *= vec3(texture(shadowtex0, pos).x);
+
+					if(texture(shadowtex1, pos).x > pos.z && sh2.x < 1.0){
+						vec4 translucentShadow = texture(shadowcolor0, pos.xy);
+						if(translucentShadow.a < 0.9) sh2 = normalize(translucentShadow.rgb+0.0001);
+					}
+				#else
+					sh2 *= vec3(texture(shadow, pos).x);
+				#endif
+			}
+		#endif
+
+		vec3 sunAbsorbance = exp(-waterCoefs * estSunDepth * d);
+		vec3 ambientAbsorbance = exp(-waterCoefs * (estEndDepth * d + thing));
+
+		vec3 Directlight = lightSource * sh2 * phase * sunAbsorbance;
+
+		vec3 _ambient = ambient;
+
+		#ifdef OVERWORLD_SHADER
+			float horizontalDist = length(progressP.xz - lightningBoltPosition.xz);
+			if (horizontalDist < 250.0 && lightningBoltPosition.w > 0.0) {
+				float lightningIntensity = exp(-horizontalDist * 0.02) * lightningFlash;
+				_ambient = mix(_ambient, vec3(1.3,1.5,3.0) * sh2, lightningIntensity);
+			}
+		#endif
+
+		#if defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED && defined LPV_VL_FOG_ILLUMINATION_HANDHELD_WATER
+			float lightRange = 0.0;
+			vec3 handLightCol = GetHandLight(heldItemId, progressP, lightRange);
+			
+			vec3 handLightCol2 = GetHandLight(heldItemId2, progressP, lightRange);
+
+			_ambient += (handLightCol + handLightCol2) * TORCH_AMOUNT * 0.225 * (LPV_VL_FOG_ILLUMINATION_BRIGHTNESS / 100.0);
+		#endif
+
+		vec3 Indirectlight = _ambient * ambientAbsorbance;
+
+		vec3 light = (Indirectlight + Directlight) * scatterCoef;
+		
+		vec3 volumeCoeff = exp(-waterCoefs * dd * rayLength);
+		vL += (light - light * volumeCoeff) / waterCoefs * absorbance;
+		absorbance *= volumeCoeff;
+	}
+	
+    return vec4(vL, dot(absorbance,vec3(0.333333)));
 }
 
 vec2 decodeVec2(float a){
@@ -233,367 +689,233 @@ vec2 decodeVec2(float a){
     return fract( a * constant1 ) * constant2 ;
 }
 
-vec3 decode (vec2 encn){
-    vec3 n = vec3(0.0);
-    encn = encn * 2.0 - 1.0;
-    n.xy = abs(encn);
-    n.z = 1.0 - n.x - n.y;
-    n.xy = n.z <= 0.0 ? (1.0 - n.yx) * sign(encn) : encn;
-    return clamp(normalize(n.xyz),-1.0,1.0);
-}
 
-vec3 toLinear(vec3 sRGB){
-return sRGB * (sRGB * (sRGB * 0.305306011 + 0.682171111) + 0.012522878);
-}
+//////////////////////////////VOID MAIN//////////////////////////////
+//////////////////////////////VOID MAIN//////////////////////////////
+//////////////////////////////VOID MAIN//////////////////////////////
+//////////////////////////////VOID MAIN//////////////////////////////
+//////////////////////////////VOID MAIN//////////////////////////////
 
-float shlickFresnelRoughness(float XdotN, float roughness){
-
-	float shlickFresnel = clamp(1.0 + XdotN,0.0,1.0);
-
-	float curves = exp(-4.0*pow(1.0-(roughness),2.5));
-	float brightness = exp(-3.0*pow(1.0-sqrt(roughness),3.50));
-
-	shlickFresnel = pow(1.0-pow(1.0-shlickFresnel, mix(1.0, 1.9, curves)),mix(5.0, 2.6, curves));
-	shlickFresnel = mix(0.0, mix(1.0,0.065,  brightness) , clamp(shlickFresnel,0.0,1.0));
-	
-	return shlickFresnel;
-}
-
-void frisvad(in vec3 n, out vec3 f, out vec3 r){
-    if(n.z < -0.9) {
-        f = vec3(0.,-1,0);
-        r = vec3(-1, 0, 0);
-    } else {
-    	float a = 1./(1.+n.z);
-    	float b = -n.x*n.y*a;
-    	f = vec3(1. - n.x*n.x*a, b, -n.x) ;
-    	r = vec3(b, 1. - n.y*n.y*a , -n.y);
-    }
-}
-
-mat3 CoordBase(vec3 n){
-	vec3 x,y;
-    frisvad(n,x,y);
-    return mat3(x,y,n);
-}
-
-vec3 GGX(vec3 n, vec3 v, vec3 l, float r, vec3 f0, vec3 metalAlbedoTint) {
-  r = max(pow(r,2.5), 0.0001);
-
-  vec3 h = normalize(l + v);
-  float hn = inversesqrt(dot(h, h));
-
-  float dotLH = clamp(dot(h,l)*hn,0.,1.);
-  float dotNH = clamp(dot(h,n)*hn,0.,1.) ;
-  float dotNL = clamp(dot(n,l),0.,1.);
-  float dotNHsq = dotNH*dotNH;
-
-  float denom = dotNHsq * r - dotNHsq + 1.;
-  float D = r / (3.141592653589793 * denom * denom);
-
-  vec3 F = (f0 + (1. - f0) * exp2((-5.55473*dotLH-6.98316)*dotLH)) * metalAlbedoTint;
-  float k2 = .25 * r;
-
-  return dotNL * D * F / (dotLH*dotLH*(1.0-k2)+k2);
-}
-
-#ifdef IEXT_ENABLED
-uniform bool IEXT_KEY_0;
-#endif
-
-vec4 calculateFlashlightData(in vec3 viewPos, bool hand){
-    #ifdef IEXT_ENABLED
-    if(!IEXT_KEY_0) return vec4(0.0);
-    #endif
-
-  vec4 flashLightSpecularData = vec4(0.0);
-  if(hand){
-		return flashLightSpecularData;
-	}
-
-	// vec3 shiftedViewPos = viewPos + vec3(-0.25, 0.2, 0.0);
-	// vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition) * 3.0;
-	// shiftedViewPos = mat3(gbufferPreviousModelView) * shiftedPlayerPos + gbufferPreviousModelView[3].xyz;
-	vec3 shiftedViewPos;
-    vec3 shiftedPlayerPos;
-	float forwardOffset;
-
-    #ifdef VIVECRAFT
-        if (vivecraftIsVR) {
-	        forwardOffset = 0.0;
-            shiftedPlayerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz + vivecraftRelativeMainHandPos;
-            shiftedViewPos = shiftedPlayerPos * mat3(vivecraftRelativeMainHandRot);
-        } else
-    #endif
-    {
-	    forwardOffset = 0.5;
-        shiftedViewPos = viewPos + vec3(-0.25, 0.2, 0.0);
-        shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition) * 3.0;
-        shiftedViewPos = mat3(gbufferPreviousModelView) * shiftedPlayerPos + gbufferPreviousModelView[3].xyz;
-    }
-
-    
-    
-  vec2 scaledViewPos = shiftedViewPos.xy / max(-shiftedViewPos.z - forwardOffset, 1e-7);
-	float linearDistance = length(shiftedPlayerPos);
-	float shiftedLinearDistance = length(scaledViewPos);
-
-	float lightFalloff = 1.0 - clamp(1.0-linearDistance/FLASHLIGHT_RANGE, -0.999,1.0);
-	lightFalloff = max(exp(-10.0 * FLASHLIGHT_BRIGHTNESS_FALLOFF_MULT * lightFalloff),0.0);
-
-	float flashLightSpecular = lightFalloff * exp2(-7.0*shiftedLinearDistance*shiftedLinearDistance) * FLASHLIGHT_BRIGHTNESS_MULT;
-	flashLightSpecularData = vec4(normalize(shiftedPlayerPos), flashLightSpecular);	
-
-  return flashLightSpecularData;
-}
-
-#if defined IS_LPV_ENABLED || defined PHOTONICS && defined PHOTONICS && !defined PH_ENABLE_HANDHELD_LIGHT
-  uniform bool firstPersonCamera;
-	uniform vec3 relativeEyePosition;
-  uniform int heldItemId;
-  uniform int heldItemId2;
-
-	uniform sampler3D texLpv1;
-	uniform sampler3D texLpv2;
-
-  #include "/lib/util.glsl"
-	#include "/lib/hsv.glsl"
-	#include "/lib/lpv_common.glsl"
-	#include "/lib/lpv_render.glsl"
-	#include "/lib/blocks.glsl"
-	#include "/lib/lpv_blocks.glsl"
-
-  vec3 GetHandLight(const in int itemId, const in vec3 playerPos, inout float lightRange) {
-      vec3 lightFinal = vec3(0.0);
-
-      uint blockData = imageLoad(imgBlockData, itemId).r;
-      vec4 lightColorRange = unpackUnorm4x8(blockData);
-      lightRange = lightColorRange.a * 255.0;
-
-      if (lightRange > 0.0) {
-          vec3 lightColor = srgbToLinear(lightColorRange.rgb);
-          float lightDist = length(playerPos+relativeEyePosition)*0.7;
-          float falloff = pow(1.0 - lightDist / lightRange, 3.0);
-          lightFinal = lightColor * max(falloff, 0.0);
-      }
-
-      return lightFinal;
-  }
-
-  #ifdef BELTBORNE_LANTERNS
-  uniform int IEXT_beltborne_lanterns_Id;
-  #endif
-#endif
-
-float getReflectionVisibility(float f0, float roughness){
-
-	// the goal is to determine if the reflection is even visible. 
-	// if it reaches a point in smoothness or reflectance where it is not visible, allow it to interpolate to diffuse lighting.
-	#if ROUGHNESS_THRESHOLD < 1
-		return 0.0;
-	#else
-		float thresholdValue = ROUGHNESS_THRESHOLD/100.0;
-
-		// the visibility gradient should only happen for dialectric materials. because metal is always shiny i guess or something
-		float dialectrics = max(f0*255.0 - 26.0,0.0)/229.0;
-		float value = 0.35; // so to a value you think is good enough.
-		float thresholdA = min(max( (1.0-dialectrics) - value, 0.0)/value, 1.0);
-
-		// use perceptual smoothness instead of linear roughness. it just works better i guess
-		float smoothness = 1.0-sqrt(roughness);
-		value = thresholdValue; // this one is typically want you want to scale.
-		float thresholdB = min(max(smoothness - value, 0.0)/value, 1.0);
-		
-		// preserve super smooth reflections. if thresholdB's value is really high, then fully smooth, low f0 materials would be removed (like water).
-		value = 0.1; // super low so only the smoothest of materials are includes.
-		float thresholdC = 1.0-min(max(value - (1.0-smoothness), 0.0)/value, 1.0);
-		
-		float visibilityGradient = max(thresholdA*thresholdC - thresholdB,0.0);
-
-		// a curve to make the gradient look smooth/nonlinear. just preference
-		visibilityGradient = 1.0-visibilityGradient;
-		visibilityGradient *=visibilityGradient;
-		visibilityGradient = 1.0-visibilityGradient;
-		visibilityGradient *=visibilityGradient;
-
-		return visibilityGradient;
-	#endif
-}
-
-/* RENDERTARGETS:12,3 */
 
 void main() {
 
-    vec2 texcoord = gl_FragCoord.xy*texelSize;
-    float depth = texelFetch(depthtex1, ivec2(gl_FragCoord.xy),0).x;
-    // bool hand = depth < 0.56;
-    float z = depth;
+	/* RENDERTARGETS:0,13 */
 
-    #if defined DISTANT_HORIZONS || defined VOXY
-      float DH_depth1 = 1.0;
-      float swappedDepth;
-      if(z >= 1.0) {
-        DH_depth1 = texelFetch(dhVoxyDepthTex1,ivec2(gl_FragCoord.xy),0).x;
-        swappedDepth = DH_depth1;
-      } else {
-        swappedDepth = z;
-      }
-    #else
-      float DH_depth1 = 1.0;
-      float swappedDepth = z;
-    #endif
+	gl_FragData[1] = vec4(0.0,0.0,0.0, 1.0);
 
-    bool isSky = swappedDepth >= 1.0;
-  
-    gl_FragData[0] = vec4(0.0);
-    vec3 FINAL_COLOR = texture(colortex3, texcoord).rgb;
-    if(!isSky) {
+	float noise_1 = interleaved_gradientNoise_temporal();
+	// float noise_2 = blueNoise();
+	// float noise_2 = interleaved_gradientNoise_temporal();
+	vec2 bnoise = blueNoise(gl_FragCoord.xy ).rg;
 
-      float frDepth = linearize(z);
-      gl_FragData[0].a = frDepth;
+	int seed = frameCounter%40000;
+	vec2 r2_sequence = R2_samples(seed).xy*5.0;
+	vec2 BN = fract(r2_sequence + bnoise);
 
-      vec4 data = texelFetch(colortex1, ivec2(gl_FragCoord.xy), 0);
+	vec2 tc = floor(gl_FragCoord.xy)/VL_RENDER_SCALE*texelSize + texelSize*0.5;
+	// vec2 tc = (gl_FragCoord.xy - 0.5)/VL_RENDER_SCALE*texelSize;
 
-      vec4 dataUnpacked0 = vec4(decodeVec2(data.x),decodeVec2(data.y)); // albedo, masks
-      vec4 dataUnpacked1 = vec4(decodeVec2(data.z),decodeVec2(data.w)); // normals, lightmaps
+	// bool iswater = texture(colortex7,tc).a > 0.99;
 
-      float opaqueMasks = dataUnpacked1.w;
-      bool hand = abs(opaqueMasks-0.75) < 0.01;
-      bool entities = abs(opaqueMasks-0.45) < 0.01;
-      bool opaqueParticles = abs(opaqueMasks-0.85) <0.01;
-      #ifdef SHADER_GRASS
-        bool isShaderGrass = abs(opaqueMasks-0.80) < 0.01;
-      #else
-        const bool isShaderGrass = false;
-      #endif
+	ivec2 texcoord = ivec2(tc/texelSize);
 
-      vec3 viewPos = toScreenSpace(vec3(texcoord/RENDER_SCALE, z));
+	float alpha = texelFetch(colortex7,texcoord,0).a ;
+	float blendedAlpha = texelFetch(colortex2, texcoord,0).a;
 
-      vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos;
-      vec3 NplayerPos = normalize(playerPos);
-      playerPos += gbufferModelViewInverse[3].xyz;
+	bool iswater = alpha > 0.99;
+
+	float z0 = texelFetch(depthtex0, texcoord,0).x;
+	
+	// z0 = depth < 0.56 ? convertHandDepth(depth) : depth;
+
+	#if defined DISTANT_HORIZONS || defined VOXY
+		float DH_z0 = 0.0;
+		
+		if (z0 >= 1.0) DH_z0 = texelFetch(dhVoxyDepthTex, texcoord,0).x;
+	#else
+		float DH_z0 = 0.0;
+	#endif
+	
+	vec3 viewPos0 = toScreenSpace_DH(tc/RENDER_SCALE, z0, DH_z0);
+	vec3 playerPos = mat3(gbufferModelViewInverse) * viewPos0 + gbufferModelViewInverse[3].xyz;
+	vec3 playerPos_normalized = normalize(playerPos);
+
+	// vec3 waterEpsilon = vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B);
+	// vec3 dirtEpsilon = vec3(Dirt_Absorb_R, Dirt_Absorb_G, Dirt_Absorb_B);
+	vec3 totEpsilon = vec3(Water_Absorb_R, Water_Absorb_G, Water_Absorb_B);
+	vec3 scatterCoef = Dirt_Amount * vec3(Dirt_Scatter_R, Dirt_Scatter_G, Dirt_Scatter_B) / 3.14;
+
+	vec3 directLightColor = lightSourceColorSSBO / 2400.0;
+
+	vec3 directSunlightColor = sunColorSSBO / 2400.0;
+	#ifdef CUSTOM_MOON_ROTATION
+		directSunlightColor *= smoothstep(0.005, 0.09, length(WmoonVec - WrealSunVec));
+	#endif
+
+	vec3 directMoonlightColor = moonColorSSBO / 2400.0;
+	#ifdef CUSTOM_MOON_ROTATION
+		directMoonlightColor *= mix(0.0, 1.0, clamp(WmoonVec.y + 0.05, 0.0, 0.1)/0.1);
+	#endif
+
+	vec3 indirectLightColor = skyGroundColSSBO / 1200.0;
+	vec3 indirectLightColor_dynamic = averageSkyCol_CloudsSSBO / 1200.0;
+
+	// #if defined DISTANT_HORIZONS || defined VOXY
+	//  	float godrays = godrayTest(viewPos0, normalize(WsunVec*mat3(gbufferModelViewInverse)),BN.x, z0);
+	// #else
+	// 	float godrays = 1.0;
+	// #endif
+
+	#if (defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED) || (defined FLASHLIGHT && defined FLASHLIGHT_FOG_ILLUMINATION)
+		vec4 LPV_ILLUMINATION = raymarchLPV(viewPos0, BN.y);
+	#else
+		vec4 LPV_ILLUMINATION = vec4(0.0,0.0,0.0,1.0);
+	#endif
+
+	vec3 indirectLight = indirectLightColor_dynamic * skyLightLevelSmooth * ambient_brightness; 
+    float minimumLightAmount = 0.02*nightVision + 0.001 * mix(MIN_LIGHT_AMOUNT_INSIDE, MIN_LIGHT_AMOUNT, clamp(skyLightLevelSmooth, 0.0, 1.0));
+    indirectLight += vec3(1.0) * minimumLightAmount;
+	
+    vec3 indirectLight_fog = indirectLightColor * ambient_brightness; 
+    indirectLight_fog += vec3(1.0) * (0.02*nightVision + 0.001 * mix(MIN_LIGHT_AMOUNT_INSIDE, MIN_LIGHT_AMOUNT, skyLightLevelSmooth));
 
 
-      // derived from N and K from labPBR wiki https://shaderlabs.org/wiki/LabPBR_Material_Standard
-      // using ((1.0 - N)^2 + K^2) / ((1.0 + N)^2 + K^2)
-      const vec3 HCM_F0 [8] = vec3[8](
-        vec3(0.531228825312, 0.51235724246, 0.495828545714),// iron	
-        vec3(0.944229966045, 0.77610211732, 0.373402004593),// gold		
-        vec3(0.912298031535, 0.91385063144, 0.919680580954),// Aluminum
-        vec3(0.55559681715,  0.55453707574, 0.554779427513),// Chrome
-        vec3(0.925952196272, 0.72090163805, 0.504154241735),// Copper
-        vec3(0.632483812932, 0.62593707362, 0.641478899539),// Lead
-        vec3(0.678849234658, 0.64240055565, 0.588409633571),// Platinum
-        vec3(0.961999998804, 0.94946811207, 0.922115710997)	// Silver
-      );
+	float cloudPlaneDistance = 0.0;
+	vec2 cloudDistance = vec2(0.0); // r = cumulus, g = cumulonimbus
 
-      vec3 albedo = toLinear(vec3(dataUnpacked0.xz,dataUnpacked1.x));
-      vec2 lightmap = dataUnpacked1.yz;
+	vec4 VolumetricFog;
+	#ifdef OVERWORLD_SHADER
+		vec4 VolumetricClouds;
+	#endif
+	
+	if (eyeInWater){
+		vec4 underWaterFog =  waterVolumetrics(vec3(0.0), viewPos0, length(viewPos0), vec2(noise_1, BN.y), totEpsilon, scatterCoef, indirectLightColor_dynamic, directLightColor, dot(normalize(viewPos0), normalize(sunVec * lightSourceCheck)), LPV_ILLUMINATION.rgb);
+		VolumetricFog = vec4(underWaterFog.rgb, 1.0);
+	} else {
+		#ifdef OVERWORLD_SHADER
+			VolumetricClouds = GetVolumetricClouds(viewPos0, BN, WrealSunVec, WmoonVec, directSunlightColor, directMoonlightColor, indirectLightColor, cloudPlaneDistance, cloudDistance);
+			
+			#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
+				imageStore(cloudDepthTex, ivec2(gl_FragCoord.xy), vec4(cloudDistance.r, cloudDistance.g, 0, 1));
+			#endif
 
-      vec4 stuff = texelFetch(colortex8, ivec2(gl_FragCoord.xy), 0);
-      vec3 normal = decode(stuff.xy);
-      vec2 speculars = stuff.zw;
+			#ifdef CAVE_FOG
+				#if CAVE_DETECTION < 2
+					#if CAVE_DETECTION == 1
+						float caveFactor = 1.0 - smoothstep(60.0, 63.0, cameraPosition.y);
+					#else
+						const float caveFactor = 1.0;
+					#endif
+				#else
+					const float caveFactor = 0.0;
+				#endif
 
-      float roughness = speculars.r;
-      float f0 = speculars.g;
-      roughness = 1.0 - roughness; 
-      roughness *= roughness;
+				float skyhole = pow(clamp(1.0-pow(max(playerPos_normalized.y - 0.6,0.0)*5.0,2.0),0.0,1.0),2)* caveDetection * caveFactor;
+				VolumetricClouds.rgb *= 1.0-skyhole;
+				VolumetricClouds.a = mix(VolumetricClouds.a, 1.0, skyhole);
+			#endif
 
-      f0 = f0 == 0.0 ? 0.02 : f0;
+			VolumetricFog = GetVolumetricFog(viewPos0, WsunVec, BN, directLightColor, indirectLight_fog, indirectLightColor_dynamic, cloudPlaneDistance);
 
-      bool isMetal = f0 > 229.5/255.0;
+			#if (defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED) || (defined FLASHLIGHT && defined FLASHLIGHT_FOG_ILLUMINATION)
+				VolumetricFog.a *= LPV_ILLUMINATION.a;
+				VolumetricFog.rgb = VolumetricFog.rgb * LPV_ILLUMINATION.a + LPV_ILLUMINATION.rgb;
+			#endif
 
-      // get reflected vector
-      mat3 basis = CoordBase(normal);
-      vec3 viewDir = -NplayerPos*basis;
-      float VdotN = dot(-normalize(viewDir), vec3(0.0,0.0,1.0));
-      float shlickFresnel = shlickFresnelRoughness(VdotN, roughness);
+			// for bloomy fog mask
+			gl_FragData[1].a = VolumetricFog.a;
 
-      // F0 <  230 dialectrics
-      // F0 >= 230 hardcoded metal f0
-      // F0 == 255 use albedo for f0
-      albedo = f0 == 1.0 ? sqrt(albedo) : albedo;
-      vec3 metalAlbedoTint = isMetal ? albedo : vec3(1.0);
-      // get F0 values for hardcoded metals.
-      vec3 hardCodedMetalsF0 = f0 == 1.0 ? albedo : HCM_F0[int(clamp(f0*255.0 - 229.5,0.0,7.0))];
-      vec3 reflectance = isMetal ? hardCodedMetalsF0 : vec3(f0);
-      vec3 F0 = (reflectance + (1.0-reflectance) * shlickFresnel) * metalAlbedoTint;
+			VolumetricFog = vec4(VolumetricClouds.rgb * VolumetricFog.a  + VolumetricFog.rgb, VolumetricFog.a*VolumetricClouds.a);
+		#endif
+		
+		#if defined NETHER_SHADER || defined END_SHADER
+			VolumetricFog = GetVolumetricFog(viewPos0, noise_1, noise_1);
 
-      vec4 currentFrame = texture(colortex0, texcoord);
-      float alpha = getReflectionVisibility(f0, roughness);
+			#if (defined LPV_VL_FOG_ILLUMINATION && defined IS_LPV_ENABLED) || (defined FLASHLIGHT && defined FLASHLIGHT_FOG_ILLUMINATION)
+				VolumetricFog.a *= LPV_ILLUMINATION.a;
+				VolumetricFog.rgb = VolumetricFog.rgb * LPV_ILLUMINATION.a + LPV_ILLUMINATION.rgb;
+			#endif
 
-      vec3 denoisedReflections = currentFrame.rgb;
+			// for bloomy fog mask
+			gl_FragData[1].a = VolumetricFog.a;
+		#endif
+	}
 
-      if(roughness > 0.005 && alpha < 0.9999 && !hand && !entities && !opaqueParticles
-        #if defined DISTANT_HORIZONS || defined VOXY
-          && z < 1.0
-        #endif
-      ) {
-        denoisedReflections = VLTemporalFiltering2(texcoord, playerPos, frDepth, depthtex1, hand, currentFrame.rgb, roughness);
+	// VolumetricFog = vec4(godrays,godrays,godrays,0.0);
+	// VolumetricFog = raymarchTest(viewPos0, BN);
+	// VolumetricFog = vec4(0.0,0.0,0.0,1.0);
+	// VolumetricFog.rgb = vec3(0);
 
-        gl_FragData[0].rgb = denoisedReflections;
-      }
+	gl_FragData[0] = clamp(VolumetricFog, 0.0, 65000.0);
 
-      denoisedReflections.rgb = mix(FINAL_COLOR, denoisedReflections.rgb, F0);
-      FINAL_COLOR = mix(denoisedReflections.rgb, FINAL_COLOR, alpha);
 
-      #if defined OVERWORLD_SHADER && SUN_SPECULAR_MULT > 0
-        vec3 lightSourceReflection = SUN_SPECULAR_MULT * texture(colortex15, texcoord).rgb * GGX(normal, -NplayerPos, WsunVec, roughness, reflectance, metalAlbedoTint);
-        FINAL_COLOR += lightSourceReflection;
-      #endif
 
-      #if defined FLASHLIGHT_SPECULAR && (defined DEFERRED_SPECULAR || defined FORWARD_SPECULAR)
-        vec4 flashlightData = calculateFlashlightData(viewPos, hand);
-        vec3 flashLightReflection = vec3(FLASHLIGHT_R,FLASHLIGHT_G,FLASHLIGHT_B) * flashlightData.a * GGX(normal, -flashlightData.xyz, -flashlightData.xyz, roughness, reflectance, metalAlbedoTint);
-        FINAL_COLOR += flashLightReflection;
-      #endif
+	/// FOG BEHIND TRANSLUCENTS
 
-      #if defined Hand_Held_lights && defined IS_LPV_ENABLED
-        if(!hand && firstPersonCamera && !isShaderGrass) {
-          if (heldItemId > 0){
-            vec3 shiftedViewPos = viewPos + vec3(-0.25, 0.2, 0.0);
-            vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
+	if(blendedAlpha > 0.0 || iswater){
+		vec2 lightmap = decodeVec2(texelFetch(colortex14,texcoord,0).z);
+		lightmap = min(max(lightmap - 0.05,0.0)*1.06,1.0);
 
-            float lightRange = 0.0;
-            vec3 handLightCol = GetHandLight(heldItemId, shiftedPlayerPos, lightRange);
+		#ifndef OVERWORLD_SHADER
+			lightmap.y = 1.0;
+		#endif
 
-            if(lightRange > 0.0) {
-              vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
-              FINAL_COLOR += handheldReflection1;
-            }
-          }
+		vec2 curvedLightmaps = lightmap;
+		float lightmapBrightspot = min(max(lightmap.x-0.7,0.0)*3.3333,1.0);
+		lightmapBrightspot *= lightmapBrightspot*lightmapBrightspot;
+		float lightmapLight = 1.0-sqrt(1.0-lightmap.x);
+		lightmapLight *= lightmapLight;
+		curvedLightmaps.x = mix(lightmapLight, 2.5, lightmapBrightspot);
+		curvedLightmaps.y = (pow(lightmap.y,15.0)*2.0 + lightmap.y*lightmap.y)/3.0;
 
-          if (heldItemId2 > 0){
-            vec3 shiftedViewPos = viewPos + vec3(0.25, 0.2, 0.0);
-            vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
+		float z1 = texelFetch(depthtex1, texcoord,0).x;
 
-            float lightRange = 0.0;
-            vec3 handLightCol = GetHandLight(heldItemId2, shiftedPlayerPos, lightRange);
+		#if defined DISTANT_HORIZONS || defined VOXY
+			float DH_z1 = 0.0;
+			if (z1 >= 1.0) DH_z1 = texelFetch(dhVoxyDepthTex1, texcoord,0).x;
+		#else
+			float DH_z1 = 0.0;
+		#endif
 
-            if(lightRange > 0.0) {
-              vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
-              FINAL_COLOR += handheldReflection1;
-            }
-          }
+		vec3 viewPos1 = toScreenSpace_DH(tc/RENDER_SCALE, z1, DH_z1);
 
-          #ifdef BELTBORNE_LANTERNS
-            if (IEXT_beltborne_lanterns_Id > 0){
-              vec3 shiftedViewPos = viewPos + vec3(0.15, 0.2, 0.0);
-              vec3 shiftedPlayerPos = mat3(gbufferModelViewInverse) * shiftedViewPos + gbufferModelViewInverse[3].xyz + (cameraPosition - previousCameraPosition);
+		indirectLight = indirectLightColor_dynamic * skyLightLevelSmooth * ambient_brightness;
 
-              float lightRange = 0.0;
-              vec3 handLightCol = GetHandLight(IEXT_beltborne_lanterns_Id, shiftedPlayerPos, lightRange);
 
-              if(lightRange > 0.0) {
-                vec3 handheldReflection1 = handLightCol * GGX(normal, -shiftedPlayerPos, -shiftedPlayerPos, roughness, reflectance, metalAlbedoTint);
-                FINAL_COLOR += handheldReflection1;
-              }
-            }
-          #endif
-        }
-      #endif
-      
-    }
+		if(iswater && !eyeInWater){
+			float Vdiff = distance(viewPos1, viewPos0);
+			float estimatedDepth = Vdiff * abs(playerPos_normalized.y);
+			float estimatedSunDepth = Vdiff / abs(WsunVec.y); //assuming water plane
 
-    gl_FragData[1].rgb = FINAL_COLOR;
+			float lightleakfix = clamp(lightmap.y + (1.0-caveDetection),0.0,1.0);
+
+			directLightColor *= lightleakfix;
+
+			indirectLight *= curvedLightmaps.y;
+
+			indirectLight += mix(MIN_LIGHT_AMOUNT * 0.004 + nightVision*0.02, MIN_LIGHT_AMOUNT_INSIDE * 0.004 + nightVision*0.02, 1.0 - lightmap.y);
+
+			indirectLight += vec3(TORCH_R,TORCH_G,TORCH_B)	* curvedLightmaps.x  * TORCH_AMOUNT * blendedAlpha;
+
+			VolumetricFog = waterVolumetrics_alt(viewPos0, viewPos1, estimatedDepth, estimatedSunDepth, Vdiff, noise_1, totEpsilon, scatterCoef, indirectLight, directLightColor, dot(normalize(viewPos0), normalize(sunVec*lightSourceCheck)));
+		} else {
+			#if defined OVERWORLD_SHADER
+				VolumetricClouds = GetVolumetricClouds(viewPos1, vec2(noise_1), WrealSunVec, WmoonVec, directSunlightColor, directMoonlightColor, indirectLightColor, cloudPlaneDistance, cloudDistance);
+
+				#if defined CUMULONIMBUS_LIGHTNING && CUMULONIMBUS > 0
+					imageStore(cloudDepthTex, ivec2(gl_FragCoord.xy), vec4(cloudDistance.r, cloudDistance.g, 0, 1));
+				#endif
+		
+				VolumetricFog = GetVolumetricFog(viewPos1, WsunVec, vec2(noise_1), directLightColor, indirectLight_fog, indirectLight, cloudPlaneDistance);
+
+				VolumetricFog = vec4(VolumetricClouds.rgb*VolumetricFog.a + VolumetricFog.rgb, VolumetricFog.a*VolumetricClouds.a);
+			#endif
+			
+			#if defined NETHER_SHADER || defined END_SHADER
+				VolumetricFog = GetVolumetricFog(viewPos1, noise_1, noise_1);
+			#endif
+		}
+		
+		gl_FragData[1] = clamp(VolumetricFog, 0.0, 65000.0);
+	}
 }

@@ -24,11 +24,7 @@ Read the terms of modification and sharing before changing something below pleas
 
 out DATA {
 	vec4 lmtexcoord;
-	#if defined LIGHTNING || defined ENTITIES
-		vec4 color;
-	#else
-		vec3 color;
-	#endif
+	vec4 color;
 
 	vec3 viewVector;
 
@@ -138,8 +134,8 @@ void main() {
 
 	gl_Position = ftransform();
 
-	color.rgb = gl_Color.rgb;
-	#if defined LIGHTNING || defined ENTITIES
+	color = vec4(gl_Color.rgb, 1.0);
+	#ifdef LIGHTNING
 		color.a = gl_Color.a;
 	#endif
 
@@ -212,7 +208,8 @@ void main() {
 	// 0.8 = reflective entities
 	// 0.7 = reflective blocks
 	// 0.6 = nether portal
-	float mat = 0.0;
+float mat = 0.0;
+
 
 	// water mask
 	if(isWater
@@ -232,8 +229,9 @@ void main() {
 
 	// translucent blocks
 	if (mc_Entity.x >= 301 && mc_Entity.x <= 338) mat = 0.1;
+	if (mc_Entity.x == 516.0) mat = 0.1;
 
-	// if (mc_Entity.x == BLOCK_NETHER_PORTAL) mat = 0.6;
+	if (mc_Entity.x == BLOCK_NETHER_PORTAL) mat = 0.6;
 
 	if (mc_Entity.x == WISPJELLY) lmtexcoord.z = 0.0;
 

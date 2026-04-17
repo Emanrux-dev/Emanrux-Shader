@@ -237,7 +237,29 @@ void main() {
     COLOR = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_SCALE*RENDER_SCALE)).rgb;
   #endif
 
+#ifdef CINEMATIC_MODE
+    float luma = dot(COLOR, vec3(0.299, 0.587, 0.114));
+    COLOR = mix(vec3(luma), COLOR, 0.6);
+    COLOR *= 1;
+    vec2 vUV = texcoord * 2.0 - 1.0;
+    float vignette = 1.0 - dot(vUV, vUV) * 0.5;
+    vignette = clamp(vignette, 0.0, 1.0);
+    COLOR *= vignette;
+COLOR = (COLOR - 0.5) * 1.1 + 0.5;  // 1.3 → 1.1, menos contraste
+COLOR = clamp(COLOR, 0.0, 1.0);
+float luminance = dot(COLOR, vec3(0.299, 0.587, 0.114));
+vec3 shadows = vec3(0.08, 0.08, 0.20);    // subido de 0.05 → 0.08, sombras menos negras
+vec3 highlights = vec3(1.05, 0.95, 0.85);
+COLOR = mix(COLOR * shadows * 2.0, COLOR * highlights, luminance);
+COLOR = clamp(COLOR, 0.0, 1.0);
+float grain = fract(sin(dot(texcoord + fract(frameTimeCounter), vec2(12.9898, 78.233))) * 43758.5453);
+grain = (grain - 0.5) * 0.04;
+COLOR += grain;
+    float barSize = 0.084;
+    if(texcoord.y < barSize || texcoord.y > 1.0 - barSize) COLOR = vec3(0.0);
+#endif
   gl_FragColor.rgb = COLOR;
+
 
   #if DEBUG_VIEW == debug_WATERSIM && WATER_INTERACTION == 2
     if (hideGUI == 1) {

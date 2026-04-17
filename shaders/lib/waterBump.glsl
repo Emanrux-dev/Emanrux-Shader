@@ -5,6 +5,7 @@ const vec2 wave_size[3] = vec2[](
 );
 
 const float radiance = 2.39996;
+const mat2 rotationMatrix = mat2(-0.73736670, 0.67549268, -0.67549268, -0.73736670);
 
 float waterCaustics(vec3 worldPos, vec3 sunVec, float surfacePos) {
 
@@ -12,8 +13,6 @@ float waterCaustics(vec3 worldPos, vec3 sunVec, float surfacePos) {
 	vec2 pos = projectedPos.xz;
 
 	float movement = frameTimeCounter * 0.035 * WATER_WAVE_SPEED;
-
-	mat2 rotationMatrix  = mat2(vec2(cos(radiance),  -sin(radiance)),  vec2(sin(radiance),  cos(radiance)));
 
 	float largeWaves = texture(noisetex, pos / 600.0 ).b;
 	float largeWavesCurved = pow(1.0-pow(1.0-largeWaves,2.5),4.5);
@@ -31,14 +30,22 @@ float waterCaustics(vec3 worldPos, vec3 sunVec, float surfacePos) {
 
 float getWaterHeightmap(vec2 posxz, in float largeWaves, in float largeWavesCurved) {
 	vec2 pos = posxz;
-
 	float movement = frameTimeCounter * 0.035 * WATER_WAVE_SPEED;
-
-	mat2 rotationMatrix  = mat2(vec2(cos(radiance),  -sin(radiance)),  vec2(sin(radiance),  cos(radiance)));
 
 	float heightSum = 0.0;
 	for (int i = 0; i < 3; i++){
+		pos = rotationMatrix * pos;
+		heightSum += texture(noisetex, pos / wave_size[i] + largeWavesCurved * 0.5 + movement).b;
+	}
 
+	return (heightSum/4.5) * max(largeWavesCurved,0.3);
+}
+
+float getWaterHeightmapMov(vec2 posxz, in float largeWaves, in float largeWavesCurved, in float movement) {
+	vec2 pos = posxz;
+
+	float heightSum = 0.0;
+	for (int i = 0; i < 3; i++){
 		pos = rotationMatrix * pos;
 		heightSum += texture(noisetex, pos / wave_size[i] + largeWavesCurved * 0.5 + movement).b;
 	}
@@ -56,16 +63,16 @@ vec3 getWaveNormal(vec3 waterPos, vec3 playerpos){
 		float deltaPos = 0.025;
 	#else
 		float deltaPos = mix(WAVES_A_RADIUS, WAVES_B_RADIUS, largeWavesCurved);
-		// reduce high frequency detail as distance increases. reduces noise on waves. why have more details than pixels?
 		float range = min(length(playerpos) / (16.0*24.0), 3.0);
 		deltaPos += range;
 	#endif
 
 	vec2 coord = waterPos.xy;
+	float movement = frameTimeCounter * 0.035 * WATER_WAVE_SPEED;
 
-	float h0 = getWaterHeightmap(coord, largeWaves, largeWavesCurved);
-	float h1 = getWaterHeightmap(coord + vec2(deltaPos,0.0), largeWaves,largeWavesCurved);
-	float h3 = getWaterHeightmap(coord + vec2(0.0,deltaPos), largeWaves,largeWavesCurved);
+	float h0 = getWaterHeightmapMov(coord,                       largeWaves, largeWavesCurved, movement);
+	float h1 = getWaterHeightmapMov(coord + vec2(deltaPos, 0.0), largeWaves, largeWavesCurved, movement);
+	float h3 = getWaterHeightmapMov(coord + vec2(0.0, deltaPos), largeWaves, largeWavesCurved, movement);
 
 	float xDelta = (h1-h0)/deltaPos;
 	float yDelta = (h3-h0)/deltaPos;

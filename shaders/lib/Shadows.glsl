@@ -15,12 +15,11 @@ void GriAndEminShadowFix(
 
 void applyShadowBias(inout vec3 projectedShadowPosition, in vec3 playerPos, in vec3 geoNormals){
 
-	// Calculate the bias size according to the 1:1 ratio of one shadow texel to one full block
-	float biasSize = (shadowDistance / shadowMapResolution*2.0) * 2.0;
+	float biasSize = (shadowDistance / shadowMapResolution) * 4.0;
 
 	float biasDistanceFactor = length(projectedShadowPosition.xy);
 
-	biasDistanceFactor = 1.0 + biasDistanceFactor * ((16.0*8.0) / shadowDistance) * 0.1;
+	biasDistanceFactor = 1.0 + biasDistanceFactor * (12.8 / shadowDistance);
 
 	#ifdef CUSTOM_MOON_ROTATION
 		projectedShadowPosition += (mat3(customShadowMatrixSSBO) * geoNormals) * biasSize * 0.15 * biasDistanceFactor;

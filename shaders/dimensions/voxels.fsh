@@ -36,9 +36,7 @@ in DATA {
 	#endif
 
     vec3 block_normal;
-    #if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0
-	float chunkFade;
-	#endif
+    flat int blockID;
 } data_in;
 
 const float mincoord = 1.0/4096.0;
@@ -356,6 +354,11 @@ void main() {
 	float saveDepth = 0.0;
 
 	if(!ifPOM) adjustedTexCoord = data_in.lmtexcoord.xy;
+
+	float opaqueMasks = 1.0;
+
+	// if(data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL || data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_LOWER || data_in.blockID == BLOCK_GRASS_TALL_UPPER ) opaqueMasks = 0.60;
+	// else if(data_in.blockID == BLOCK_AIR_WAVING) opaqueMasks = 0.55;
 	
 
 	//////////////////////////////// 				////////////////////////////////
@@ -384,7 +387,6 @@ void main() {
 
     if (!ray.result_hit) discard;
     if (ray.result_normal == vec3(0.0)) ray.result_normal = data_in.block_normal;
-    int blockID = result_block_id;
 
     playerpos = ray.result_position + world_offset - cameraPosition;
     vec3 viewPos = (gbufferModelView * vec4(playerpos, 1.0f)).xyz;
@@ -405,50 +407,37 @@ void main() {
 		Albedo.rgb = vec3(0.5);
 	#endif
 
-    float opaqueMasks = 1.0;
-
-	if(blockID == BLOCK_GROUND_WAVING_VERTICAL || blockID == BLOCK_GRASS_SHORT || blockID == BLOCK_GRASS_TALL_LOWER || blockID == BLOCK_GRASS_TALL_UPPER ) opaqueMasks = 0.60;
-	else if(blockID == BLOCK_AIR_WAVING) opaqueMasks = 0.55;
-
 		
-	#ifdef AEROCHROME_MODE
-		float gray = dot(Albedo.rgb, vec3(0.2, 1.0, 0.07));
-		if (
-			blockID == BLOCK_AMETHYST_BUD_MEDIUM || blockID == BLOCK_AMETHYST_BUD_LARGE || blockID == BLOCK_AMETHYST_CLUSTER 
-			|| blockID == BLOCK_SSS_STRONG || blockID == BLOCK_SSS_STRONG3 || blockID == BLOCK_SSS_WEAK || blockID == BLOCK_CACTUS
-			|| blockID == BLOCK_CELESTIUM || blockID == BLOCK_SNOW_LAYERS
-			|| blockID >= 10 && blockID < 80
-		) {
-			// IR Reflective (Pink-red)
-			Albedo.rgb = mix(vec3(gray), aerochrome_color, 0.7);
-		}
-		else if(blockID == BLOCK_GRASS) {
-		// Special handling for grass block
-			float strength = 1.0 - Color.b;
-			Albedo.rgb = mix(Albedo.rgb, aerochrome_color, strength);
-		}
-		#ifdef AEROCHROME_WOOL_ENABLED
-			else if (blockID == BLOCK_SSS_WEAK_2 || blockID == BLOCK_CARPET) {
-			// Wool
-				Albedo.rgb = mix(Albedo.rgb, aerochrome_color, 0.3);
-			}
-		#endif
-		else if(blockID == BLOCK_WATER || (blockID >= 300 && blockID < 400))
-		{
-		// IR Absorbsive? Dark.
-			Albedo.rgb = mix(Albedo.rgb, vec3(0.01, 0.08, 0.15), 0.5);
-		}
-	#endif
+	// #ifdef AEROCHROME_MODE
+	// 	float gray = dot(Albedo.rgb, vec3(0.2, 1.0, 0.07));
+	// 	if (
+	// 		data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER 
+	// 		|| data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_SSS_STRONG3 || data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_CACTUS
+	// 		|| data_in.blockID == BLOCK_CELESTIUM || data_in.blockID == BLOCK_SNOW_LAYERS
+	// 		|| data_in.blockID >= 10 && data_in.blockID < 80
+	// 	) {
+	// 		// IR Reflective (Pink-red)
+	// 		Albedo.rgb = mix(vec3(gray), aerochrome_color, 0.7);
+	// 	}
+	// 	else if(data_in.blockID == BLOCK_GRASS) {
+	// 	// Special handling for grass block
+	// 		float strength = 1.0 - Color.b;
+	// 		Albedo.rgb = mix(Albedo.rgb, aerochrome_color, strength);
+	// 	}
+	// 	#ifdef AEROCHROME_WOOL_ENABLED
+	// 		else if (data_in.blockID == BLOCK_SSS_WEAK_2 || data_in.blockID == BLOCK_CARPET) {
+	// 		// Wool
+	// 			Albedo.rgb = mix(Albedo.rgb, aerochrome_color, 0.3);
+	// 		}
+	// 	#endif
+	// 	else if(data_in.blockID == BLOCK_WATER || (data_in.blockID >= 300 && data_in.blockID < 400))
+	// 	{
+	// 	// IR Absorbsive? Dark.
+	// 		Albedo.rgb = mix(Albedo.rgb, vec3(0.01, 0.08, 0.15), 0.5);
+	// 	}
+	// #endif
 
 	Albedo.a = opaqueMasks;
-
-    #if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
-		#ifdef TAA
-			if(sqrt(data_in.chunkFade) < BN) discard;
-		#else
-			if(sqrt(data_in.chunkFade) < R2) discard;
-		#endif
-	#endif
 
 	//////////////////////////////// 				////////////////////////////////
 	////////////////////////////////	SPECULAR	////////////////////////////////
@@ -457,96 +446,96 @@ void main() {
     normal = viewToWorld(normal);
 
     float SSSAMOUNT = 0.0;
-    #if (SSS_TYPE == 1 || SSS_TYPE == 2) && !defined HAND
-        #ifdef ENTITIES
-            #ifdef MOB_SSS
-                /////// ----- SSS ON MOBS----- ///////
-                // strong
-                if(blockID == ENTITY_SSS_MEDIUM) SSSAMOUNT = 0.75;
-        
-                // medium
-        
-                // low
-                else if(blockID == ENTITY_SSS_WEAK || blockID == ENTITY_PLAYER || blockID == ENTITY_CURRENT_PLAYER) SSSAMOUNT = 0.4;
-            #endif
-        #else
-            #if defined SHADER_GRASS && !defined CUTOUT
-                if (ShaderGrass) SSSAMOUNT = 0.65;
-                else
-            #endif
-    
-            /////// ----- SSS ON BLOCKS ----- ///////
-            // strong
-            if (
-                blockID == BLOCK_SSS_STRONG || blockID == BLOCK_SSS_STRONG3 || blockID == BLOCK_AIR_WAVING || blockID == BLOCK_SSS_STRONG_2
-            ) {
-                SSSAMOUNT = 1.0;
-            }
-            // medium
-            else if (
-                blockID == BLOCK_GROUND_WAVING || blockID == BLOCK_GROUND_WAVING_VERTICAL ||
-                blockID == BLOCK_GRASS_SHORT || blockID == BLOCK_GRASS_TALL_UPPER || blockID == BLOCK_GRASS_TALL_LOWER ||
-                blockID == BLOCK_SSS_WEAK || blockID == BLOCK_CACTUS || blockID == BLOCK_SSS_WEAK_2 ||
-                blockID == BLOCK_CELESTIUM || (blockID >= 269 && blockID <= 274) || blockID == BLOCK_SNOW_LAYERS || blockID == BLOCK_CARPET ||
-                blockID == BLOCK_AMETHYST_BUD_MEDIUM || blockID == BLOCK_AMETHYST_BUD_LARGE || blockID == BLOCK_AMETHYST_CLUSTER ||
-                blockID == BLOCK_BAMBOO || blockID == BLOCK_SAPLING || blockID == BLOCK_VINE || blockID == BLOCK_VINE_OTHER
-                #ifdef MISC_BLOCK_SSS
-                || blockID == BLOCK_SSS_WEIRD || blockID == BLOCK_GRASS
-                #endif
-            ) {
-                SSSAMOUNT = 0.5;
-            }
-        #endif
-    
-        #ifdef BLOCKENTITIES
-            /////// ----- SSS ON BLOCK ENTITIES----- ///////
-            // strong
-    
-            // medium
-            if(blockID == BLOCK_SSS_WEAK_3) SSSAMOUNT = 0.4;
-    
-            // low
-    
-        #endif
-    #endif
+    // #if (SSS_TYPE == 1 || SSS_TYPE == 2) && !defined HAND
+    //     #ifdef ENTITIES
+    //         #ifdef MOB_SSS
+    //             /////// ----- SSS ON MOBS----- ///////
+    //             // strong
+    //             if(data_in.blockID == ENTITY_SSS_MEDIUM) SSSAMOUNT = 0.75;
+    //     
+    //             // medium
+    //     
+    //             // low
+    //             else if(data_in.blockID == ENTITY_SSS_WEAK || data_in.blockID == ENTITY_PLAYER || data_in.blockID == ENTITY_CURRENT_PLAYER) SSSAMOUNT = 0.4;
+    //         #endif
+    //     #else
+    //         #if defined SHADER_GRASS && !defined CUTOUT
+    //             if (ShaderGrass) SSSAMOUNT = 0.65;
+    //             else
+    //         #endif
+// 
+    //         /////// ----- SSS ON BLOCKS ----- ///////
+    //         // strong
+    //         if (
+    //             data_in.blockID == BLOCK_SSS_STRONG || data_in.blockID == BLOCK_SSS_STRONG3 || data_in.blockID == BLOCK_AIR_WAVING || data_in.blockID == BLOCK_SSS_STRONG_2
+    //         ) {
+    //             SSSAMOUNT = 1.0;
+    //         }
+    //         // medium
+    //         else if (
+    //             data_in.blockID == BLOCK_GROUND_WAVING || data_in.blockID == BLOCK_GROUND_WAVING_VERTICAL ||
+    //             data_in.blockID == BLOCK_GRASS_SHORT || data_in.blockID == BLOCK_GRASS_TALL_UPPER || data_in.blockID == BLOCK_GRASS_TALL_LOWER ||
+    //             data_in.blockID == BLOCK_SSS_WEAK || data_in.blockID == BLOCK_CACTUS || data_in.blockID == BLOCK_SSS_WEAK_2 ||
+    //             data_in.blockID == BLOCK_CELESTIUM || (data_in.blockID >= 269 && data_in.blockID <= 274) || data_in.blockID == BLOCK_SNOW_LAYERS || data_in.blockID == BLOCK_CARPET ||
+    //             data_in.blockID == BLOCK_AMETHYST_BUD_MEDIUM || data_in.blockID == BLOCK_AMETHYST_BUD_LARGE || data_in.blockID == BLOCK_AMETHYST_CLUSTER ||
+    //             data_in.blockID == BLOCK_BAMBOO || data_in.blockID == BLOCK_SAPLING || (data_in.blockID >= BLOCK_VINE_NORTH && data_in.blockID <= BLOCK_VINE_UP) || data_in.blockID == BLOCK_VINE_OTHER
+    //             #ifdef MISC_BLOCK_SSS
+    //             || data_in.blockID == BLOCK_SSS_WEIRD || data_in.blockID == BLOCK_GRASS
+    //             #endif
+    //         ) {
+    //             SSSAMOUNT = 0.5;
+    //         }
+    //     #endif
+// 
+    //     #ifdef BLOCKENTITIES
+    //         /////// ----- SSS ON BLOCK ENTITIES----- ///////
+    //         // strong
+// 
+    //         // medium
+    //         if(data_in.blockID == BLOCK_SSS_WEAK_3) SSSAMOUNT = 0.4;
+// 
+    //         // low
+// 
+    //     #endif
+    // #endif
 
     float EMISSIVE = 0.0;
-    #if EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2
-        /////// ----- EMISSIVE STUFF ----- ///////
-
-        // if(vNameTags > 0) EMISSIVE = 0.9;
-
-        // normal block lightsources
-        if(blockID >= 100 && blockID < 282) {
-            EMISSIVE = 0.5;
-
-            if(blockID == 266 || (blockID >= 276 && blockID <= 281)) EMISSIVE = 0.2; // sculk stuff
-
-            else if(blockID == 195) EMISSIVE = 2.3; // glow lichen
-
-            else if(blockID == 185) EMISSIVE = 1.5; // crying obsidian
-
-            else if(blockID == 105) EMISSIVE = 2.0; // brewing stand
-
-            else if(blockID == 236) EMISSIVE = 1.0; // respawn anchor
-
-            else if(blockID == 101) EMISSIVE = 0.7; // large amethyst bud
-
-            else if(blockID == 103) EMISSIVE = 1.0; // amethyst cluster
-
-            else if(blockID == 244) EMISSIVE = 1.5; // soul fire
-        }
-
-        #if EMISSIVE_ORES > 0
-            if(blockID == 502) {
-                EMISSIVE = EMISSIVE_ORES_STRENGTH;
-
-                #ifndef HARDCODED_EMISSIVES_APPROX
-                    EMISSIVE *= getEmission(Albedo.rgb);
-                #endif
-            }
-        #endif
-    #endif
+    // #if EMISSIVE_TYPE == 1 || EMISSIVE_TYPE == 2
+    //     /////// ----- EMISSIVE STUFF ----- ///////
+// 
+    //     // if(vNameTags > 0) EMISSIVE = 0.9;
+// 
+    //     // normal block lightsources
+    //     if(data_in.blockID >= 100 && data_in.blockID < 282) {
+    //         EMISSIVE = 0.5;
+// 
+    //         if(data_in.blockID == 266 || (data_in.blockID >= 276 && data_in.blockID <= 281)) EMISSIVE = 0.2; // sculk stuff
+// 
+    //         else if(data_in.blockID == 195) EMISSIVE = 2.3; // glow lichen
+// 
+    //         else if(data_in.blockID == 185) EMISSIVE = 1.5; // crying obsidian
+// 
+    //         else if(data_in.blockID == 105) EMISSIVE = 2.0; // brewing stand
+    //         
+    //         else if(data_in.blockID == 236) EMISSIVE = 1.0; // respawn anchor
+// 
+    //         else if(data_in.blockID == 101) EMISSIVE = 0.7; // large amethyst bud
+// 
+    //         else if(data_in.blockID == 103) EMISSIVE = 1.0; // amethyst cluster
+// 
+    //         else if(data_in.blockID == 244) EMISSIVE = 1.5; // soul fire
+    //     }
+// 
+    //     #if EMISSIVE_ORES > 0
+    //         if(data_in.blockID == 502) {
+    //             EMISSIVE = EMISSIVE_ORES_STRENGTH;
+// 
+    //             #ifndef HARDCODED_EMISSIVES_APPROX
+    //                 EMISSIVE *= getEmission(Albedo.rgb);
+    //             #endif
+    //         }
+    //     #endif
+    // #endif
 
 
     vec4 SpecularTex = vec4(0.0);
@@ -556,13 +545,13 @@ void main() {
     OutSpecular = vec4(0.0,0.0,0.0,0.0);
     OutSpecular.rg = SpecularTex.rg;
 
-    #if EMISSIVE_ORES > 1 && EMISSIVE_TYPE > 1
-        if(blockID == 502) {
-            SpecularTex.a = EMISSIVE_ORES_STRENGTH;
-            
-            SpecularTex.a *= getEmission(Albedo.rgb);
-        }
-    #endif
+    // #if EMISSIVE_ORES > 1 && EMISSIVE_TYPE > 1
+    //     if(data_in.blockID == 502) {
+    //         SpecularTex.a = EMISSIVE_ORES_STRENGTH;
+    //         
+    //         SpecularTex.a *= getEmission(Albedo.rgb);
+    //     }
+    // #endif
 
 
     #if EMISSIVE_TYPE == 2
@@ -570,7 +559,7 @@ void main() {
     #endif
 
     // #ifdef MIRROR_IRON
-    // if(blockID == 504 || currentRenderedItemId == 504) {
+    // if(data_in.blockID == 504 || currentRenderedItemId == 504) {
     //     OutSpecular.rg = vec2(1.0, 1.0);
     //     Albedo.rgb = vec3(1.0);
     // }

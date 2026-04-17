@@ -13,7 +13,7 @@ float densityAtPosFog(in vec3 pos){
 }
 
 
-float cloudVol(in vec3 pos, float maxDistance){
+float cloudVol(in vec3 pos, float maxDistance ){
 	
 	float fogYstart = FOG_START_HEIGHT + 3.0;
 	vec3 samplePos = pos*vec3(1.0,1./24.,1.0);
@@ -200,14 +200,14 @@ vec4 GetVolumetricFog(
 				shadowPos = shadowPos*vec3(0.5,0.5,0.5/6.0)+0.5;
 
 				#ifdef TRANSLUCENT_COLORED_SHADOWS
-					sh = vec3(texture(shadowtex0HW, shadowPos).x);
+					sh = vec3(texture(shadowtex0, shadowPos).x);
 
-					if(texture(shadowtex1HW, shadowPos).x > shadowPos.z && sh.x < 1.0){
+					if(texture(shadowtex1, shadowPos).x > shadowPos.z && sh.x < 1.0){
 						vec4 translucentShadow = texture(shadowcolor0, shadowPos.xy);
 						if(translucentShadow.a < 0.9) sh = normalize(translucentShadow.rgb+0.0001);
 					}
 				#else
-					sh = vec3(texture(shadowtex0HW, shadowPos).x);
+					sh = vec3(texture(shadow, shadowPos).x);
 				#endif
 			}
 

@@ -36,8 +36,6 @@ vec3 drawMoon(vec3 PlayerPos, vec3 WorldSunVec, vec3 Color, inout vec3 occludeSt
 
 	vec3 sunNormal = vec3(dot(WorldSunVec+PlayerPos, vec3(shape2,0,0)), dot(PlayerPos+WorldSunVec, vec3(0,shape2,0)), -dot(WorldSunVec, PlayerPos) * 15.0);
 
-
-	// even has a little tilt approximation haha.... yeah....
 	vec3[8] phase = vec3[8](
 		vec3( -1.0,	 -0.5,	 1.0	),
 		vec3( -1.0,	 -0.5,	 0.35	),
@@ -235,3 +233,15 @@ vec4 volumetricsFromTex(vec3 pos,sampler2D sampler, float LOD){
 
 	return textureLod(sampler, uv, LOD);
 }
+
+#ifdef GALAXY_SKY
+	#ifndef GALAXY_TEX_UNIFORM
+	#define GALAXY_TEX_UNIFORM
+	uniform sampler2D galaxyTex;
+	#endif
+
+	vec3 galaxyFromTex(vec3 pos, sampler2D sampler) {
+		vec2 p = sphereToCarte(pos);
+		return texture(sampler, p).rgb;
+	}
+#endif

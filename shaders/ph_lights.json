@@ -104,6 +104,16 @@
         "*219"
       ]
     },
+    "redstone_block" : {
+     "intensity": 25,
+     "radius": 4.5,
+     "falloff": 0.4,
+     "color": "rgb(0.939, 0.305, 0.164)",
+     "is_traced": true,
+     "blocks": [
+       "*513"
+     ]
+   },
     "crying_obsidian" : {
       "intensity": 20,
       "radius": 3.0,

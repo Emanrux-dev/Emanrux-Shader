@@ -17,7 +17,7 @@ uniform float frameTimeCounter;
 uniform sampler2D noisetex;
 
 const bool shadowHardwareFiltering = true;
-uniform sampler2DShadow shadowtex0HW;
+uniform sampler2DShadow shadow;
 
 #ifdef DISTANT_HORIZONS
 uniform sampler2D dhDepthTex;
@@ -393,7 +393,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
     	    	Shadows = 0.0;
     	    	projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5);
 
-    	    	Shadows = texture(shadowtex0HW, projectedShadowPosition + vec3(0.0,0.0, smallbias)).x;
+    	    	Shadows = texture(shadow, projectedShadowPosition + vec3(0.0,0.0, smallbias)).x;
     	    }
         #endif
 

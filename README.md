@@ -30,7 +30,15 @@ Main changes:
 
 - Galaxy Sky: Featuring stars, planets, and black holes.
 
-- Cinematic Dark Mode: A more immersive, high-contrast visual style.
+- The enchanting table now has magical spirals surrounding it.
+
+- Souls appear at the edge of the screen when near soul light (Emanrux Config: "Soul Presence")
+
+- Fixed blue fire color correction when a mob burns near soul fire.
+
+- Parallax occlusion mapping (POM) for many more blocks (disabled by default for performance reasons)
+
+- Soul light takes over the player's skin and some mobs, tinting pixels blue.
 
 - Cloud Optimization: Reduced excessive cloud layers for better light passage and effects.
 
@@ -40,7 +48,7 @@ Main changes:
 
 - Added compatibility with Any Size Portals Mod
 
-- Added support for multiple languages in Emanrux Settings, including English, Spanish, French, German, Portuguese, Russian, and Chinese.
+- Added support for multiple languages in Emanrux Settings, including English, Spanish, French, German, Portuguese, Italian, Russian, and Chinese.
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 <img width="800" alt="2" src="https://github.com/user-attachments/assets/3026d14d-b960-4ab5-9ff1-3ea7240f73e8" />
@@ -73,6 +81,7 @@ https://github.com/Merlin1809/Eclipse-Shader
 - Tested in Minecraft 1.21+
 - Distant Horizon
 - Voxy
+- Photonics
 
 How to download the latest version:
 Look for the green "Code" button at the top of this page.

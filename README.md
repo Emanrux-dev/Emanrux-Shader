@@ -22,8 +22,6 @@ Main changes:
 
 - Emissive Blocks: Improved glow for blocks like Redstone.
 
-- Fixed Luminosity: Corrected lighting for missing block textures.
-
 - Enhanced Ores: Brighter and more visible ores.
 
 - Custom Nether Portal: Added a unique spiral effect.

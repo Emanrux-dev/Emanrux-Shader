@@ -93,9 +93,11 @@
 
         vec2 rodExposureDepthSSBO;
     
-    }"},
+    }
     "useViewportDims": true,
     "uniforms": [
+	"viewWidth",
+        "viewHeight",
         "nightVision",
         "cloudTime",
         "noPuddleAreas",

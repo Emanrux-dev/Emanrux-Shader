@@ -519,12 +519,12 @@ float getCloudScattering(
 	float maxHeight,
 	float density
 ){
-	int samples = 3;
+	int samples = 2;
 	int LOD = 0;
 
-	if(LayerIndex == CUMULONIMBUS_LAYER) samples = 7;
+	if(LayerIndex == CUMULONIMBUS_LAYER) samples = 4;
 
-	if((LayerIndex == ALTOSTRATUS_LAYER) || (LayerIndex == CIRRUS_LAYER)) samples = 2;
+	if((LayerIndex == ALTOSTRATUS_LAYER) || (LayerIndex == CIRRUS_LAYER)) samples = 1;
 
 	float shadow = 0.0;
 	vec3 shadowRayPosition = vec3(0.0);

@@ -94,9 +94,12 @@ void main() {
 		gl_Position.xy += offsets[framemod4_DH] * gl_Position.w*texelSize;
 	#endif
 	
-	lightmapCoords = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
+	lightmapCoords = gl_MultiTexCoord1.xy;
+	lightmapCoords = lightmapCoords / (30.0 / 32.0) - (1.0 / 32.0);
     
     gcolor = gl_Color;
+    lightmapCoords = gl_MultiTexCoord1.xy;
+    lightmapCoords = lightmapCoords / (30.0 / 32.0) - (1.0 / 32.0);
 	
 
 	EMISSIVE = 0.0;

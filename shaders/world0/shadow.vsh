@@ -291,7 +291,7 @@ void main() {
 	#endif
  	
 
-	if (blockId == BLOCK_WATER) gl_Position.w = -1.0;
+	if (blockId == BLOCK_WATER || blockId == 516) gl_Position.w = -1.0;
 
   	gl_Position.z /= 6.0;
 }

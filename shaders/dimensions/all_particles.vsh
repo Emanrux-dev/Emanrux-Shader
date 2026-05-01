@@ -56,7 +56,10 @@ vec4 toClipSpace3(vec3 viewSpacePosition) {
 
 #if defined DAMAGE_BLOCK_EFFECT && defined POM
 	in vec4 mc_midTexCoord;
+#ifndef AT_TANGENT_IN
+#define AT_TANGENT_IN
 	in vec4 at_tangent;
+#endif
 #endif
 
 #ifdef LINES

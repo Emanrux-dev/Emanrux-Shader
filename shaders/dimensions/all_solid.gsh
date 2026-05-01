@@ -39,6 +39,7 @@ in DATA {
 	#endif
 
 	flat int blockID;
+	vec3 worldPosAbs;
 } data_in[];
 
 out DATA {
@@ -64,6 +65,7 @@ out DATA {
 	#endif
 
 	flat int blockID;
+	vec3 worldPosAbs;
 } data_out;
 
 
@@ -211,6 +213,7 @@ void main() {
             data_out.tangent = data_in[i].tangent;
         #endif
         data_out.blockID = data_in[i].blockID;
+        data_out.worldPosAbs = data_in[i].worldPosAbs;
 
         #ifdef COLORWHEEL
             clrwl_setVertexOut(i);
@@ -458,6 +461,7 @@ void main() {
                     #endif
 
                     data_out.blockID = -15;
+                    data_out.worldPosAbs = verticies[3*j+i] + cameraPosition;
 
                     EmitVertex();
                 }

@@ -46,7 +46,7 @@ out DATA {
 	vec4 lmtexcoord;
 	vec3 normalMat;
 
-	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+	#if defined POM && !defined CUTOUT && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec4 texcoordam; // .st for add, .pq for mul
 		vec2 texcoord;
 	#endif
@@ -56,10 +56,14 @@ out DATA {
 	#endif
 
 	flat int blockID;
+	vec3 worldPosAbs;
 } data_out;
 
 #ifdef MC_NORMAL_MAP
+#ifndef AT_TANGENT_IN
+#define AT_TANGENT_IN
 	in vec4 at_tangent;
+#endif
 #endif
 
 uniform float frameTimeCounter;
@@ -232,6 +236,15 @@ vec3 viewToWorld(vec3 viewPos) {
 	uniform float caveDetection;
 #endif
 
+#if defined BLOCKENTITIES && !defined COLORWHEEL && (MC_VERSION >= 260100 || !defined SHADER_END_PORTAL)
+	vec4 projection_from_position(vec4 position) {
+		vec4 projection = position * 0.5;
+		projection.xy = vec2(projection.x + projection.w, projection.y + projection.w);
+		projection.zw = position.zw;
+		return projection;
+	}
+#endif
+
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
 //////////////////////////////VOID MAIN//////////////////////////////
@@ -261,7 +274,7 @@ void main() {
 	// gl_TextureMatrix[0] for animated things like charged creepers
 	data_out.lmtexcoord.xy = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
 
-	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+	#if defined POM && !defined CUTOUT && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec2 midcoord = (gl_TextureMatrix[0] *  mc_midTexCoord).st;
 		vec2 texcoordminusmid = data_out.lmtexcoord.xy-midcoord;
 		data_out.texcoordam.pq  = abs(texcoordminusmid)*2.;
@@ -295,7 +308,7 @@ void main() {
 
 	#if defined WORLD && !defined HAND
 		#ifdef BLOCKENTITIES
-			if(blockEntityId == BLOCK_END_PORTAL || blockEntityId == 187) {
+			if(blockEntityId == BLOCK_END_PORTAL || blockEntityId == BLOCK_END_GATEWAY) {
 				data_out.lmtexcoord.w = 0.0;
 			}
 		#endif
@@ -312,6 +325,13 @@ void main() {
 #ifdef WORLD
 
    	vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
+	data_out.worldPosAbs = worldpos + cameraPosition;
+
+	#ifdef BLOCKENTITIES
+		if (blockEntityId == 267) {
+			enchantTablePosSSBO = vec4(floor(data_out.worldPosAbs) + 0.5, 1.0);
+		}
+	#endif
 
 	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && (defined GRASS_DETECT_FALLOFF || defined GRASS_DETECT_INV_FALLOFF || REPLACE_SHORT_GRASS > 0) && !defined BLOCKENTITIES
 
@@ -499,5 +519,8 @@ void main() {
 			uint blockBelow = GetVoxelBlock(ivec3(LPVpos.x, LPVpos.y - 0.6, LPVpos.z));
 			if(blockBelow == 85) gl_Position.z -= 10000.0;
 		}
+	#endif
+	#if defined BLOCKENTITIES && !defined COLORWHEEL && (MC_VERSION >= 260100 || !defined SHADER_END_PORTAL)
+		if(data_out.blockID == BLOCK_END_PORTAL || data_out.blockID == BLOCK_END_GATEWAY)data_out.lmtexcoord = projection_from_position(gl_Position);
 	#endif
 }

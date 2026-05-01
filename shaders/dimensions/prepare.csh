@@ -161,4 +161,56 @@ void main() {
         }
     }
     #endif
+
+#if defined FIRE_COLOR_CORRECTION || defined ENCHANTING_TABLE_EFFECTS
+#ifdef IS_LPV_ENABLED
+    int foundSoulBlock = 0;
+    vec3 searchBase = GetLpvPosition(vec3(0.0));
+    ivec3 vBase = ivec3(floor(searchBase));
+    
+#ifdef FIRE_COLOR_CORRECTION
+    for(int x = -1; x <= 1 && foundSoulBlock == 0; x++) {
+        for(int y = -1; y <= 1 && foundSoulBlock == 0; y++) {
+            for(int z = -1; z <= 1 && foundSoulBlock == 0; z++) {
+                uint b = GetVoxelBlock(vBase + ivec3(x,y,z));
+                if (b == 244u || b == 245u || b == 246u) foundSoulBlock = 1;
+            }
+        }
+    }
+    for(int r = 2; r <= 4 && foundSoulBlock == 0; r++) {
+        for(int x = -r; x <= r && foundSoulBlock == 0; x += r) {
+            for(int y = -r; y <= r && foundSoulBlock == 0; y += r) {
+                for(int z = -r; z <= r && foundSoulBlock == 0; z += r) {
+                    uint b = GetVoxelBlock(vBase + ivec3(x,y,z));
+                    if (b == 244u || b == 245u || b == 246u) foundSoulBlock = 1;
+                }
+            }
+        }
+    }
+    nearSoulBlockSSBO = foundSoulBlock;
+#else
+    nearSoulBlockSSBO = 0;
+#endif
+
+#ifdef ENCHANTING_TABLE_EFFECTS
+    vec4 enchantPos = vec4(0.0);
+    for(int y = -4; y <= 4 && enchantPos.w == 0.0; y++) {
+        for(int x = -6; x <= 6 && enchantPos.w == 0.0; x++) {
+            for(int z = -6; z <= 6 && enchantPos.w == 0.0; z++) {
+                if (GetVoxelBlock(vBase + ivec3(x,y,z)) == 267u) {
+                    enchantPos = vec4(floor(cameraPosition) + vec3(ivec3(x,y,z)), 1.0);
+                }
+            }
+        }
+    }
+    enchantTablePosSSBO = enchantPos;
+#else
+    enchantTablePosSSBO = vec4(0.0);
+#endif
+
+#else
+    nearSoulBlockSSBO = 0;
+    enchantTablePosSSBO = vec4(0.0);
+#endif
+#endif
 }

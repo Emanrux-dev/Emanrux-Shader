@@ -38,7 +38,10 @@ out DATA {
 } data_out;
 
 #ifdef MC_NORMAL_MAP
+#ifndef AT_TANGENT_IN
+#define AT_TANGENT_IN
 	in vec4 at_tangent;
+#endif
 #endif
 
 uniform float frameTimeCounter;

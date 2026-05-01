@@ -68,4 +68,8 @@ layout(std430, binding = 4) buffer SSBO1 {
     float exposureSSBO;
 
     vec2 rodExposureDepthSSBO;
+
+    int nearSoulBlockSSBO;
+    
+    vec4 enchantTablePosSSBO;
 };

@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Eine Eclipse-Bearbeitung
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 0.1.0-beta
+    value.SHADER_VERSION_LABEL.482 = 1.0.0
 
 profile.POTATO=§4Kartoffel 
 profile.VERY_LOW=§cSehr Niedrig 
@@ -62,6 +62,12 @@ option.BRIGHT_ORES.comment=Lässt Erze im Dunkeln intensiver leuchten (einschlie
 
 option.GALAXY_SKY=GALAXIENHIMMEL
 option.GALAXY_SKY.comment=Fügt eine realistische Galaxie zum Nachthimmel hinzu. §aLEISTUNGSKOSTEN: §aniedrig
+
+option.FIRE_COLOR_CORRECTION=ANWESENHEIT VON SEELEN
+option.FIRE_COLOR_CORRECTION.comment=Fügt die Anwesenheit von Seelen auf dem Bildschirm des Spielers hinzu, Farbkorrektur für Seelenfeuer, Seelenbesitz des Körpers des Spielers und einiger Mobs, solange sie sich in der Nähe von Seelen befinden (blaues Licht). §aPERFORMANCEKOSTEN: §aniedrig
+
+option.ENCHANTING_TABLE_EFFECTS=VERZAUBERUNGSTISCH-EFFEKTE
+option.ENCHANTING_TABLE_EFFECTS.comment=Aktiviert magische Runenböden und schwebende Partikel in der Nähe eines Verzauberungstisches. §aPERFORMANCEKOSTEN: §aniedrig
 
 option.CINEMATIC_MODE=Kinomodus
 option.CINEMATIC_MODE.comment=Fügt Letterbox-Balken, Entsättigung, Abdunklung und Vignette für einen kinematischen Look hinzu. §cLEISTUNGSKOSTEN: §aniedrig

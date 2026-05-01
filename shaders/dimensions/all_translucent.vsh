@@ -62,7 +62,10 @@ uniform sampler2D noisetex;
 uniform mat4 gbufferModelViewInverse;
 uniform mat4 gbufferModelView;
 
+#ifndef AT_TANGENT_IN
+#define AT_TANGENT_IN
 in vec4 at_tangent;
+#endif
 in vec4 mc_Entity;
 #if defined ENTITIES || defined BLOCKENTITIES
 	uniform int entityId;
@@ -134,10 +137,7 @@ void main() {
 
 	gl_Position = ftransform();
 
-	color = vec4(gl_Color.rgb, 1.0);
-	#ifdef LIGHTNING
-		color.a = gl_Color.a;
-	#endif
+	color = gl_Color;
 
 	bool isWater = mc_Entity.x == 8.0;
 
@@ -208,8 +208,7 @@ void main() {
 	// 0.8 = reflective entities
 	// 0.7 = reflective blocks
 	// 0.6 = nether portal
-float mat = 0.0;
-
+	float mat = 0.0;
 
 	// water mask
 	if(isWater

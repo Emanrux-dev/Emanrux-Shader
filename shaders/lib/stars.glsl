@@ -104,6 +104,17 @@ uniform sampler2D galaxyTex;
 void CalculateGalaxy(vec3 viewPos, out float galaxyBrightness, out vec3 galaxyColor) {
     vec3 dir = normalize(viewPos);
     
+// Smoothly fade the galaxy in/out during transitions (night, rain)
+    float nightFactor = clamp(sunElevation * -10.0, 0.0, 1.0); // Simple night detection
+    float rainFactor = clamp(1.0 - rainStrength, 0.0, 1.0);
+    
+    // Early escape for daytime or bad weather to save GPU cycles over the entire sky dome
+    if(nightFactor * rainFactor < 0.001) {
+        galaxyColor = vec3(0.0);
+        galaxyBrightness = 0.0;
+        return;
+    }
+
     // Rotation for better alignment
     float a1 = 1.25;
     float a2 = 0.65;
@@ -121,10 +132,6 @@ void CalculateGalaxy(vec3 viewPos, out float galaxyBrightness, out vec3 galaxyCo
     
     // Calculate brightness from luminance and alpha
     float luminance = dot(galaxyColor, vec3(0.2126, 0.7152, 0.0722));
-    
-    // Smoothly fade the galaxy in/out during transitions (night, rain)
-    float nightFactor = clamp(sunElevation * -10.0, 0.0, 1.0); // Simple night detection
-    float rainFactor = clamp(1.0 - rainStrength, 0.0, 1.0);
     
     galaxyBrightness = luminance * tex.a * rainFactor * nightFactor * 0.75;
     

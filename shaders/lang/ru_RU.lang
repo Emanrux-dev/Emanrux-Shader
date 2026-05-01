@@ -1,18 +1,7 @@
 option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - An Eclipse Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 0.1.0-beta
+    value.SHADER_VERSION_LABEL.482 = 1.0.0
 
-profile.POTATO=§4Картофель
-profile.VERY_LOW=§cОчень низкое
-profile.LOW=§aНизкое
-profile.MEDIUM=§2Среднее §6§l(Рекомендуется)
-profile.ALTERNATE_MEDIUM=§2Среднее §7(Альтернативный стиль)
-profile.HIGH=§bВысокое §6§l(Рекомендуется)
-profile.ALTERNATE_HIGH=§bВысокое §7(Альтернативный стиль)
-profile.HIGH_GRASS=§bВысокое + Шейдерная трава
-profile.ALTERNATE_HIGH_GRASS=§bВысокое + Шейдерная трава §7(Альт. стиль)
-profile.VERY_HIGH=§9Очень высокое
-profile.ULTRA=§dУльтра
 profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lНАСТРОЙКИ §6§lEMANRUX §r§l«§4§l◆
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,6 +51,12 @@ option.BRIGHT_ORES.comment=Делает руды более ярко светя�
 
 option.GALAXY_SKY=ГАЛАКТИЧЕСКОЕ НЕБО
 option.GALAXY_SKY.comment=Добавляет реалистичную галактику на ночное небо. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкая
+
+option.FIRE_COLOR_CORRECTION=ПРИСУТСТВИЕ ДУШ
+option.FIRE_COLOR_CORRECTION.comment=Добавляет присутствие душ на экране игрока, цветокоррекцию для огня душ, одержимость душами тела игрока и некоторых мобов, пока они находятся рядом с душами (синий свет). §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aНИЗКАЯ
+
+option.ENCHANTING_TABLE_EFFECTS=ЭФФЕКТЫ СТОЛА ЗАЧАРОВАНИЙ
+option.ENCHANTING_TABLE_EFFECTS.comment=Активирует магические рунические полы и парящие частицы вблизи стола зачарований. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aНИЗКАЯ
 
 option.CINEMATIC_MODE=Кинематографический режим
 option.CINEMATIC_MODE.comment=Добавляет полосы letterbox, обесцвечивание, затемнение и виньетку для кинематографического вида. §cСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкая

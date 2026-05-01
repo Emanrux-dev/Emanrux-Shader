@@ -27,6 +27,7 @@ in DATA {
 	#endif
 
 	flat int blockID;
+	vec3 worldPosAbs;
 } data_in[];
 
 out DATA {
@@ -54,6 +55,7 @@ out DATA {
 	#endif
 
 	flat int blockID;
+	vec3 worldPosAbs;
 } data_out;
 
 
@@ -81,6 +83,7 @@ void main() {
     #endif
 
     data_out.blockID = data_in[0].blockID;
+    data_out.worldPosAbs = calcTessellation(data_in[0].worldPosAbs, data_in[1].worldPosAbs, data_in[2].worldPosAbs);
 
     #if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && defined WORLD
         data_out.grassSideCheck = data_in[0].grassSideCheck;

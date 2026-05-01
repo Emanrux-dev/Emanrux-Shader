@@ -1,5 +1,9 @@
 #include "/lib/settings.glsl"
 
+#if defined IS_LPV_ENABLED || defined LPV_ENABLED || defined FIRE_COLOR_CORRECTION
+  #extension GL_ARB_shader_image_load_store : enable
+#endif
+
 #include "/lib/SSBOs.glsl"
 
 uniform sampler2D colortex7;
@@ -15,7 +19,7 @@ uniform sampler2D depthtex2;
 uniform sampler2D noisetex;
 uniform sampler2D shadowcolor1;
 
-#if !defined IS_IRIS || (defined SHADER_GRASS_SETTING && MC_VERSION < 12101 && !defined SHADER_GRASS_UNSUPPORTED_FIX)
+#if !defined IS_IRIS || (defined SHADER_GRASS_SETTING && MC_VERSION < 12101 && !defined SHADER_GRASS_UNSUPPORTED_FIX) || defined EXPLODE_THE_SHADER
   #include "/lib/text_rendering.glsl"
 #endif
 
@@ -27,6 +31,7 @@ uniform sampler2D shadowcolor1;
 #endif
 
 in vec2 texcoord;
+flat in int nearSoulBlock_fs;
 uniform vec2 texelSize;
 uniform float frameTimeCounter;
 uniform int frameCounter;
@@ -189,7 +194,7 @@ void main() {
     #endif
   #endif
   
-  #if defined LOW_HEALTH_EFFECT || defined DAMAGE_TAKEN_EFFECT || defined WATER_ON_CAMERA_EFFECT  
+  #if defined LOW_HEALTH_EFFECT || defined DAMAGE_TAKEN_EFFECT || defined WATER_ON_CAMERA_EFFECT || defined ON_FIRE_DISTORT_EFFECT || defined FIRE_COLOR_CORRECTION
     // for making the fun, more fun
     applyGameplayEffects(COLOR, texcoord, noise);
   #endif
@@ -237,29 +242,7 @@ void main() {
     COLOR = imageLoad(cloudDepthTex, ivec2(gl_FragCoord.xy*VL_RENDER_SCALE*RENDER_SCALE)).rgb;
   #endif
 
-#ifdef CINEMATIC_MODE
-    float luma = dot(COLOR, vec3(0.299, 0.587, 0.114));
-    COLOR = mix(vec3(luma), COLOR, 0.6);
-    COLOR *= 1;
-    vec2 vUV = texcoord * 2.0 - 1.0;
-    float vignette = 1.0 - dot(vUV, vUV) * 0.5;
-    vignette = clamp(vignette, 0.0, 1.0);
-    COLOR *= vignette;
-COLOR = (COLOR - 0.5) * 1.1 + 0.5;  // 1.3 → 1.1, menos contraste
-COLOR = clamp(COLOR, 0.0, 1.0);
-float luminance = dot(COLOR, vec3(0.299, 0.587, 0.114));
-vec3 shadows = vec3(0.08, 0.08, 0.20);    // subido de 0.05 → 0.08, sombras menos negras
-vec3 highlights = vec3(1.05, 0.95, 0.85);
-COLOR = mix(COLOR * shadows * 2.0, COLOR * highlights, luminance);
-COLOR = clamp(COLOR, 0.0, 1.0);
-float grain = fract(sin(dot(texcoord + fract(frameTimeCounter), vec2(12.9898, 78.233))) * 43758.5453);
-grain = (grain - 0.5) * 0.04;
-COLOR += grain;
-    float barSize = 0.084;
-    if(texcoord.y < barSize || texcoord.y > 1.0 - barSize) COLOR = vec3(0.0);
-#endif
   gl_FragColor.rgb = COLOR;
-
 
   #if DEBUG_VIEW == debug_WATERSIM && WATER_INTERACTION == 2
     if (hideGUI == 1) {
@@ -324,5 +307,18 @@ COLOR += grain;
     #elif DEBUG_VIEW == debug_radiosity_GI
       gl_FragColor.rgb = vec3(texture(colortex15, texcoord).rgb);
     #endif
+  #endif
+
+  #ifdef EXPLODE_THE_SHADER
+    gl_FragColor.rgb = vec3(0.0);
+    beginText(ivec2(gl_FragCoord.xy/vec2(6.0, 8.0)), ivec2(0.05*viewWidth/6.0, 0.75*viewHeight/8.0));
+    text.fgCol = vec4(1.0, 0.0, 0.0, 1.0);
+    printString((_D, _o, _space, _N, _O, _T, _space, _u, _s, _e, _space, _b, _o, _t, _h, _space, _D, _i, _s, _t, _a, _n, _t, _space, _H, _o, _r, _i, _z, _o, _n, _s, _space));
+    printLine();
+    printString((_a, _n, _d, _space, _V, _o, _x, _y, _space, _t, _o, _g, _e, _t, _h, _e, _r, _exclm));
+    printLine();
+    printLine();
+    printString((_D, _i, _s, _a, _b, _l, _e, _space, _o, _n, _e, _space, _o, _f, _space, _t, _h, _e, _m, _exclm));
+    endText(gl_FragColor.rgb);
   #endif
 }

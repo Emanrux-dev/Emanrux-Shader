@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - An Eclipse Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 0.1.0-beta
+    value.SHADER_VERSION_LABEL.482 = 1.0.0
 
 profile.POTATO=§4Potato 
 profile.VERY_LOW=§cVery Low 
@@ -62,6 +62,12 @@ option.BRIGHT_ORES.comment=Makes ores glow more intensely in the dark (including
 
 option.GALAXY_SKY=GALAXY SKY
 option.GALAXY_SKY.comment=Adds a realistic galaxy to the night sky. §aPERFORMANCE COST: §alow
+
+option.FIRE_COLOR_CORRECTION=PRESENCE OF SOULS
+option_FIRE_COLOR_CORRECTION.comment=Adds the presence of souls on the player's screen, color correction for soul fire, soul possession of the player's body and some mobs, as long as they are near souls (blue light) §aPERFORMANCE COST: §alow
+
+option.ENCHANTING_TABLE_EFFECTS=ENCHANTING TABLE EFFECTS
+option.ENCHANTING_TABLE_EFFECTS.comment=Enables magical runic floors and floating particles when near an Enchanting Table. §aPERFORMANCE COST: §alow
 
 option.CINEMATIC_MODE=Cinematic Mode
 option.CINEMATIC_MODE.comment=Adds letterbox bars, desaturation, darkening and vignette for a cinematic look. §cPERFORMANCE COST: §alow

@@ -150,14 +150,13 @@ float invLinZ (float lindepth){
 	// uniform sampler2D colortex4;
 	// uniform sampler2D colortex12;
 	// const bool shadowHardwareFiltering = true;
-	uniform sampler2DShadow shadow;
+	uniform sampler2DShadow shadowtex0HW;
 
 	// #undef TRANSLUCENT_COLORED_SHADOWS
 
 	#ifdef TRANSLUCENT_COLORED_SHADOWS
 		uniform sampler2D shadowcolor0;
-		uniform sampler2DShadow shadowtex0;
-		uniform sampler2DShadow shadowtex1;
+		uniform sampler2DShadow shadowtex1HW;
 	#endif
 
 	// #define TEST

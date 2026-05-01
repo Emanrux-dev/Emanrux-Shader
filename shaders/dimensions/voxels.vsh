@@ -34,11 +34,16 @@ out DATA {
 	#endif
 
     vec3 block_normal;
-    flat int blockID;
+	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0
+	float chunkFade;
+	#endif
 } data_out;
 
 #ifdef MC_NORMAL_MAP
+#ifndef AT_TANGENT_IN
+#define AT_TANGENT_IN
 	in vec4 at_tangent;
+#endif
 #endif
 
 uniform float frameTimeCounter;
@@ -209,7 +214,7 @@ vec3 viewToWorld(vec3 viewPos) {
     pos = gbufferModelViewInverse * pos;
     return pos.xyz;
 }
-#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND
+#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1
 	uniform float caveDetection;
 #endif
 
@@ -224,7 +229,10 @@ void main() {
 	gl_Position =  gl_ModelViewProjectionMatrix * gl_Vertex;
 
 	vec3 position = mat3(gl_ModelViewMatrix) * vec3(gl_Vertex) + gl_ModelViewMatrix[3].xyz;
-    data_out.blockID = int(mc_Entity.x);
+
+	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+		data_out.chunkFade = abs(mc_chunkFade);
+	#endif
 
     /////// ----- COLOR STUFF ----- ///////
 	data_out.color = gl_Color;

@@ -63,6 +63,12 @@ option.BRIGHT_ORES.comment=Faz os minérios brilhar mais intensamente no escuro 
 option.GALAXY_SKY=CÉU GALÁXIA
 option.GALAXY_SKY.comment=Adiciona uma galáxia realista ao céu nocturno. §aCUSTO DE DESEMPENHO: §abaixo
 
+option.FIRE_COLOR_CORRECTION=PRESENÇA DE ALMAS
+option.FIRE_COLOR_CORRECTION.comment=Adiciona a presença de almas no ecrã do jogador, correcção de cores para o fogo das almas, possessão de almas do corpo do jogador e de alguns mobs, desde que estejam perto de almas (luz azul). §aCUSTO DE DESEMPENHO: §abaixo
+
+option.ENCHANTING_TABLE_EFFECTS=EFEITOS DA MESA DE ENCANTAMENTOS
+option.ENCHANTING_TABLE_EFFECTS.comment=Activa pavimentos rúnicos mágicos e partículas flutuantes ao estar perto de uma Mesa de Encantamentos. §aCUSTO DE DESEMPENHO: §abaixo
+
 option.CINEMATIC_MODE=Modo Cinemático
 option.CINEMATIC_MODE.comment=Adiciona barras de letterbox, dessaturação, escurecimento e vinheta para um aspecto cinemático. §cCUSTO DE DESEMPENHO: §abaixo
 

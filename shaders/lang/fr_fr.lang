@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Une Édition Eclipse
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 0.1.0-beta
+    value.SHADER_VERSION_LABEL.482 = 1.0.0
 
 profile.POTATO=§4Patate 
 profile.VERY_LOW=§cTrès Bas 
@@ -62,6 +62,11 @@ option.BRIGHT_ORES.comment=Rend les minerais plus lumineux dans l'obscurité (y 
 
 option.GALAXY_SKY=CIEL GALACTIQUE
 option.GALAXY_SKY.comment=Ajoute une galaxie réaliste au ciel nocturne. §aCOÛT DE PERFORMANCE : §afaible
+
+option.FIRE_COLOR_CORRECTION=PRÉSENCE D'ÂMES
+option.FIRE_COLOR_CORRECTION.comment=Ajoute la présence d'âmes sur l'écran du joueur, correction des couleurs pour le feu des âmes, possession des âmes du corps du joueur et de certains mobs, tant qu'ils sont près des âmes (lumière bleue). §aCOÛT DE PERFORMANCE: §afaible
+option.ENCHANTING_TABLE_EFFECTS=EFFETS DE TABLE D'ENCHANTEMENT
+option.ENCHANTING_TABLE_EFFECTS.comment=Active des sols runiques magiques et des particules flottantes lorsqu'on est près d'une Table d'Enchantement. §aCOÛT DE PERFORMANCE: §afaible
 
 option.CINEMATIC_MODE=Mode Cinématique
 option.CINEMATIC_MODE.comment=Ajoute des barres de letterbox, une désaturation, un assombrissement et un vignettage pour un rendu cinématique. §cCOÛT DE PERFORMANCE : §afaible

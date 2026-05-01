@@ -62,7 +62,7 @@ void main() {
         uint mixMask = 0xFFFF;
         vec3 tintColor = vec3(1.0);
 
-        if (blockId == BLOCK_SSS_WEAK || blockId == BLOCK_CACTUS || blockId == BLOCK_SSS_WEAK_3 || blockId == BLOCK_SSS_STRONG || blockId == BLOCK_SSS_STRONG3) {
+        if (blockId == BLOCK_SSS_WEAK || blockId == BLOCK_CACTUS || blockId == BLOCK_SSS_WEAK_3 || blockId == BLOCK_SSS_STRONG || blockId == BLOCK_SSS_STRONG3 || (blockId >= 301 && blockId <= 317) || blockId == 516) {
             mixWeight = 1.0;
         }
 
@@ -493,8 +493,9 @@ void main() {
 
         if (blockId == BLOCK_CRYING_OBSIDIAN) {
             lightColor = vec3(0.390, 0.065, 0.646);
-            lightRange = 15.0;
+            lightRange = 10.0;
         }
+
 	///////////////////////////////////////////////////////////
 /////////////////////////////EMANRUX/////////////////////////////////////////
 	////////////////////////////////////////////////////////////
@@ -503,12 +504,13 @@ if (blockId == 513u) {
     lightColor = vec3(0.95, 0.1, 0.05);
     lightRange = 8.0;
 }
+#endif
 /////////////////////////////&&&&&&&/////////////////////////////////////////
 
-        if (blockId == BLOCK_END_GATEWAY) {
-            lightColor = vec3(1.0);
-            lightRange = 15.0;
-        }
+              // if (blockId == BLOCK_END_GATEWAY) {
+        //     lightColor = vec3(1.0);
+        //     lightRange = 15.0;
+        // }
 
         if (blockId == BLOCK_END_ROD || blockId == ITEM_END_ROD) {
             lightColor = vec3(0.957, 0.929, 0.875);
@@ -1227,7 +1229,5 @@ if (blockId == 513u) {
         tintColorMask |= mixMask << 24;
 
         imageStore(imgBlockData, blockId, uvec4(lightColorRange, tintColorMask, 0u, 0u));
-
-
     #endif
 }

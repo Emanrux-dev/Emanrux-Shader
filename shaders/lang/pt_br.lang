@@ -1,18 +1,7 @@
 option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Uma Edição Eclipse
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 0.1.0-beta
+    value.SHADER_VERSION_LABEL.482 = 1.0.0
 
-profile.POTATO=§4Batata 
-profile.VERY_LOW=§cMuito Baixo 
-profile.LOW=§aBaixo 
-profile.MEDIUM=§2Médio §6§l(Recomendado)
-profile.ALTERNATE_MEDIUM=§2Médio §7(Estilo Alternativo)
-profile.HIGH=§bAlto §6§l(Recomendado)
-profile.ALTERNATE_HIGH=§bAlto §7(Estilo Alternativo)
-profile.HIGH_GRASS=§bAlto + Grama do Shader
-profile.ALTERNATE_HIGH_GRASS=§bAlto + Grama do Shader §7(Est. Alt.)
-profile.VERY_HIGH=§9Muito Alto
-profile.ULTRA=§dUltra
 profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lEMANRUX §6§lCONFIGURAÇÕES §r§l«§4§l◆
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,6 +51,12 @@ option.BRIGHT_ORES.comment=Faz os minérios brilharem com mais intensidade no es
 
 option.GALAXY_SKY=CÉU COM GALÁXIA
 option.GALAXY_SKY.comment=Adiciona uma galáxia realista ao céu noturno. §aCUSTO DE DESEMPENHO: §abaixo
+
+option.FIRE_COLOR_CORRECTION=PRESENÇA DE ALMAS
+option.FIRE_COLOR_CORRECTION.comment=Adiciona a presença de almas na tela do jogador, correção de cores para o fogo das almas, possessão de almas do corpo do jogador e de alguns mobs, desde que estejam perto de almas (luz azul). §aCUSTO DE DESEMPENHO: §abaixo
+
+option.ENCHANTING_TABLE_EFFECTS=EFEITOS DA MESA DE ENCANTAMENTOS
+option.ENCHANTING_TABLE_EFFECTS.comment=Ativa pisos rúnicos mágicos e partículas flutuantes ao estar perto de uma Mesa de Encantamentos. §aCUSTO DE DESEMPENHO: §abaixo
 
 option.CINEMATIC_MODE=Modo Cinemático
 option.CINEMATIC_MODE.comment=Adiciona barras de letterbox, dessaturação, escurecimento e vinheta para um visual cinemático. §cCUSTO DE DESEMPENHO: §abaixo

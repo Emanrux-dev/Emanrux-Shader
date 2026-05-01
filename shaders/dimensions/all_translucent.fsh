@@ -2,6 +2,13 @@
 	#extension GL_ARB_shader_image_load_store: enable
 	#extension GL_ARB_shading_language_packing: enable
 #endif
+ 
+uniform vec3 relativeEyePosition;
+
+#include "/lib/projections.glsl"
+
+uniform int frameCounter;
+uniform float frameTimeCounter;
 
 #include "/lib/settings.glsl"
 
@@ -70,6 +77,7 @@ uniform sampler2D depthtex1;
 uniform sampler2D depthtex2;
 uniform float snowAmount;
 uniform bool isSnowBiome;
+uniform bool isAridBiome;
 
 #ifdef DISTANT_HORIZONS
 	uniform sampler2D dhDepthTex1;
@@ -115,8 +123,7 @@ uniform float skyIntensity;
 uniform ivec2 eyeBrightnessSmooth;
 uniform float nightVision;
 
-uniform int frameCounter;
-uniform float frameTimeCounter;
+
 uniform vec2 texelSize;
 uniform int framemod8;
 uniform float viewWidth;
@@ -160,7 +167,7 @@ uniform float dhVoxyFarPlane;
 #include "/lib/util.glsl"
 #include "/lib/Shadow_Params.glsl"
 #include "/lib/color_transforms.glsl"
-#include "/lib/projections.glsl"
+
 #include "/lib/DistantHorizons_projections.glsl"
 #include "/lib/sky_gradient.glsl"
 #include "/lib/waterBump.glsl"
@@ -168,6 +175,8 @@ uniform float dhVoxyFarPlane;
 #ifdef IRIS_FEATURE_TEXTURE_FILTERING
 #include "/lib/texture_filtering.glsl"
 #endif
+
+
 
 #ifdef OVERWORLD_SHADER
 	#include "/lib/lightning_stuff.glsl"
@@ -191,21 +200,13 @@ uniform float dhVoxyFarPlane;
 #endif
 
 #define FORWARD_SPECULAR
-#define FORWARD_SSR_QUALITY 30 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 200 300 400 500]
+#define FORWARD_SSR_QUALITY 15 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 200 300 400 500]
 #define FORWARD_BACKGROUND_REFLECTION
 // #define FORWARD_ROUGH_REFLECTION
 
 
-#ifdef FORWARD_SPECULAR
-#endif
-#if FORWARD_SSR_QUALITY > -1
-#endif
-#ifdef FORWARD_BACKGROUND_REFLECTION
-#endif
-#ifdef FORWARD_ROUGH_REFLECTION
-#endif
 
-uniform vec3 relativeEyePosition;
+
 
 vec2 decodeVec2(float a){
     const vec2 constant1 = 65535. / vec2( 256., 65536.);
@@ -588,6 +589,7 @@ float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, floa
 
 
 void main() {
+bool isInternalFace = false;
 if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	{
 	
 	vec3 FragCoord = gl_FragCoord.xyz;
@@ -598,13 +600,17 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	#ifdef TAA
 		vec2 tempOffset = offsets[framemod8];
 		vec3 viewPos = toScreenSpace(FragCoord*vec3(texelSize/RENDER_SCALE,1.0)-vec3(vec2(tempOffset)*texelSize, 0.0));
+		vec3 vPosStable = toScreenSpace(FragCoord*vec3(texelSize/RENDER_SCALE,1.0)); // Jitter-free
 	#else
 		vec3 viewPos = toScreenSpace(FragCoord*vec3(texelSize/RENDER_SCALE,1.0));
+		vec3 vPosStable = viewPos;
 	#endif
 
 	// Use mat4 multiplication to include the translation part (eye height, etc.)
 	vec3 feetPlayerPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz;
+	vec3 feetPlayerPosStable = (gbufferModelViewInverse * vec4(vPosStable, 1.0)).xyz;
 	vec3 worldPos = feetPlayerPos + cameraPosition;
+	vec3 worldPosStable = feetPlayerPosStable + cameraPosition;
 	vec3 normalMatWorld = viewToWorld(normalMat.xyz);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -628,9 +634,10 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	// bool isHand = abs(MATERIALS - 0.1) < 0.01;
 	bool isWater = MATERIALS > 0.99;
 	bool isReflectiveEntity = abs(MATERIALS - 0.2) < 0.01;
+	vec3 _glassCheckPos = feetPlayerPos - normalMatWorld * 0.1;
 	bool isPanelGlass = false;
 	#ifdef IS_LPV_ENABLED
-	uint _panelCheck = imageLoad(imgVoxelMask, ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)))).r;
+	uint _panelCheck = imageLoad(imgVoxelMask, ivec3(floor(GetLpvPosition(_glassCheckPos)))).r;
 	isPanelGlass = (_panelCheck >= 301u && _panelCheck <= 317u) || _panelCheck == 516u;
 	#endif
 	bool isReflective = abs(MATERIALS - 0.1) < 0.01 || isWater || isReflectiveEntity;
@@ -644,6 +651,8 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 
 	vec2 lightmap = lmtexcoord.zw;
 	
+
+	
 	#ifndef COLORWHEEL
 		#ifdef IRIS_FEATURE_TEXTURE_FILTERING
 		gl_FragData[0] = textureFilteringMode == 1 ? sampleRGSS(gtexture, lmtexcoord.xy, 1.0 / vec2(textureSize(gtexture, 0))) : sampleNearest(gtexture, lmtexcoord.xy, 1.0 / vec2(textureSize(gtexture, 0)));
@@ -651,10 +660,42 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		#else
 		gl_FragData[0] = texture(gtexture, lmtexcoord.xy, mipmapBias) * color;
 		#endif
+
+	#ifdef FIRE_COLOR_CORRECTION
+		if (isEntity) {
+			#ifdef IS_LPV_ENABLED
+				vec3 fireHSV = RgbToHsv(toLinear(gl_FragData[0].rgb));
+				if (fireHSV.y > 0.4 && fireHSV.z > 0.6 && fireHSV.x < 0.16 && fireHSV.x > 0.02) {
+					vec3 _lpvPos = GetLpvPosition(feetPlayerPos);
+					
+					vec3 lpvCol = SampleLpvLinear(_lpvPos).rgb;
+					bool isBlueLight = lpvCol.b > lpvCol.r * 1.1 && lpvCol.b > 0.003;
+					
+					bool soulFireFound = false;
+					ivec3 vPosBase = ivec3(floor(_lpvPos));
+					// Larger radius: ensures fire stays blue for the full burn duration
+					// even when the entity moves away from the soul fire source block
+					for(int x = -4; x <= 4; x++) {
+						for(int z = -4; z <= 4; z++) {
+							for(int y = -4; y <= 4; y++) {
+								uint b = imageLoad(imgVoxelMask, vPosBase + ivec3(x,y,z)).r;
+								if (b == 244u || b == 245u || b == 246u) soulFireFound = true;
+							}
+						}
+					}
+					if (soulFireFound || isBlueLight) {
+						vec3 sRgbHSV = RgbToHsv(gl_FragData[0].rgb);
+						gl_FragData[0].rgb = HsvToRgb(vec3(0.53, min(sRgbHSV.y * 0.75, 0.8), min(sRgbHSV.z * 1.8, 1.0)));
+						lightmap.x *= 0.05;
+					}
+				}
+			#endif
+		}
+	#endif
 #ifdef IS_LPV_ENABLED
 	if(normalMat.w < 0.99 && normalMat.w > 0.05) {
-		vec3 lpvPos = GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1);
-ivec3 voxelPos = ivec3(floor(lpvPos));
+		vec3 lpvPos = GetLpvPosition(_glassCheckPos);
+		ivec3 voxelPos = ivec3(floor(lpvPos));
 
 uint _aPX = imageLoad(imgVoxelMask, voxelPos + ivec3( 1,0,0)).r;
 uint _aNX = imageLoad(imgVoxelMask, voxelPos + ivec3(-1,0,0)).r;
@@ -662,105 +703,55 @@ uint _aPZ = imageLoad(imgVoxelMask, voxelPos + ivec3( 0,0, 1)).r;
 uint _aNZ = imageLoad(imgVoxelMask, voxelPos + ivec3( 0,0,-1)).r;
 uint _aPY = imageLoad(imgVoxelMask, voxelPos + ivec3( 0, 1,0)).r;
 uint _aNY = imageLoad(imgVoxelMask, voxelPos + ivec3( 0,-1,0)).r;
-bool adjPX = _aPX == 301u || _aPX == 516u;
-bool adjNX = _aNX == 301u || _aNX == 516u;
-bool adjPZ = _aPZ == 301u || _aPZ == 516u;
-bool adjNZ = _aNZ == 301u || _aNZ == 516u;
-bool adjPY = _aPY == 301u || _aPY == 516u;
-bool adjNY = _aNY == 301u || _aNY == 516u;
+bool adjPX = (_aPX >= 301u && _aPX <= 317u) || _aPX == 516u;
+bool adjNX = (_aNX >= 301u && _aNX <= 317u) || _aNX == 516u;
+bool adjPZ = (_aPZ >= 301u && _aPZ <= 317u) || _aPZ == 516u;
+bool adjNZ = (_aNZ >= 301u && _aNZ <= 317u) || _aNZ == 516u;
+bool adjPY = (_aPY >= 301u && _aPY <= 317u) || _aPY == 516u;
+bool adjNY = (_aNY >= 301u && _aNY <= 317u) || _aNY == 516u;
 
-vec3 worldNormal = normalMatWorld;
+		vec3 worldNormal = normalMatWorld;
 		vec3 absNormal = abs(worldNormal);
 		bool facingX = absNormal.x > 0.5;
 		bool facingZ = absNormal.z > 0.5;
 		bool facingY = absNormal.y > 0.5;
+
+		if(facingX) isInternalFace = (worldNormal.x > 0.5) ? adjPX : adjNX;
+		else if(facingZ) isInternalFace = (worldNormal.z > 0.5) ? adjPZ : adjNZ;
+		else if(facingY) isInternalFace = (worldNormal.y > 0.5) ? adjPY : adjNY;
+
+
 
 		vec3 blockFract = fract(worldPos);
 		vec2 uv;
 		if(facingY) uv = blockFract.xz;
 		else if(facingX) uv = blockFract.zy;
 		else uv = blockFract.xy;
-
-		float borderSize = 0.6;
-		float maskLeft  = 1.0;
-		float maskRight = 1.0;
-		float maskDown  = 1.0;
-		float maskUp    = 1.0;
+		float frameWidth = 0.05;
+		float borderMask = 0.0;
 
 		if(facingY) {
-			if(adjPX) maskRight = smoothstep(1.0, 1.0 - borderSize, uv.x);
-			if(adjNX) maskLeft  = smoothstep(0.0, borderSize, uv.x);
-			if(adjPZ) maskDown  = smoothstep(1.0, 1.0 - borderSize, uv.y);
-			if(adjNZ) maskUp    = smoothstep(0.0, borderSize, uv.y);
+			if(!adjPX) borderMask = max(borderMask, smoothstep(1.0 - frameWidth, 1.0, uv.x));
+			if(!adjNX) borderMask = max(borderMask, 1.0 - smoothstep(0.0, frameWidth, uv.x));
+			if(!adjPZ) borderMask = max(borderMask, smoothstep(1.0 - frameWidth, 1.0, uv.y));
+			if(!adjNZ) borderMask = max(borderMask, 1.0 - smoothstep(0.0, frameWidth, uv.y));
 		} else if(facingX) {
-			if(adjPZ) maskRight = smoothstep(1.0, 1.0 - borderSize, uv.x);
-			if(adjNZ) maskLeft  = smoothstep(0.0, borderSize, uv.x);
-			if(adjPY) maskDown  = smoothstep(1.0, 1.0 - borderSize, uv.y);
-			if(adjNY) maskUp    = smoothstep(0.0, borderSize, uv.y);
+			if(!adjPZ) borderMask = max(borderMask, smoothstep(1.0 - frameWidth, 1.0, uv.x));
+			if(!adjNZ) borderMask = max(borderMask, 1.0 - smoothstep(0.0, frameWidth, uv.x));
+			if(!adjPY) borderMask = max(borderMask, smoothstep(1.0 - frameWidth, 1.0, uv.y));
+			if(!adjNY) borderMask = max(borderMask, 1.0 - smoothstep(0.0, frameWidth, uv.y));
 		} else if(facingZ) {
-			if(adjPX) maskRight = smoothstep(1.0, 1.0 - borderSize, uv.x);
-			if(adjNX) maskLeft  = smoothstep(0.0, borderSize, uv.x);
-			if(adjPY) maskDown  = smoothstep(1.0, 1.0 - borderSize, uv.y);
-			if(adjNY) maskUp    = smoothstep(0.0, borderSize, uv.y);
+			if(!adjPX) borderMask = max(borderMask, smoothstep(1.0 - frameWidth, 1.0, uv.x));
+			if(!adjNX) borderMask = max(borderMask, 1.0 - smoothstep(0.0, frameWidth, uv.x));
+			if(!adjPY) borderMask = max(borderMask, smoothstep(1.0 - frameWidth, 1.0, uv.y));
+			if(!adjNY) borderMask = max(borderMask, 1.0 - smoothstep(0.0, frameWidth, uv.y));
 		}
-float borderMask = maskLeft * maskRight * maskUp * maskDown;
+
 		uint voxelID = imageLoad(imgVoxelMask, voxelPos).r;
 		#ifdef CONNECTED_GLASS
-		if(voxelID == 301u) {
-			float invBorder = 1.0 - borderMask;
-			gl_FragData[0].rgb *= borderMask;
-			gl_FragData[0].a = mix(gl_FragData[0].a, 0.0, invBorder);
-		}
-		#endif
-
-		#ifdef IS_LPV_ENABLED
-		if(imageLoad(imgVoxelMask, ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)))).r == 516u) {
-			#ifdef CONNECTED_GLASS
-			vec3 _absNormal = abs(normalMatWorld);
-			if(_absNormal.y > 0.5) {
-				discard;
-			} else {
-				ivec3 _voxelPos = ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)));
-				uint _rPX = imageLoad(imgVoxelMask, _voxelPos + ivec3( 1,0,0)).r;
-				uint _rNX = imageLoad(imgVoxelMask, _voxelPos + ivec3(-1,0,0)).r;
-				uint _rPZ = imageLoad(imgVoxelMask, _voxelPos + ivec3( 0,0, 1)).r;
-				uint _rNZ = imageLoad(imgVoxelMask, _voxelPos + ivec3( 0,0,-1)).r;
-				uint _rPY = imageLoad(imgVoxelMask, _voxelPos + ivec3( 0, 1,0)).r;
-				uint _rNY = imageLoad(imgVoxelMask, _voxelPos + ivec3( 0,-1,0)).r;
-				bool solidPX = _rPX > 0u && _rPX != 516u && _rPX != 301u;
-				bool solidNX = _rNX > 0u && _rNX != 516u && _rNX != 301u;
-				bool solidPZ = _rPZ > 0u && _rPZ != 516u && _rPZ != 301u;
-				bool solidNZ = _rNZ > 0u && _rNZ != 516u && _rNZ != 301u;
-				bool solidPY = _rPY > 0u && _rPY != 516u && _rPY != 301u;
-				bool solidNY = _rNY > 0u && _rNY != 516u && _rNY != 301u;
-				vec3 _worldPos = feetPlayerPos + cameraPosition;
-				vec3 _blockFract = fract(_worldPos);
-				vec2 _uv;
-				if(_absNormal.x > 0.5) _uv = _blockFract.zy;
-				else _uv = _blockFract.xy;
-				float _borderSize = 0.15;
-				float _mask = 0.0;
-				if(_absNormal.x > 0.5) {
-					if(solidPZ) _mask = max(_mask, smoothstep(_borderSize, 0.0, 1.0 - _uv.x));
-					if(solidNZ) _mask = max(_mask, smoothstep(_borderSize, 0.0, _uv.x));
-					if(solidPY) _mask = max(_mask, smoothstep(_borderSize, 0.0, 1.0 - _uv.y));
-					if(solidNY) _mask = max(_mask, smoothstep(_borderSize, 0.0, _uv.y));
-				} else {
-					if(solidPX) _mask = max(_mask, smoothstep(_borderSize, 0.0, 1.0 - _uv.x));
-					if(solidNX) _mask = max(_mask, smoothstep(_borderSize, 0.0, _uv.x));
-					if(solidPY) _mask = max(_mask, smoothstep(_borderSize, 0.0, 1.0 - _uv.y));
-					if(solidNY) _mask = max(_mask, smoothstep(_borderSize, 0.0, _uv.y));
-				}
-				float savedAlpha = gl_FragData[0].a;
-				gl_FragData[0].a = max(_mask, savedAlpha > 0.05 ? savedAlpha : 0.0);
-				if(_mask < 0.001) {
-					gl_FragData[0].a = 0.0;
-					gl_FragData[0].rgb = vec3(0.0);
-				} else {
-					gl_FragData[0].rgb *= _mask;
-				}
-			}
-			#endif
+		if((voxelID >= 301u && voxelID <= 317u) || voxelID == 516u) {
+			float minAlpha = (voxelID == 301u || voxelID == 516u) ? 1.0/255.0 : 0.15;
+			gl_FragData[0].a = mix(minAlpha, gl_FragData[0].a, borderMask);
 		}
 		#endif
 	}
@@ -794,6 +785,8 @@ float borderMask = maskLeft * maskRight * maskUp * maskDown;
 	#endif
 
 	vec3 Albedo = toLinear(gl_FragData[0].rgb);
+
+
 
 	vec3 shadowPlayerPos = feetPlayerPos + gbufferModelViewInverse[3].xyz;
 	#if (defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0) || defined RIPPLE_WATER
@@ -1206,32 +1199,28 @@ bool hasFrost = false;
 #ifdef IS_LPV_ENABLED
 if(isSnowBiome && rainStrength > 0.05)
 {
-    vec3 absNormal = abs(normalMatWorld);
-    if(absNormal.y < 0.5)
+    uint frostID = imageLoad(imgVoxelMask,
+    ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld*0.1)))).r;
+    if((frostID >= 301u && frostID <= 317u) || frostID == 516u)
     {
-        uint frostID = imageLoad(imgVoxelMask,
-        ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld*0.1)))).r;
-        if((frostID >= 301u && frostID <= 317u) || frostID == 516u)
-        {
 
             vec3 worldNormal = normalMatWorld;
             vec2 frostUV;
-            if(abs(worldNormal.x) > 0.5) frostUV = worldPos.zy;
-            else if(abs(worldNormal.z) > 0.5) frostUV = worldPos.xy;
-            else frostUV = worldPos.xz;
+            if(abs(worldNormal.x) > 0.5) frostUV = worldPosStable.zy;
+            else if(abs(worldNormal.z) > 0.5) frostUV = worldPosStable.xy;
+            else frostUV = worldPosStable.xz;
             frostUV *= 0.25;
             float growth = rainStrength; 
             float frost = 0.0;
-            for(int i=0;i<12;i++)
-            {
-                float scale = 10.0 + float(i)*6.0;
-                vec2 uv = frostUV * scale;
-                vec2 cell = floor(uv);
-                vec2 local = fract(uv) - 0.5;
-                float rand =
-                fract(sin(dot(cell,vec2(127.1,311.7)))*43758.5453);
-                float rand2 =
-                fract(sin(dot(cell,vec2(269.5,183.3)))*23421.631);
+            if (!isInternalFace) {
+                for(int i=0;i<12;i++)
+                {
+                    float scale = 10.0 + float(i)*6.0;
+                    vec2 uv = frostUV * scale;
+                    vec2 cell = floor(uv);
+                    vec2 local = fract(uv) - 0.5;
+                    float rand = fract(sin(dot(cell,vec2(127.1,311.7)))*43758.5453);
+                    float rand2 = fract(sin(dot(cell,vec2(269.5,183.3)))*23421.631);
                 float angle = rand * 6.28318;
                 vec2 dir = vec2(cos(angle),sin(angle));
                 float branch = dot(local,dir);
@@ -1256,63 +1245,143 @@ if(isSnowBiome && rainStrength > 0.05)
             frost *= growth;
             float baseFill = texture(noisetex, frostUV * 0.3).r * 0.25 * growth;
             frost = max(frost, baseFill);
-            frost = clamp(frost,0.0,1.0);
+            }
             if(frost > 0.02)
             {
                 hasFrost = true;
                 vec3 frostColor = mix(vec3(0.7,0.8,1.0), vec3(0.95,0.97,1.0), frost);
                 vec3 lighting = Direct_lighting + Indirect_lighting;
-                float sparkle = pow(max(0.0, dot(normalMat.xyz,vec3(0.0,1.0,0.0))),24.0);
+                float sparkle = pow(max(0.0, dot(normalMatWorld, vec3(0.0, 1.0, 0.0))), 24.0); // Now world-space
                 vec3 final = frostColor*(lighting + sparkle*0.6);
                 FinalColor = mix(FinalColor, final, frost*0.85);
                 if(frost > 0.3) gl_FragData[0].a = min(gl_FragData[0].a, 0.95);    
                 gl_FragData[0].a = max(gl_FragData[0].a,frost*0.7);
             }
-        }
+
     }
 }
 #endif
 #endif
 
 #ifdef RAIN_ON_GLASS
+	bool isDryBiomeLocal = isAridBiome;
 	#ifdef IS_LPV_ENABLED
-	if(rainStrength > 0.05 && !isSnowBiome){
+	if (!isDryBiomeLocal)
+	{
+		ivec3 voxPlayer = ivec3(floor(GetLpvPosition(vec3(0.0))));
+		for(int dy = 0; dy <= 70; dy += 5) {
+			uint b = imageLoad(imgVoxelMask, voxPlayer + ivec3(0, -dy, 0)).r;
+			if(b == 84u || b == 89u || b == 54u || b == 80u) { isDryBiomeLocal = true; break; }
+		}
+	}
+	#endif
 
-		vec3 _absNormal = abs(normalMatWorld);
-		if(_absNormal.y < 0.5) {
-			uint _glassID = imageLoad(imgVoxelMask, ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)))).r;
-			if((_glassID >= 301u && _glassID <= 317u) || _glassID == 516u) {
-				vec3 _worldNormal = normalMatWorld;
-				vec2 dropUV = worldPos.xz;
-				if(abs(_worldNormal.x) > 0.5) dropUV = worldPos.zy;
-				else if(abs(_worldNormal.z) > 0.5) dropUV = worldPos.xy;
-				else dropUV = worldPos.xz;
-				vec2 scaledUV = dropUV * 8.0;
-				vec2 cellID = floor(scaledUV);
-				vec2 cellUV = fract(scaledUV);
-				float rand  = fract(sin(dot(cellID, vec2(127.1, 311.7))) * 43758.5453);
-				float rand2 = fract(sin(dot(cellID, vec2(269.5, 183.3))) * 12345.6789);
-				float rand3 = fract(sin(dot(cellID, vec2(53.7, 251.3))) * 77777.7777);
-				if(rand3 < RAIN_DENSITY && lightmap.y > 0.78) {
-				float speed = RAIN_SPEED + rand * RAIN_SPEED_VARIANCE;
+	if(rainStrength > 0.05 && !isSnowBiome && !isDryBiomeLocal){
+
+		vec3 _worldNormal = normalMatWorld;
+		vec3 _absNormal = abs(_worldNormal);
+		
+		#ifdef IS_LPV_ENABLED
+		uint _glassID = imageLoad(imgVoxelMask, ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)))).r;
+		if((_glassID >= 301u && _glassID <= 317u) || _glassID == 516u) {
+			vec2 dropUV = worldPos.xz;
+			if(_absNormal.x > 0.5) dropUV = worldPos.zy;
+			else if(_absNormal.z > 0.5) dropUV = worldPos.xy;
+			
+			vec2 scaledUV = dropUV * 8.0;
+			vec2 cellID = floor(scaledUV);
+			vec2 cellUV = fract(scaledUV);
+			float rand  = fract(sin(dot(cellID, vec2(127.1, 311.7))) * 43758.5453);
+			float rand2 = fract(sin(dot(cellID, vec2(269.5, 183.3))) * 12345.6789);
+			float rand3 = fract(sin(dot(cellID, vec2(53.7, 251.3))) * 77777.7777);
+			
+			if(rand3 < RAIN_DENSITY && lightmap.y > 0.78) {
+				bool isHorizontal = _absNormal.y > 0.5;
+				bool skipRain = false;
+				
+				ivec3 _voxPos = ivec3(floor(GetLpvPosition(feetPlayerPos - _worldNormal * 0.1)));
+				uint _adjPX = imageLoad(imgVoxelMask, _voxPos + ivec3( 1, 0, 0)).r;
+				uint _adjNX = imageLoad(imgVoxelMask, _voxPos + ivec3(-1, 0, 0)).r;
+				uint _adjPZ = imageLoad(imgVoxelMask, _voxPos + ivec3( 0, 0, 1)).r;
+				uint _adjNZ = imageLoad(imgVoxelMask, _voxPos + ivec3( 0, 0,-1)).r;
+				uint _adjPY = imageLoad(imgVoxelMask, _voxPos + ivec3( 0, 1, 0)).r;
+				uint _adjNY = imageLoad(imgVoxelMask, _voxPos + ivec3( 0,-1, 0)).r;
+				
+				bool hasPX = (_adjPX >= 301u && _adjPX <= 317u) || _adjPX == 516u;
+				bool hasNX = (_adjNX >= 301u && _adjNX <= 317u) || _adjNX == 516u;
+				bool hasPZ = (_adjPZ >= 301u && _adjPZ <= 317u) || _adjPZ == 516u;
+				bool hasNZ = (_adjNZ >= 301u && _adjNZ <= 317u) || _adjNZ == 516u;
+				bool hasPY = (_adjPY >= 301u && _adjPY <= 317u) || _adjPY == 516u;
+				bool hasNY = (_adjNY >= 301u && _adjNY <= 317u) || _adjNY == 516u;
+
+				if (isInternalFace) skipRain = true;
+
+				if (!skipRain) {
+					float speed = RAIN_SPEED + rand * RAIN_SPEED_VARIANCE;
 					float timeOffset = rand2 * 10.0;
-					float dropX = rand;
-					float dropY = 1.0 - fract(frameTimeCounter * speed * 0.1 + timeOffset);
-					vec2 diff = cellUV - vec2(dropX, dropY);
-					diff.y *= (1.0 - RAIN_TRAIL);
+					float dropPos = 1.0 - fract(frameTimeCounter * speed * 0.1 + timeOffset);
+					
+					vec2 diff;
+					float tip;
+					
+					if (!isHorizontal) {
+						diff = cellUV - vec2(rand, dropPos);
+						diff.y *= (1.0 - RAIN_TRAIL);
+						float tipDist = abs(diff.x) + abs(diff.y + 0.04) * 0.5;
+						tip = smoothstep(0.0, 0.06, diff.y + 0.04) * smoothstep(0.1, 0.0, tipDist);
+					} else {
+						// Fixed flow logic for horizontal glass
+						vec2 posFract = fract(worldPos.xz) - 0.5;
+						float len = length(posFract);
+						vec2 flowDir = len > 0.001 ? posFract / len : vec2(0.0, 1.0);
+						if (_worldNormal.y < -0.5) flowDir = -flowDir;
+						
+						vec2 dropOrigin = vec2(rand, rand2);
+						vec2 dropPos2D = fract(dropOrigin + flowDir * (1.0 - dropPos));
+						diff = cellUV - dropPos2D;
+						
+						float p = dot(diff, flowDir);
+						vec2 perp = diff - flowDir * p;
+						p *= (1.0 - RAIN_TRAIL);
+						diff = perp + flowDir * p;
+						
+						float tipDist = length(perp) + abs(-p + 0.04) * 0.5;
+						tip = smoothstep(0.0, 0.06, -p + 0.04) * smoothstep(0.1, 0.0, tipDist);
+					}
+					
 					float dist = length(diff);
-					float tipDist = abs(diff.x) + abs(diff.y + 0.04) * 0.5;
-					float tip = smoothstep(0.0, 0.06, diff.y + 0.04) * smoothstep(0.1, 0.0, tipDist);
 					float drop = max(smoothstep(RAIN_SIZE, 0.0, dist), tip);
 					drop *= rainStrength;
-					FinalColor += drop * RAIN_BRIGHTNESS * (Indirect_lighting + Direct_lighting);
+					
+					vec3 dropTint = vec3(0.92, 0.93, 0.95); // Very subtle neutral tint for real water/glass
+					bool isColored = (_glassID >= 302u && _glassID <= 317u);
+					
+					if (isColored) {
+						// Inherit color for colored glass only
+						vec3 glassCol = GLASS_TINT_COLORS.rgb;
+						float l = dot(glassCol, vec3(0.2126, 0.7152, 0.0722));
+						// Moderate saturation boost for visibility on colored glass
+						dropTint = mix(vec3(l), glassCol * 1.5, 0.8);
+						dropTint = normalize(dropTint + 0.1) * 1.5; 
+					}
+
+					float lightFactor = dot(Indirect_lighting + Direct_lighting, vec3(0.33)) + 0.05;
+					vec3 dropHighlight = drop * RAIN_BRIGHTNESS * lightFactor * dropTint;
+					
+					FinalColor = mix(FinalColor, FinalColor * 0.7, drop * 0.4); // Darken drop body
+					FinalColor += dropHighlight; // Add highlight
+					
 					gl_FragData[0].a = max(gl_FragData[0].a, drop * 0.7);
 				}
 			}
 		}
+		#endif
 	}
-	#endif
-	#endif
+#endif
+
+
+
+
 
 
 	#if EMISSIVE_TYPE == 2 || EMISSIVE_TYPE == 3
@@ -1324,52 +1393,61 @@ if(isNetherPortal) {
     float t = frameTimeCounter;
 
     // --- Voxel-based Center Detection ---
-    ivec3 baseVoxel = ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)));
+    #ifdef IS_LPV_ENABLED
+    ivec3 baseVoxel = ivec3(floor(GetLpvPosition(_glassCheckPos)));
+    #else
+    ivec3 baseVoxel = ivec3(0);
+    #endif
     
-    // Initial bounds (current block center)
-    float minX = floor(worldPos.x) + 0.5, maxX = floor(worldPos.x) + 0.5;
-    float minY = floor(worldPos.y) + 0.5, maxY = floor(worldPos.y) + 0.5;
-    float minZ = floor(worldPos.z) + 0.5, maxZ = floor(worldPos.z) + 0.5;
+    float _fwX = floor(worldPos.x);
+    float _fwY = floor(worldPos.y);
+    float _fwZ = floor(worldPos.z);
+
+    float minX = _fwX + 0.5, maxX = _fwX + 0.5;
+    float minY = _fwY + 0.5, maxY = _fwY + 0.5;
+    float minZ = _fwZ + 0.5, maxZ = _fwZ + 0.5;
 
     bool facingZ = abs(normalMatWorld.z) > 0.5;
     bool facingX = abs(normalMatWorld.x) > 0.5;
 
     // Scan for edges (limit 21 blocks for vanilla portals)
+    #ifdef IS_LPV_ENABLED
     if (facingZ) {
         for(int i=1; i<=21; i++) {
-            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(i, 0, 0)).r == 337u) maxX = floor(worldPos.x) + i + 0.5;
+            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(i, 0, 0)).r == 337u) maxX = _fwX + float(i) + 0.5;
             else break;
         }
         for(int i=1; i<=21; i++) {
-            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(i, 0, 0)).r == 337u) minX = floor(worldPos.x) - i + 0.5;
+            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(i, 0, 0)).r == 337u) minX = _fwX - float(i) + 0.5;
             else break;
         }
         for(int i=1; i<=21; i++) {
-            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(0, i, 0)).r == 337u) maxY = floor(worldPos.y) + i + 0.5;
+            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(0, i, 0)).r == 337u) maxY = _fwY + float(i) + 0.5;
             else break;
         }
         for(int i=1; i<=21; i++) {
-            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(0, i, 0)).r == 337u) minY = floor(worldPos.y) - i + 0.5;
+            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(0, i, 0)).r == 337u) minY = _fwY - float(i) + 0.5;
             else break;
         }
     } else if (facingX) {
         for(int i=1; i<=21; i++) {
-            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(0, 0, i)).r == 337u) maxZ = floor(worldPos.z) + i + 0.5;
+            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(0, 0, i)).r == 337u) maxZ = _fwZ + float(i) + 0.5;
             else break;
         }
         for(int i=1; i<=21; i++) {
-            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(0, 0, i)).r == 337u) minZ = floor(worldPos.z) - i + 0.5;
+            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(0, 0, i)).r == 337u) minZ = _fwZ - float(i) + 0.5;
             else break;
         }
         for(int i=1; i<=21; i++) {
-            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(0, i, 0)).r == 337u) maxY = floor(worldPos.y) + i + 0.5;
+            if (imageLoad(imgVoxelMask, baseVoxel + ivec3(0, i, 0)).r == 337u) maxY = _fwY + float(i) + 0.5;
             else break;
         }
         for(int i=1; i<=21; i++) {
-            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(0, i, 0)).r == 337u) minY = floor(worldPos.y) - i + 0.5;
+            if (imageLoad(imgVoxelMask, baseVoxel - ivec3(0, i, 0)).r == 337u) minY = _fwY - float(i) + 0.5;
             else break;
         }
     }
+    #endif
 
     vec2 p;
     float spread;

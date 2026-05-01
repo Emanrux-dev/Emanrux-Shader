@@ -1,6 +1,6 @@
 option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - 日蚀编辑版
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 0.1.0-beta
+    value.SHADER_VERSION_LABEL.482 = 1.0.0
 
 profile.POTATO=§4土豆
 profile.VERY_LOW=§c极低
@@ -62,6 +62,12 @@ option.BRIGHT_ORES.comment=使矿石在黑暗中发出更强烈的光芒（包�
 
 option.GALAXY_SKY=星系天空
 option.GALAXY_SKY.comment=在夜空中添加真实星系。§a性能消耗：§a低
+
+option.FIRE_COLOR_CORRECTION=灵魂的存在
+option.FIRE_COLOR_CORRECTION.comment=在玩家屏幕上添加灵魂的存在效果，灵魂火焰的颜色校正，以及玩家和部分生物被灵魂附身的效果，只要他们靠近灵魂（蓝色光源）。§a性能消耗：§a低
+
+option.ENCHANTING_TABLE_EFFECTS=附魔台效果
+option.ENCHANTING_TABLE_EFFECTS.comment=在附魔台附近启用魔法符文地板和漂浮粒子效果。§a性能消耗：§a低
 
 option.CINEMATIC_MODE=电影模式
 option.CINEMATIC_MODE.comment=添加黑边、去饱和、变暗和暗角效果，呈现电影感。§c性能消耗：§a低

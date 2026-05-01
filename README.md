@@ -1,4 +1,3 @@
-<img width="1360" height="768" alt="118" src="https://github.com/user-attachments/assets/d6b2b343-4d3e-406b-9cef-10e3113c2402" />
 Emanrux Shader - An Edition of Eclipse
 ------------------------------------------
 Eclipse is already an excellent shader; the work of Chocapic13, modified by Xonk and then further modified by Merlin1809 is incredible. 

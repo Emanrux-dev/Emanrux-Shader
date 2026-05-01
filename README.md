@@ -61,7 +61,7 @@ Main changes:
 <img width="800" alt="8" src="https://github.com/user-attachments/assets/da011f27-5303-49b6-992e-2f138ec7970d" />
 <img width="800" alt="9" src="https://github.com/user-attachments/assets/d6e6ecc6-36ff-4a6e-ac1a-59cec8e1e66a" />
 <img width="800" alt="10" src="https://github.com/user-attachments/assets/9dca7a17-f08e-4de8-aef8-6a18c0ddf75f" />
-<img width="1360" height="705" alt="442" src="https://github.com/user-attachments/assets/f6ba9e45-0305-4d60-9bbd-a7b98ed7ba02" />
+<img width="800" alt="442" src="https://github.com/user-attachments/assets/f6ba9e45-0305-4d60-9bbd-a7b98ed7ba02" />
 <img width="800" alt="11" src="https://github.com/user-attachments/assets/85a6fba0-db78-4897-83a9-eae2ebc248b1" />
 
 SPECIAL THANKS:

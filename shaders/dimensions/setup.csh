@@ -506,7 +506,6 @@ if (blockId == 513u) {
 }
 #endif
 /////////////////////////////&&&&&&&/////////////////////////////////////////
-
               // if (blockId == BLOCK_END_GATEWAY) {
         //     lightColor = vec3(1.0);
         //     lightRange = 15.0;

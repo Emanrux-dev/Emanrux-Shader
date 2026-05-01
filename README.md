@@ -34,9 +34,9 @@ Main changes:
 
 - Fixed blue fire color correction when a mob burns near soul fire.
 
-- Parallax occlusion mapping (POM) for many more blocks (disabled by default for performance reasons)
-
 - Soul light takes over the player's skin and some mobs, tinting pixels blue.
+
+- Parallax occlusion mapping (POM) for many more blocks (disabled by default for performance reasons)
 
 - Cloud Optimization: Reduced excessive cloud layers for better light passage and effects.
 

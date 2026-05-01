@@ -46,8 +46,6 @@ Main changes:
 
 - Performance Boost: Removed "Shader Grass" to ensure higher FPS.
 
-- Added compatibility with Any Size Portals Mod
-
 - Added support for multiple languages in Emanrux Settings, including English, Spanish, French, German, Portuguese, Italian, Russian, and Chinese.
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -84,6 +82,7 @@ https://github.com/Merlin1809/Eclipse-Shader
 - Distant Horizon
 - Voxy
 - Photonics
+- Any Size Portals Mod
 
 How to download the latest version:
 Look for the green "Code" button at the top of this page.

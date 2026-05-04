@@ -98,6 +98,7 @@
         vec2 rodExposureDepthSSBO;
     
     }
+    "},
     "useViewportDims": true,
     "uniforms": [
 	"viewWidth",

@@ -81,7 +81,7 @@ https://github.com/Merlin1809/Eclipse-Shader
 - Tested in Minecraft 1.21+
 - Distant Horizon
 - Voxy
-- Photonics
+- Photonics 1.21.11+
 - Any Size Portals Mod
 
 How to download the latest version:

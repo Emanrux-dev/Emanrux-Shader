@@ -84,6 +84,8 @@ https://github.com/Merlin1809/Eclipse-Shader
 - Photonics 1.21.11+
 - Any Size Portals Mod
 
+Discord: https://discord.gg/mgfRFdjT7D
+
 How to download the latest version:
 Look for the green "Code" button at the top of this page.
 

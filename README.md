@@ -87,6 +87,7 @@ https://github.com/Merlin1809/Eclipse-Shader
 ## Contact
 Discord: https://discord.gg/mgfRFdjT7D
 
+## Download 
 How to download the latest version:
 Look for the green "Code" button at the top of this page.
 

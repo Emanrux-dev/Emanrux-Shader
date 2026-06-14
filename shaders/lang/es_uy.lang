@@ -1,68 +1,203 @@
-option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Una Edición de Eclipse
+option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Una edición de Eclipse
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 1.0.0
+    value.SHADER_VERSION_LABEL.482 = 1.1.0
 
-profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lCONFIGURACIÓN §6§lEMANRUX §r§l«§4§l◆
+iris_extension.keybind.key0.name=Linterna
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lEMANRUX §6§lCONFIGURACIÓN §r§l«§4§l◆
 
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
-screen.Emanrux_Settings=Configuración de Emanrux
-screen.POM_Settings=Configuración de POM
-screen.Emanrux_Configs=Configs de Emanrux
-option.CUSTOM_REFLECTIONS=REFLEXIONES PERSONALIZADAS
+screen.Emanrux_Settings=Configuración Emanrux
+screen.POM_Settings=Configuración POM
+screen.Emanrux_Configs=Configs Emanrux
+option.CUSTOM_REFLECTIONS=REFLEJOS PERSONALIZADOS
 option.EXTRA_EMISSIVE_BLOCKS=BLOQUES EMISIVOS EXTRA
 option.CONNECTED_GLASS=VIDRIO CONECTADO
-screen.Rain_on_Glass_Settings=Configuración de Lluvia en Vidrio
-option.RAIN_ON_GLASS=LLUVIA EN VIDRIO
+screen.Rain_on_Glass_Settings=Lluvia sobre Vidrio
+option.RAIN_ON_GLASS=LLUVIA SOBRE VIDRIO
 option.RAIN_SPEED=Velocidad de la Lluvia
-option.RAIN_SPEED_VARIANCE=Variación de Velocidad de Lluvia
-option.RAIN_DENSITY=Densidad de Lluvia
-option.RAIN_TRAIL=Longitud del Rastro de Lluvia
-option.RAIN_SIZE=Tamaño de las Gotas de Lluvia
+option.RAIN_SPEED_VARIANCE=Variación de Velocidad
+option.RAIN_DENSITY=Densidad de la Lluvia
+option.RAIN_TRAIL=Longitud del Rastro
+option.RAIN_SIZE=Tamaño de las Gotas
 
-screen.Rain_on_Glass_Settings.comment=Configura la apariencia y comportamiento de las gotas de lluvia en el vidrio
-screen.Emanrux_Configs.comment=Configuraciones personalizadas hechas por Emanrux 
-screen.POM_Settings.comment=Configura la profundidad y calidad del Mapeo de Oclusión de Paralaje
+screen.Rain_on_Glass_Settings.comment=Configura la apariencia y el comportamiento de las gotas de lluvia sobre el vidrio
+screen.Emanrux_Configs.comment=Configuraciones personalizadas hechas por Emanrux
+screen.POM_Settings.comment=Configura la profundidad y calidad del Mapeado de Oclusión Paralela
 
-option.CUSTOM_REFLECTIONS.comment=Activa reflexiones de espacio de pantalla personalizadas en las superficies. §aCOSTO DE RENDIMIENTO: §emedio
-option.EXTRA_EMISSIVE_BLOCKS.comment=Agrega brillo emisivo extra a tipos de bloques adicionales. §aCOSTO DE RENDIMIENTO: §abajo
-option.CONNECTED_GLASS.comment=Activa texturas conectadas sin costuras en bloques de vidrio. §aCOSTO DE RENDIMIENTO: §abajo
+option.CUSTOM_REFLECTIONS.comment=Activa reflejos personalizados de espacio de pantalla en superficies. §aCOSTO DE RENDIMIENTO: §emedio
+option.EXTRA_EMISSIVE_BLOCKS.comment=Añade brillo emisivo extra a tipos de bloques adicionales. §aCOSTO DE RENDIMIENTO: §abajo
+option.CONNECTED_GLASS.comment=Activa texturas conectadas en bloques de vidrio. §aCOSTO DE RENDIMIENTO: §abajo
 
-option.RAIN_ON_GLASS.comment=Activa gotas de lluvia animadas en superficies de vidrio. §eSolo visible durante lluvia. §aCOSTO DE RENDIMIENTO: §abajo
-option.RAIN_SPEED.comment=Controla la velocidad de caída de las gotas de lluvia en el vidrio. §7Valores más altos hacen que las gotas caigan más rápido. §aCOSTO DE RENDIMIENTO: §2ninguno
-option.RAIN_SPEED_VARIANCE.comment=Agrega aleatoriedad a la velocidad individual de cada gota. §7Valores más altos crean movimientos más variados. §aCOSTO DE RENDIMIENTO: §2ninguno
-option.RAIN_DENSITY.comment=Controla cuántas gotas de lluvia aparecen en la superficie de vidrio. §7Valores más altos crean un efecto de lluvia más intensa. §aCOSTO DE RENDIMIENTO: §abajo
-option.RAIN_TRAIL.comment=Longitud del rastro que deja cada gota de lluvia al desvanecerse. §7Valores más bajos crean gotas más cortas y redondas. §aCOSTO DE RENDIMIENTO: §2ninguno
-option.RAIN_SIZE.comment=Tamaño de las gotas individuales en el vidrio. §7Valores más pequeños se ven más realistas. §aCOSTO DE RENDIMIENTO: §2ninguno
+option.RAIN_ON_GLASS.comment=Activa gotas de lluvia animadas sobre superficies de vidrio. §eSolo visible durante la lluvia. §aCOSTO DE RENDIMIENTO: §abajo
+option.RAIN_SPEED.comment=Controla la velocidad de caída de las gotas sobre el vidrio. §7Valores más altos hacen que caigan más rápido. §aCOSTO DE RENDIMIENTO: §2ninguno
+option.RAIN_SPEED_VARIANCE.comment=Añade aleatoriedad a la velocidad individual de cada gota. §7Valores más altos crean movimiento más variado. §aCOSTO DE RENDIMIENTO: §2ninguno
+option.RAIN_DENSITY.comment=Controla cuántas gotas aparecen sobre el vidrio. §7Valores más altos crean un efecto de lluvia más intensa. §aCOSTO DE RENDIMIENTO: §abajo
+option.RAIN_TRAIL.comment=Longitud del rastro que deja cada gota. §7Valores más bajos crean gotas más cortas y redondeadas. §aCOSTO DE RENDIMIENTO: §2ninguno
+option.RAIN_SIZE.comment=Tamaño individual de las gotas sobre el vidrio. §7Valores más pequeños se ven más realistas. §aCOSTO DE RENDIMIENTO: §2ninguno
 
-screen.Frost_on_Glass_Settings=Configuración de Escarcha en Vidrio
-option.FROST_ON_GLASS=ESCARCHA EN VIDRIO
-option.FROST_ON_GLASS.comment=Activa el efecto de cristales de escarcha en superficies de vidrio durante nevadas. §aCOSTO DE RENDIMIENTO: §abajo
+option.FROST_ON_GLASS=ESCARCHA SOBRE VIDRIO
+option.FROST_ON_GLASS.comment=Activa cristales de escarcha sobre el vidrio durante nevadas. §aCOSTO DE RENDIMIENTO: §abajo-medio
 
-option.EXTRA_BLOCK_LIGHTS=LUCES DE BLOQUE EXTRA
+option.EXTRA_BLOCK_LIGHTS=LUCES DE BLOQUES EXTRA
 option.EXTRA_BLOCK_LIGHTS.comment=Activa emisión de luz LPV real desde bloques adicionales como bloques de redstone. §aCOSTO DE RENDIMIENTO: §emedio
 
-option.CUSTOM_NETHER_PORTAL=PORTAL DEL NETHER PERSONALIZADO
-option.CUSTOM_NETHER_PORTAL.comment=Agrega un efecto de vórtice animado personalizado a los Portales del Nether. §aCOSTO DE RENDIMIENTO: §abajo
+option.CUSTOM_NETHER_PORTAL=PORTAL AL NETHER PERSONALIZADO
+option.CUSTOM_NETHER_PORTAL.comment=Añade un efecto de vórtice animado a los Portales al Nether. §aCOSTO DE RENDIMIENTO: §abajo
 
 option.BRIGHT_ORES=MINERALES MÁS BRILLANTES
-option.BRIGHT_ORES.comment=Hace que los minerales brillen más intensamente en la oscuridad (incluyendo el carbón). §aCOSTO DE RENDIMIENTO: §abajo
+option.BRIGHT_ORES.comment=Hace que los minerales brillen con más intensidad en la oscuridad (incluido el carbón). §aCOSTO DE RENDIMIENTO: §abajo
 
-option.GALAXY_SKY=CIELO DE GALAXIA
-option.GALAXY_SKY.comment=Agrega una galaxia realista al cielo nocturno. §aCOSTO DE RENDIMIENTO: §abajo
+option.GALAXY_SKY=CIELO GALÁCTICO
+option.GALAXY_SKY.comment=Añade una galaxia realista al cielo nocturno. §aCOSTO DE RENDIMIENTO: §abajo
+
+option.NO_CLOUDS_AT_NIGHT=SIN NUBES DE NOCHE
+option.NO_CLOUDS_AT_NIGHT.comment=Desactiva las nubes volumétricas durante la noche, dejando el cielo estrellado completamente visible. §aCOSTO DE RENDIMIENTO: §2positivo
+
+option.SUN_FLARE_RING=ANILLO DE DESTELLO SOLAR
+option.SUN_FLARE_RING.comment=Activa un anillo de brillo alrededor del sol durante los destellos de lente. §aCOSTO DE RENDIMIENTO: §2ninguno
+
+option.black_hole_effect_strength=INTENSIDAD DEL EFECTO DE AGUJERO NEGRO
+option.black_hole_effect_strength.comment=Controla la atracción y el temblor del agujero negro desde el centro. Establece 0 para desactivar. §aCOSTO DE RENDIMIENTO: §abajo
+
+option.END_SHADOW_QUALITY=CALIDAD DE SOMBRAS DEL END
+option.END_SHADOW_QUALITY.comment=Controla la calidad del filtro de sombra del agujero negro del End, manteniendo el mapa de sombras limitado a 2048px. §aCOSTO DE RENDIMIENTO: §ebajo a medio
+    value.END_SHADOW_QUALITY.0=BAJA
+    value.END_SHADOW_QUALITY.1=MEDIA
+    value.END_SHADOW_QUALITY.2=ALTA
+    value.END_SHADOW_QUALITY.3=ULTRA
+
+option.END_FOG_LEVEL=NIVEL DE NIEBLA DEL END
+option.END_FOG_LEVEL.comment=Controla toda la niebla del End, niebla volumétrica, cúmulos de niebla y la espiral de nebulosa de la isla principal de 0 a 100.
+suffix.END_FOG_LEVEL=%
+
+option.END_VOID_SPIRAL=ESPIRAL DEL VACÍO DEL END
+option.END_VOID_SPIRAL.comment=Añade una espiral violeta animada bajo el vacío del End. §aCOSTO DE RENDIMIENTO: §abajo
+option.END_WANDERING_DRAGONS=DRAGONES ERRANTES DEL END
+option.END_WANDERING_DRAGONS.comment=Muestra siluetas procedurales de Ender Dragon en el cielo del End. §aCOSTO DE RENDIMIENTO: §abajo
+
+option.AURORA_LOCATION=UBICACIÓN DE LA AURORA
+option.AURORA_LOCATION.comment=Controla en qué biomas aparece el efecto de aurora boreal. §aCOSTO DE RENDIMIENTO: §abajo
+    value.AURORA_LOCATION.0=DESACTIVADA
+    value.AURORA_LOCATION.1=SOLO BIOMAS NEVADOS
+    value.AURORA_LOCATION.2=SIEMPRE (TODOS LOS BIOMAS)
+    value.AURORA_LOCATION.3=TODOS LOS BIOMAS (RARA EN BIOMAS NO NEVADOS)
 
 option.FIRE_COLOR_CORRECTION=PRESENCIA DE ALMAS
-option.FIRE_COLOR_CORRECTION.comment=Añade la presencia de almas en la pantalla del jugador, corrección de color para el fuego de almas, posesión de almas del cuerpo del jugador y de algunos mobs, siempre que estén cerca de almas (luz azul). §aCOSTO DE RENDIMIENTO: §abajo
+option.FIRE_COLOR_CORRECTION.comment=Añade corrección de color de fuego de almas, presencia en pantalla y efectos de alma cerca de bloques de almas o fuego de almas. §aCOSTO DE RENDIMIENTO: §abajo
 
-option.ENCHANTING_TABLE_EFFECTS=EFECTOS DE MESA DE ENCANTAMIENTOS
-option.ENCHANTING_TABLE_EFFECTS.comment=Activa suelos rúnicos mágicos y partículas flotantes al estar cerca de una Mesa de Encantamientos. §aCOSTO DE RENDIMIENTO: §abajo
+option.ENCHANTING_TABLE_EFFECTS=EFECTOS DE MESA DE ENCANTAMIENTO
+option.ENCHANTING_TABLE_EFFECTS.comment=Activa suelos rúnicos mágicos y partículas flotantes al acercarse a una Mesa de Encantamiento. §aCOSTO DE RENDIMIENTO: §abajo
+
+option.LENS_FLARE_MODE=MODO DE DESTELLO DE LENTE
+option.LENS_FLARE_MODE.comment=Selecciona el estilo del destello de lente. 0 lo desactiva, 1 es el destello actual, 2 añade más anillos y 3 añade rayos más intensos. §aCOSTO DE RENDIMIENTO: §abajo
+    value.LENS_FLARE_MODE.0=APAGADO
+    value.LENS_FLARE_MODE.1=1
+    value.LENS_FLARE_MODE.2=2 - ANILLOS
+    value.LENS_FLARE_MODE.3=3 - RAYOS
 
 option.CINEMATIC_MODE=Modo Cinemático
-option.CINEMATIC_MODE.comment=Agrega barras de cine, desaturación, oscurecimiento y viñeta para un aspecto cinematográfico. §cCOSTO DE RENDIMIENTO: §abajo
+option.CINEMATIC_MODE.comment=Añade barras de letterbox, desaturación, oscurecimiento y viñeta para una apariencia cinemática. §cCOSTO DE RENDIMIENTO: §abajo
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+screen.Night_Options=Opciones Nocturnas
+screen.Night_Options.comment=Controles rápidos para luz de luna, brillo nocturno, linterna, estrellas y detalles del cielo nocturno.
+option.RAIN_ON_GLASS_MODE=Lluvia sobre Vidrio
+option.RAIN_ON_GLASS_MODE.comment=Apagado desactiva el overlay de lluvia sobre vidrio. Ligero mantiene las gotas simples actuales. §aCOSTO DE RENDIMIENTO: §abajo                                      §fRealista añade gotas variadas, rastros curvos y fusión procedural. §aCOSTO DE RENDIMIENTO: §emedio
+value.RAIN_ON_GLASS_MODE.0=Apagado
+value.RAIN_ON_GLASS_MODE.1=Ligero
+value.RAIN_ON_GLASS_MODE.2=Realista
+option.PULSAR=Púlsar
+option.PULSAR.comment=Añade un pequeño púlsar azul distante en el cielo nocturno con un haz giratorio errático. §aCOSTO DE RENDIMIENTO: §abajo
+option.PULSAR_BRIGHTNESS=Brillo del Púlsar
+option.PULSAR_SIZE=Tamaño del Púlsar
+option.PLANET_0=Planeta 1
+option.PLANET_1=Planeta con Anillos
+option.PLANET_2=Planeta 3
+option.PLANET_3=Planeta 4
+option.PLANET_4=Planeta 5
+screen.Rain_on_Glass_Light_Settings=Modo Ligero
+screen.Rain_on_Glass_Realistic_Settings=Modo Realista
+option.RAIN_REALISTIC_SPEED=Velocidad de Flujo Realista
+option.RAIN_REALISTIC_DENSITY=Densidad de Gotas Realista
+option.RAIN_REALISTIC_DROP_SIZE=Tamaño de Gotas Realista
+option.RAIN_REALISTIC_TRAILS=Peso del Rastro Realista
+option.RAIN_REALISTIC_HIGHLIGHTS=Reflejos Realistas
+option.RAIN_LIGHT_BRIGHTNESS=Brillo del Modo Ligero
+screen.Space_Objects_Settings=Objetos Espaciales
+screen.Space_Objects_Settings.comment=Objetos del cielo exclusivos del Overworld: planetas, meteoros y púlsar.
+screen.End_Options=Opciones del End
+screen.End_Options.comment=Atmósfera exclusiva del End, sombras, espiral del vacío, dragones, agujero negro, meteoros y planetas.
+option.BRIGHT_ORES_INTENSITY=Intensidad de Minerales Brillantes
+option.PLANETS=Planetas del Overworld
+option.PLANETS.comment=Muestra planetas configurables en el cielo del Overworld.
+option.PLANET_BRIGHTNESS=Brillo de los Planetas
+option.PLANET_QUALITY=Calidad de los Planetas
+value.PLANET_QUALITY.0=Baja
+value.PLANET_QUALITY.1=Media
+value.PLANET_QUALITY.2=Alta
+option.METEORS_OW=METEOROS
+value.METEORS_OW.0=Apagado
+value.METEORS_OW.1=Encendido
+option.METEORS_OW.comment=Muestra meteoros en el cielo del Overworld. §aCOSTO DE RENDIMIENTO: §abajo
+option.METEOR_COUNT=Cantidad de Meteoros
+option.METEOR_RARITY=Rareza de los Meteoros
+option.METEOR_SPEED=Velocidad de los Meteoros
+option.END_PLANETS=Planetas del End
+option.END_PLANETS.comment=Muestra planetas configurables solo en el cielo del End. §aCOSTO DE RENDIMIENTO: §abajo
+option.END_PLANET_0=Planeta 1
+option.END_PLANET_1=Planeta 2
+option.END_PLANET_2=Planeta 3
+option.END_PLANET_3=Planeta 4
+option.END_PLANET_4=Planeta 5
+option.END_METEORS=Meteoros del End
+option.END_METEORS.comment=Muestra meteoros solo en el cielo del End. §aCOSTO DE RENDIMIENTO: §abajo
+option.END_BLACK_HOLE=Agujero Negro del End
+option.END_BLACK_HOLE.comment=Muestra el agujero negro del End y su disco de acreción.
+option.END_BH_JETS=Jets del Agujero Negro del End
+option.END_BH_JETS.comment=Añade jets de energía verticales al agujero negro del End.
+option.BLACK_HOLE_SIZE=Tamaño del Agujero Negro
+option.BLACK_HOLE_LENSING=Lente Gravitacional del Agujero Negro
+value.PLANETS.0=Apagado
+value.PLANETS.1=Encendido
+value.PLANET_0.0=Apagado
+value.PLANET_0.1=Encendido
+value.PLANET_1.0=Apagado
+value.PLANET_1.1=Encendido
+value.PLANET_2.0=Apagado
+value.PLANET_2.1=Encendido
+value.PLANET_3.0=Apagado
+value.PLANET_3.1=Encendido
+value.PLANET_4.0=Apagado
+value.PLANET_4.1=Encendido
+value.END_PLANETS.0=Apagado
+value.END_PLANETS.1=Encendido
+value.END_PLANET_0.0=Apagado
+value.END_PLANET_0.1=Encendido
+value.END_PLANET_1.0=Apagado
+value.END_PLANET_1.1=Encendido
+value.END_PLANET_2.0=Apagado
+value.END_PLANET_2.1=Encendido
+value.END_PLANET_3.0=Apagado
+value.END_PLANET_3.1=Encendido
+value.END_PLANET_4.0=Apagado
+value.END_PLANET_4.1=Encendido
+value.END_METEORS.0=Apagado
+value.END_METEORS.1=Encendido
+value.END_BLACK_HOLE.0=Apagado
+value.END_BLACK_HOLE.1=Encendido
+value.END_BH_JETS.0=Apagado
+value.END_BH_JETS.1=Encendido
+option.END_PLANET_BRIGHTNESS=Brillo de los Planetas del End
+option.END_PLANET_QUALITY=Calidad de los Planetas del End
+value.END_PLANET_QUALITY.0=Baja
+value.END_PLANET_QUALITY.1=Media
+value.END_PLANET_QUALITY.2=Alta
+option.END_METEOR_COUNT=Cantidad de Meteoros del End
+option.END_METEOR_RARITY=Rareza de los Meteoros del End
+option.END_METEOR_SPEED=Velocidad de los Meteoros del End
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 
 

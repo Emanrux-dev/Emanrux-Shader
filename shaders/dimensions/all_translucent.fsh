@@ -47,6 +47,12 @@ in DATA {
 		flat int NAMETAG;
 	#endif
 
+	#if defined ENTITIES
+		flat int ENTITY_SHADOW_LIKE;
+	#endif
+
+	flat int blockID;
+
 	#ifdef LARGE_WAVE_DISPLACEMENT
 		vec3 largeWaveDisplacementNormal;
 	#endif
@@ -117,6 +123,7 @@ uniform float near;
 uniform float sunElevation;
 
 uniform int isEyeInWater;
+uniform float is_soul_burning;
 uniform float rainStrength;
 uniform float skyIntensityNight;
 uniform float skyIntensity;
@@ -369,6 +376,36 @@ float ld(float dist) {
     return (2.0 * near) / (far + near - dist * (far - near));
 }
 
+bool IsGlassVoxelId(uint id) {
+	return (id >= 301u && id <= 318u) || id == 516u;
+}
+
+bool IsColoredGlassVoxelId(uint id) {
+	return id >= 302u && id <= 317u;
+}
+
+vec3 GlassTintSrgbFromId(uint id, vec3 fallback) {
+	vec3 tint = fallback;
+	if (id == 302u) tint = vec3(0.04, 0.04, 0.05);
+	else if (id == 303u) tint = vec3(0.10, 0.18, 0.95);
+	else if (id == 304u) tint = vec3(0.42, 0.24, 0.12);
+	else if (id == 305u) tint = vec3(0.00, 0.68, 0.78);
+	else if (id == 306u) tint = vec3(0.25, 0.27, 0.30);
+	else if (id == 307u) tint = vec3(0.18, 0.55, 0.10);
+	else if (id == 308u) tint = vec3(0.34, 0.72, 1.00);
+	else if (id == 309u) tint = vec3(0.66, 0.66, 0.64);
+	else if (id == 310u) tint = vec3(0.56, 0.98, 0.13);
+	else if (id == 311u) tint = vec3(0.84, 0.22, 0.90);
+	else if (id == 312u) tint = vec3(1.00, 0.54, 0.07);
+	else if (id == 313u) tint = vec3(1.00, 0.54, 0.76);
+	else if (id == 314u) tint = vec3(0.46, 0.17, 0.82);
+	else if (id == 315u) tint = vec3(0.95, 0.08, 0.06);
+	else if (id == 316u) tint = vec3(0.96);
+	else if (id == 317u) tint = vec3(1.00, 0.90, 0.10);
+	else if (id == 318u) tint = vec3(0.22, 0.24, 0.26);
+	return clamp(tint, vec3(0.02), vec3(1.0));
+}
+
 
 
 #ifdef RIPPLE_WATER
@@ -382,11 +419,17 @@ float ld(float dist) {
 
 #include "/lib/Shadows.glsl"
 
+vec2 EndShadowKernelOffset(int i, int samples) {
+	if (i == 0 || samples <= 1) return vec2(0.0);
+
+	float fi = float(i);
+	float radius = sqrt((fi - 0.5) / float(samples - 1));
+	float angle = fi * 2.39996323;
+	return vec2(cos(angle), sin(angle)) * radius;
+}
+
 float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDistFade, float noise, in vec3 geoNormals){
 
-	// if(maxDistFade <= 0.0) return 1.0;
-
-	// setup shadow projection
 	#ifdef OVERWORLD_SHADER
 		#ifdef CUSTOM_MOON_ROTATION
 			vec3 projectedShadowPosition = mat3(customShadowMatrixSSBO) * playerPos  + customShadowMatrixSSBO[3].xyz;
@@ -398,7 +441,6 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 
 		projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 
-		// un-distort
 		#ifdef DISTORT_SHADOWMAP
 			float distortFactor = calcDistort(projectedShadowPosition.xy);
 			projectedShadowPosition.xy *= distortFactor;
@@ -416,64 +458,61 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 		applyShadowBias(shadowPos.xyz, playerPos, geoNormals);
 		shadowPos =  customShadowPerspectiveSSBO * shadowPos;
 		vec3 projectedShadowPosition = shadowPos.xyz / shadowPos.w;
+		projectedShadowPosition.z -= 0.0035;
 	#endif
 
-
-
-	// hamburger
 	projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5);
 	
 	float shadowmap = 0.0;
 	vec3 translucentTint = vec3(0.0);
 
 	#ifdef BASIC_SHADOW_FILTER
-		int samples = int(SHADOW_FILTER_SAMPLE_COUNT * 0.5);
 		#ifdef END_SHADER
-			float rdMul = 52.0*distortFactor*d0k;
+			int samples = END_SHADOW_FILTER_SAMPLES;
+			float rdMul = END_SHADOW_FILTER_RADIUS * distortFactor * d0k;
 		#else
+			int samples = int(SHADOW_FILTER_SAMPLE_COUNT * 0.5);
 			float rdMul = 2.4*distortFactor*d0k;
 		#endif
 
 		for(int i = 0; i < samples; i++){
-			vec2 offsetS = CleanSample(i, samples - 1, noise) * rdMul;
-			projectedShadowPosition.xy += offsetS;
+			#ifdef END_SHADER
+				vec2 offsetS = EndShadowKernelOffset(i, samples) * rdMul;
+			#else
+				vec2 offsetS = CleanSample(i, samples - 1, noise) * rdMul;
+			#endif
+			vec3 sampleShadowPosition = projectedShadowPosition;
+			sampleShadowPosition.xy += offsetS;
 	#else
 		int samples = 1;
+		vec3 sampleShadowPosition = projectedShadowPosition;
 	#endif
 	
 
-		#ifdef TRANSLUCENT_COLORED_SHADOWS
+		#if defined TRANSLUCENT_COLORED_SHADOWS
 
-			// determine when opaque shadows are overlapping translucent shadows by getting the difference of opaque depth and translucent depth
-			float shadowDepthDiff = pow(clamp((texture(shadowtex1, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
+			float shadowDepthDiff = pow(clamp((texture(shadowtex1, sampleShadowPosition).x - sampleShadowPosition.z) * 2.0,0.0,1.0),2.0);
 
-			// get opaque shadow data to get opaque data from translucent shadows.
-			float opaqueShadow = texture(shadowtex0, projectedShadowPosition).x;
+			float opaqueShadow = texture(shadowtex0, sampleShadowPosition).x;
 			shadowmap += max(opaqueShadow, shadowDepthDiff);
 
-			// get translucent shadow data
-			vec4 translucentShadow = texture(shadowcolor0, projectedShadowPosition.xy);
+			vec4 translucentShadow = texture(shadowcolor0, sampleShadowPosition.xy);
 
-			// this curve simply looked the nicest. it has no other meaning.
 			float shadowAlpha = pow(1.0 - pow(translucentShadow.a,5.0),0.2);
 
-			// normalize the color to remove luminance, and keep the hue. remove all opaque color.
-			// mulitply shadow alpha to shadow color, but only on surfaces facing the lightsource. this is a tradeoff to protect subsurface scattering's colored shadow tint from shadow bias on the back of the caster.
 			translucentShadow.rgb = max(normalize(translucentShadow.rgb + 0.0001), max(opaqueShadow, 1.0-shadowAlpha)) * shadowAlpha;
 
-			// make it such that full alpha areas that arent in a shadow have a value of 1.0 instead of 0.0
 			translucentTint += mix(translucentShadow.rgb, vec3(1.0),  opaqueShadow*shadowDepthDiff);
 
 		#else
-			shadowmap += texture(shadow, projectedShadowPosition).x;
+			shadowmap += texture(shadow, sampleShadowPosition).x;
 		#endif
 
 	#ifdef BASIC_SHADOW_FILTER
 		}
 	#endif
 
-	#ifdef TRANSLUCENT_COLORED_SHADOWS
-		// tint the lightsource color with the translucent shadow color
+	#if defined TRANSLUCENT_COLORED_SHADOWS
 		directLightColor *= mix(vec3(1.0), translucentTint.rgb / samples, maxDistFade);
 	#endif
 
@@ -481,15 +520,11 @@ float ComputeShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDis
 
 	#ifdef END_SHADER
 	float r = length(projectedShadowPosition.xy - vec2(0.5));
-	if (r < 0.5 && abs(projectedShadowPosition.z) < 1.0) {
-		shadowResult *= smoothstep(0.5, 0.25, r);
-	} else {
-		shadowResult = 0.0;
-	}
+	float endMapFade = (1.0 - smoothstep(0.44, 0.50, r)) * step(0.0, projectedShadowPosition.z) * step(projectedShadowPosition.z, 1.0);
+	shadowResult = mix(1.0, shadowResult, endMapFade);
 	#endif
 
 	return shadowResult;
-	// return mix(1.0, shadowmap / samples, maxDistFade);
 }
 #endif
 
@@ -579,16 +614,391 @@ float SSRT_FlashLight_Shadows(vec3 viewPos, bool depthCheck, vec3 lightDir, floa
 }
 #endif
 
-//////////////////////////////VOID MAIN//////////////////////////////
-//////////////////////////////VOID MAIN//////////////////////////////
-//////////////////////////////VOID MAIN//////////////////////////////
-//////////////////////////////VOID MAIN//////////////////////////////
-//////////////////////////////VOID MAIN//////////////////////////////
+#ifdef RAIN_ON_GLASS
+float RG_N(float t) {
+    return fract(sin(t * 12345.564) * 7658.76);
+}
+vec3 RG_N13(float p) {
+    vec3 p3 = fract(vec3(p) * vec3(0.1031, 0.11369, 0.13787));
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract(vec3((p3.x+p3.y)*p3.z, (p3.x+p3.z)*p3.y, (p3.y+p3.z)*p3.x));
+}
+
+float RG_S(float a, float b, float t) {
+    return clamp((t - a) / (b - a), 0.0, 1.0);
+}
+
+float RG_Saw(float b, float t) {
+    float s = smoothstep(0.0, b, t);
+    return s * smoothstep(1.0, b, t);
+}
+
+float RG_Bubble(vec2 p, vec2 center, float radius) {
+    float d = length(p - center);
+    float outer = smoothstep(radius, radius * 0.7, d);
+    float inner = smoothstep(radius * 0.5, radius * 0.8, d);
+    float rim = outer * inner;
+    vec2 hlOfs = center + vec2(-radius * 0.3, radius * 0.35);
+    float hl = smoothstep(radius * 0.25, 0.0, length(p - hlOfs)) * 0.9;
+    return rim * 0.55 + hl;
+}
+
+vec4 RG_ComputeRealisticDrop(vec2 uv) {
+    vec2 p = vec2(uv.x, 1.0 - uv.y) - 0.5;
+    
+    float elongation = 1.0 + clamp(-p.y * 2.0, 0.0, 1.0) * 2.8;
+    vec2 p_body = vec2(p.x * elongation, p.y - 0.02);
+    
+    float topRadius = 2.5;
+    float bottomRadius = 4.5;
+    float verticalBias = mix(topRadius, bottomRadius, clamp(p.y * -2.0 + 0.5, 0.0, 1.0));
+    float bodyD = length(p_body * vec2(verticalBias, 2.2));
+    float bodyMask = smoothstep(0.52, 0.32, bodyD);
+    
+    float pendantY = 0.38;
+    float pendantBulge = smoothstep(0.0, pendantY, -p.y) * 0.12;
+    vec2 p_pendant = vec2(p.x * (5.5 + pendantBulge * 8.0), (p.y + 0.28) * 6.5);
+    float pendantD = length(p_pendant);
+    float pendantMask = smoothstep(0.55, 0.28, pendantD);
+    
+    float mask = clamp(bodyMask + pendantMask * 0.7, 0.0, 1.0);
+    
+    vec2 n2_body = p_body * vec2(verticalBias, 2.2) / 0.52;
+    vec2 n2_pendant = p_pendant / 0.55;
+    vec2 n2 = mix(n2_body, n2_pendant, pendantMask * (1.0 - bodyMask));
+    n2 = clamp(n2 * 0.85, -1.0, 1.0);
+    float z = sqrt(clamp(1.0 - dot(n2, n2), 0.0, 1.0));
+    vec3 n = normalize(vec3(n2, z + 0.001));
+    
+    float fresnel = pow(1.0 - clamp(n.z, 0.0, 1.0), 4.0);
+    float rim = fresnel * mask * 2.5;
+    
+    vec2 hlOfs = vec2(-0.06, 0.12);
+    float hlD = length((p - hlOfs) * vec2(9.0, 7.0));
+    float highlight = smoothstep(0.20, 0.0, hlD) * 2.8;
+    
+    vec2 hl2Ofs = vec2(0.05, -0.15);
+    float hl2D = length((p - hl2Ofs) * vec2(12.0, 10.0));
+    float highlight2 = smoothstep(0.15, 0.0, hl2D) * 1.2;
+    
+    float causticD = length(p_body * vec2(4.0, 1.8));
+    float caustic = smoothstep(0.55, 0.25, causticD) * smoothstep(0.08, 0.35, causticD) * 0.28;
+    
+    float shadowD = length((p - vec2(0.0, -0.18)) * vec2(7.0, 5.0));
+    float shadow = smoothstep(0.15, 0.55, shadowD) * 0.7 * bodyMask;
+    
+    float interiorGrad = smoothstep(0.52, 0.05, bodyD) * 0.18;
+    float extras = rim + highlight + highlight2 + caustic + interiorGrad - shadow;
+    
+    return vec4(n.xy, extras, mask);
+}
+vec2 RG_DropPositionAt(float ti, float nx, float uniqueSeed, float pathType) {
+    float fall = clamp(ti * ti * 0.6 + ti * 0.4, 0.0, 1.0);
+    float y = 1.05 - fall * 1.18;
+
+    float xOffset = 0.0;
+    if (pathType < 0.25) {
+        float lean = (fract(uniqueSeed * 2.1) - 0.5) * 2.2;
+        xOffset = lean * fall;
+    } else if (pathType < 0.50) {
+        float seg1 = (fract(uniqueSeed * 3.3) - 0.5) * 1.8;
+        float seg2 = (fract(uniqueSeed * 5.1) - 0.5) * 1.8;
+        xOffset = mix(seg1 * clamp(fall * 3.0, 0.0, 1.0), seg2 * fall, smoothstep(0.25, 0.55, fall));
+    } else if (pathType < 0.75) {
+        float k1 = (fract(uniqueSeed * 4.7) - 0.5) * 1.6;
+        float k2 = (fract(uniqueSeed * 6.3) - 0.5) * 1.4;
+        float k3 = (fract(uniqueSeed * 8.1) - 0.5) * 1.2;
+        xOffset = (k1 * smoothstep(0.0, 0.3, fall) + k2 * smoothstep(0.3, 0.6, fall) + k3 * smoothstep(0.6, 0.9, fall)) * fall;
+    } else {
+        float diag = (fract(uniqueSeed * 9.1) - 0.5) * 1.5;
+        float wobble = sin(fall * 5.0 + uniqueSeed * 6.28) * 0.18;
+        xOffset = (diag + wobble) * fall;
+    }
+
+    return vec2(nx + xOffset, y);
+}
+
+vec2 RG_ProjectFlowUV(vec2 uv, vec2 flowDir) {
+    vec2 f = normalize(flowDir + vec2(0.0001, 0.0));
+    vec2 side = vec2(-f.y, f.x);
+    return vec2(dot(uv, side), dot(uv, f));
+}
+
+float RG_FaceInteriorMask(vec2 uv, float width) {
+    return smoothstep(width, width + 0.025, uv.x) *
+           smoothstep(width, width + 0.025, uv.y) *
+           smoothstep(width, width + 0.025, 1.0 - uv.x) *
+           smoothstep(width, width + 0.025, 1.0 - uv.y);
+}
+
+vec3 RG_GlassTintFromId(uint id, vec3 fallback) {
+    vec3 tint = fallback;
+    if (id == 302u) tint = vec3(0.03, 0.03, 0.04);
+    else if (id == 303u) tint = vec3(0.08, 0.14, 0.80);
+    else if (id == 304u) tint = vec3(0.36, 0.20, 0.10);
+    else if (id == 305u) tint = vec3(0.00, 0.58, 0.68);
+    else if (id == 306u) tint = vec3(0.20, 0.22, 0.24);
+    else if (id == 307u) tint = vec3(0.14, 0.46, 0.08);
+    else if (id == 308u) tint = vec3(0.30, 0.64, 0.95);
+    else if (id == 309u) tint = vec3(0.58, 0.58, 0.56);
+    else if (id == 310u) tint = vec3(0.48, 0.86, 0.10);
+    else if (id == 311u) tint = vec3(0.72, 0.18, 0.78);
+    else if (id == 312u) tint = vec3(0.96, 0.48, 0.06);
+    else if (id == 313u) tint = vec3(0.96, 0.48, 0.68);
+    else if (id == 314u) tint = vec3(0.38, 0.14, 0.68);
+    else if (id == 315u) tint = vec3(0.78, 0.06, 0.04);
+    else if (id == 316u) tint = vec3(0.92);
+    else if (id == 317u) tint = vec3(0.98, 0.86, 0.08);
+    else if (id == 318u) tint = vec3(0.18, 0.20, 0.22);
+    return clamp(tint, vec3(0.02), vec3(1.0));
+}
+
+float RG_StaticDrops(vec2 uv, float t);
+
+#ifdef IS_LPV_ENABLED
+bool RG_IsRainOpenAbove(ivec3 voxelPos) {
+    for (int stepY = 1; stepY <= 64; stepY++) {
+        uint columnID = imageLoad(imgVoxelMask, voxelPos + ivec3(0, stepY, 0)).r;
+        if (columnID == 0u || IsGlassVoxelId(columnID)) continue;
+        return false;
+    }
+    return true;
+}
+
+bool RG_IsRainReachableFromSide(ivec3 glassVoxelPos, ivec3 sideStep) {
+    for (int sideDist = 1; sideDist <= 10; sideDist++) {
+        ivec3 sidePos = glassVoxelPos + sideStep * sideDist;
+        uint sideID = imageLoad(imgVoxelMask, sidePos).r;
+        if (sideID != 0u && !IsGlassVoxelId(sideID)) return false;
+        if (RG_IsRainOpenAbove(sidePos)) return true;
+    }
+    return false;
+}
+
+bool RG_IsGlassRainExposed(ivec3 glassVoxelPos, vec3 worldNormal) {
+    bool exposed = RG_IsRainOpenAbove(glassVoxelPos);
+    exposed = exposed || RG_IsRainOpenAbove(glassVoxelPos + ivec3( 1, 0, 0));
+    exposed = exposed || RG_IsRainOpenAbove(glassVoxelPos + ivec3(-1, 0, 0));
+    exposed = exposed || RG_IsRainOpenAbove(glassVoxelPos + ivec3( 0, 0, 1));
+    exposed = exposed || RG_IsRainOpenAbove(glassVoxelPos + ivec3( 0, 0,-1));
+    exposed = exposed || RG_IsRainReachableFromSide(glassVoxelPos, ivec3( 1, 0, 0));
+    exposed = exposed || RG_IsRainReachableFromSide(glassVoxelPos, ivec3(-1, 0, 0));
+    exposed = exposed || RG_IsRainReachableFromSide(glassVoxelPos, ivec3( 0, 0, 1));
+    exposed = exposed || RG_IsRainReachableFromSide(glassVoxelPos, ivec3( 0, 0,-1));
+    return exposed;
+}
+#endif
+
+vec4 RG_DropInCell(vec2 cellOffset, vec2 st, float t, vec2 grid, vec2 baseID, out float outSize, out float outSpeed, out float outSlip) {
+    vec2 id = baseID + cellOffset;
+    vec3 n = RG_N13(id.x * 35.2 + id.y * 2376.1 + 7.77);
+    vec3 m = RG_N13(id.x * 71.5 + id.y * 119.3 + 3.14);
+
+    float sizeRand = m.x;
+    float sizeClass = sizeRand < 0.55 ? 0.62 : (sizeRand < 0.88 ? 1.0 : 1.45);
+    float speed = (0.25 + n.y * 0.35) * mix(0.65, 1.1, smoothstep(0.5, 1.6, sizeClass));
+
+    float ti = fract(t * speed + n.z);
+
+    float pausePos = 0.2 + m.y * 0.5;
+    float pauseLen = 0.05 + m.z * 0.1;
+    float inPause = step(pausePos, ti) * step(ti, pausePos + pauseLen);
+    float effectiveTi = ti - inPause * (ti - pausePos) * 0.98;
+
+    float uniqueSeed = n.x * 17.3 + m.z * 31.7 + id.x * 0.137 + id.y * 0.091;
+    float pathType = fract(uniqueSeed * 7.3);
+
+    vec2 pos = RG_DropPositionAt(effectiveTi, n.x, uniqueSeed, pathType);
+    vec2 posPrev = RG_DropPositionAt(max(effectiveTi - 0.018, 0.0), n.x, uniqueSeed, pathType);
+    vec2 vel = (pos - posPrev) / 0.018;
+
+    outSize = sizeClass;
+    outSpeed = speed;
+    outSlip = smoothstep(0.05, 0.5, effectiveTi);
+
+    return vec4(pos, vel);
+}
+vec3 RG_DropLayer2(vec2 uv, float t) {
+    uv.y += t * 0.58;
+    vec2 grid = vec2(12.0, 6.0);
+    vec2 id0 = floor(uv * grid);
+    uv.y += RG_N(id0.x) * 0.85;
+    vec2 id = floor(uv * grid);
+    vec2 st = fract(uv * grid);
+
+    float mySize, mySpeed, mySlip;
+    vec4 myDrop = RG_DropInCell(vec2(0.0), st, t, grid, id, mySize, mySpeed, mySlip);
+    vec2 myPos = myDrop.xy;
+    vec2 myVel = myDrop.zw;
+
+    vec3 n2 = RG_N13(id.x * 91.3 + id.y * 57.7 + 1.23);
+    vec2 neighbor1Pos = vec2(n2.x + sin(t * (0.42 + n2.y * 0.3) + n2.z * 6.28) * 0.08,
+                            1.05 - fract(t * (0.38 + n2.z * 0.4) + n2.x) * 1.18) + vec2(-1.0, 0.0);
+    vec2 delta1 = neighbor1Pos - myPos;
+    float prox1 = smoothstep(0.38, 0.10, length(delta1 * vec2(1.0, 0.7)));
+    float sizeN1 = n2.x < 0.55 ? 0.62 : (n2.x < 0.88 ? 1.0 : 1.55);
+
+    vec3 n3 = RG_N13(id.x * 43.1 + id.y * 113.9 + 5.77);
+    vec2 neighbor2Pos = vec2(n3.x + sin(t * (0.45 + n3.y * 0.35) + n3.z * 6.28) * 0.08,
+                            1.05 - fract(t * (0.41 + n3.z * 0.38) + n3.x) * 1.18) + vec2(1.0, 0.0);
+    vec2 delta2 = neighbor2Pos - myPos;
+    float prox2 = smoothstep(0.38, 0.10, length(delta2 * vec2(1.0, 0.7)));
+    float sizeN2 = n3.x < 0.55 ? 0.62 : (n3.x < 0.88 ? 1.0 : 1.55);
+
+    float mergeBoost = prox1 * (sizeN1 + mySize) * 0.28 + prox2 * (sizeN2 + mySize) * 0.28;
+    vec2 mergePull = normalize(delta1 + vec2(0.0001)) * prox1 * 0.03 + normalize(delta2 + vec2(0.0001)) * prox2 * 0.03;
+    float effectiveSize = mySize + mergeBoost * 0.6;
+    vec2 finalPos = myPos + mergePull * mergeBoost;
+
+    vec2 drop_local_uv = (st - finalPos) / max(effectiveSize * 0.95, 0.4) + 0.5;
+    float velMag = length(myVel);
+    vec2 velDir = velMag > 0.0001 ? myVel / velMag : vec2(0.0, -1.0);
+    float rotBlend = smoothstep(0.05, 0.35, velMag);
+    float c = mix(1.0, -velDir.y, rotBlend);
+    float s = mix(0.0, -velDir.x, rotBlend);
+    vec2 q = drop_local_uv - 0.5;
+    vec2 rotatedUV = vec2(q.x * c + q.y * s, q.x * -s + q.y * c) + 0.5;
+    vec4 drop = RG_ComputeRealisticDrop(rotatedUV);
+    float dropMask = drop.w * smoothstep(1.7, 0.55, length((st - finalPos) / max(effectiveSize, 0.4)));
+
+    float trailMaxLen = 0.5 + effectiveSize * 0.25;
+    float trailFront = trailMaxLen * mySlip;
+
+    vec2 fromDrop = st - finalPos;
+    vec2 trailDir = -velDir;
+    float alongTrail = dot(fromDrop, trailDir);
+    float xDist = abs(fromDrop.x * trailDir.y - fromDrop.y * trailDir.x);
+    float inTrailRange = step(0.001, alongTrail) * step(alongTrail, trailFront);
+    float relY = clamp(alongTrail / max(trailFront, 0.001), 0.0, 1.0);
+
+    float trailWidth = (0.035 + effectiveSize * 0.045) * smoothstep(1.0, 0.0, relY);
+    float core = (1.0 - smoothstep(0.0, trailWidth, xDist)) * inTrailRange;
+    float film = (1.0 - smoothstep(trailWidth, trailWidth * 2.2, xDist)) * 0.2 * inTrailRange;
+
+    float fadeOut = smoothstep(1.0, 0.6, relY);
+    float trailOpacity = fadeOut * mySlip * (0.4 + effectiveSize * 0.4);
+
+    float trail = (core * 0.8 + film) * trailOpacity;
+
+    float headFilm = (1.0 - smoothstep(0.0, 0.10 + effectiveSize * 0.04, length(fromDrop + velDir * (0.05 + effectiveSize * 0.03)))) * 0.18 * effectiveSize * mySlip;
+
+    return vec3(max(dropMask, headFilm * 0.5), trail, drop.z * dropMask + trail * 0.04);
+}
+
+vec3 RG_HorizontalDropShape(vec2 uv, vec2 dropPos, vec2 velDir, float sizeClass, float slip, float edgeFade, float dropScale) {
+    vec2 diff = uv - dropPos;
+    float menuScale = mix(0.70, 3.50, smoothstep(0.005, 1.75, dropScale));
+    float radius = mix(0.006, 0.016, clamp((sizeClass - 0.62) / 0.83, 0.0, 1.0)) * menuScale;
+    float dropDist = length(diff / max(radius, 0.001));
+    vec2 localUV = diff / max(radius * 2.15, 0.001) + 0.5;
+
+    velDir = length(velDir) > 0.001 ? normalize(velDir) : vec2(0.0, -1.0);
+    float rc = -velDir.y;
+    float rs = -velDir.x;
+    vec2 q = localUV - 0.5;
+    vec2 rotatedUV = vec2(q.x * rc + q.y * rs, q.x * -rs + q.y * rc) + 0.5;
+    vec4 drop = RG_ComputeRealisticDrop(rotatedUV);
+    float dropMask = drop.w * smoothstep(1.10, 0.48, dropDist) * edgeFade;
+
+    vec2 trailDir = -velDir;
+    float alongTrail = dot(diff, trailDir);
+    float xDist = abs(diff.x * trailDir.y - diff.y * trailDir.x);
+    float trailMaxLen = (0.010 + radius * 0.25) * slip;
+    float inTrailRange = step(0.001, alongTrail) * step(alongTrail, trailMaxLen);
+    float relY = clamp(alongTrail / max(trailMaxLen, 0.001), 0.0, 1.0);
+    float trailWidth = (0.002 + radius * 0.08) * smoothstep(1.0, 0.0, relY);
+    float core = (1.0 - smoothstep(0.0, trailWidth, xDist)) * inTrailRange;
+    float film = (1.0 - smoothstep(trailWidth, trailWidth * 2.4, xDist)) * 0.025 * inTrailRange;
+    float trail = (core * 0.05 + film) * smoothstep(1.0, 0.45, relY) * slip * edgeFade;
+
+    return vec3(dropMask, trail, drop.z * dropMask + trail * 0.002);
+}
+
+vec3 RG_DropsHorizontalFace(vec2 faceUV, vec2 faceID, float t, float radialSign, float l0, float l1, float l2, float density, float dropScale) {
+    vec3 result = vec3(0.0);
+    vec2 center = vec2(0.5);
+    float layerWeight = max(l1, l2);
+    
+    float densityCutoff = mix(0.70, 0.98, clamp(density, 0.0, 1.0));
+    int iterations = (radialSign > 0.0) ? 112 : 72;
+
+    for (int i = 0; i < iterations; i++) {
+        float fi = float(i);
+        vec3 n = RG_N13(dot(faceID, vec2(37.13, 91.71)) + fi * 19.19 + 4.7);
+        vec3 m = RG_N13(dot(faceID, vec2(13.57, 61.33)) + fi * 31.41 + 8.2);
+        if (RG_N(fi + dot(faceID, vec2(11.7, 29.3))) > densityCutoff) continue;
+
+        float sizeClass = m.x < 0.56 ? 0.62 : (m.x < 0.88 ? 1.0 : 1.45);
+        float speed = (0.48 + n.y * 0.52) * mix(0.85, 1.35, smoothstep(0.5, 1.6, sizeClass));
+        float ti = fract(t * speed + n.z);
+        float eased = ti * ti * (3.0 - 2.0 * ti);
+        float slip = smoothstep(0.03, 0.30, ti);
+
+        vec2 dropPos;
+        vec2 velDir;
+        float edgeFade;
+        if (radialSign > 0.0) {
+            vec2 start = mix(vec2(n.x, m.y), center + (vec2(n.x, m.y) - 0.5) * 0.40, 0.45);
+            start = clamp(start, vec2(0.12), vec2(0.88));
+            velDir = start - center;
+            velDir = length(velDir) > 0.001 ? normalize(velDir) : normalize(vec2(n.x - 0.5, m.z - 0.5) + vec2(0.001, 0.0));
+            float distToEdge = 1.0 - length(start - center) * 1.414;
+            vec2 sideCurve = vec2(-velDir.y, velDir.x) * sin(ti * 6.28 + m.z * 6.28) * (0.015 + 0.02 * m.y) * smoothstep(0.05, 0.80, ti);
+            dropPos = start + velDir * distToEdge * eased + sideCurve;
+            edgeFade = RG_FaceInteriorMask(dropPos, -0.05) * smoothstep(1.0, 0.75, ti);
+        } else {
+            float side = floor(n.x * 4.0);
+            float ec = 0.1 + 0.8 * m.y;
+            vec2 ep = (side < 1.0) ? vec2(ec, -0.05) : ((side < 2.0) ? vec2(1.05, ec) : ((side < 3.0) ? vec2(ec, 1.05) : vec2(-0.05, ec)));
+            vec2 target = center + (vec2(m.z, n.y) - 0.5) * 0.25;
+            velDir = normalize(target - ep);
+            dropPos = mix(ep, target, eased) + vec2(-velDir.y, velDir.x) * sin(ti * 6.28 + m.z * 6.28) * 0.015 * smoothstep(0.02, 0.75, ti);
+            edgeFade = RG_FaceInteriorMask(dropPos, -0.07) * smoothstep(0.0, 0.15, ti) * smoothstep(1.0, 0.85, ti);
+        }
+
+        vec3 d = RG_HorizontalDropShape(faceUV, dropPos, velDir, sizeClass, slip, edgeFade, dropScale);
+        result.x = max(result.x, d.x * layerWeight);
+        result.y = max(result.y, d.y * layerWeight * 0.02);
+        result.z += d.z * layerWeight;
+    }
+
+    result.x = smoothstep(0.12, 0.90, result.x);
+    return result;
+}
+
+float RG_StaticDrops(vec2 uv, float t) {
+    uv *= 40.0;
+    vec2 id = floor(uv);
+    uv = fract(uv) - 0.5;
+    vec3 n = RG_N13(id.x * 107.45 + id.y * 3543.654);
+    vec2 p = (n.xy - 0.5) * 0.7;
+    float d = length(uv - p);
+    float fade = RG_Saw(0.025, fract(t * 0.1 + n.z));
+    float sizeVar = 0.25 + n.z * 0.15;
+    return smoothstep(sizeVar + 0.10, 0.0, d) * fract(n.z * 10.0) * fade;
+}
+
+vec3 RG_Drops(vec2 uv, float t, float l0, float l1, float l2) {
+    float s = RG_StaticDrops(uv, t) * l0;
+    vec3 m1 = RG_DropLayer2(uv * 0.85, t) * l1;
+    vec3 m2 = RG_DropLayer2(uv * 1.40 + 3.77, t * 1.12 + 0.5) * l2;
+    vec3 m3 = RG_DropLayer2(uv * 1.90 + vec2(5.31, 2.14), t * 0.88 + 1.1) * l1 * 0.6;
+    float c = smoothstep(0.22, 1.0, s + m1.x + m2.x + m3.x);
+    float trail = max(max(m1.y, m2.y), m3.y);
+    trail = max(trail, smoothstep(0.15, 0.95, s) * 0.12);
+    return vec3(c, trail, m1.z + m2.z + m3.z * 0.6);
+}
+
+#endif
 
 /* RENDERTARGETS:2,7,11,14 */
 
 
 void main() {
+	#if defined ENTITIES
+		if (ENTITY_SHADOW_LIKE == 1) discard;
+	#endif
+
 bool isInternalFace = false;
 if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	{
 	
@@ -638,7 +1048,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 	bool isPanelGlass = false;
 	#ifdef IS_LPV_ENABLED
 	uint _panelCheck = imageLoad(imgVoxelMask, ivec3(floor(GetLpvPosition(_glassCheckPos)))).r;
-	isPanelGlass = (_panelCheck >= 301u && _panelCheck <= 317u) || _panelCheck == 516u;
+	isPanelGlass = IsGlassVoxelId(_panelCheck);
 	#endif
 	bool isReflective = abs(MATERIALS - 0.1) < 0.01 || isWater || isReflectiveEntity;
 	if(isPanelGlass) isReflective = true;
@@ -661,37 +1071,7 @@ if (gl_FragCoord.x * texelSize.x < 1.0  && gl_FragCoord.y * texelSize.y < 1.0 )	
 		gl_FragData[0] = texture(gtexture, lmtexcoord.xy, mipmapBias) * color;
 		#endif
 
-	#ifdef FIRE_COLOR_CORRECTION
-		if (isEntity) {
-			#ifdef IS_LPV_ENABLED
-				vec3 fireHSV = RgbToHsv(toLinear(gl_FragData[0].rgb));
-				if (fireHSV.y > 0.4 && fireHSV.z > 0.6 && fireHSV.x < 0.16 && fireHSV.x > 0.02) {
-					vec3 _lpvPos = GetLpvPosition(feetPlayerPos);
-					
-					vec3 lpvCol = SampleLpvLinear(_lpvPos).rgb;
-					bool isBlueLight = lpvCol.b > lpvCol.r * 1.1 && lpvCol.b > 0.003;
-					
-					bool soulFireFound = false;
-					ivec3 vPosBase = ivec3(floor(_lpvPos));
-					// Larger radius: ensures fire stays blue for the full burn duration
-					// even when the entity moves away from the soul fire source block
-					for(int x = -4; x <= 4; x++) {
-						for(int z = -4; z <= 4; z++) {
-							for(int y = -4; y <= 4; y++) {
-								uint b = imageLoad(imgVoxelMask, vPosBase + ivec3(x,y,z)).r;
-								if (b == 244u || b == 245u || b == 246u) soulFireFound = true;
-							}
-						}
-					}
-					if (soulFireFound || isBlueLight) {
-						vec3 sRgbHSV = RgbToHsv(gl_FragData[0].rgb);
-						gl_FragData[0].rgb = HsvToRgb(vec3(0.53, min(sRgbHSV.y * 0.75, 0.8), min(sRgbHSV.z * 1.8, 1.0)));
-						lightmap.x *= 0.05;
-					}
-				}
-			#endif
-		}
-	#endif
+
 #ifdef IS_LPV_ENABLED
 	if(normalMat.w < 0.99 && normalMat.w > 0.05) {
 		vec3 lpvPos = GetLpvPosition(_glassCheckPos);
@@ -703,12 +1083,12 @@ uint _aPZ = imageLoad(imgVoxelMask, voxelPos + ivec3( 0,0, 1)).r;
 uint _aNZ = imageLoad(imgVoxelMask, voxelPos + ivec3( 0,0,-1)).r;
 uint _aPY = imageLoad(imgVoxelMask, voxelPos + ivec3( 0, 1,0)).r;
 uint _aNY = imageLoad(imgVoxelMask, voxelPos + ivec3( 0,-1,0)).r;
-bool adjPX = (_aPX >= 301u && _aPX <= 317u) || _aPX == 516u;
-bool adjNX = (_aNX >= 301u && _aNX <= 317u) || _aNX == 516u;
-bool adjPZ = (_aPZ >= 301u && _aPZ <= 317u) || _aPZ == 516u;
-bool adjNZ = (_aNZ >= 301u && _aNZ <= 317u) || _aNZ == 516u;
-bool adjPY = (_aPY >= 301u && _aPY <= 317u) || _aPY == 516u;
-bool adjNY = (_aNY >= 301u && _aNY <= 317u) || _aNY == 516u;
+bool adjPX = IsGlassVoxelId(_aPX);
+bool adjNX = IsGlassVoxelId(_aNX);
+bool adjPZ = IsGlassVoxelId(_aPZ);
+bool adjNZ = IsGlassVoxelId(_aNZ);
+bool adjPY = IsGlassVoxelId(_aPY);
+bool adjNY = IsGlassVoxelId(_aNY);
 
 		vec3 worldNormal = normalMatWorld;
 		vec3 absNormal = abs(worldNormal);
@@ -749,9 +1129,26 @@ bool adjNY = (_aNY >= 301u && _aNY <= 317u) || _aNY == 516u;
 
 		uint voxelID = imageLoad(imgVoxelMask, voxelPos).r;
 		#ifdef CONNECTED_GLASS
-		if((voxelID >= 301u && voxelID <= 317u) || voxelID == 516u) {
-			float minAlpha = (voxelID == 301u || voxelID == 516u) ? 1.0/255.0 : 0.15;
-			gl_FragData[0].a = mix(minAlpha, gl_FragData[0].a, borderMask);
+		#ifndef END_SHADER
+		if(IsGlassVoxelId(voxelID)) {
+			if (voxelID == 301u || voxelID == 516u) {
+				if (isInternalFace) discard;
+				gl_FragData[0].a = mix(0.0, gl_FragData[0].a, borderMask);
+				gl_FragData[0].rgb *= borderMask;
+				if (borderMask < 0.01) gl_FragData[0].a = 0.0;
+			} else if (IsColoredGlassVoxelId(voxelID) || voxelID == 318u) {
+				float minAlpha = (voxelID == 318u) ? 0.32 : 0.15;
+				gl_FragData[0].a = mix(minAlpha, gl_FragData[0].a, borderMask);
+			}
+		}
+		#endif
+		#endif
+		#ifdef END_SHADER
+		if(IsGlassVoxelId(voxelID)) {
+			isPanelGlass = true;
+			float stableGlassAlpha = (voxelID == 301u || voxelID == 516u) ? 0.18 : 0.34;
+			if (voxelID == 318u) stableGlassAlpha = 0.42;
+			gl_FragData[0].a = max(gl_FragData[0].a, stableGlassAlpha);
 		}
 		#endif
 	}
@@ -767,7 +1164,7 @@ bool adjNY = (_aNY >= 301u && _aNY <= 317u) || _aNY == 516u;
 		gl_FragData[0] = _color;
 	#endif
 
-	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
+	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND && !defined ENTITIES && !defined BLOCKENTITIES
 		gl_FragData[0].a *= sqrt(chunkFade);
 
 		#ifdef TAA
@@ -1117,7 +1514,7 @@ bool adjNY = (_aNY >= 301u && _aNY <= 317u) || _aNY == 516u;
 		Direct_lighting = lightColors * endPhase * end_NdotL * fogShadow;
 
 		#ifdef END_ISLAND_LIGHT
-			vec3 WsunVec = normalize(vec3(END_LIGHT_POS)-(feetPlayerPos+cameraPosition));
+			vec3 WsunVec = END_LIGHT_DIR;
 			vec3 DirectLightColor = vec3(VORTEX_LIGHT_COL_R,VORTEX_LIGHT_COL_G,VORTEX_LIGHT_COL_B);
 
 			float NdotL = clamp((-15 + dot(normal, normalize(WsunVec*mat3(gbufferModelViewInverse)))*255.0) / 240.0  ,0.0,1.0);
@@ -1133,13 +1530,20 @@ bool adjNY = (_aNY >= 301u && _aNY <= 317u) || _aNY == 516u;
 			// Shadows = mix(LM_shadowMapFallback, Shadows, shadowMapFalloff2);
 			Shadows *= mix(LM_shadowMapFallback,1.0,shadowMapFalloff2);
 
-			Direct_lighting = DirectLightColor * NdotL * Shadows;
+			Direct_lighting = DirectLightColor * end_NdotL * Shadows;
 		#endif
 
 		vec3 AmbientLightColor = vec3(AmbientLightEnd_R,AmbientLightEnd_G,AmbientLightEnd_B) ;
 			
-		Indirect_lighting = AmbientLightColor + 0.7 * AmbientLightColor * dot(worldSpaceNormal, normalize(feetPlayerPos));
+		vec3 endIndirectLightDir = normalize(-lightPos);
+		float endIndirectFacing = clamp(dot(worldSpaceNormal, endIndirectLightDir) * 0.5 + 0.5, 0.0, 1.0);
+		Indirect_lighting = AmbientLightColor * mix(0.34, 1.0, endIndirectFacing);
 		Indirect_lighting *= 0.1;
+		if ((blockID >= BLOCK_GLASS && blockID <= BLOCK_GLASS_YELLOW) || blockID == 516) {
+			Direct_lighting *= 0.35;
+			Indirect_lighting = max(Indirect_lighting, AmbientLightColor * 0.09 + vec3(0.025, 0.018, 0.045));
+			gl_FragData[0].a = max(gl_FragData[0].a, 0.22);
+		}
 	#endif
 
 	///////////////////////// BLOCKLIGHT LIGHTING OR LPV LIGHTING OR FLOODFILL COLORED LIGHTING
@@ -1194,77 +1598,81 @@ vec3 FinalColor = (Indirect_lighting + Direct_lighting) * Albedo;
 	///////////////////////////////////////////////////////
 
 bool hasFrost = false;
+float frostAmount = 0.0;
 
 #ifdef FROST_ON_GLASS
 #ifdef IS_LPV_ENABLED
-if(isSnowBiome && rainStrength > 0.05)
+float frostWeather = max(rainStrength, snowAmount);
+bool frostGlassSurface = isPanelGlass || ((blockID >= 301 && blockID <= 318) || blockID == 516);
+if(isSnowBiome && frostWeather > 0.02 && frostGlassSurface)
 {
-    uint frostID = imageLoad(imgVoxelMask,
-    ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld*0.1)))).r;
-    if((frostID >= 301u && frostID <= 317u) || frostID == 516u)
-    {
 
-            vec3 worldNormal = normalMatWorld;
-            vec2 frostUV;
-            if(abs(worldNormal.x) > 0.5) frostUV = worldPosStable.zy;
-            else if(abs(worldNormal.z) > 0.5) frostUV = worldPosStable.xy;
-            else frostUV = worldPosStable.xz;
-            frostUV *= 0.25;
-            float growth = rainStrength; 
-            float frost = 0.0;
-            if (!isInternalFace) {
-                for(int i=0;i<12;i++)
-                {
-                    float scale = 10.0 + float(i)*6.0;
-                    vec2 uv = frostUV * scale;
-                    vec2 cell = floor(uv);
-                    vec2 local = fract(uv) - 0.5;
-                    float rand = fract(sin(dot(cell,vec2(127.1,311.7)))*43758.5453);
-                    float rand2 = fract(sin(dot(cell,vec2(269.5,183.3)))*23421.631);
-                float angle = rand * 6.28318;
-                vec2 dir = vec2(cos(angle),sin(angle));
-                float branch = dot(local,dir);
-                float thickness = abs(dot(local,vec2(-dir.y,dir.x)));
-                float trunk =
-                smoothstep(0.03,0.0,thickness) *
-                smoothstep(-0.1,0.4,branch);
-                float side =
-                sin(branch*18.0 + rand*20.0) *
-                smoothstep(0.02,0.0,thickness*1.8);
-                float crystal = trunk + side*0.5;
-                float subAngle = angle + rand2*2.0 - 1.0;
-                vec2 subDir = vec2(cos(subAngle),sin(subAngle));
-                float subBranch = dot(local,subDir);
-                float subThick = abs(dot(local,vec2(-subDir.y,subDir.x)));
-                float subCrystal =
-                smoothstep(0.02,0.0,subThick) *
-                smoothstep(0.0,0.35,subBranch);
-                crystal += subCrystal*0.6;
-                frost = max(frost,crystal*(1.0-float(i)*0.07));
-            }
-            frost *= growth;
-            float baseFill = texture(noisetex, frostUV * 0.3).r * 0.25 * growth;
-            frost = max(frost, baseFill);
-            }
-            if(frost > 0.02)
-            {
-                hasFrost = true;
-                vec3 frostColor = mix(vec3(0.7,0.8,1.0), vec3(0.95,0.97,1.0), frost);
-                vec3 lighting = Direct_lighting + Indirect_lighting;
-                float sparkle = pow(max(0.0, dot(normalMatWorld, vec3(0.0, 1.0, 0.0))), 24.0); // Now world-space
-                vec3 final = frostColor*(lighting + sparkle*0.6);
-                FinalColor = mix(FinalColor, final, frost*0.85);
-                if(frost > 0.3) gl_FragData[0].a = min(gl_FragData[0].a, 0.95);    
-                gl_FragData[0].a = max(gl_FragData[0].a,frost*0.7);
-            }
+    vec3 worldNormal = normalMatWorld;
+    vec2 frostUV;
+    if(abs(worldNormal.x) > 0.5)      frostUV = worldPosStable.zy;
+    else if(abs(worldNormal.z) > 0.5) frostUV = worldPosStable.xy;
+    else                               frostUV = worldPosStable.xz;
+    frostUV *= 0.18;
 
+    float frostWeatherFast = pow(frostWeather, 2.5);
+    float growth = clamp(frostWeatherFast * 1.4, 0.0, 0.95);
+    float frost = 0.0;
+    if (!isInternalFace) {
+        for(int i = 0; i < 12; i++)
+        {
+            float scale = 10.0 + float(i) * 6.0;
+            vec2 uv = frostUV * scale;
+            vec2 cell = floor(uv);
+            vec2 local = fract(uv) - 0.5;
+            float rand  = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+            float rand2 = fract(sin(dot(cell, vec2(269.5, 183.3))) * 23421.631);
+            float angle = rand * 6.28318;
+            vec2 dir = vec2(cos(angle), sin(angle));
+            float branch    = dot(local, dir);
+            float thickness = abs(dot(local, vec2(-dir.y, dir.x)));
+            float trunk =
+                smoothstep(0.03, 0.0, thickness) *
+                smoothstep(-0.1, 0.4, branch);
+            float side =
+                sin(branch * 18.0 + rand * 20.0) *
+                smoothstep(0.02, 0.0, thickness * 1.8);
+            float crystal = trunk + side * 0.5;
+            float subAngle = angle + rand2 * 2.0 - 1.0;
+            vec2 subDir = vec2(cos(subAngle), sin(subAngle));
+            float subBranch = dot(local, subDir);
+            float subThick  = abs(dot(local, vec2(-subDir.y, subDir.x)));
+            float subCrystal =
+                smoothstep(0.02, 0.0, subThick) *
+                smoothstep(0.0, 0.35, subBranch);
+            crystal += subCrystal * 0.6;
+            frost = max(frost, crystal * (1.0 - float(i) * 0.07));
+        }
+        frost *= growth;
+        float baseFill = texture(noisetex, frostUV * 0.3).r * 0.35 * growth;
+        frost = max(frost, baseFill);
     }
+    if(frost > 0.02)
+    {
+        hasFrost = true;
+        frostAmount = clamp(frost, 0.0, 1.0);
+
+        vec3 frostColor = mix(vec3(0.34, 0.43, 0.55), vec3(0.72, 0.82, 0.92), frostAmount);
+        vec3 final = frostColor * (Indirect_lighting + Direct_lighting + 0.02);
+	FinalColor = mix(FinalColor, max(FinalColor * 0.88, final), frostAmount * 0.80);
+	FinalColor += frostColor * frostAmount * 0.028;
+	gl_FragData[0].a = max(gl_FragData[0].a, frostAmount * 0.68);
+    }
+
 }
 #endif
 #endif
 
+vec3 RainLighting = vec3(0.0);
 #ifdef RAIN_ON_GLASS
 	bool isDryBiomeLocal = isAridBiome;
+    vec2 rg_n = vec2(0.0);
+    float rg_drop = 0.0, rg_trail = 0.0;
+
 	#ifdef IS_LPV_ENABLED
 	if (!isDryBiomeLocal)
 	{
@@ -1283,106 +1691,127 @@ if(isSnowBiome && rainStrength > 0.05)
 		
 		#ifdef IS_LPV_ENABLED
 		uint _glassID = imageLoad(imgVoxelMask, ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)))).r;
-		if((_glassID >= 301u && _glassID <= 317u) || _glassID == 516u) {
+		if((_glassID >= 301u && _glassID <= 318u) || _glassID == 516u) {
 			vec2 dropUV = worldPos.xz;
 			if(_absNormal.x > 0.5) dropUV = worldPos.zy;
 			else if(_absNormal.z > 0.5) dropUV = worldPos.xy;
-			
-			vec2 scaledUV = dropUV * 8.0;
-			vec2 cellID = floor(scaledUV);
-			vec2 cellUV = fract(scaledUV);
-			float rand  = fract(sin(dot(cellID, vec2(127.1, 311.7))) * 43758.5453);
-			float rand2 = fract(sin(dot(cellID, vec2(269.5, 183.3))) * 12345.6789);
-			float rand3 = fract(sin(dot(cellID, vec2(53.7, 251.3))) * 77777.7777);
-			
-			if(rand3 < RAIN_DENSITY && lightmap.y > 0.78) {
-				bool isHorizontal = _absNormal.y > 0.5;
-				bool skipRain = false;
-				
-				ivec3 _voxPos = ivec3(floor(GetLpvPosition(feetPlayerPos - _worldNormal * 0.1)));
-				uint _adjPX = imageLoad(imgVoxelMask, _voxPos + ivec3( 1, 0, 0)).r;
-				uint _adjNX = imageLoad(imgVoxelMask, _voxPos + ivec3(-1, 0, 0)).r;
-				uint _adjPZ = imageLoad(imgVoxelMask, _voxPos + ivec3( 0, 0, 1)).r;
-				uint _adjNZ = imageLoad(imgVoxelMask, _voxPos + ivec3( 0, 0,-1)).r;
-				uint _adjPY = imageLoad(imgVoxelMask, _voxPos + ivec3( 0, 1, 0)).r;
-				uint _adjNY = imageLoad(imgVoxelMask, _voxPos + ivec3( 0,-1, 0)).r;
-				
-				bool hasPX = (_adjPX >= 301u && _adjPX <= 317u) || _adjPX == 516u;
-				bool hasNX = (_adjNX >= 301u && _adjNX <= 317u) || _adjNX == 516u;
-				bool hasPZ = (_adjPZ >= 301u && _adjPZ <= 317u) || _adjPZ == 516u;
-				bool hasNZ = (_adjNZ >= 301u && _adjNZ <= 317u) || _adjNZ == 516u;
-				bool hasPY = (_adjPY >= 301u && _adjPY <= 317u) || _adjPY == 516u;
-				bool hasNY = (_adjNY >= 301u && _adjNY <= 317u) || _adjNY == 516u;
 
-				if (isInternalFace) skipRain = true;
+			bool isHorizontal = _absNormal.y > 0.5;
+			bool skipRain = false;
+			if (isInternalFace) skipRain = true;
+			ivec3 glassVoxelPos = ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.1)));
+			if (!RG_IsGlassRainExposed(glassVoxelPos, _worldNormal)) skipRain = true;
 
-				if (!skipRain) {
+			if (!skipRain) {
+
+				float lightFactor = dot(Indirect_lighting + Direct_lighting, vec3(0.33)) + 0.05;
+				vec3 dropTint = vec3(0.92, 0.93, 0.95);
+				bool isColored = (_glassID >= 302u && _glassID <= 318u);
+				if (isColored) {
+					vec3 glassCol = GLASS_TINT_COLORS.rgb;
+					float l = dot(glassCol, vec3(0.2126, 0.7152, 0.0722));
+					dropTint = mix(vec3(l), glassCol * 1.5, 0.8);
+					dropTint = normalize(dropTint + 0.1) * 1.5;
+				}
+
+			#if RAIN_ON_GLASS_MODE == 1
+
+				vec2 scaledUV = dropUV * 8.0;
+				vec2 cellID = floor(scaledUV);
+				vec2 cellUV = fract(scaledUV);
+				float rand  = fract(sin(dot(cellID, vec2(127.1, 311.7))) * 43758.5453);
+				float rand2 = fract(sin(dot(cellID, vec2(269.5, 183.3))) * 12345.6789);
+				float rand3 = fract(sin(dot(cellID, vec2(53.7, 251.3))) * 77777.7777);
+
+				if(rand3 < RAIN_DENSITY) {
 					float speed = RAIN_SPEED + rand * RAIN_SPEED_VARIANCE;
 					float timeOffset = rand2 * 10.0;
 					float dropPos = 1.0 - fract(frameTimeCounter * speed * 0.1 + timeOffset);
-					
+
 					vec2 diff;
 					float tip;
-					
-					if (!isHorizontal) {
-						diff = cellUV - vec2(rand, dropPos);
-						diff.y *= (1.0 - RAIN_TRAIL);
-						float tipDist = abs(diff.x) + abs(diff.y + 0.04) * 0.5;
-						tip = smoothstep(0.0, 0.06, diff.y + 0.04) * smoothstep(0.1, 0.0, tipDist);
-					} else {
-						// Fixed flow logic for horizontal glass
-						vec2 posFract = fract(worldPos.xz) - 0.5;
-						float len = length(posFract);
-						vec2 flowDir = len > 0.001 ? posFract / len : vec2(0.0, 1.0);
-						if (_worldNormal.y < -0.5) flowDir = -flowDir;
-						
-						vec2 dropOrigin = vec2(rand, rand2);
-						vec2 dropPos2D = fract(dropOrigin + flowDir * (1.0 - dropPos));
-						diff = cellUV - dropPos2D;
-						
-						float p = dot(diff, flowDir);
-						vec2 perp = diff - flowDir * p;
-						p *= (1.0 - RAIN_TRAIL);
-						diff = perp + flowDir * p;
-						
-						float tipDist = length(perp) + abs(-p + 0.04) * 0.5;
-						tip = smoothstep(0.0, 0.06, -p + 0.04) * smoothstep(0.1, 0.0, tipDist);
-					}
-					
-					float dist = length(diff);
-					float drop = max(smoothstep(RAIN_SIZE, 0.0, dist), tip);
-					drop *= rainStrength;
-					
-					vec3 dropTint = vec3(0.92, 0.93, 0.95); // Very subtle neutral tint for real water/glass
-					bool isColored = (_glassID >= 302u && _glassID <= 317u);
-					
-					if (isColored) {
-						// Inherit color for colored glass only
-						vec3 glassCol = GLASS_TINT_COLORS.rgb;
-						float l = dot(glassCol, vec3(0.2126, 0.7152, 0.0722));
-						// Moderate saturation boost for visibility on colored glass
-						dropTint = mix(vec3(l), glassCol * 1.5, 0.8);
-						dropTint = normalize(dropTint + 0.1) * 1.5; 
-					}
+					diff = cellUV - vec2(rand, dropPos);
 
-					float lightFactor = dot(Indirect_lighting + Direct_lighting, vec3(0.33)) + 0.05;
-					vec3 dropHighlight = drop * RAIN_BRIGHTNESS * lightFactor * dropTint;
-					
-					FinalColor = mix(FinalColor, FinalColor * 0.7, drop * 0.4); // Darken drop body
-					FinalColor += dropHighlight; // Add highlight
-					
-					gl_FragData[0].a = max(gl_FragData[0].a, drop * 0.7);
+					diff.y *= (1.0 - RAIN_TRAIL);
+					tip = 0.0;
+
+					float dist = length(diff);
+					float drop = max(1.0 - smoothstep(0.0, RAIN_SIZE, dist), tip);
+					drop *= rainStrength;
+
+					RainLighting += drop * RAIN_LIGHT_BRIGHTNESS * lightFactor * dropTint * 1.5;
+					FinalColor = mix(FinalColor, FinalColor * 0.55, drop * 0.55);
+					gl_FragData[0].a = max(gl_FragData[0].a, drop * 0.82);
 				}
+#elif RAIN_ON_GLASS_MODE == 2
+    float rg_density = clamp(RAIN_REALISTIC_DENSITY, 0.10, 1.0);
+    float rg_size = clamp(RAIN_REALISTIC_DROP_SIZE * 0.42, 0.18, 1.15);
+    float rg_trailSetting = clamp(RAIN_REALISTIC_TRAILS, 0.0, 1.0);
+
+    float rg_static = smoothstep(0.60, 1.0, rg_density) * 0.08;
+    float rg_layer1 = smoothstep(0.16, 0.70, rg_density);
+    float rg_layer2 = smoothstep(0.00, 0.55, rg_density);
+
+    float rg_t = frameTimeCounter * RAIN_REALISTIC_SPEED * 0.30;
+
+    vec3 rg_c;
+    vec2 rg_e = vec2(0.0012, 0.0);
+    vec3 rg_dx, rg_dy;
+
+    if (isHorizontal) {
+        float radialSign = (_worldNormal.y > 0.5) ? 1.0 : -1.0;
+        vec2 rg_faceUV = fract(dropUV);
+        vec2 rg_faceID = floor(dropUV);
+        rg_c = RG_DropsHorizontalFace(rg_faceUV, rg_faceID, rg_t, radialSign, rg_static, rg_layer1, rg_layer2, rg_density, RAIN_REALISTIC_DROP_SIZE);
+        float h_val = (rg_c.x + rg_c.y * 0.15) * rainStrength;
+        vec2 h_grad = vec2(dFdx(h_val), dFdy(h_val)) * 450.0;
+        rg_dx = vec3(rg_c.x + h_grad.x, rg_c.y, rg_c.z);
+        rg_dy = vec3(rg_c.x + h_grad.y, rg_c.y, rg_c.z);
+    } else {
+        vec2 rg_uv_base = dropUV * vec2(1.0, 0.78);
+        vec2 rg_uv = rg_uv_base / rg_size * 0.55;
+        rg_c  = RG_Drops(rg_uv,            rg_t, rg_static, rg_layer1, rg_layer2);
+        rg_dx = RG_Drops(rg_uv + rg_e,     rg_t, 0.0, rg_layer1, rg_layer2);
+        rg_dy = RG_Drops(rg_uv + rg_e.yx,  rg_t, 0.0, rg_layer1, rg_layer2);
+    }
+
+    float rg_surface = rg_c.x + rg_c.y * 0.42;
+    rg_n = vec2(
+        rg_dx.x + rg_dx.y * 0.42 - rg_surface,
+        rg_dy.x + rg_dy.y * 0.42 - rg_surface
+    ) * 2.05;
+
+
+    rg_drop = rg_c.x * rainStrength;
+    float rg_extras = rg_c.z * rainStrength;
+    rg_trail = rg_c.y * rainStrength * rg_trailSetting;
+
+    float rimGrad = length(rg_n);
+    float rg_highlight = pow(clamp(rimGrad, 0.0, 1.0), 3.5) * RAIN_REALISTIC_HIGHLIGHTS * 0.90;
+    float internalGlow = (smoothstep(0.15, 0.85, rg_drop) + rg_trail * 0.38) * 0.38 * RAIN_REALISTIC_HIGHLIGHTS;
+
+    vec3 rg_tint = vec3(1.0);
+    if (_glassID >= 302u && _glassID <= 318u) {
+        vec3 glassTint = RG_GlassTintFromId(_glassID, GLASS_TINT_COLORS.rgb);
+        float tintLuma = dot(glassTint, vec3(0.2126, 0.7152, 0.0722));
+        rg_tint = mix(vec3(max(tintLuma, 0.08)), glassTint, 0.86);
+    }
+
+    float wetDarken = clamp(rg_trail * 0.16 + rg_drop * 0.06, 0.0, 0.24);
+    FinalColor = mix(FinalColor, FinalColor * mix(vec3(0.90), rg_tint, 0.24), wetDarken);
+
+    float rg_lightBoost = (_glassID == 301u) ? 0.18 : 0.08;
+    RainLighting += (rg_highlight * 1.10 + internalGlow * 0.95 + rg_extras * 0.7) * rg_tint * (Indirect_lighting + Direct_lighting + rg_lightBoost);
+
+    float rg_alphaMult = (_glassID == 301u) ? 0.16 : 0.28;
+    float rg_trailMult = (_glassID == 301u) ? 0.09 : 0.16;
+    gl_FragData[0].a = max(gl_FragData[0].a, max(rg_drop * rg_alphaMult, rg_trail * rg_trailMult));
+#endif
 			}
 		}
 		#endif
 	}
 #endif
-
-
-
-
-
 
 	#if EMISSIVE_TYPE == 2 || EMISSIVE_TYPE == 3
 		Emission(FinalColor, Albedo, SpecularTex.b);
@@ -1392,9 +1821,19 @@ if(isSnowBiome && rainStrength > 0.05)
 if(isNetherPortal) {
     float t = frameTimeCounter;
 
-    // --- Voxel-based Center Detection ---
     #ifdef IS_LPV_ENABLED
-    ivec3 baseVoxel = ivec3(floor(GetLpvPosition(_glassCheckPos)));
+    ivec3 baseVoxel = ivec3(floor(GetLpvPosition(feetPlayerPos)));
+    uint basePortalId = imageLoad(imgVoxelMask, baseVoxel).r;
+    if(basePortalId != 337u) {
+        ivec3 backVoxel = ivec3(floor(GetLpvPosition(feetPlayerPos - normalMatWorld * 0.45)));
+        uint backPortalId = imageLoad(imgVoxelMask, backVoxel).r;
+        if(backPortalId == 337u) {
+            baseVoxel = backVoxel;
+        } else {
+            ivec3 frontVoxel = ivec3(floor(GetLpvPosition(feetPlayerPos + normalMatWorld * 0.45)));
+            if(imageLoad(imgVoxelMask, frontVoxel).r == 337u) baseVoxel = frontVoxel;
+        }
+    }
     #else
     ivec3 baseVoxel = ivec3(0);
     #endif
@@ -1410,7 +1849,6 @@ if(isNetherPortal) {
     bool facingZ = abs(normalMatWorld.z) > 0.5;
     bool facingX = abs(normalMatWorld.x) > 0.5;
 
-    // Scan for edges (limit 21 blocks for vanilla portals)
     #ifdef IS_LPV_ENABLED
     if (facingZ) {
         for(int i=1; i<=21; i++) {
@@ -1461,15 +1899,25 @@ if(isNetherPortal) {
         spread = max(maxZ - minZ, maxY - minY) * 0.5 + 0.5;
     }
 
+    if(spread < 1.05) {
+        vec2 portalPlane = facingZ ? worldPos.xy : worldPos.zy;
+        const float fallbackSpan = 64.0;
+        vec2 fallbackCenter = floor(portalPlane / fallbackSpan) * fallbackSpan + fallbackSpan * 0.5;
+        p = portalPlane - fallbackCenter;
+        spread = fallbackSpan * 0.52;
+    }
+
+    float portalQuality = 1.0 - smoothstep(120.0, 240.0, length(feetPlayerPos));
     float dist = length(p);
     float angle = atan(p.y, p.x);
 
-    // Dynamic density: tighter for small portals, original for big ones
     float twist = mix(4.5, 1.5, smoothstep(1.5, 4.0, spread));
+    twist *= mix(0.72, 1.0, portalQuality);
     angle += (t * 0.6) + (dist * twist);
     vec2 polarP = vec2(cos(angle), sin(angle)) * dist;
 
     float noiseDensity = mix(4.0, 2.0, smoothstep(1.5, 4.0, spread));
+    noiseDensity *= mix(0.58, 1.0, portalQuality);
     float noise = 0.5 + 0.5 * sin(polarP.x * noiseDensity + t) * cos(polarP.y * noiseDensity - t);
     noise += 0.25 * sin(dist * (noiseDensity * 2.0) - t * 1.5);
     noise = clamp(noise, 0.0, 1.0);
@@ -1486,7 +1934,7 @@ if(isNetherPortal) {
 
     float stars = fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
     stars = smoothstep(0.997, 1.0, stars);
-    finalPortal += stars * 1.5 * darkCenter;
+    finalPortal += stars * mix(0.55, 1.5, portalQuality) * darkCenter;
 
     finalPortal *= 0.7;
     FinalColor = mix(FinalColor, finalPortal, 0.98);
@@ -1524,7 +1972,7 @@ if(isNetherPortal) {
 		#endif
 		
 		float roughness = specularValues.r; 
-
+		
 		if(UnchangedAlpha <= 0.0 && !isReflective) f0 = 0.0;
 		if(isPanelGlass) {
 			f0 = 0.1;
@@ -1547,14 +1995,15 @@ if(isNetherPortal) {
 			
 			gl_FragData[0].a = gl_FragData[0].a + (1.0-gl_FragData[0].a) * reflectance;
 		
-			// invert the alpha blending darkening on the color so you can interpolate between diffuse and specular and keep buffer blending
-			gl_FragData[0].rgb = clamp(specularReflections / gl_FragData[0].a * 0.1,0.0,65000.0);
+			gl_FragData[0].rgb = clamp(specularReflections / max(gl_FragData[0].a, 0.045) * 0.1, 0.0, 65000.0);
+			gl_FragData[0].rgb += RainLighting * 0.1;
 			
 		}else{
-			gl_FragData[0].rgb = clamp(FinalColor * 0.1,0.0,65000.0);
+			gl_FragData[0].rgb = clamp(FinalColor / max(gl_FragData[0].a, 0.045) * 0.1, 0.0, 65000.0);
+			gl_FragData[0].rgb += RainLighting * 0.1;
 		}
 	#else
-		gl_FragData[0].rgb = FinalColor*0.1;
+		gl_FragData[0].rgb = (FinalColor / max(gl_FragData[0].a, 0.045) + RainLighting) * 0.1;
 	#endif
 
 	#if defined ENTITIES && !defined COLORWHEEL
@@ -1601,7 +2050,15 @@ if(isNetherPortal) {
 
 	float weatherMask = 1.0;
 	if (MATERIALS > 0.05 && MATERIALS < 0.9) weatherMask = 0.0; // Mark translucents as 'non-solid' for rain occlusion
-	gl_FragData[3] = vec4(weatherMask, 1, encodeVec2(lightmap.x, lightmap.y), 1);
+	#if defined RAIN_ON_GLASS && RAIN_ON_GLASS_MODE == 2
+		if (rg_drop + rg_trail > 0.01) {
+			gl_FragData[3] = vec4(clamp(rg_n * 0.5 + 0.5, 0.0, 1.0), rg_drop, rg_trail);
+		} else {
+			gl_FragData[3] = vec4(weatherMask, 1, encodeVec2(lightmap.x, lightmap.y), 1);
+		}
+	#else
+		gl_FragData[3] = vec4(weatherMask, 1, encodeVec2(lightmap.x, lightmap.y), 1);
+	#endif
 
 	#if defined ENTITIES && defined IS_IRIS && !defined COLORWHEEL
 		if(NAMETAG > 0) {

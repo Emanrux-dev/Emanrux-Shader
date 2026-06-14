@@ -330,9 +330,6 @@ vec2 CleanVoxelSample(
 
 float ComputeVoxelShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDistFade, float noise, in vec3 geoNormals){
 
-	// if(maxDistFade <= 0.0) return 1.0;
-
-	// setup shadow projection
 	#ifdef OVERWORLD_SHADER
 		#ifdef CUSTOM_MOON_ROTATION
 			vec3 projectedShadowPosition = mat3(customShadowMatrixSSBO) * playerPos  + customShadowMatrixSSBO[3].xyz;
@@ -344,7 +341,6 @@ float ComputeVoxelShadowMap(inout vec3 directLightColor, vec3 playerPos, float m
 
 		projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 
-		// un-distort
 		#ifdef DISTORT_SHADOWMAP
 			float distortFactor = calcDistort(projectedShadowPosition.xy);
 			projectedShadowPosition.xy *= distortFactor;
@@ -364,62 +360,61 @@ float ComputeVoxelShadowMap(inout vec3 directLightColor, vec3 playerPos, float m
 		vec3 projectedShadowPosition = shadowPos.xyz / shadowPos.w;
 	#endif
 
-
-
-	// hamburger
 	projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5);
 	
 	float shadowmap = 0.0;
 	vec3 translucentTint = vec3(0.0);
 
 	#ifdef BASIC_SHADOW_FILTER
-		int samples = int(SHADOW_FILTER_SAMPLE_COUNT * 0.5);
 		#ifdef END_SHADER
-			float rdMul = 52.0*d0k;
+			int samples = END_SHADOW_FILTER_SAMPLES;
+			float rdMul = END_SHADOW_FILTER_RADIUS * d0k;
 		#else
+			int samples = int(SHADOW_FILTER_SAMPLE_COUNT * 0.5);
 			float rdMul = 2.4*distortFactor*d0k;
 		#endif
 
 		for(int i = 0; i < samples; i++){
-			vec2 offsetS = CleanVoxelSample(i, samples - 1, noise) * rdMul;
-			projectedShadowPosition.xy += offsetS;
+			#ifdef END_SHADER
+				float fi = float(i);
+				float stableRadius = i == 0 ? 0.0 : sqrt((fi - 0.5) / float(samples - 1));
+				float stableAngle = fi * 2.39996323;
+				vec2 offsetS = vec2(cos(stableAngle), sin(stableAngle)) * stableRadius * rdMul;
+			#else
+				vec2 offsetS = CleanVoxelSample(i, samples - 1, noise) * rdMul;
+			#endif
+			vec3 sampleShadowPosition = projectedShadowPosition;
+			sampleShadowPosition.xy += offsetS;
 	#else
 		int samples = 1;
+		vec3 sampleShadowPosition = projectedShadowPosition;
 	#endif
 	
 
-		#ifdef TRANSLUCENT_COLORED_SHADOWS
+		#if defined TRANSLUCENT_COLORED_SHADOWS
 
-			// determine when opaque shadows are overlapping translucent shadows by getting the difference of opaque depth and translucent depth
-			float shadowDepthDiff = pow(clamp((texture(shadowtex1HW, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
+			float shadowDepthDiff = pow(clamp((texture(shadowtex1HW, sampleShadowPosition).x - sampleShadowPosition.z) * 2.0,0.0,1.0),2.0);
 
-			// get opaque shadow data to get opaque data from translucent shadows.
-			float opaqueShadow = texture(shadowtex0HW, projectedShadowPosition).x;
+			float opaqueShadow = texture(shadowtex0HW, sampleShadowPosition).x;
 			shadowmap += max(opaqueShadow, shadowDepthDiff);
 
-			// get translucent shadow data
-			vec4 translucentShadow = texture(shadowcolor0, projectedShadowPosition.xy);
+			vec4 translucentShadow = texture(shadowcolor0, sampleShadowPosition.xy);
 
-			// this curve simply looked the nicest. it has no other meaning.
 			float shadowAlpha = pow(1.0 - pow(translucentShadow.a,5.0),0.2);
 
-			// normalize the color to remove luminance, and keep the hue. remove all opaque color.
-			// mulitply shadow alpha to shadow color, but only on surfaces facing the lightsource. this is a tradeoff to protect subsurface scattering's colored shadow tint from shadow bias on the back of the caster.
 			translucentShadow.rgb = max(normalize(translucentShadow.rgb + 0.0001), max(opaqueShadow, 1.0-shadowAlpha)) * shadowAlpha;
 
-			// make it such that full alpha areas that arent in a shadow have a value of 1.0 instead of 0.0
 			translucentTint += mix(translucentShadow.rgb, vec3(1.0),  opaqueShadow*shadowDepthDiff);
 
 		#else
-			shadowmap += texture(shadowtex0HW, projectedShadowPosition.xy).x;
+			shadowmap += texture(shadowtex0HW, sampleShadowPosition).x;
 		#endif
 
 	#ifdef BASIC_SHADOW_FILTER
 		}
 	#endif
 
-	#ifdef TRANSLUCENT_COLORED_SHADOWS
-		// tint the lightsource color with the translucent shadow color
+	#if defined TRANSLUCENT_COLORED_SHADOWS
 		directLightColor *= mix(vec3(1.0), translucentTint.rgb / samples, maxDistFade);
 	#endif
 
@@ -427,15 +422,11 @@ float ComputeVoxelShadowMap(inout vec3 directLightColor, vec3 playerPos, float m
 
 	#ifdef END_SHADER
 	float r = length(projectedShadowPosition.xy - vec2(0.5));
-	if (r < 0.5 && abs(projectedShadowPosition.z) < 1.0) {
-		shadowResult *= smoothstep(0.5, 0.25, r);
-	} else {
-		shadowResult = 0.0;
-	}
+	float endMapFade = (1.0 - smoothstep(0.44, 0.50, r)) * step(0.0, projectedShadowPosition.z) * step(projectedShadowPosition.z, 1.0);
+	shadowResult = mix(1.0, shadowResult, endMapFade);
 	#endif
 
 	return shadowResult;
-	// return mix(1.0, shadowmap / samples, maxDistFade);
 }
 
 bool planeIntersect(inout vec3 currPos, in float worldOffset, inout vec3 voxelPos, in vec3 reflectedVector, inout vec3 stepAxis, in vec3 normal)
@@ -1101,9 +1092,6 @@ vec2 CleanPhotonicsSample(
 
 float ComputePhotonicsShadowMap(inout vec3 directLightColor, vec3 playerPos, float maxDistFade, float noise, in vec3 geoNormals){
 
-	// if(maxDistFade <= 0.0) return 1.0;
-
-	// setup shadow projection
 	#ifdef OVERWORLD_SHADER
 		#ifdef CUSTOM_MOON_ROTATION
 			vec3 projectedShadowPosition = mat3(customShadowMatrixSSBO) * playerPos  + customShadowMatrixSSBO[3].xyz;
@@ -1115,7 +1103,6 @@ float ComputePhotonicsShadowMap(inout vec3 directLightColor, vec3 playerPos, flo
 
 		projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 
-		// un-distort
 		#ifdef DISTORT_SHADOWMAP
 			float distortFactor = calcDistort(projectedShadowPosition.xy);
 			projectedShadowPosition.xy *= distortFactor;
@@ -1135,62 +1122,61 @@ float ComputePhotonicsShadowMap(inout vec3 directLightColor, vec3 playerPos, flo
 		vec3 projectedShadowPosition = shadowPos.xyz / shadowPos.w;
 	#endif
 
-
-
-	// hamburger
 	projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5);
 	
 	float shadowmap = 0.0;
 	vec3 translucentTint = vec3(0.0);
 
 	#ifdef BASIC_SHADOW_FILTER
-		int samples = int(SHADOW_FILTER_SAMPLE_COUNT * 0.5);
 		#ifdef END_SHADER
-			float rdMul = 52.0*d0k;
+			int samples = END_SHADOW_FILTER_SAMPLES;
+			float rdMul = END_SHADOW_FILTER_RADIUS * d0k;
 		#else
+			int samples = int(SHADOW_FILTER_SAMPLE_COUNT * 0.5);
 			float rdMul = 2.4*distortFactor*d0k;
 		#endif
 
 		for(int i = 0; i < samples; i++){
-			vec2 offsetS = CleanPhotonicsSample(i, samples - 1, noise) * rdMul;
-			projectedShadowPosition.xy += offsetS;
+			#ifdef END_SHADER
+				float fi = float(i);
+				float stableRadius = i == 0 ? 0.0 : sqrt((fi - 0.5) / float(samples - 1));
+				float stableAngle = fi * 2.39996323;
+				vec2 offsetS = vec2(cos(stableAngle), sin(stableAngle)) * stableRadius * rdMul;
+			#else
+				vec2 offsetS = CleanPhotonicsSample(i, samples - 1, noise) * rdMul;
+			#endif
+			vec3 sampleShadowPosition = projectedShadowPosition;
+			sampleShadowPosition.xy += offsetS;
 	#else
 		int samples = 1;
+		vec3 sampleShadowPosition = projectedShadowPosition;
 	#endif
 	
 
-		#ifdef TRANSLUCENT_COLORED_SHADOWS
+		#if defined TRANSLUCENT_COLORED_SHADOWS
 
-			// determine when opaque shadows are overlapping translucent shadows by getting the difference of opaque depth and translucent depth
-			float shadowDepthDiff = pow(clamp((texture(shadowtex1HW, projectedShadowPosition).x - projectedShadowPosition.z) * 2.0,0.0,1.0),2.0);
+			float shadowDepthDiff = pow(clamp((texture(shadowtex1HW, sampleShadowPosition).x - sampleShadowPosition.z) * 2.0,0.0,1.0),2.0);
 
-			// get opaque shadow data to get opaque data from translucent shadows.
-			float opaqueShadow = texture(shadowtex0HW, projectedShadowPosition).x;
+			float opaqueShadow = texture(shadowtex0HW, sampleShadowPosition).x;
 			shadowmap += max(opaqueShadow, shadowDepthDiff);
 
-			// get translucent shadow data
-			vec4 translucentShadow = texture(shadowcolor0, projectedShadowPosition.xy);
+			vec4 translucentShadow = texture(shadowcolor0, sampleShadowPosition.xy);
 
-			// this curve simply looked the nicest. it has no other meaning.
 			float shadowAlpha = pow(1.0 - pow(translucentShadow.a,5.0),0.2);
 
-			// normalize the color to remove luminance, and keep the hue. remove all opaque color.
-			// mulitply shadow alpha to shadow color, but only on surfaces facing the lightsource. this is a tradeoff to protect subsurface scattering's colored shadow tint from shadow bias on the back of the caster.
 			translucentShadow.rgb = max(normalize(translucentShadow.rgb + 0.0001), max(opaqueShadow, 1.0-shadowAlpha)) * shadowAlpha;
 
-			// make it such that full alpha areas that arent in a shadow have a value of 1.0 instead of 0.0
 			translucentTint += mix(translucentShadow.rgb, vec3(1.0),  opaqueShadow*shadowDepthDiff);
 
 		#else
-			shadowmap += texture(shadowtex0HW, projectedShadowPosition).x;
+			shadowmap += texture(shadowtex0HW, sampleShadowPosition).x;
 		#endif
 
 	#ifdef BASIC_SHADOW_FILTER
 		}
 	#endif
 
-	#ifdef TRANSLUCENT_COLORED_SHADOWS
-		// tint the lightsource color with the translucent shadow color
+	#if defined TRANSLUCENT_COLORED_SHADOWS
 		directLightColor *= mix(vec3(1.0), translucentTint.rgb / samples, maxDistFade);
 	#endif
 
@@ -1198,15 +1184,11 @@ float ComputePhotonicsShadowMap(inout vec3 directLightColor, vec3 playerPos, flo
 
 	#ifdef END_SHADER
 	float r = length(projectedShadowPosition.xy - vec2(0.5));
-	if (r < 0.5 && abs(projectedShadowPosition.z) < 1.0) {
-		shadowResult *= smoothstep(0.5, 0.25, r);
-	} else {
-		shadowResult = 0.0;
-	}
+	float endMapFade = (1.0 - smoothstep(0.44, 0.50, r)) * step(0.0, projectedShadowPosition.z) * step(projectedShadowPosition.z, 1.0);
+	shadowResult = mix(1.0, shadowResult, endMapFade);
 	#endif
 
 	return shadowResult;
-	// return mix(1.0, shadowmap / samples, maxDistFade);
 }
 #endif
 #if defined PHOTONICS_INCLUDED && defined PHOTONICS && defined VOXEL_REFLECTIONS
@@ -1470,6 +1452,10 @@ vec3 doBlockLightLightingVoxel(
 			return vec4(0.0,0.0,0.0,1.0);
 		#endif
 
+		#if defined END_SHADER && (!defined TOGGLE_VL_FOG || END_FOG_LEVEL <= 0)
+			return vec4(0.0,0.0,0.0,1.0);
+		#endif
+
 		if(length(origin-endPos) < 0.001) return vec4(0.0,0.0,0.0,1.0);
 
 		const int SAMPLECOUNT = 3;
@@ -1523,9 +1509,11 @@ vec3 doBlockLightLightingVoxel(
 
 				density = plumeDensity + ceilingSmokeDensity;
 			#elif defined END_SHADER
-				float volumeDensity = fogShape(rayProgress + cameraPosition);
+				vec3 progressW = rayProgress + cameraPosition;
+				float endFog = EndFogAmount();
+				float volumeDensity = fogShape(progressW) * EndOuterIslandFogMultiplier(progressW);
 				float clearArea =  1.0-min(max(1.0 - length(rayProgress) / 100,0.0),1.0);
-				density = min(volumeDensity, clearArea*clearArea * END_STORM_DENSTIY);
+				density = min(volumeDensity, clearArea*clearArea * END_STORM_DENSTIY * endFog);
 			#endif
 			
 			density = max(density/1000.0, _minimumDensity)*mult;
@@ -1611,6 +1599,9 @@ vec3 doBlockLightLightingVoxel(
 		const in int SAMPLECOUNT
 	){
 		#ifndef TOGGLE_VL_FOG
+			return vec4(0.0,0.0,0.0,1.0);
+		#endif
+		#if defined END_SHADER && END_FOG_LEVEL <= 0
 			return vec4(0.0,0.0,0.0,1.0);
 		#endif
 		if(length(origin-endPos) < 0.001) return vec4(0.0,0.0,0.0,1.0);
@@ -1704,7 +1695,7 @@ vec3 doBlockLightLightingVoxel(
 				#endif
 				fragposition = diagonal3(shadowProjection) * fragposition + shadowProjection[3].xyz;
 
-				#if defined DISTORT_SHADOWMAP && defined OVERWORLD_SHADER
+				#if defined DISTORT_SHADOWMAP
 					float distortFactor = calcDistort(fragposition.xy);
 				#else
 					float distortFactor = 1.0;
@@ -1846,7 +1837,7 @@ vec3 doBlockLightLightingVoxel(
 					vec3 fragposition = mat3(shadowModelView) * progressP + shadowModelView[3].xyz;
 				#endif
 				fragposition = diagonal3(shadowProjection) * fragposition + shadowProjection[3].xyz;
-				#if defined DISTORT_SHADOWMAP && defined OVERWORLD_SHADER
+				#if defined DISTORT_SHADOWMAP
 					float distortFactor = calcDistort(fragposition.xy);
 				#else
 					float distortFactor = 1.0;
@@ -2173,7 +2164,10 @@ vec4 getEnvironmentReflections(
 		}
 	#else
 		raytracePos = rayTraceSpeculars(mat3(gbufferModelView) * reflectedVector, viewPos, noise.y, quality, isHand, reflectionLength, depthCheck);
-		if (raytracePos.z > 1.00001) return reflection;
+		if (raytracePos.z > 1.00001) {
+			backgroundReflectMask = 1.0;
+			return reflection;
+		}
 	#endif
 	
 	// use higher LOD as the reflection goes on, to blur it. this helps denoise a little.
@@ -2193,7 +2187,11 @@ vec4 getEnvironmentReflections(
 	previousPosition = mat3(gbufferPreviousModelView) * previousPosition + gbufferPreviousModelView[3].xyz;
 	previousPosition.xy = projMAD(projMatrix, previousPosition).xy / -previousPosition.z * 0.5 + 0.5;
 	
-	if (previousPosition.x > 0.0 && previousPosition.y > 0.0 && previousPosition.x < 1.0 && previousPosition.y < 1.0) {
+	vec2 edgeFade2 = smoothstep(vec2(0.0), vec2(0.035), previousPosition.xy) * (1.0 - smoothstep(vec2(0.965), vec2(1.0), previousPosition.xy));
+	float edgeFade = edgeFade2.x * edgeFade2.y;
+	previousPosition.xy = clamp(previousPosition.xy, vec2(0.001), vec2(0.999));
+
+	if (edgeFade > 0.0001) {
 		if(raytracePos.z > 0.9999999) backgroundReflectMask = 1.0;
 
 		#if defined OVERWORLD_SHADER
@@ -2201,6 +2199,7 @@ vec4 getEnvironmentReflections(
 		#else
 			reflection.a = 1.0;
 		#endif
+		reflection.a *= edgeFade;
 		
 		#ifdef FORWARD_SPECULAR
 			// vec2 clampedRes = max(vec2(viewWidth,viewHeight),vec2(1920.0,1080.));
@@ -2211,6 +2210,8 @@ vec4 getEnvironmentReflections(
 		#else
 			reflection.rgb = textureLod(colortex5, previousPosition.xy, LOD).rgb;
 		#endif
+	} else {
+		backgroundReflectMask = 1.0;
 	}
 
 	// reflection.rgb = vec3(LOD/6);

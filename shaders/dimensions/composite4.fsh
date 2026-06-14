@@ -618,14 +618,19 @@ void main() {
 	bool isEntity = abs(translucentMasks - 0.4) < 0.01 || isReflectiveEntity;
 
   ////// --------------- get volumetrics
-  #if defined DISTANT_HORIZONS || defined VOXY
-	  float DH_mixedLinearZ = sqrt(texelFetch(colortex9,ivec2(gl_FragCoord.xy),0).z);
-    vec4 temporallyFilteredVL = VLTemporalFiltering(playerPos, DH_mixedLinearZ, colortex9, hand);
+  #if defined END_SHADER && (!defined TOGGLE_VL_FOG || END_FOG_LEVEL <= 0)
+    vec4 temporallyFilteredVL = vec4(0.0, 0.0, 0.0, 1.0);
+    gl_FragData[2] = temporallyFilteredVL;
   #else
-    vec4 temporallyFilteredVL = VLTemporalFiltering(playerPos, frDepth, depthtex0, hand);
-  #endif
+    #if defined DISTANT_HORIZONS || defined VOXY
+	    float DH_mixedLinearZ = sqrt(texelFetch(colortex9,ivec2(gl_FragCoord.xy),0).z);
+      vec4 temporallyFilteredVL = VLTemporalFiltering(playerPos, DH_mixedLinearZ, colortex9, hand);
+    #else
+      vec4 temporallyFilteredVL = VLTemporalFiltering(playerPos, frDepth, depthtex0, hand);
+    #endif
 
-  gl_FragData[2] = temporallyFilteredVL;
+    gl_FragData[2] = temporallyFilteredVL;
+  #endif
   float bloomyFogMult = 1.0;
 
   ////// --------------- MAIN COLOR BUFFER
@@ -785,11 +790,15 @@ void main() {
 
   ////// --------------- get volumetrics behind translucents
   float blank = 0.0;
-  #if defined DISTANT_HORIZONS || defined VOXY
-    DH_mixedLinearZ = sqrt(texelFetch(colortex9,ivec2(gl_FragCoord.xy),0).a);
-    vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, DH_mixedLinearZ, colortex9, hand, 3);
+  #if defined END_SHADER && (!defined TOGGLE_VL_FOG || END_FOG_LEVEL <= 0)
+    vec4 VLBehindTranslucents = vec4(0.0, 0.0, 0.0, 1.0);
   #else
-    vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, linearize(texelFetch(depthtex1, ivec2(refractedCoord/texelSize),0).x), depthtex1, hand, 3);
+    #if defined DISTANT_HORIZONS || defined VOXY
+      DH_mixedLinearZ = sqrt(texelFetch(colortex9,ivec2(gl_FragCoord.xy),0).a);
+      vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, DH_mixedLinearZ, colortex9, hand, 3);
+    #else
+      vec4 VLBehindTranslucents = bilateralUpsample(refractedCoord/texelSize, colortex13, blank, linearize(texelFetch(depthtex1, ivec2(refractedCoord/texelSize),0).x), depthtex1, hand, 3);
+    #endif
   #endif
 
   ////// --------------- START BLENDING FOGS AND FORWARD RENDERED COLOR

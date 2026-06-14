@@ -164,6 +164,187 @@ uniform sampler2D radiosity_direct;
 uniform sampler2D radiosity_direct_soft;
 uniform sampler2D radiosity_handheld;
 
+#if defined OVERWORLD_SHADER
+    uniform vec3 sunPosition;
+    uniform vec3 moonPosition;
+    uniform float sunElevation;
+    uniform float moonElevation;
+#endif
+
+#if defined END_SHADER && END_BLACK_HOLE == 1
+    uniform float blackHoleCenterFocus;
+#endif
+
+#if defined OVERWORLD_SHADER
+vec2 lensDelta(vec2 uv, vec2 pos) {
+    vec2 d = uv - pos;
+    d.x *= aspectRatio;
+    return d;
+}
+
+float lensDisc(vec2 uv, vec2 pos, float radius, float softness) {
+    return 1.0 - smoothstep(radius, radius + softness, length(lensDelta(uv, pos)));
+}
+
+float lensRing(vec2 uv, vec2 pos, float radius, float width) {
+    float d = length(lensDelta(uv, pos));
+    return exp(-abs(d - radius) / max(width, 0.0001));
+}
+
+float lensAperture(vec2 uv, vec2 pos, float radius, float softness, float blades) {
+    vec2 d = lensDelta(uv, pos);
+    float a = atan(d.y, d.x);
+    float blade = 0.92 + 0.08 * cos(a * blades);
+    return 1.0 - smoothstep(radius * blade, radius * blade + softness, length(d));
+}
+
+float lensStreak(vec2 uv, vec2 pos, float streakLength, float streakWidth, float angle) {
+    vec2 d = lensDelta(uv, pos);
+    float s = sin(angle);
+    float c = cos(angle);
+    d = mat2(c, -s, s, c) * d;
+    return exp(-abs(d.y) / streakWidth) * exp(-abs(d.x) / streakLength);
+}
+
+void applyLensFlare(inout vec3 color, vec3 lightPos, vec3 lightCol, float noise, float strength, float centerGrowth, float lunarFlare) {
+    if (strength > 0.001 && lightPos.z < -0.01) {
+        vec3 clipPos = toClipSpace3(lightPos);
+        vec2 screenPos = clipPos.xy;
+
+        if (screenPos.x < 0.015 || screenPos.x > 0.985 || screenPos.y < 0.015 || screenPos.y > 0.985) return;
+
+        vec2 centerDelta = (screenPos - 0.5) * vec2(aspectRatio, 1.0);
+        float centerDist = length(centerDelta);
+        
+        float directLook = 1.0 - smoothstep(0.02, 0.22, centerDist);
+        if (directLook <= 0.001) return;
+
+        float centerAmount = 1.0 - smoothstep(0.01, 0.30, centerDist);
+        float scale = mix(1.0, 1.25, centerAmount * centerGrowth);
+        vec2 delta = lensDelta(texcoord, screenPos);
+        float dist = length(delta);
+
+        float visibility = 0.0;
+        for(int i = 0; i < 16; i++) {
+            vec2 offset = circlemap(float(i), 16.0) * 0.0052;
+            float d = texture(depthtex1, clamp(screenPos + offset, vec2(0.001), vec2(0.999))).r;
+            if (d >= 0.9995) visibility += 1.0 / 16.0;
+        }
+
+        visibility = smoothstep(0.16, 0.90, visibility);
+        if (visibility <= 0.001) return;
+
+        vec2 axis = 0.5 - screenPos;
+        float b = 8.0; 
+
+        vec3 warmWhite = mix(vec3(1.00, 0.96, 0.88), vec3(0.85, 0.92, 1.00), lunarFlare);
+        vec3 orangeYel = mix(vec3(1.00, 0.65, 0.10), vec3(0.60, 0.75, 1.00), lunarFlare);
+        vec3 redBrown  = mix(vec3(0.80, 0.25, 0.05), vec3(0.25, 0.35, 0.65), lunarFlare);
+        vec3 cyanBlue  = mix(vec3(0.15, 0.65, 0.95), vec3(0.55, 0.80, 1.00), lunarFlare);
+        vec3 magenta   = mix(vec3(0.85, 0.15, 0.55), vec3(0.45, 0.40, 0.85), lunarFlare);
+        vec3 green     = mix(vec3(0.40, 0.85, 0.30), vec3(0.55, 0.85, 0.85), lunarFlare);
+        vec3 purpBlue  = mix(vec3(0.50, 0.30, 0.90), vec3(0.35, 0.40, 0.85), lunarFlare);
+
+        float core = exp(-dist * 250.0 / scale) * mix(1.2, 0.6, lunarFlare); 
+        float innerHalo = exp(-dist * 80.0 / scale) * mix(0.15, 0.05, lunarFlare);
+        float outerHalo = exp(-dist * 30.0 / scale) * mix(0.06, 0.015, lunarFlare);
+        float haze = exp(-dist * 8.0 / scale) * mix(0.02, 0.005, lunarFlare);
+
+        float angle = atan(delta.y, delta.x);
+        float starBurst = 0.0;
+        for(float i = 0.0; i < 4.0; i++) {
+            float a = angle + i * 0.785398;
+            starBurst += pow(abs(cos(a)), 160.0) * exp(-dist * 40.0 / scale);
+        }
+        float star = starBurst * mix(0.15, 0.03, lunarFlare);
+
+        #if LENS_FLARE_MODE == 3
+        float extraRays = 0.0;
+        for(float i = 0.0; i < 8.0; i++) {
+            float a = angle + i * 0.392699;
+            extraRays += pow(abs(cos(a)), 260.0) * exp(-dist * 28.0 / scale);
+        }
+        star += extraRays * mix(0.22, 0.045, lunarFlare);
+        #endif
+
+        float ring = 0.0;
+        vec3 ringCol = orangeYel;
+        #if defined SUN_FLARE_RING
+        if (lunarFlare < 0.5) {
+            float rDist = abs(dist - 0.06 * scale);
+            float rInnerDist = abs(dist - 0.045 * scale);
+            
+            float rNoise = texture(noisetex, texcoord * 1.5 + noise * 0.01).r;
+            float rAngle = atan(delta.y, delta.x);
+            float rShimmer = pow(abs(cos(rAngle * 12.0 + noise * 3.0)), 3.0);
+            float rGlitter = pow(abs(cos(rAngle * 45.0 - noise * 5.0)), 20.0) * exp(-dist * 15.0 / scale);
+            
+            float ring1 = exp(-rInnerDist * 180.0 / scale) * 0.4;
+            float ring2 = rGlitter * 0.5;
+            
+            ring = (ring1 + ring2) * (0.8 + 0.3 * rNoise);
+
+            vec3 colorA = mix(orangeYel, redBrown, 0.6);
+            vec3 colorB = mix(cyanBlue, warmWhite, 0.3);
+            vec3 ringRainbow = mix(colorA, colorB, smoothstep(-0.03 * scale, 0.03 * scale, dist - 0.06 * scale));
+            
+            ringCol = mix(orangeYel, ringRainbow, 0.5);
+            ring *= directLook;
+        }
+        #endif
+
+        vec3 ghostCol = vec3(0.0);
+        ghostCol += lensAperture(texcoord, 0.5 + axis *  0.15, 0.015 * scale, 0.003 * scale, b) * cyanBlue * 0.15;
+        ghostCol += lensAperture(texcoord, 0.5 + axis *  0.22, 0.035 * scale, 0.004 * scale, b) * purpBlue * 0.08;
+        ghostCol += lensAperture(texcoord, 0.5 + axis *  0.35, 0.020 * scale, 0.003 * scale, b) * magenta  * 0.12;
+        ghostCol += lensAperture(texcoord, 0.5 + axis *  0.42, 0.010 * scale, 0.002 * scale, b) * warmWhite* 0.18;
+        ghostCol += lensAperture(texcoord, 0.5 + axis *  0.55, 0.050 * scale, 0.006 * scale, b) * purpBlue * 0.05;
+        ghostCol += lensAperture(texcoord, 0.5 + axis *  0.65, 0.030 * scale, 0.004 * scale, b) * cyanBlue * 0.08;
+        ghostCol += lensAperture(texcoord, 0.5 + axis * -0.10, 0.025 * scale, 0.003 * scale, b) * orangeYel* 0.10;
+        ghostCol += lensAperture(texcoord, 0.5 + axis * -0.20, 0.040 * scale, 0.005 * scale, b) * magenta  * 0.06;
+        ghostCol += lensAperture(texcoord, 0.5 + axis * -0.35, 0.060 * scale, 0.008 * scale, b) * purpBlue * 0.05;
+        ghostCol += lensAperture(texcoord, 0.5 + axis * -0.50, 0.120 * scale, 0.015 * scale, b) * cyanBlue * 0.03;
+
+        #if LENS_FLARE_MODE == 2
+        if (lunarFlare < 0.75) {
+            ghostCol += lensRing(texcoord, 0.5 + axis *  0.72, 0.090 * scale, 0.010 * scale) * cyanBlue  * 0.070;
+            ghostCol += lensRing(texcoord, 0.5 + axis *  0.94, 0.155 * scale, 0.018 * scale) * purpBlue  * 0.055;
+            ghostCol += lensRing(texcoord, 0.5 + axis * -0.62, 0.135 * scale, 0.020 * scale) * orangeYel * 0.050;
+            ghostCol += lensRing(texcoord, 0.5 + axis * -0.82, 0.205 * scale, 0.026 * scale) * magenta   * 0.035;
+            ghostCol += lensDisc(texcoord, 0.5 + axis *  0.88, 0.030 * scale, 0.020 * scale) * warmWhite * 0.030;
+            ring += lensRing(texcoord, screenPos, 0.105 * scale, 0.010 * scale) * directLook * 0.32;
+            ring += lensRing(texcoord, screenPos, 0.165 * scale, 0.018 * scale) * directLook * 0.16;
+        }
+        #endif
+
+        float horizontal = lensStreak(texcoord, screenPos, 0.45 * scale, 0.0015 * scale, 0.0) * mix(0.12, 0.03, lunarFlare);
+        float rayStreaks = 0.0;
+        #if LENS_FLARE_MODE == 3
+            rayStreaks += lensStreak(texcoord, screenPos, 0.34 * scale, 0.0018 * scale, 1.570796) * mix(0.080, 0.018, lunarFlare);
+            rayStreaks += lensStreak(texcoord, screenPos, 0.28 * scale, 0.0014 * scale, 0.785398) * mix(0.060, 0.014, lunarFlare);
+            rayStreaks += lensStreak(texcoord, screenPos, 0.28 * scale, 0.0014 * scale, -0.785398) * mix(0.060, 0.014, lunarFlare);
+            rayStreaks += lensStreak(texcoord, screenPos, 0.55 * scale, 0.0009 * scale, 0.0) * mix(0.075, 0.018, lunarFlare);
+        #endif
+
+        vec3 source = vec3(0.0);
+        source += core * warmWhite;
+        source += innerHalo * orangeYel;
+        source += outerHalo * mix(orangeYel, redBrown, 0.5);
+        source += haze * redBrown;
+        source += horizontal * mix(warmWhite, cyanBlue, 0.4);
+        source += rayStreaks * mix(warmWhite, orangeYel, 0.35);
+        source += star * warmWhite;
+        source += ring * ringCol;
+
+        vec3 flare = lightCol * (source + ghostCol);
+        
+        float screenFade  = smoothstep(0.0, 0.08, texcoord.x) * (1.0 - smoothstep(0.92, 1.0, texcoord.x));
+        screenFade       *= smoothstep(0.0, 0.08, texcoord.y) * (1.0 - smoothstep(0.92, 1.0, texcoord.y));
+        
+        color += flare * visibility * directLook * strength * screenFade * mix(0.4, 0.2, lunarFlare);
+    }
+}
+#endif
 
 void main() {
   
@@ -194,6 +375,36 @@ void main() {
     #endif
   #endif
   
+  #if defined END_SHADER && END_BLACK_HOLE == 1
+  if (black_hole_effect_strength > 0.001) {
+    vec3 bhWorldDir = normalize(vec3(0.18, 0.42, -0.89));
+    vec3 bhViewDir = mat3(gbufferModelView) * bhWorldDir * 100.0;
+    vec3 bhScreen = toClipSpace3(bhViewDir);
+
+    if (bhViewDir.z < 0.0 && bhScreen.x > -0.1 && bhScreen.x < 1.1 && bhScreen.y > -0.1 && bhScreen.y < 1.1) {
+      vec2 bhCenterDelta = (bhScreen.xy - vec2(0.5)) * vec2(aspectRatio, 1.0);
+      float centerLock = 1.0 - smoothstep(0.010, 0.045, length(bhCenterDelta));
+      centerLock = centerLock * centerLock;
+
+      if (centerLock > 0.001) {
+        float focusRamp = mix(centerLock * 0.22, centerLock, clamp(blackHoleCenterFocus, 0.0, 1.0));
+        float effectStrength = clamp(black_hole_effect_strength, 0.0, 2.0) * focusRamp;
+        float zoomAmount = effectStrength * 0.105;
+
+        float t = frameTimeCounter;
+        vec2 shake = vec2(
+          sin(t * 22.7 + 1.7) * 0.0024 + sin(t * 41.3) * 0.0017 + sin(t * 9.1 + 4.2) * 0.0009,
+          cos(t * 18.3 + 2.3) * 0.0024 + cos(t * 37.1) * 0.0017 + cos(t * 11.7 + 0.8) * 0.0009
+        ) * effectStrength * (0.35 + 0.65 * clamp(blackHoleCenterFocus, 0.0, 1.0));
+
+        vec2 zoomedUV = mix(texcoord, bhScreen.xy, zoomAmount) + shake;
+        zoomedUV = clamp(zoomedUV, vec2(0.001), vec2(0.999));
+        COLOR = texture(colortex7, zoomedUV).rgb;
+      }
+    }
+  }
+  #endif
+
   #if defined LOW_HEALTH_EFFECT || defined DAMAGE_TAKEN_EFFECT || defined WATER_ON_CAMERA_EFFECT || defined ON_FIRE_DISTORT_EFFECT || defined FIRE_COLOR_CORRECTION
     // for making the fun, more fun
     applyGameplayEffects(COLOR, texcoord, noise);
@@ -253,6 +464,13 @@ void main() {
     vec3 waveNormals = normalize(vec3(waveGradients.x, waveGradients.y, 0.2));
     if (length(waveNormals.xy) > 0.0) gl_FragColor.rgb += waveNormals;
     }
+  #endif
+
+  #if defined LENS_FLARE && defined OVERWORLD_SHADER
+      float sunFlareStrength = smoothstep(0.015, 0.11, sunElevation);
+      float moonFlareStrength = smoothstep(0.015, 0.12, moonElevation) * (1.0 - smoothstep(-0.06, 0.05, sunElevation)) * 0.16;
+      applyLensFlare(gl_FragColor.rgb, sunPosition, sunColorBase * 0.000007, noise, sunFlareStrength, 2.5, 0.0);
+      applyLensFlare(gl_FragColor.rgb, moonPosition, moonColorBase * 0.0000025, noise, moonFlareStrength, 0.0, 1.0);
   #endif
 
   #if defined SHADER_GRASS_SETTING && MC_VERSION < 12101 && !defined SHADER_GRASS_UNSUPPORTED_FIX

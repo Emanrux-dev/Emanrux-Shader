@@ -1,22 +1,12 @@
-option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - 日蚀编辑版
+option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Eclipse 编辑版
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 1.0.0
+    value.SHADER_VERSION_LABEL.482 = 1.1.0
 
-profile.POTATO=§4土豆
-profile.VERY_LOW=§c极低
-profile.LOW=§a低
-profile.MEDIUM=§2中 §6§l(推荐)
-profile.ALTERNATE_MEDIUM=§2中 §7(备用风格)
-profile.HIGH=§b高 §6§l(推荐)
-profile.ALTERNATE_HIGH=§b高 §7(备用风格)
-profile.HIGH_GRASS=§b高 + 着色器草地
-profile.ALTERNATE_HIGH_GRASS=§b高 + 着色器草地 §7(备用风格)
-profile.VERY_HIGH=§9极高
-profile.ULTRA=§d超高
+iris_extension.keybind.key0.name=手电筒
+
 profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lEMANRUX §6§l设置 §r§l«§4§l◆
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 screen.Emanrux_Settings=Emanrux 设置
 screen.POM_Settings=POM 设置
@@ -24,57 +14,190 @@ screen.Emanrux_Configs=Emanrux 配置
 option.CUSTOM_REFLECTIONS=自定义反射
 option.EXTRA_EMISSIVE_BLOCKS=额外发光方块
 option.CONNECTED_GLASS=连接玻璃
-screen.Rain_on_Glass_Settings=玻璃上的雨滴设置
-option.RAIN_ON_GLASS=玻璃上的雨滴
+screen.Rain_on_Glass_Settings=玻璃雨滴设置
+option.RAIN_ON_GLASS=玻璃雨滴
 option.RAIN_SPEED=雨滴速度
-option.RAIN_SPEED_VARIANCE=雨滴速度变化
+option.RAIN_SPEED_VARIANCE=雨滴速度随机性
 option.RAIN_DENSITY=雨滴密度
 option.RAIN_TRAIL=雨滴拖尾长度
 option.RAIN_SIZE=雨滴大小
 
 screen.Rain_on_Glass_Settings.comment=配置玻璃上雨滴的外观和行为
 screen.Emanrux_Configs.comment=由 Emanrux 制作的自定义设置
-screen.POM_Settings.comment=配置视差遮蔽贴图的深度和质量
+screen.POM_Settings.comment=配置视差遮蔽映射的深度和质量
 
 option.CUSTOM_REFLECTIONS.comment=启用表面的自定义屏幕空间反射。§a性能消耗：§e中等
-option.EXTRA_EMISSIVE_BLOCKS.comment=为更多方块类型添加额外发光效果。§a性能消耗：§a低
+option.EXTRA_EMISSIVE_BLOCKS.comment=为更多方块类型添加额外的发光效果。§a性能消耗：§a低
 option.CONNECTED_GLASS.comment=启用玻璃方块的无缝连接纹理。§a性能消耗：§a低
 
-option.RAIN_ON_GLASS.comment=启用玻璃表面的动态雨滴效果。§e仅在雨天可见。§a性能消耗：§a低
+option.RAIN_ON_GLASS.comment=启用玻璃表面的动态雨滴。§e仅在雨天可见。§a性能消耗：§a低
 option.RAIN_SPEED.comment=控制玻璃上雨滴的下落速度。§7数值越高，雨滴下落越快。§a性能消耗：§2无
 option.RAIN_SPEED_VARIANCE.comment=为每个雨滴的速度添加随机性。§7数值越高，运动越多样。§a性能消耗：§2无
-option.RAIN_DENSITY.comment=控制玻璃表面出现的雨滴数量。§7数值越高，雨势越大。§a性能消耗：§a低
-option.RAIN_TRAIL.comment=每个雨滴留下的渐隐拖尾长度。§7数值越低，雨滴越短越圆。§a性能消耗：§2无
-option.RAIN_SIZE.comment=玻璃上单个雨滴的大小。§7数值越小越逼真。§a性能消耗：§2无
+option.RAIN_DENSITY.comment=控制玻璃表面出现的雨滴数量。§7数值越高，雨效越强烈。§a性能消耗：§a低
+option.RAIN_TRAIL.comment=每个雨滴身后渐隐拖尾的长度。§7数值越低，雨滴越短越圆。§a性能消耗：§2无
+option.RAIN_SIZE.comment=玻璃上单个雨滴的大小。§7数值越小，效果越真实。§a性能消耗：§2无
 
-screen.Frost_on_Glass_Settings=玻璃上的霜冻设置
-option.FROST_ON_GLASS=玻璃上的霜冻
-option.FROST_ON_GLASS.comment=在降雪期间启用玻璃表面的霜晶效果。§a性能消耗：§a低
+option.FROST_ON_GLASS=玻璃霜冻
+option.FROST_ON_GLASS.comment=在降雪时为玻璃启用霜晶效果。§a性能消耗：§a低至中等
 
-option.EXTRA_BLOCK_LIGHTS=额外方块灯光
+option.EXTRA_BLOCK_LIGHTS=额外方块光源
 option.EXTRA_BLOCK_LIGHTS.comment=为红石块等额外方块启用真实 LPV 光照发射。§a性能消耗：§e中等
 
 option.CUSTOM_NETHER_PORTAL=自定义地狱传送门
 option.CUSTOM_NETHER_PORTAL.comment=为地狱传送门添加自定义动态漩涡效果。§a性能消耗：§a低
 
 option.BRIGHT_ORES=更亮的矿石
-option.BRIGHT_ORES.comment=使矿石在黑暗中发出更强烈的光芒（包括煤矿）。§a性能消耗：§a低
+option.BRIGHT_ORES.comment=使矿石在黑暗中发出更强的光芒（包括煤矿石）。§a性能消耗：§a低
 
-option.GALAXY_SKY=星系天空
-option.GALAXY_SKY.comment=在夜空中添加真实星系。§a性能消耗：§a低
+option.GALAXY_SKY=银河天空
+option.GALAXY_SKY.comment=在夜空中添加真实的银河效果。§a性能消耗：§a低
 
-option.FIRE_COLOR_CORRECTION=灵魂的存在
-option.FIRE_COLOR_CORRECTION.comment=在玩家屏幕上添加灵魂的存在效果，灵魂火焰的颜色校正，以及玩家和部分生物被灵魂附身的效果，只要他们靠近灵魂（蓝色光源）。§a性能消耗：§a低
+option.NO_CLOUDS_AT_NIGHT=夜间无云
+option.NO_CLOUDS_AT_NIGHT.comment=在夜间禁用体积云，让星空完全可见。§a性能消耗：§2正面效果
+
+option.SUN_FLARE_RING=太阳光晕环
+option.SUN_FLARE_RING.comment=在镜头光晕时为太阳启用光晕环效果。§a性能消耗：§2无
+
+option.black_hole_effect_strength=黑洞效果强度
+option.black_hole_effect_strength.comment=控制仅限中心的黑洞拉力和震动。设为 0 可禁用。§a性能消耗：§a低
+
+option.END_SHADOW_QUALITY=末地阴影质量
+option.END_SHADOW_QUALITY.comment=控制末地黑洞阴影滤镜质量，阴影贴图上限维持在 2048px。§a性能消耗：§e低至中等
+    value.END_SHADOW_QUALITY.0=低
+    value.END_SHADOW_QUALITY.1=中
+    value.END_SHADOW_QUALITY.2=高
+    value.END_SHADOW_QUALITY.3=极高
+
+option.END_FOG_LEVEL=末地雾气等级
+option.END_FOG_LEVEL.comment=控制所有末地雾气、体积雾、雾团以及主岛星云螺旋，范围 0 至 100。
+suffix.END_FOG_LEVEL=%
+
+option.END_VOID_SPIRAL=末地虚空漩涡
+option.END_VOID_SPIRAL.comment=在末地虚空下方添加动态紫色漩涡。§a性能消耗：§a低
+option.END_WANDERING_DRAGONS=末地游荡龙
+option.END_WANDERING_DRAGONS.comment=在末地天空中显示远处的程序化末影龙剪影。§a性能消耗：§a低
+
+option.AURORA_LOCATION=极光位置
+option.AURORA_LOCATION.comment=控制哪些生物群系会出现极光效果。§a性能消耗：§a低
+    value.AURORA_LOCATION.0=禁用
+    value.AURORA_LOCATION.1=仅限冰雪生物群系
+    value.AURORA_LOCATION.2=始终显示（所有生物群系）
+    value.AURORA_LOCATION.3=所有生物群系（非冰雪生物群系稀有）
+
+option.FIRE_COLOR_CORRECTION=灵魂之息
+option.FIRE_COLOR_CORRECTION.comment=在灵魂方块或灵魂火焰附近添加灵魂火焰色彩校正、屏幕氛围及灵魂效果。§a性能消耗：§a低
 
 option.ENCHANTING_TABLE_EFFECTS=附魔台效果
 option.ENCHANTING_TABLE_EFFECTS.comment=在附魔台附近启用魔法符文地板和漂浮粒子效果。§a性能消耗：§a低
 
+option.LENS_FLARE_MODE=镜头光晕模式
+option.LENS_FLARE_MODE.comment=选择镜头光晕风格。0 为禁用，1 为当前光晕，2 添加更多光环，3 添加更强光线。§a性能消耗：§a低
+    value.LENS_FLARE_MODE.0=关闭
+    value.LENS_FLARE_MODE.1=1
+    value.LENS_FLARE_MODE.2=2 - 光环
+    value.LENS_FLARE_MODE.3=3 - 光线
+
 option.CINEMATIC_MODE=电影模式
-option.CINEMATIC_MODE.comment=添加黑边、去饱和、变暗和暗角效果，呈现电影感。§c性能消耗：§a低
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+option.CINEMATIC_MODE.comment=添加黑边、去饱和、暗化和渐晕效果，呈现电影质感。§c性能消耗：§a低
 
 
+screen.Night_Options=夜间选项
+screen.Night_Options.comment=月光、夜间亮度、手电筒、星星及夜空细节的快速控制。
+option.RAIN_ON_GLASS_MODE=玻璃雨滴
+option.RAIN_ON_GLASS_MODE.comment=关闭则禁用玻璃雨滴覆盖。轻度保留当前简单雨滴效果。§a性能消耗：§a低                                      §f真实模式添加多样雨滴、弯曲拖尾和程序化合并效果。§a性能消耗：§e中等
+value.RAIN_ON_GLASS_MODE.0=关闭
+value.RAIN_ON_GLASS_MODE.1=轻度
+value.RAIN_ON_GLASS_MODE.2=真实
+option.PULSAR=脉冲星
+option.PULSAR.comment=在夜空中添加一颗带有不规则旋转光束的遥远蓝色脉冲星。§a性能消耗：§a低
+option.PULSAR_BRIGHTNESS=脉冲星亮度
+option.PULSAR_SIZE=脉冲星大小
+option.PLANET_0=行星 1
+option.PLANET_1=环状行星
+option.PLANET_2=行星 3
+option.PLANET_3=行星 4
+option.PLANET_4=行星 5
+screen.Rain_on_Glass_Light_Settings=轻度模式
+screen.Rain_on_Glass_Realistic_Settings=真实模式
+option.RAIN_REALISTIC_SPEED=真实流动速度
+option.RAIN_REALISTIC_DENSITY=真实雨滴密度
+option.RAIN_REALISTIC_DROP_SIZE=真实雨滴大小
+option.RAIN_REALISTIC_TRAILS=真实拖尾粗细
+option.RAIN_REALISTIC_HIGHLIGHTS=真实高光
+option.RAIN_LIGHT_BRIGHTNESS=轻度亮度
+screen.Space_Objects_Settings=太空天体设置
+screen.Space_Objects_Settings.comment=主世界专属天空天体：行星、流星和脉冲星。
+screen.End_Options=末地选项
+screen.End_Options.comment=末地专属大气、阴影、虚空漩涡、龙、黑洞、流星和行星。
+option.BRIGHT_ORES_INTENSITY=矿石亮度强度
+option.PLANETS=主世界行星
+option.PLANETS.comment=在主世界天空中显示可配置的行星。
+option.PLANET_BRIGHTNESS=行星亮度
+option.PLANET_QUALITY=行星质量
+value.PLANET_QUALITY.0=低
+value.PLANET_QUALITY.1=中
+value.PLANET_QUALITY.2=高
+option.METEORS_OW=流星
+value.METEORS_OW.0=关闭
+value.METEORS_OW.1=开启
+option.METEORS_OW.comment=在主世界天空中显示流星。§a性能消耗：§a低
+option.METEOR_COUNT=流星数量
+option.METEOR_RARITY=流星稀有度
+option.METEOR_SPEED=流星速度
+option.END_PLANETS=末地行星
+option.END_PLANETS.comment=仅在末地天空中显示可配置的行星。§a性能消耗：§a低
+option.END_PLANET_0=行星 1
+option.END_PLANET_1=行星 2
+option.END_PLANET_2=行星 3
+option.END_PLANET_3=行星 4
+option.END_PLANET_4=行星 5
+option.END_METEORS=末地流星
+option.END_METEORS.comment=仅在末地天空中显示流星。§a性能消耗：§a低
+option.END_BLACK_HOLE=末地黑洞
+option.END_BLACK_HOLE.comment=显示末地黑洞及其吸积盘。
+option.END_BH_JETS=末地黑洞喷流
+option.END_BH_JETS.comment=为末地黑洞添加垂直能量喷流。
+option.BLACK_HOLE_SIZE=黑洞大小
+option.BLACK_HOLE_LENSING=黑洞引力透镜
+value.PLANETS.0=关闭
+value.PLANETS.1=开启
+value.PLANET_0.0=关闭
+value.PLANET_0.1=开启
+value.PLANET_1.0=关闭
+value.PLANET_1.1=开启
+value.PLANET_2.0=关闭
+value.PLANET_2.1=开启
+value.PLANET_3.0=关闭
+value.PLANET_3.1=开启
+value.PLANET_4.0=关闭
+value.PLANET_4.1=开启
+value.END_PLANETS.0=关闭
+value.END_PLANETS.1=开启
+value.END_PLANET_0.0=关闭
+value.END_PLANET_0.1=开启
+value.END_PLANET_1.0=关闭
+value.END_PLANET_1.1=开启
+value.END_PLANET_2.0=关闭
+value.END_PLANET_2.1=开启
+value.END_PLANET_3.0=关闭
+value.END_PLANET_3.1=开启
+value.END_PLANET_4.0=关闭
+value.END_PLANET_4.1=开启
+value.END_METEORS.0=关闭
+value.END_METEORS.1=开启
+value.END_BLACK_HOLE.0=关闭
+value.END_BLACK_HOLE.1=开启
+value.END_BH_JETS.0=关闭
+value.END_BH_JETS.1=开启
+option.END_PLANET_BRIGHTNESS=末地行星亮度
+option.END_PLANET_QUALITY=末地行星质量
+value.END_PLANET_QUALITY.0=低
+value.END_PLANET_QUALITY.1=中
+value.END_PLANET_QUALITY.2=高
+option.END_METEOR_COUNT=末地流星数量
+option.END_METEOR_RARITY=末地流星稀有度
+option.END_METEOR_SPEED=末地流星速度
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 
 option.OLD_LIGHTLEAK_FIX = 旧版漏光修复

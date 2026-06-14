@@ -1,80 +1,203 @@
 option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Eine Eclipse-Bearbeitung
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 1.0.0
+    value.SHADER_VERSION_LABEL.482 = 1.1.0
 
-profile.POTATO=§4Kartoffel 
-profile.VERY_LOW=§cSehr Niedrig 
-profile.LOW=§aNiedrig 
-profile.MEDIUM=§2Mittel §6§l(Empfohlen)
-profile.ALTERNATE_MEDIUM=§2Mittel §7(Alternativer Stil)
-profile.HIGH=§bHoch §6§l(Empfohlen)
-profile.ALTERNATE_HIGH=§bHoch §7(Alternativer Stil)
-profile.HIGH_GRASS=§bHoch + Shader-Gras
-profile.ALTERNATE_HIGH_GRASS=§bHoch + Shader-Gras §7(Alt. Stil)
-profile.VERY_HIGH=§9Sehr Hoch
-profile.ULTRA=§dUltra
+iris_extension.keybind.key0.name=Taschenlampe
+
 profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lEMANRUX §6§lEINSTELLUNGEN §r§l«§4§l◆
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 screen.Emanrux_Settings=Emanrux-Einstellungen
 screen.POM_Settings=POM-Einstellungen
 screen.Emanrux_Configs=Emanrux-Konfigurationen
 option.CUSTOM_REFLECTIONS=BENUTZERDEFINIERTE REFLEXIONEN
-option.EXTRA_EMISSIVE_BLOCKS=EXTRA EMISSIVE BLÖCKE
+option.EXTRA_EMISSIVE_BLOCKS=ZUSÄTZLICHE EMISSIVE BLÖCKE
 option.CONNECTED_GLASS=VERBUNDENES GLAS
-screen.Rain_on_Glass_Settings=Regen-auf-Glas-Einstellungen
+screen.Rain_on_Glass_Settings=Regen auf Glas
 option.RAIN_ON_GLASS=REGEN AUF GLAS
 option.RAIN_SPEED=Regengeschwindigkeit
-option.RAIN_SPEED_VARIANCE=Varianz der Regengeschwindigkeit
+option.RAIN_SPEED_VARIANCE=Geschwindigkeitsvarianz
 option.RAIN_DENSITY=Regendichte
-option.RAIN_TRAIL=Regentropfen-Spurlänge
-option.RAIN_SIZE=Regentropfengröße
+option.RAIN_TRAIL=Schweifllänge
+option.RAIN_SIZE=Tropfengröße
 
-screen.Rain_on_Glass_Settings.comment=Aussehen und Verhalten der Regentropfen auf Glas konfigurieren
-screen.Emanrux_Configs.comment=Benutzerdefinierte Einstellungen von Emanrux 
-screen.POM_Settings.comment=Tiefe und Qualität des Parallax-Occlusion-Mappings konfigurieren
+screen.Rain_on_Glass_Settings.comment=Konfiguriert das Aussehen und Verhalten der Regentropfen auf Glas
+screen.Emanrux_Configs.comment=Benutzerdefinierte Einstellungen von Emanrux
+screen.POM_Settings.comment=Konfiguriert die Tiefe und Qualität des Parallax Occlusion Mappings
 
-option.CUSTOM_REFLECTIONS.comment=Aktiviert benutzerdefinierte bildschirmraumbasierte Reflexionen auf Oberflächen. §aLEISTUNGSKOSTEN: §emittel
-option.EXTRA_EMISSIVE_BLOCKS.comment=Fügt zusätzlichen emissiven Glanz zu weiteren Blocktypen hinzu. §aLEISTUNGSKOSTEN: §aniedrig
-option.CONNECTED_GLASS.comment=Aktiviert nahtlose verbundene Texturen auf Glasblöcken. §aLEISTUNGSKOSTEN: §aniedrig
+option.CUSTOM_REFLECTIONS.comment=Aktiviert benutzerdefinierte Bildschirmraum-Reflexionen auf Oberflächen. §aLEISTUNGSKOSTEN: §emittel
+option.EXTRA_EMISSIVE_BLOCKS.comment=Fügt zusätzlichen Emissionsglanz zu weiteren Blocktypen hinzu. §aLEISTUNGSKOSTEN: §agering
+option.CONNECTED_GLASS.comment=Aktiviert nahtlose verbundene Texturen auf Glasblöcken. §aLEISTUNGSKOSTEN: §agering
 
-option.RAIN_ON_GLASS.comment=Aktiviert animierte Regentropfen auf Glasoberflächen. §eNur bei Regenwetter sichtbar. §aLEISTUNGSKOSTEN: §aniedrig
-option.RAIN_SPEED.comment=Steuert die Fallgeschwindigkeit der Regentropfen auf Glas. §7Höhere Werte lassen Tropfen schneller fallen. §aLEISTUNGSKOSTEN: §2keine
-option.RAIN_SPEED_VARIANCE.comment=Fügt jedem Tropfen individuelle Zufälligkeit hinzu. §7Höhere Werte erzeugen abwechslungsreichere Bewegungen. §aLEISTUNGSKOSTEN: §2keine
-option.RAIN_DENSITY.comment=Steuert die Anzahl der Regentropfen auf der Glasoberfläche. §7Höhere Werte erzeugen einen stärkeren Regeneffekt. §aLEISTUNGSKOSTEN: §aniedrig
-option.RAIN_TRAIL.comment=Länge der verblassenden Spur hinter jedem Regentropfen. §7Niedrigere Werte erzeugen kürzere, rundere Tropfen. §aLEISTUNGSKOSTEN: §2keine
+option.RAIN_ON_GLASS.comment=Aktiviert animierte Regentropfen auf Glasoberflächen. §eNur bei Regenwetter sichtbar. §aLEISTUNGSKOSTEN: §agering
+option.RAIN_SPEED.comment=Steuert die Fallgeschwindigkeit der Tropfen auf dem Glas. §7Höhere Werte lassen Tropfen schneller fallen. §aLEISTUNGSKOSTEN: §2keine
+option.RAIN_SPEED_VARIANCE.comment=Fügt jedem Tropfen individuelle Zufälligkeit der Geschwindigkeit hinzu. §7Höhere Werte erzeugen abwechslungsreichere Bewegungen. §aLEISTUNGSKOSTEN: §2keine
+option.RAIN_DENSITY.comment=Steuert die Anzahl der Regentropfen auf der Glasoberfläche. §7Höhere Werte erzeugen einen stärkeren Regeneffekt. §aLEISTUNGSKOSTEN: §agering
+option.RAIN_TRAIL.comment=Länge des verblassenden Schweifs hinter jedem Tropfen. §7Niedrigere Werte erzeugen kürzere, rundere Tropfen. §aLEISTUNGSKOSTEN: §2keine
 option.RAIN_SIZE.comment=Größe der einzelnen Regentropfen auf dem Glas. §7Kleinere Werte wirken realistischer. §aLEISTUNGSKOSTEN: §2keine
 
-screen.Frost_on_Glass_Settings=Frost-auf-Glas-Einstellungen
 option.FROST_ON_GLASS=FROST AUF GLAS
-option.FROST_ON_GLASS.comment=Aktiviert den Eiskristalleffekt auf Glasoberflächen während Schneefall. §aLEISTUNGSKOSTEN: §aniedrig
+option.FROST_ON_GLASS.comment=Aktiviert Frostkristalle auf Glas während Schneefällen. §aLEISTUNGSKOSTEN: §agering bis mittel
 
-option.EXTRA_BLOCK_LIGHTS=EXTRA BLOCKLICHTER
-option.EXTRA_BLOCK_LIGHTS.comment=Aktiviert echte LPV-Lichtemission von zusätzlichen Blöcken wie Redstoneblöcken. §aLEISTUNGSKOSTEN: §emittel
+option.EXTRA_BLOCK_LIGHTS=ZUSÄTZLICHE BLOCKBELEUCHTUNG
+option.EXTRA_BLOCK_LIGHTS.comment=Aktiviert echte LPV-Lichtemission von zusätzlichen Blöcken wie Redstone-Blöcken. §aLEISTUNGSKOSTEN: §emittel
 
 option.CUSTOM_NETHER_PORTAL=BENUTZERDEFINIERTES NETHER-PORTAL
-option.CUSTOM_NETHER_PORTAL.comment=Fügt einen benutzerdefinierten animierten Wirbeleffekt zu Nether-Portalen hinzu. §aLEISTUNGSKOSTEN: §aniedrig
+option.CUSTOM_NETHER_PORTAL.comment=Fügt einen animierten Wirbeleffekt zu Nether-Portalen hinzu. §aLEISTUNGSKOSTEN: §agering
 
 option.BRIGHT_ORES=HELLERE ERZE
-option.BRIGHT_ORES.comment=Lässt Erze im Dunkeln intensiver leuchten (einschließlich Kohle). §aLEISTUNGSKOSTEN: §aniedrig
+option.BRIGHT_ORES.comment=Lässt Erze im Dunkeln intensiver leuchten (einschließlich Kohle). §aLEISTUNGSKOSTEN: §agering
 
 option.GALAXY_SKY=GALAXIENHIMMEL
-option.GALAXY_SKY.comment=Fügt eine realistische Galaxie zum Nachthimmel hinzu. §aLEISTUNGSKOSTEN: §aniedrig
+option.GALAXY_SKY.comment=Fügt eine realistische Galaxie zum Nachthimmel hinzu. §aLEISTUNGSKOSTEN: §agering
+
+option.NO_CLOUDS_AT_NIGHT=KEINE WOLKEN BEI NACHT
+option.NO_CLOUDS_AT_NIGHT.comment=Deaktiviert volumetrische Wolken während der Nacht und lässt den Sternenhimmel vollständig sichtbar. §aLEISTUNGSKOSTEN: §2positiv
+
+option.SUN_FLARE_RING=SONNENBLENDRING
+option.SUN_FLARE_RING.comment=Aktiviert einen Leuchtring um die Sonne bei Linsenreflexionen. §aLEISTUNGSKOSTEN: §2keine
+
+option.black_hole_effect_strength=STÄRKE DES SCHWARZEN-LOCH-EFFEKTS
+option.black_hole_effect_strength.comment=Steuert den mittigen Sog und das Zittern des schwarzen Lochs. Auf 0 setzen zum Deaktivieren. §aLEISTUNGSKOSTEN: §agering
+
+option.END_SHADOW_QUALITY=SCHATTENQUALITÄT DES ENDS
+option.END_SHADOW_QUALITY.comment=Steuert die Qualität des Schattenfilters des schwarzen Lochs im End bei einer Schattenkarte von max. 2048px. §aLEISTUNGSKOSTEN: §egering bis mittel
+    value.END_SHADOW_QUALITY.0=NIEDRIG
+    value.END_SHADOW_QUALITY.1=MITTEL
+    value.END_SHADOW_QUALITY.2=HOCH
+    value.END_SHADOW_QUALITY.3=ULTRA
+
+option.END_FOG_LEVEL=NEBELSTÄRKE DES ENDS
+option.END_FOG_LEVEL.comment=Steuert den gesamten End-Nebel, volumetrischen Nebel, Nebelklumpen und die Nebelspirale der Hauptinsel von 0 bis 100.
+suffix.END_FOG_LEVEL=%
+
+option.END_VOID_SPIRAL=LEERSPIRALE DES ENDS
+option.END_VOID_SPIRAL.comment=Fügt eine animierte violette Spirale unter dem End-Void hinzu. §aLEISTUNGSKOSTEN: §agering
+option.END_WANDERING_DRAGONS=UMHERIRRENDE DRACHEN DES ENDS
+option.END_WANDERING_DRAGONS.comment=Zeigt prozedurale Ender-Drachen-Silhouetten am End-Himmel. §aLEISTUNGSKOSTEN: §agering
+
+option.AURORA_LOCATION=AURORA-POSITION
+option.AURORA_LOCATION.comment=Steuert, in welchen Biomen der Nordlicht-Effekt erscheint. §aLEISTUNGSKOSTEN: §agering
+    value.AURORA_LOCATION.0=DEAKTIVIERT
+    value.AURORA_LOCATION.1=NUR SCHNEEREICHE BIOME
+    value.AURORA_LOCATION.2=IMMER (ALLE BIOME)
+    value.AURORA_LOCATION.3=ALLE BIOME (SELTEN IN NICHT-SCHNEEBIOMEN)
 
 option.FIRE_COLOR_CORRECTION=ANWESENHEIT VON SEELEN
-option.FIRE_COLOR_CORRECTION.comment=Fügt die Anwesenheit von Seelen auf dem Bildschirm des Spielers hinzu, Farbkorrektur für Seelenfeuer, Seelenbesitz des Körpers des Spielers und einiger Mobs, solange sie sich in der Nähe von Seelen befinden (blaues Licht). §aPERFORMANCEKOSTEN: §aniedrig
+option.FIRE_COLOR_CORRECTION.comment=Fügt Seelenfeuer-Farbkorrektur, Bildschirmpräsenz und Seeleneffekte in der Nähe von Seelenblöcken oder Seelenfeuer hinzu. §aLEISTUNGSKOSTEN: §agering
 
 option.ENCHANTING_TABLE_EFFECTS=VERZAUBERUNGSTISCH-EFFEKTE
-option.ENCHANTING_TABLE_EFFECTS.comment=Aktiviert magische Runenböden und schwebende Partikel in der Nähe eines Verzauberungstisches. §aPERFORMANCEKOSTEN: §aniedrig
+option.ENCHANTING_TABLE_EFFECTS.comment=Aktiviert magische Runenböden und schwebende Partikel in der Nähe eines Verzauberungstisches. §aLEISTUNGSKOSTEN: §agering
+
+option.LENS_FLARE_MODE=LINSENREFLEXIONS-MODUS
+option.LENS_FLARE_MODE.comment=Wählt den Stil der Linsenreflexion. 0 deaktiviert sie, 1 ist die aktuelle Reflexion, 2 fügt mehr Ringe hinzu und 3 fügt stärkere Strahlen hinzu. §aLEISTUNGSKOSTEN: §agering
+    value.LENS_FLARE_MODE.0=AUS
+    value.LENS_FLARE_MODE.1=1
+    value.LENS_FLARE_MODE.2=2 - RINGE
+    value.LENS_FLARE_MODE.3=3 - STRAHLEN
 
 option.CINEMATIC_MODE=Kinomodus
-option.CINEMATIC_MODE.comment=Fügt Letterbox-Balken, Entsättigung, Abdunklung und Vignette für einen kinematischen Look hinzu. §cLEISTUNGSKOSTEN: §aniedrig
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+option.CINEMATIC_MODE.comment=Fügt Letterbox-Balken, Entsättigung, Abdunklung und Vignettierung für einen kinematischen Look hinzu. §cLEISTUNGSKOSTEN: §agering
 
 
+screen.Night_Options=Nachtoptionen
+screen.Night_Options.comment=Schnelleinstellungen für Mondlicht, Nachthelligkeit, Taschenlampe, Sterne und Nachthimmeldetails.
+option.RAIN_ON_GLASS_MODE=Regen auf Glas
+option.RAIN_ON_GLASS_MODE.comment=Aus deaktiviert das Glasregen-Overlay. Leicht behält die aktuellen einfachen Tropfen. §aLEISTUNGSKOSTEN: §agering                                      §fRealistisch fügt abwechslungsreiche Tropfen, geschwungene Schweife und prozedurale Verschmelzung hinzu. §aLEISTUNGSKOSTEN: §emittel
+value.RAIN_ON_GLASS_MODE.0=Aus
+value.RAIN_ON_GLASS_MODE.1=Leicht
+value.RAIN_ON_GLASS_MODE.2=Realistisch
+option.PULSAR=Pulsar
+option.PULSAR.comment=Fügt einen kleinen blauen Pulsar in der Ferne am Nachthimmel mit einem erratischen rotierenden Strahl hinzu. §aLEISTUNGSKOSTEN: §agering
+option.PULSAR_BRIGHTNESS=Pulsar-Helligkeit
+option.PULSAR_SIZE=Pulsargröße
+option.PLANET_0=Planet 1
+option.PLANET_1=Planet mit Ringen
+option.PLANET_2=Planet 3
+option.PLANET_3=Planet 4
+option.PLANET_4=Planet 5
+screen.Rain_on_Glass_Light_Settings=Leichter Modus
+screen.Rain_on_Glass_Realistic_Settings=Realistischer Modus
+option.RAIN_REALISTIC_SPEED=Realistische Fließgeschwindigkeit
+option.RAIN_REALISTIC_DENSITY=Realistische Tropfendichte
+option.RAIN_REALISTIC_DROP_SIZE=Realistische Tropfengröße
+option.RAIN_REALISTIC_TRAILS=Realistisches Schweifgewicht
+option.RAIN_REALISTIC_HIGHLIGHTS=Realistische Glanzlichter
+option.RAIN_LIGHT_BRIGHTNESS=Helligkeit des leichten Modus
+screen.Space_Objects_Settings=Weltraumobjekte
+screen.Space_Objects_Settings.comment=Nur im Overworld sichtbare Himmelsobjekte: Planeten, Meteore und Pulsar.
+screen.End_Options=End-Optionen
+screen.End_Options.comment=Exklusive End-Atmosphäre, Schatten, Leerspirale, Drachen, schwarzes Loch, Meteore und Planeten.
+option.BRIGHT_ORES_INTENSITY=Intensität der leuchtenden Erze
+option.PLANETS=Overworld-Planeten
+option.PLANETS.comment=Zeigt konfigurierbare Planeten am Overworld-Himmel.
+option.PLANET_BRIGHTNESS=Planetenhelligkeit
+option.PLANET_QUALITY=Planetenqualität
+value.PLANET_QUALITY.0=Niedrig
+value.PLANET_QUALITY.1=Mittel
+value.PLANET_QUALITY.2=Hoch
+option.METEORS_OW=METEORE
+value.METEORS_OW.0=Aus
+value.METEORS_OW.1=An
+option.METEORS_OW.comment=Zeigt Meteore am Overworld-Himmel. §aLEISTUNGSKOSTEN: §agering
+option.METEOR_COUNT=Meteoranzahl
+option.METEOR_RARITY=Meteorseltenheit
+option.METEOR_SPEED=Meteorgeschwindigkeit
+option.END_PLANETS=End-Planeten
+option.END_PLANETS.comment=Zeigt konfigurierbare Planeten nur am End-Himmel. §aLEISTUNGSKOSTEN: §agering
+option.END_PLANET_0=Planet 1
+option.END_PLANET_1=Planet 2
+option.END_PLANET_2=Planet 3
+option.END_PLANET_3=Planet 4
+option.END_PLANET_4=Planet 5
+option.END_METEORS=End-Meteore
+option.END_METEORS.comment=Zeigt Meteore nur am End-Himmel. §aLEISTUNGSKOSTEN: §agering
+option.END_BLACK_HOLE=Schwarzes Loch des Ends
+option.END_BLACK_HOLE.comment=Zeigt das schwarze Loch des Ends und seine Akkretionsscheibe.
+option.END_BH_JETS=Jets des schwarzen Lochs des Ends
+option.END_BH_JETS.comment=Fügt dem schwarzen Loch des Ends vertikale Energiestrahlen hinzu.
+option.BLACK_HOLE_SIZE=Größe des schwarzen Lochs
+option.BLACK_HOLE_LENSING=Gravitationslinse des schwarzen Lochs
+value.PLANETS.0=Aus
+value.PLANETS.1=An
+value.PLANET_0.0=Aus
+value.PLANET_0.1=An
+value.PLANET_1.0=Aus
+value.PLANET_1.1=An
+value.PLANET_2.0=Aus
+value.PLANET_2.1=An
+value.PLANET_3.0=Aus
+value.PLANET_3.1=An
+value.PLANET_4.0=Aus
+value.PLANET_4.1=An
+value.END_PLANETS.0=Aus
+value.END_PLANETS.1=An
+value.END_PLANET_0.0=Aus
+value.END_PLANET_0.1=An
+value.END_PLANET_1.0=Aus
+value.END_PLANET_1.1=An
+value.END_PLANET_2.0=Aus
+value.END_PLANET_2.1=An
+value.END_PLANET_3.0=Aus
+value.END_PLANET_3.1=An
+value.END_PLANET_4.0=Aus
+value.END_PLANET_4.1=An
+value.END_METEORS.0=Aus
+value.END_METEORS.1=An
+value.END_BLACK_HOLE.0=Aus
+value.END_BLACK_HOLE.1=An
+value.END_BH_JETS.0=Aus
+value.END_BH_JETS.1=An
+option.END_PLANET_BRIGHTNESS=Helligkeit der End-Planeten
+option.END_PLANET_QUALITY=Qualität der End-Planeten
+value.END_PLANET_QUALITY.0=Niedrig
+value.END_PLANET_QUALITY.1=Mittel
+value.END_PLANET_QUALITY.2=Hoch
+option.END_METEOR_COUNT=Anzahl der End-Meteore
+option.END_METEOR_RARITY=Seltenheit der End-Meteore
+option.END_METEOR_SPEED=Geschwindigkeit der End-Meteore
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 
 option.OLD_LIGHTLEAK_FIX = Alter Lichtleck-Fix

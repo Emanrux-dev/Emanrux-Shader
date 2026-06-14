@@ -1,22 +1,12 @@
 option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - An Eclipse Edit
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 1.0.0
+    value.SHADER_VERSION_LABEL.482 = 1.1.0
 
-profile.POTATO=§4Potato 
-profile.VERY_LOW=§cVery Low 
-profile.LOW=§aLow 
-profile.MEDIUM=§2Medium §6§l(Recommended)
-profile.ALTERNATE_MEDIUM=§2Medium §7(Alternate Style)
-profile.HIGH=§bHigh §6§l(Recommended)
-profile.ALTERNATE_HIGH=§bHigh §7(Alternate Style)
-profile.HIGH_GRASS=§bHigh + Shader Grass
-profile.ALTERNATE_HIGH_GRASS=§bHigh + Shader Grass §7(Alt. Style)
-profile.VERY_HIGH=§9Very High
-profile.ULTRA=§dUltra
+iris_extension.keybind.key0.name=Flashlight
+
 profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lEMANRUX §6§lSETTINGS §r§l«§4§l◆
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 screen.Emanrux_Settings=Emanrux Settings
 screen.POM_Settings=POM Settings
@@ -47,9 +37,8 @@ option.RAIN_DENSITY.comment=Controls how many rain drops appear on the glass sur
 option.RAIN_TRAIL.comment=Length of the fading trail left behind each rain drop. §7Lower values create shorter, rounder drops. §aPERFORMANCE COST: §2none
 option.RAIN_SIZE.comment=Size of individual rain drops on the glass. §7Smaller values look more realistic. §aPERFORMANCE COST: §2none
 
-screen.Frost_on_Glass_Settings=Frost on Glass Settings
 option.FROST_ON_GLASS=FROST ON GLASS
-option.FROST_ON_GLASS.comment=Enables frost crystal effect on glass surfaces during snowfall. §aPERFORMANCE COST: §alow
+option.FROST_ON_GLASS.comment=Enables frost crystals on glass during snowfall. §aPERFORMANCE COST: §alow-medium
 
 option.EXTRA_BLOCK_LIGHTS=EXTRA BLOCK LIGHTS
 option.EXTRA_BLOCK_LIGHTS.comment=Enables real LPV light emission from additional blocks like redstone blocks. §aPERFORMANCE COST: §emedium
@@ -63,19 +52,152 @@ option.BRIGHT_ORES.comment=Makes ores glow more intensely in the dark (including
 option.GALAXY_SKY=GALAXY SKY
 option.GALAXY_SKY.comment=Adds a realistic galaxy to the night sky. §aPERFORMANCE COST: §alow
 
+option.NO_CLOUDS_AT_NIGHT=NO CLOUDS AT NIGHT
+option.NO_CLOUDS_AT_NIGHT.comment=Disables volumetric clouds during nighttime, leaving the starry sky fully visible. §aPERFORMANCE COST: §2positive
+
+option.SUN_FLARE_RING=SUN FLARE RING
+option.SUN_FLARE_RING.comment=Enables a glow ring around the sun during lens flares. §aPERFORMANCE COST: §2none
+
+option.black_hole_effect_strength=BLACK HOLE EFFECT STRENGTH
+option.black_hole_effect_strength.comment=Controls the center-only black hole pull and shake. Set to 0 to disable. §aPERFORMANCE COST: §alow
+
+option.END_SHADOW_QUALITY=END SHADOW QUALITY
+option.END_SHADOW_QUALITY.comment=Controls the End black-hole shadow filter quality while keeping the shadow map capped at 2048px. §aPERFORMANCE COST: §elow to medium
+    value.END_SHADOW_QUALITY.0=LOW
+    value.END_SHADOW_QUALITY.1=MEDIUM
+    value.END_SHADOW_QUALITY.2=HIGH
+    value.END_SHADOW_QUALITY.3=ULTRA
+
+option.END_FOG_LEVEL=END FOG LEVEL
+option.END_FOG_LEVEL.comment=Controls all End fog, volumetric fog, fog clumps, and the main-island nebula spiral from 0 to 100.
+suffix.END_FOG_LEVEL=%
+
+option.END_VOID_SPIRAL=END VOID SPIRAL
+option.END_VOID_SPIRAL.comment=Adds an animated violet spiral below the End void. §aPERFORMANCE COST: §alow
+option.END_WANDERING_DRAGONS=END WANDERING DRAGONS
+option.END_WANDERING_DRAGONS.comment=Shows distant procedural Ender Dragon silhouettes in the End sky. §aPERFORMANCE COST: §alow
+
+option.AURORA_LOCATION=AURORA LOCATION
+option.AURORA_LOCATION.comment=Controls which biomes get the aurora borealis effect. §aPERFORMANCE COST: §alow
+    value.AURORA_LOCATION.0=DISABLED
+    value.AURORA_LOCATION.1=SNOWY BIOMES ONLY
+    value.AURORA_LOCATION.2=ALWAYS (ALL BIOMES)
+    value.AURORA_LOCATION.3=ALL BIOMES (RARE IN NON-SNOWY)
+
 option.FIRE_COLOR_CORRECTION=PRESENCE OF SOULS
-option_FIRE_COLOR_CORRECTION.comment=Adds the presence of souls on the player's screen, color correction for soul fire, soul possession of the player's body and some mobs, as long as they are near souls (blue light) §aPERFORMANCE COST: §alow
+option.FIRE_COLOR_CORRECTION.comment=Adds soul fire color correction, screen presence, and soul effects near soul blocks or soul fire. §aPERFORMANCE COST: §alow
 
 option.ENCHANTING_TABLE_EFFECTS=ENCHANTING TABLE EFFECTS
 option.ENCHANTING_TABLE_EFFECTS.comment=Enables magical runic floors and floating particles when near an Enchanting Table. §aPERFORMANCE COST: §alow
 
+option.LENS_FLARE_MODE=LENS FLARE MODE
+option.LENS_FLARE_MODE.comment=Selects the lens flare style. 0 disables it, 1 is the current flare, 2 adds more rings, and 3 adds stronger rays. §aPERFORMANCE COST: §alow
+    value.LENS_FLARE_MODE.0=OFF
+    value.LENS_FLARE_MODE.1=1
+    value.LENS_FLARE_MODE.2=2 - RINGS
+    value.LENS_FLARE_MODE.3=3 - RAYS
+
 option.CINEMATIC_MODE=Cinematic Mode
 option.CINEMATIC_MODE.comment=Adds letterbox bars, desaturation, darkening and vignette for a cinematic look. §cPERFORMANCE COST: §alow
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
+screen.Night_Options=Night Options
+screen.Night_Options.comment=Quick controls for moonlight, night brightness, flashlight, stars, and night sky details.
+option.RAIN_ON_GLASS_MODE=Rain on Glass
+option.RAIN_ON_GLASS_MODE.comment=Off disables the glass rain overlay. Light keeps the current simple drops. §aPERFORMANCE COST: §alow                                      §fRealistic adds varied drops, curved trails, and procedural merging. §aPERFORMANCE COST: §emedium
+value.RAIN_ON_GLASS_MODE.0=Off
+value.RAIN_ON_GLASS_MODE.1=Light
+value.RAIN_ON_GLASS_MODE.2=Realistic
+option.PULSAR=Pulsar
+option.PULSAR.comment=Adds a small distant blue pulsar in the night sky with an erratic rotating beam. §aPERFORMANCE COST: §alow   
+option.PULSAR_BRIGHTNESS=Pulsar Brightness
+option.PULSAR_SIZE=Pulsar Size
+option.PLANET_0=Planet 1
+option.PLANET_1=Ringed Planet
+option.PLANET_2=Planet 3
+option.PLANET_3=Planet 4
+option.PLANET_4=Planet 5
+screen.Rain_on_Glass_Light_Settings=Light Mode
+screen.Rain_on_Glass_Realistic_Settings=Realistic Mode
+option.RAIN_REALISTIC_SPEED=Realistic Flow Speed
+option.RAIN_REALISTIC_DENSITY=Realistic Drop Density
+option.RAIN_REALISTIC_DROP_SIZE=Realistic Drop Size
+option.RAIN_REALISTIC_TRAILS=Realistic Trail Weight
+option.RAIN_REALISTIC_HIGHLIGHTS=Realistic Highlights
+option.RAIN_LIGHT_BRIGHTNESS=Light Brightness
+screen.Space_Objects_Settings=Space Objects Settings
+screen.Space_Objects_Settings.comment=Overworld-only sky objects: planets, meteors, and pulsar.
+screen.End_Options=End Options
+screen.End_Options.comment=End-only atmosphere, shadows, void spiral, dragons, black hole, meteors, and planets.
+option.BRIGHT_ORES_INTENSITY=Bright Ores Intensity
+option.PLANETS=Overworld Planets
+option.PLANETS.comment=Shows configurable planets in the Overworld sky.
+option.PLANET_BRIGHTNESS=Planet Brightness
+option.PLANET_QUALITY=Planet Quality
+value.PLANET_QUALITY.0=Low
+value.PLANET_QUALITY.1=Medium
+value.PLANET_QUALITY.2=High
+option.METEORS_OW=METEORS
+value.METEORS_OW.0=Off
+value.METEORS_OW.1=On
+option.METEORS_OW.comment=Shows meteors in the Overworld sky. §aPERFORMANCE COST: §alow   
+option.METEOR_COUNT=Meteor Count
+option.METEOR_RARITY=Meteor Rarity
+option.METEOR_SPEED=Meteor Speed
+option.END_PLANETS=End Planets
+option.END_PLANETS.comment=Shows configurable planets only in the End sky. §aPERFORMANCE COST: §alow   
+option.END_PLANET_0=Planet 1
+option.END_PLANET_1=Planet 2
+option.END_PLANET_2=Planet 3
+option.END_PLANET_3=Planet 4
+option.END_PLANET_4=Planet 5
+option.END_METEORS=End Meteors
+option.END_METEORS.comment=Shows meteors only in the End sky. §aPERFORMANCE COST: §alow   
+option.END_BLACK_HOLE=End Black Hole
+option.END_BLACK_HOLE.comment=Shows the End black hole and its accretion disk.
+option.END_BH_JETS=End Black Hole Jets
+option.END_BH_JETS.comment=Adds vertical energy jets to the End black hole.
+option.BLACK_HOLE_SIZE=Black Hole Size
+option.BLACK_HOLE_LENSING=Black Hole Lensing
+value.PLANETS.0=Off
+value.PLANETS.1=On
+value.PLANET_0.0=Off
+value.PLANET_0.1=On
+value.PLANET_1.0=Off
+value.PLANET_1.1=On
+value.PLANET_2.0=Off
+value.PLANET_2.1=On
+value.PLANET_3.0=Off
+value.PLANET_3.1=On
+value.PLANET_4.0=Off
+value.PLANET_4.1=On
+value.END_PLANETS.0=Off
+value.END_PLANETS.1=On
+value.END_PLANET_0.0=Off
+value.END_PLANET_0.1=On
+value.END_PLANET_1.0=Off
+value.END_PLANET_1.1=On
+value.END_PLANET_2.0=Off
+value.END_PLANET_2.1=On
+value.END_PLANET_3.0=Off
+value.END_PLANET_3.1=On
+value.END_PLANET_4.0=Off
+value.END_PLANET_4.1=On
+value.END_METEORS.0=Off
+value.END_METEORS.1=On
+value.END_BLACK_HOLE.0=Off
+value.END_BLACK_HOLE.1=On
+value.END_BH_JETS.0=Off
+value.END_BH_JETS.1=On
+option.END_PLANET_BRIGHTNESS=End Planet Brightness
+option.END_PLANET_QUALITY=End Planet Quality
+value.END_PLANET_QUALITY.0=Low
+value.END_PLANET_QUALITY.1=Medium
+value.END_PLANET_QUALITY.2=High
+option.END_METEOR_COUNT=End Meteor Count
+option.END_METEOR_RARITY=End Meteor Rarity
+option.END_METEOR_SPEED=End Meteor Speed
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 option.OLD_LIGHTLEAK_FIX = Old Lightleak Fix
 option.CAVE_DETECTION = Cave detection
@@ -119,7 +241,10 @@ screen.CUSTOM_MOON_SETTINGS = Custom Moon Settings
     option.CUSTOM_MOON_ROTATION = Custom Moon Rotation
     option.CAELUM_SUPPORT = Caelum (ArdaCraft) Support
         option.CAELUM_SUPPORT.comment = §cREQUIRES CUSTOM MOON ROTATION.§r Changes the light casted by the sun/moon to the correct position specified by Caelum.
-    option.MOON_SIZE_SETTING = Moon Size
+    option.MOON_SIZE = Moon Size
+        suffix.MOON_SIZE = %
+    option.SUN_SIZE = Sun Size
+        suffix.SUN_SIZE = %
     option.MOON_LATITUDE = Latitude
         suffix.MOON_LATITUDE = °
     option.MONTH_LENGTH = Month Length
@@ -302,7 +427,7 @@ screen.Direct_Light = Direct Light
         option.LPV_REDSTONE_LIGHTS = Redstone Lights
         option.LPV_COLORED_CANDLES = Colored Candles
         option.LPV_NOSHADOW_HACK = Iris <= 1.7.0 Fix
-        option.LPV_VL_FOG_ILLUMINATION = Fog Light Propagation
+        option.LPV_VL_FOG_ILLUMINATION = Floodfill Fog Light Propagation
             value.LPV_VL_FOG_ILLUMINATION.0 = Off
             value.LPV_VL_FOG_ILLUMINATION.1 = Only Indoors
             value.LPV_VL_FOG_ILLUMINATION.2 = On
@@ -881,6 +1006,7 @@ screen.Resource_Pack_Support = Materials / Resource Pack Support
             suffix.DEFERRED_SSR_QUALITY = §§ samples
         option.DEFERRED_BACKGROUND_REFLECTION =^ Background reflections
         option.DEFERRED_ROUGH_REFLECTION =^ Rough reflections
+        option.DENOISED_REFLECTIONS =^ Denoised rough reflections
         option.FORWARD_SPECULAR = Reflections on water, glass
         option.FORWARD_SSR_QUALITY =^ Environment reflections
             value.FORWARD_SSR_QUALITY.0 =§c OFF
@@ -1254,7 +1380,7 @@ screen.Post_Processing.comment = Configure settings for all post processing effe
     screen.TAA_OPTIONS.comment = Configure settings related to anti-aliasing.
         option.SCREENSHOT_MODE.comment = §aTHIS DOES NOT CHANGE GRAPHICS QUALITY IN ANY WAY§r.  Toggle frame accumulation to get a low noise image. §bWhat is this?§r It stacks frames that happend onto the next frame that is generated, so it is like a long exposure photo.
         option.TAA.comment = Toggle temporal anti-aliasing. This removes all jagged edges on things, softens the image, and helps remove noise for many effects. This will cause ghosting or trailing because it uses past frames for extra information on the world. §aPERFORMANCE COST:§r low
-        option.BLEND_FACTOR.comment = Configure how much of frame history is used. high numbers means it relies less on frame history, so it may look flickery and noisy. low numbers rely more on frame history, so it may look less moisy, but more smudged with more trailing.
+        option.BLEND_FACTOR.comment = Configure how much of frame history is used. high numbers means it relies less on frame history, so it may look flickery and noisy. low numbers rely more on frame history, so it may look less noisy, but more smudged with more trailing.
         option.TAA_UPSCALING.comment = Toggle temporal upscaling. This retains a good amount of quality from a lower resolution image when it upscales. so you can still have a high looking resolution compared to typical upsampling and still have better performance.
         option.SCALE_FACTOR.comment = Configure from what fraction of your resolution to upscale from - §abelow 0.50x is not recommended, it is only allowed for fun!§r
 
@@ -1335,9 +1461,21 @@ screen.VOXY_SETTINGS = Voxy Settings
 
 screen.PHOTONICS_SETTINGS = Photonics Settings
     option.PHOTONICS_ACTIVE = Enable Photonics
+    option.ENABLE_PHOTONICS_HANDHELD = Photonics Handheld Lighting
+    option.ENABLE_PHOTONICS_GI = Photonics Global Illumination
+    option.ENABLE_PHOTONICS_BLOCKLIGHT = Photonics Blocklight
     option.PHOTONICS_INDIRECT_BRIGHTNESS = GI Brightness
     option.PHOTONICS_GI_ONLY = GI Only
-    option.PHOTONICS_FLOODFILL_FOG_LIGHT_PROPAGATION = Fog Light Propagation (Floodfill!)
+    option.PHOTONICS_LIGHTING_MODE = Lighting Mode
+    option.PHOTONICS_ALPHA_MODE = Alpha Mode
+    option.PHOTONICS_MAX_SAMPLES = Max Samples
+    option.PHOTONICS_MAX_LIGHTS = Max Lights
+    option.VOXEL_REFLECTIONS_SOLID = World Space Reflections (Terrain)
+    option.VOXEL_REFLECTIONS_TRANSLUCENT = World Space Reflections (Water)
+    option.TRANSLUCENT_IN_REFLECTIONS = Translucents in Reflections
+    option.MIRROR_IRON = Iron Block Mirror
+    option.VOXEL_REFLECTIONS_FOG = Fog in Reflections
+    option.VOXEL_REFLECTIONS_LPV_FOG = Floodfill Fog Light Propagation in Reflections
 
 
 option.TRANSLUCENT_COLORED_SHADOWS.comment = §bWhat is this?§r This effect allows translucent things like stained glass to color the sunlight as it passes through it. §aPERFORMANCE COST:§r medium

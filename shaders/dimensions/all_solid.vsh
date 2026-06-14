@@ -46,7 +46,7 @@ out DATA {
 	vec4 lmtexcoord;
 	vec3 normalMat;
 
-	#if defined POM && !defined CUTOUT && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec4 texcoordam; // .st for add, .pq for mul
 		vec2 texcoord;
 	#endif
@@ -60,10 +60,7 @@ out DATA {
 } data_out;
 
 #ifdef MC_NORMAL_MAP
-#ifndef AT_TANGENT_IN
-#define AT_TANGENT_IN
 	in vec4 at_tangent;
-#endif
 #endif
 
 uniform float frameTimeCounter;
@@ -274,7 +271,7 @@ void main() {
 	// gl_TextureMatrix[0] for animated things like charged creepers
 	data_out.lmtexcoord.xy = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
 
-	#if defined POM && !defined CUTOUT && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec2 midcoord = (gl_TextureMatrix[0] *  mc_midTexCoord).st;
 		vec2 texcoordminusmid = data_out.lmtexcoord.xy-midcoord;
 		data_out.texcoordam.pq  = abs(texcoordminusmid)*2.;
@@ -520,6 +517,7 @@ void main() {
 			if(blockBelow == 85) gl_Position.z -= 10000.0;
 		}
 	#endif
+	
 	#if defined BLOCKENTITIES && !defined COLORWHEEL && (MC_VERSION >= 260100 || !defined SHADER_END_PORTAL)
 		if(data_out.blockID == BLOCK_END_PORTAL || data_out.blockID == BLOCK_END_GATEWAY)data_out.lmtexcoord = projection_from_position(gl_Position);
 	#endif

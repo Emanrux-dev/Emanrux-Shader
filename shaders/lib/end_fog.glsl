@@ -66,10 +66,13 @@ SOFTWARE.*/
 float vortexBoundRange = 300.0;
 vec3 ManualLightPos = vec3(ORB_X, ORB_Y, ORB_Z);
 
+float EndFogAmount(){
+	return clamp(float(END_FOG_LEVEL) * 0.01, 0.0, 1.0);
+}
+
 vec3 LightSourcePosition(vec3 worldPos, vec3 cameraPos, float vortexBounds){
 
-	// this is static so it can just sit in one place
-	vec3 vortexPos = worldPos - vec3(0.0,200.0,0.0);
+	vec3 vortexPos = -END_LIGHT_DIR * 200.0;
 
     vec3 lightningPos = worldPos - cameraPos - ManualLightPos;
     
@@ -125,7 +128,9 @@ void VolumeBounds(inout float Volume, vec3 Origin){
 	Origin2.y *= 0.8;
     float Center1 = length(Origin2);
 
-    float Bounds = max(1.0 - Center1 / 95.0, 0.0) * 5.0;
+    float mainIslandClear = 1.0 - smoothstep(70.0, 190.0, length(Origin.xz));
+    mainIslandClear *= 1.0 - smoothstep(125.0, 230.0, abs(Origin.y));
+    float Bounds = max(1.0 - Center1 / 95.0, 0.0) * 5.0 + mainIslandClear * 1.15;
 
 
     float radius = 150.0;
@@ -140,8 +145,27 @@ void VolumeBounds(inout float Volume, vec3 Origin){
 	
 }
 
+float EndIslandNebulaSpiral(vec3 pos, vec3 samplePos){
+	float r = length(pos.xz);
+	float heightMask = exp(-pow((pos.y - 72.0) / 92.0, 2.0));
+	float ringMask = exp(-pow((r - 205.0) / 72.0, 2.0));
+	float angle = atan(pos.z, pos.x);
+	float spiralNoise = densityAtPosFog(samplePos * 5.4 + vec3(17.0, 4.0, 9.0));
+	float arm = 0.5 + 0.5 * sin(angle * 3.0 - r * 0.034 + pos.y * 0.018 + frameTimeCounter * 0.055 + spiralNoise * 4.2);
+	float armMask = smoothstep(0.42, 0.96, arm);
+	float softBody = 0.30 + 0.70 * densityAtPosFog(samplePos * 8.5 - vec3(frameTimeCounter * 0.012));
+	return ringMask * heightMask * (0.010 + 0.038 * armMask) * softBody;
+}
+
 // create the volume shape
 float fogShape(in vec3 pos){
+
+	#ifndef TOGGLE_VL_FOG
+		return 0.0;
+	#endif
+
+	float endFog = EndFogAmount();
+	if (endFog <= 0.0) return 0.0;
 
 	float vortexBounds = clamp(vortexBoundRange - length(pos), 0.0,1.0);
 	vec3 samplePos = pos*vec3(1.0,1.0/48.0,1.0);
@@ -149,6 +173,8 @@ float fogShape(in vec3 pos){
 
 	// this is below down where you fall to your death.
 	float voidZone = max(exp2(-1.0 * sqrt(max(pos.y - -60,0.0))) ,0.0) ;
+	float mainIslandCalm = 1.0 - smoothstep(105.0, 245.0, length(pos.xz));
+	mainIslandCalm *= 1.0 - smoothstep(140.0, 270.0, abs(pos.y));
 
 	// swirly swirly :DDDDDDDDDDD
     SwirlAroundOrigin(samplePos, pos);
@@ -157,13 +183,21 @@ float fogShape(in vec3 pos){
     float erosion = 1.0-densityAtPosFog((samplePos - frameTimeCounter/18) * (124 + (1-noise)*7));
     
 
-	float clumpyFog = max(exp(noise * -mix(10,4,vortexBounds))*mix(2,1,vortexBounds) - erosion*0.32, 0.0);
+	float clumpyFog = max(exp(noise * -mix(10,4,vortexBounds))*mix(2,1,vortexBounds) - erosion*0.32, 0.0) * 0.02;
+	clumpyFog *= mix(1.0, 0.72, mainIslandCalm);
     
 	// apply limts
     VolumeBounds(clumpyFog, pos);
 
+	float islandSpiral = EndIslandNebulaSpiral(pos, samplePos);
 
-	return clumpyFog + voidZone;
+	return (clumpyFog + islandSpiral + voidZone * mix(0.06, 0.038, mainIslandCalm)) * endFog;
+}
+
+float EndOuterIslandFogMultiplier(vec3 pos){
+	float outerIslands = smoothstep(720.0, 1050.0, length(pos.xz));
+	float mainIsland = 1.0 - smoothstep(180.0, 360.0, length(pos.xz));
+	return mix(mix(0.32, 0.42, 1.0 - mainIsland), 0.24, outerIslands);
 }
 
 float endFogPhase(vec3 LightPos){
@@ -224,6 +258,7 @@ vec4 GetVolumetricFog(
 	#ifndef TOGGLE_VL_FOG
 		return vec4(0.0,0.0,0.0,1.0);
 	#endif
+	if (EndFogAmount() <= 0.0) return vec4(0.0,0.0,0.0,1.0);
 
 
 	/// -------------  RAYMARCHING STUFF ------------- \\\
@@ -236,12 +271,24 @@ vec4 GetVolumetricFog(
 
 	float rayLength = length(dVWorld);
 
+	#if VL_SAMPLES <= 4
+		const int END_VL_SAMPLE_COUNT = 5;
+	#elif VL_SAMPLES <= 6
+		const int END_VL_SAMPLE_COUNT = 7;
+	#elif VL_SAMPLES <= 8
+		const int END_VL_SAMPLE_COUNT = 9;
+	#elif VL_SAMPLES <= 10
+		const int END_VL_SAMPLE_COUNT = 11;
+	#else
+		const int END_VL_SAMPLE_COUNT = 13;
+	#endif
+
 	#if defined DISTANT_HORIZONS || defined VOXY
-		int SAMPLECOUNT = 19;
+		int SAMPLECOUNT = END_VL_SAMPLE_COUNT + 2;
 		float expFactor = 33.0;
 		float maxDist = mix(800.0, 300.0, verticalFactor);
 	#else
-		int SAMPLECOUNT = 15;
+		int SAMPLECOUNT = END_VL_SAMPLE_COUNT;
 		float expFactor = 11.0;
 		float maxDist = mix(380.0, 300.0, verticalFactor);
 	#endif
@@ -290,10 +337,12 @@ vec4 GetVolumetricFog(
         	vec3 lightPosition = LightSourcePosition(progressW, cameraPosition, vortexBounds);
 			vec3 lightColors = LightSourceColors(vortexBounds, lightningflash) * 0.25;
 
-			float volumeDensity = fogShape(progressW);
+			float endFog = EndFogAmount();
+			float outerFogMultiplier = EndOuterIslandFogMultiplier(progressW);
+			float volumeDensity = fogShape(progressW) * outerFogMultiplier;
 			
 			float clearArea =  1.0-min(max(1.0 - length(progressP) / 100,0.0),1.0);
-			float stormDensity = min(volumeDensity, clearArea*clearArea * END_STORM_DENSTIY);
+			float stormDensity = min(volumeDensity, clearArea*clearArea * END_STORM_DENSTIY * endFog);
 			
 			#ifdef THE_ORB
 				stormDensity += min(50.0*max(1.0 - length(lightPosition)/10,0.0),1.0);
@@ -311,7 +360,7 @@ vec4 GetVolumetricFog(
 
 		//------ HAZE EFFECT
 			// dont make haze contrube to absorbance.
-			float hazeDensity = 0.001 * END_HAZE_DENSTIY;
+			float hazeDensity = 0.001 * END_HAZE_DENSTIY * endFog * outerFogMultiplier;
 			vec3 hazeLighting = vec3(0.37,0.32,0.75) * skyPhase * 0.5;
 			color += (hazeLighting - hazeLighting*exp(-hazeDensity*dd*dL)) * absorbance;
 	}
@@ -319,13 +368,18 @@ vec4 GetVolumetricFog(
 }
 
 float GetEndFogShadow(vec3 WorldPos, vec3 LightPos){
+	#ifndef TOGGLE_VL_FOG
+		return 1.0;
+	#endif
+	if (EndFogAmount() <= 0.0 || END_STORM_DENSTIY <= 0.0) return 1.0;
+
     float Shadow = 0.0;
 
 	for (int i=0; i < 3; i++){
 
 	    // vec3 shadowSamplePos = WorldPos - LightPos * (pow(i,0.75)*0.25); 
 	    vec3 shadowSamplePos = WorldPos - LightPos * (0.01 + pow(i,0.75)*0.25); 
-	    Shadow += fogShape(shadowSamplePos)*END_STORM_DENSTIY;
+	    Shadow += fogShape(shadowSamplePos)*END_STORM_DENSTIY*EndOuterIslandFogMultiplier(shadowSamplePos);
     }
 
 	return clamp(exp2(Shadow * -10.0),0.0,1.0);

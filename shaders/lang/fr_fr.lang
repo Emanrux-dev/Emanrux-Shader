@@ -1,80 +1,203 @@
-option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Une Édition Eclipse
+option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Une édition d'Eclipse
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 1.0.0
+    value.SHADER_VERSION_LABEL.482 = 1.1.0
 
-profile.POTATO=§4Patate 
-profile.VERY_LOW=§cTrès Bas 
-profile.LOW=§aBas 
-profile.MEDIUM=§2Moyen §6§l(Recommandé)
-profile.ALTERNATE_MEDIUM=§2Moyen §7(Style Alternatif)
-profile.HIGH=§bÉlevé §6§l(Recommandé)
-profile.ALTERNATE_HIGH=§bÉlevé §7(Style Alternatif)
-profile.HIGH_GRASS=§bÉlevé + Herbe du Shader
-profile.ALTERNATE_HIGH_GRASS=§bÉlevé + Herbe du Shader §7(Style Alt.)
-profile.VERY_HIGH=§9Très Élevé
-profile.ULTRA=§dUltra
-profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lPARAMÈTRES §6§lEMANRUX §r§l«§4§l◆
+iris_extension.keybind.key0.name=Lampe torche
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lEMANRUX §6§lPARAMÈTRES §r§l«§4§l◆
 
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 screen.Emanrux_Settings=Paramètres Emanrux
 screen.POM_Settings=Paramètres POM
-screen.Emanrux_Configs=Configurations Emanrux
+screen.Emanrux_Configs=Configs Emanrux
 option.CUSTOM_REFLECTIONS=RÉFLEXIONS PERSONNALISÉES
 option.EXTRA_EMISSIVE_BLOCKS=BLOCS ÉMISSIFS SUPPLÉMENTAIRES
 option.CONNECTED_GLASS=VERRE CONNECTÉ
-screen.Rain_on_Glass_Settings=Paramètres Pluie sur le Verre
+screen.Rain_on_Glass_Settings=Pluie sur le Verre
 option.RAIN_ON_GLASS=PLUIE SUR LE VERRE
 option.RAIN_SPEED=Vitesse de la Pluie
-option.RAIN_SPEED_VARIANCE=Variance de Vitesse de la Pluie
+option.RAIN_SPEED_VARIANCE=Variance de Vitesse
 option.RAIN_DENSITY=Densité de la Pluie
-option.RAIN_TRAIL=Longueur de la Traînée de Pluie
-option.RAIN_SIZE=Taille des Gouttes de Pluie
+option.RAIN_TRAIL=Longueur de la Traînée
+option.RAIN_SIZE=Taille des Gouttes
 
-screen.Rain_on_Glass_Settings.comment=Configurer l'apparence et le comportement des gouttes de pluie sur le verre
-screen.Emanrux_Configs.comment=Paramètres personnalisés créés par Emanrux 
-screen.POM_Settings.comment=Configurer la profondeur et la qualité du Parallax Occlusion Mapping
+screen.Rain_on_Glass_Settings.comment=Configure l'apparence et le comportement des gouttes de pluie sur le verre
+screen.Emanrux_Configs.comment=Paramètres personnalisés créés par Emanrux
+screen.POM_Settings.comment=Configure la profondeur et la qualité du Parallax Occlusion Mapping
 
-option.CUSTOM_REFLECTIONS.comment=Active les réflexions personnalisées en espace écran sur les surfaces. §aCOÛT DE PERFORMANCE : §emoyen
+option.CUSTOM_REFLECTIONS.comment=Active des réflexions personnalisées en espace écran sur les surfaces. §aCOÛT DE PERFORMANCE : §emoyen
 option.EXTRA_EMISSIVE_BLOCKS.comment=Ajoute une lueur émissive supplémentaire à des types de blocs additionnels. §aCOÛT DE PERFORMANCE : §afaible
-option.CONNECTED_GLASS.comment=Active les textures connectées sans couture sur les blocs de verre. §aCOÛT DE PERFORMANCE : §afaible
+option.CONNECTED_GLASS.comment=Active les textures connectées sur les blocs de verre. §aCOÛT DE PERFORMANCE : §afaible
 
-option.RAIN_ON_GLASS.comment=Active les gouttes de pluie animées sur les surfaces en verre. §eVisible uniquement par temps de pluie. §aCOÛT DE PERFORMANCE : §afaible
-option.RAIN_SPEED.comment=Contrôle la vitesse de chute des gouttes de pluie sur le verre. §7Des valeurs plus élevées font tomber les gouttes plus vite. §aCOÛT DE PERFORMANCE : §2aucun
+option.RAIN_ON_GLASS.comment=Active des gouttes de pluie animées sur les surfaces en verre. §eVisible uniquement par temps de pluie. §aCOÛT DE PERFORMANCE : §afaible
+option.RAIN_SPEED.comment=Contrôle la vitesse de chute des gouttes sur le verre. §7Des valeurs plus élevées font tomber les gouttes plus vite. §aCOÛT DE PERFORMANCE : §2aucun
 option.RAIN_SPEED_VARIANCE.comment=Ajoute de l'aléatoire à la vitesse individuelle de chaque goutte. §7Des valeurs plus élevées créent un mouvement plus varié. §aCOÛT DE PERFORMANCE : §2aucun
-option.RAIN_DENSITY.comment=Contrôle le nombre de gouttes de pluie apparaissant sur la surface en verre. §7Des valeurs plus élevées créent un effet de pluie plus intense. §aCOÛT DE PERFORMANCE : §afaible
-option.RAIN_TRAIL.comment=Longueur de la traînée estompée laissée derrière chaque goutte de pluie. §7Des valeurs plus faibles créent des gouttes plus courtes et rondes. §aCOÛT DE PERFORMANCE : §2aucun
-option.RAIN_SIZE.comment=Taille des gouttes de pluie individuelles sur le verre. §7Des valeurs plus petites semblent plus réalistes. §aCOÛT DE PERFORMANCE : §2aucun
+option.RAIN_DENSITY.comment=Contrôle le nombre de gouttes apparaissant sur le verre. §7Des valeurs plus élevées créent un effet de pluie plus intense. §aCOÛT DE PERFORMANCE : §afaible
+option.RAIN_TRAIL.comment=Longueur de la traînée laissée par chaque goutte. §7Des valeurs plus faibles créent des gouttes plus courtes et arrondies. §aCOÛT DE PERFORMANCE : §2aucun
+option.RAIN_SIZE.comment=Taille individuelle des gouttes sur le verre. §7Des valeurs plus petites sont plus réalistes. §aCOÛT DE PERFORMANCE : §2aucun
 
-screen.Frost_on_Glass_Settings=Paramètres Givre sur le Verre
 option.FROST_ON_GLASS=GIVRE SUR LE VERRE
-option.FROST_ON_GLASS.comment=Active l'effet de cristaux de givre sur les surfaces en verre lors des chutes de neige. §aCOÛT DE PERFORMANCE : §afaible
+option.FROST_ON_GLASS.comment=Active des cristaux de givre sur le verre lors des chutes de neige. §aCOÛT DE PERFORMANCE : §afaible à moyen
 
 option.EXTRA_BLOCK_LIGHTS=LUMIÈRES DE BLOCS SUPPLÉMENTAIRES
 option.EXTRA_BLOCK_LIGHTS.comment=Active l'émission de lumière LPV réelle depuis des blocs supplémentaires comme les blocs de redstone. §aCOÛT DE PERFORMANCE : §emoyen
 
 option.CUSTOM_NETHER_PORTAL=PORTAIL DU NETHER PERSONNALISÉ
-option.CUSTOM_NETHER_PORTAL.comment=Ajoute un effet de vortex animé personnalisé aux Portails du Nether. §aCOÛT DE PERFORMANCE : §afaible
+option.CUSTOM_NETHER_PORTAL.comment=Ajoute un effet de vortex animé aux Portails du Nether. §aCOÛT DE PERFORMANCE : §afaible
 
-option.BRIGHT_ORES=MINERAIS PLUS BRILLANTS
-option.BRIGHT_ORES.comment=Rend les minerais plus lumineux dans l'obscurité (y compris le charbon). §aCOÛT DE PERFORMANCE : §afaible
+option.BRIGHT_ORES=MINERAIS PLUS LUMINEUX
+option.BRIGHT_ORES.comment=Fait briller les minerais plus intensément dans le noir (charbon inclus). §aCOÛT DE PERFORMANCE : §afaible
 
 option.GALAXY_SKY=CIEL GALACTIQUE
 option.GALAXY_SKY.comment=Ajoute une galaxie réaliste au ciel nocturne. §aCOÛT DE PERFORMANCE : §afaible
 
+option.NO_CLOUDS_AT_NIGHT=PAS DE NUAGES LA NUIT
+option.NO_CLOUDS_AT_NIGHT.comment=Désactive les nuages volumétriques pendant la nuit, laissant le ciel étoilé entièrement visible. §aCOÛT DE PERFORMANCE : §2positif
+
+option.SUN_FLARE_RING=ANNEAU DE HALO SOLAIRE
+option.SUN_FLARE_RING.comment=Active un anneau lumineux autour du soleil lors des halos de lentille. §aCOÛT DE PERFORMANCE : §2aucun
+
+option.black_hole_effect_strength=INTENSITÉ DE L'EFFET TROU NOIR
+option.black_hole_effect_strength.comment=Contrôle l'attraction et les vibrations du trou noir depuis le centre. Mettre à 0 pour désactiver. §aCOÛT DE PERFORMANCE : §afaible
+
+option.END_SHADOW_QUALITY=QUALITÉ DES OMBRES DE L'END
+option.END_SHADOW_QUALITY.comment=Contrôle la qualité du filtre d'ombre du trou noir de l'End tout en maintenant la carte d'ombres limitée à 2048px. §aCOÛT DE PERFORMANCE : §efaible à moyen
+    value.END_SHADOW_QUALITY.0=FAIBLE
+    value.END_SHADOW_QUALITY.1=MOYEN
+    value.END_SHADOW_QUALITY.2=ÉLEVÉ
+    value.END_SHADOW_QUALITY.3=ULTRA
+
+option.END_FOG_LEVEL=NIVEAU DE BROUILLARD DE L'END
+option.END_FOG_LEVEL.comment=Contrôle tout le brouillard de l'End, le brouillard volumétrique, les amas de brouillard et la spirale nébuleuse de l'île principale de 0 à 100.
+suffix.END_FOG_LEVEL=%
+
+option.END_VOID_SPIRAL=SPIRALE DU VIDE DE L'END
+option.END_VOID_SPIRAL.comment=Ajoute une spirale violette animée sous le vide de l'End. §aCOÛT DE PERFORMANCE : §afaible
+option.END_WANDERING_DRAGONS=DRAGONS ERRANTS DE L'END
+option.END_WANDERING_DRAGONS.comment=Affiche des silhouettes procédurales d'Ender Dragon dans le ciel de l'End. §aCOÛT DE PERFORMANCE : §afaible
+
+option.AURORA_LOCATION=EMPLACEMENT DE L'AURORE
+option.AURORA_LOCATION.comment=Contrôle dans quels biomes apparaît l'effet d'aurore boréale. §aCOÛT DE PERFORMANCE : §afaible
+    value.AURORA_LOCATION.0=DÉSACTIVÉE
+    value.AURORA_LOCATION.1=BIOMES ENNEIGÉS UNIQUEMENT
+    value.AURORA_LOCATION.2=TOUJOURS (TOUS LES BIOMES)
+    value.AURORA_LOCATION.3=TOUS LES BIOMES (RARE HORS BIOMES ENNEIGÉS)
+
 option.FIRE_COLOR_CORRECTION=PRÉSENCE D'ÂMES
-option.FIRE_COLOR_CORRECTION.comment=Ajoute la présence d'âmes sur l'écran du joueur, correction des couleurs pour le feu des âmes, possession des âmes du corps du joueur et de certains mobs, tant qu'ils sont près des âmes (lumière bleue). §aCOÛT DE PERFORMANCE: §afaible
+option.FIRE_COLOR_CORRECTION.comment=Ajoute une correction des couleurs du feu d'âmes, une présence à l'écran et des effets d'âme à proximité de blocs d'âmes ou de feu d'âmes. §aCOÛT DE PERFORMANCE : §afaible
+
 option.ENCHANTING_TABLE_EFFECTS=EFFETS DE TABLE D'ENCHANTEMENT
-option.ENCHANTING_TABLE_EFFECTS.comment=Active des sols runiques magiques et des particules flottantes lorsqu'on est près d'une Table d'Enchantement. §aCOÛT DE PERFORMANCE: §afaible
+option.ENCHANTING_TABLE_EFFECTS.comment=Active des sols runiques magiques et des particules flottantes à proximité d'une Table d'Enchantement. §aCOÛT DE PERFORMANCE : §afaible
+
+option.LENS_FLARE_MODE=MODE DE HALO DE LENTILLE
+option.LENS_FLARE_MODE.comment=Sélectionne le style du halo de lentille. 0 le désactive, 1 est le halo actuel, 2 ajoute plus d'anneaux et 3 ajoute des rayons plus intenses. §aCOÛT DE PERFORMANCE : §afaible
+    value.LENS_FLARE_MODE.0=DÉSACTIVÉ
+    value.LENS_FLARE_MODE.1=1
+    value.LENS_FLARE_MODE.2=2 - ANNEAUX
+    value.LENS_FLARE_MODE.3=3 - RAYONS
 
 option.CINEMATIC_MODE=Mode Cinématique
-option.CINEMATIC_MODE.comment=Ajoute des barres de letterbox, une désaturation, un assombrissement et un vignettage pour un rendu cinématique. §cCOÛT DE PERFORMANCE : §afaible
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+option.CINEMATIC_MODE.comment=Ajoute des barres letterbox, une désaturation, un assombrissement et un vignettage pour un rendu cinématique. §cCOÛT DE PERFORMANCE : §afaible
 
 
-
+screen.Night_Options=Options Nocturnes
+screen.Night_Options.comment=Contrôles rapides pour la lumière de lune, la luminosité nocturne, la lampe torche, les étoiles et les détails du ciel nocturne.
+option.RAIN_ON_GLASS_MODE=Pluie sur le Verre
+option.RAIN_ON_GLASS_MODE.comment=Désactivé supprime l'overlay de pluie sur le verre. Léger conserve les gouttes simples actuelles. §aCOÛT DE PERFORMANCE : §afaible                                      §fRéaliste ajoute des gouttes variées, des traînées courbées et une fusion procédurale. §aCOÛT DE PERFORMANCE : §emoyen
+value.RAIN_ON_GLASS_MODE.0=Désactivé
+value.RAIN_ON_GLASS_MODE.1=Léger
+value.RAIN_ON_GLASS_MODE.2=Réaliste
+option.PULSAR=Pulsar
+option.PULSAR.comment=Ajoute un petit pulsar bleu lointain dans le ciel nocturne avec un faisceau rotatif erratique. §aCOÛT DE PERFORMANCE : §afaible
+option.PULSAR_BRIGHTNESS=Luminosité du Pulsar
+option.PULSAR_SIZE=Taille du Pulsar
+option.PLANET_0=Planète 1
+option.PLANET_1=Planète à Anneaux
+option.PLANET_2=Planète 3
+option.PLANET_3=Planète 4
+option.PLANET_4=Planète 5
+screen.Rain_on_Glass_Light_Settings=Mode Léger
+screen.Rain_on_Glass_Realistic_Settings=Mode Réaliste
+option.RAIN_REALISTIC_SPEED=Vitesse d'Écoulement Réaliste
+option.RAIN_REALISTIC_DENSITY=Densité de Gouttes Réaliste
+option.RAIN_REALISTIC_DROP_SIZE=Taille de Gouttes Réaliste
+option.RAIN_REALISTIC_TRAILS=Poids de Traînée Réaliste
+option.RAIN_REALISTIC_HIGHLIGHTS=Reflets Réalistes
+option.RAIN_LIGHT_BRIGHTNESS=Luminosité du Mode Léger
+screen.Space_Objects_Settings=Objets Spatiaux
+screen.Space_Objects_Settings.comment=Objets célestes exclusifs à l'Overworld : planètes, météores et pulsar.
+screen.End_Options=Options de l'End
+screen.End_Options.comment=Atmosphère exclusive à l'End, ombres, spirale du vide, dragons, trou noir, météores et planètes.
+option.BRIGHT_ORES_INTENSITY=Intensité des Minerais Lumineux
+option.PLANETS=Planètes de l'Overworld
+option.PLANETS.comment=Affiche des planètes configurables dans le ciel de l'Overworld.
+option.PLANET_BRIGHTNESS=Luminosité des Planètes
+option.PLANET_QUALITY=Qualité des Planètes
+value.PLANET_QUALITY.0=Faible
+value.PLANET_QUALITY.1=Moyenne
+value.PLANET_QUALITY.2=Élevée
+option.METEORS_OW=MÉTÉORES
+value.METEORS_OW.0=Désactivé
+value.METEORS_OW.1=Activé
+option.METEORS_OW.comment=Affiche des météores dans le ciel de l'Overworld. §aCOÛT DE PERFORMANCE : §afaible
+option.METEOR_COUNT=Nombre de Météores
+option.METEOR_RARITY=Rareté des Météores
+option.METEOR_SPEED=Vitesse des Météores
+option.END_PLANETS=Planètes de l'End
+option.END_PLANETS.comment=Affiche des planètes configurables uniquement dans le ciel de l'End. §aCOÛT DE PERFORMANCE : §afaible
+option.END_PLANET_0=Planète 1
+option.END_PLANET_1=Planète 2
+option.END_PLANET_2=Planète 3
+option.END_PLANET_3=Planète 4
+option.END_PLANET_4=Planète 5
+option.END_METEORS=Météores de l'End
+option.END_METEORS.comment=Affiche des météores uniquement dans le ciel de l'End. §aCOÛT DE PERFORMANCE : §afaible
+option.END_BLACK_HOLE=Trou Noir de l'End
+option.END_BLACK_HOLE.comment=Affiche le trou noir de l'End et son disque d'accrétion.
+option.END_BH_JETS=Jets du Trou Noir de l'End
+option.END_BH_JETS.comment=Ajoute des jets d'énergie verticaux au trou noir de l'End.
+option.BLACK_HOLE_SIZE=Taille du Trou Noir
+option.BLACK_HOLE_LENSING=Lentille Gravitationnelle du Trou Noir
+value.PLANETS.0=Désactivé
+value.PLANETS.1=Activé
+value.PLANET_0.0=Désactivé
+value.PLANET_0.1=Activé
+value.PLANET_1.0=Désactivé
+value.PLANET_1.1=Activé
+value.PLANET_2.0=Désactivé
+value.PLANET_2.1=Activé
+value.PLANET_3.0=Désactivé
+value.PLANET_3.1=Activé
+value.PLANET_4.0=Désactivé
+value.PLANET_4.1=Activé
+value.END_PLANETS.0=Désactivé
+value.END_PLANETS.1=Activé
+value.END_PLANET_0.0=Désactivé
+value.END_PLANET_0.1=Activé
+value.END_PLANET_1.0=Désactivé
+value.END_PLANET_1.1=Activé
+value.END_PLANET_2.0=Désactivé
+value.END_PLANET_2.1=Activé
+value.END_PLANET_3.0=Désactivé
+value.END_PLANET_3.1=Activé
+value.END_PLANET_4.0=Désactivé
+value.END_PLANET_4.1=Activé
+value.END_METEORS.0=Désactivé
+value.END_METEORS.1=Activé
+value.END_BLACK_HOLE.0=Désactivé
+value.END_BLACK_HOLE.1=Activé
+value.END_BH_JETS.0=Désactivé
+value.END_BH_JETS.1=Activé
+option.END_PLANET_BRIGHTNESS=Luminosité des Planètes de l'End
+option.END_PLANET_QUALITY=Qualité des Planètes de l'End
+value.END_PLANET_QUALITY.0=Faible
+value.END_PLANET_QUALITY.1=Moyenne
+value.END_PLANET_QUALITY.2=Élevée
+option.END_METEOR_COUNT=Nombre de Météores de l'End
+option.END_METEOR_RARITY=Rareté des Météores de l'End
+option.END_METEOR_SPEED=Vitesse des Météores de l'End
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 option.OLD_LIGHTLEAK_FIX = Ancienne Correction de Fuite de Lumière
 option.CAVE_DETECTION = Détection de Grotte

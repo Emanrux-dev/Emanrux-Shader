@@ -1,28 +1,49 @@
-{   
+{
     "unusedString": "
         #include "/lib/settings.glsl"
         #include "/lib/res_params.glsl"
-    ",
-    "version": 1,
-    "opaqueDrawBuffers": [1, 8],
+    ","version": 1,
+    "opaqueDrawBuffers": [
+        1,
+        8
+    ],
     "excludeLodsFromVanillaDepth": true,
-    "translucentDrawBuffers": [16, 7, 11, 14],
+    "translucentDrawBuffers": [
+        16,
+        7,
+        11,
+        14
+    ],
     #ifdef TAA
     "taaOffset": "{ 
-    const vec2[4] offsets = vec2[4](
-		vec2(-0.125,	-0.875),
-		vec2( 0.875,	-0.125),
-		vec2( 0.125,	 0.875),
-		vec2(-0.875,	 0.125)
+    const vec2[
+        4
+    ] offsets = vec2[
+        4
+    ](
+		vec2(-0.125,
+    -0.875),
+		vec2( 0.875,
+    -0.125),
+		vec2( 0.125,
+    0.875),
+		vec2(-0.875,
+    0.125)
 	);
-    return offsets[framemod4_DH]*texelSize; 
-    }",
+    return offsets[framemod4_DH
+    ]*texelSize;
+}",
     #endif
     #ifdef TAA_UPSCALING 
-    "renderScale": [SCALE_FACTOR, SCALE_FACTOR],
+    "renderScale": [SCALE_FACTOR, SCALE_FACTOR
+],
     #endif
-    "blending": {-1:"SRC_ALPHA ONE_MINUS_SRC_ALPHA ONE_MINUS_DST_ALPHA ONE", 2:"off"},
-    "ssbos": {4:"{
+    "blending": {
+    -1: "SRC_ALPHA ONE_MINUS_SRC_ALPHA ONE_MINUS_DST_ALPHA ONE",
+    2: "off"
+},
+"ssbos": {
+    4:"{
         mat4 customShadowMatrixSSBO;
 
         #ifdef PHOTONICS
@@ -96,66 +117,63 @@
         float exposureSSBO;
 
         vec2 rodExposureDepthSSBO;
-    
-    }
-    "},
-    "useViewportDims": true,
-    "uniforms": [
-	"viewWidth",
-        "viewHeight",
-        "nightVision",
-        "cloudTime",
-        "noPuddleAreas",
-        "dhVoxyRenderDistance",
-        "worldDay",
-        "worldTime",
-        "moonElevation",
-        "worldTimeSmooth",
+}"},"useViewportDims": true,
+"uniforms": [
+    "viewWidth",
+    "viewHeight",
+    "nightVision",
+    "cloudTime",
+    "noPuddleAreas",
+    "dhVoxyRenderDistance",
+    "worldDay",
+    "worldTime",
+    "moonElevation",
+    "worldTimeSmooth",
         #if CUMULONIMBUS == 1
         "cumulonimbusStrength",
         #endif
         "framemod4_DH",
-        "vxModelView",
-        "vxModelViewPrev",
-        "vxModelViewInv",
-        "frameCounter",
-        "framemod8",
-        "dhVoxyFarPlane",
-        "dhVoxyNearPlane",
-        "vxProj",
-        "vxProjInv",
-        "vxProjPrev",
-        "gbufferModelView",
-        "gbufferModelViewInverse",
-        "gbufferProjection",
-        "gbufferProjectionInverse",
-        "gbufferPreviousModelView",
-        "gbufferPreviousProjection",
-        "shadowModelView",
-        "shadowModelViewInverse",
-        "shadowProjection",
-        "shadowProjectionInverse",
-        "cameraPosition",
-        "previousCameraPosition",
-        "near",
-        "far",
-        "frameTimeCounter",
-        "texelSize",
-        "sunPosition",
-        "sunElevation",
-        "lightningBoltPosition",
-        "thunderStrength",
-        "rainStrength",
-        "unsigned_WsunVecSmooth",
-        "unsigned_WmoonVecSmooth",
-        "isEyeInWater"
-    ], 
-    "samplers": [
-        "vxDepthTexOpaque",
-        "noisetex",
-        "colortex4",
-        "colortex5",
-        "depthtex0",
-        "depthtex1"
-    ]
+    "vxModelView",
+    "vxModelViewPrev",
+    "vxModelViewInv",
+    "frameCounter",
+    "framemod8",
+    "dhVoxyFarPlane",
+    "dhVoxyNearPlane",
+    "vxProj",
+    "vxProjInv",
+    "vxProjPrev",
+    "gbufferModelView",
+    "gbufferModelViewInverse",
+    "gbufferProjection",
+    "gbufferProjectionInverse",
+    "gbufferPreviousModelView",
+    "gbufferPreviousProjection",
+    "shadowModelView",
+    "shadowModelViewInverse",
+    "shadowProjection",
+    "shadowProjectionInverse",
+    "cameraPosition",
+    "previousCameraPosition",
+    "near",
+    "far",
+    "frameTimeCounter",
+    "texelSize",
+    "sunPosition",
+    "sunElevation",
+    "lightningBoltPosition",
+    "thunderStrength",
+    "rainStrength",
+    "unsigned_WsunVecSmooth",
+    "unsigned_WmoonVecSmooth",
+    "isEyeInWater"
+],
+"samplers": [
+    "vxDepthTexOpaque",
+    "noisetex",
+    "colortex4",
+    "colortex5",
+    "depthtex0",
+    "depthtex1"
+]
 }

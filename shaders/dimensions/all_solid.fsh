@@ -42,6 +42,11 @@ uniform int frameCounter;
 
 
 in DATA {
+	#if !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined BLOCKENTITIES && !defined CUTOUT
+		vec4 grassSideCheck;
+		vec3 centerPosition;
+	#endif
+
 	vec4 color;
 
 	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
@@ -51,11 +56,11 @@ in DATA {
 	vec4 lmtexcoord;
 	vec3 normalMat;
 
-	#if (defined POM && !defined CUTOUT && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)) || (!defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT)
+	#if (defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)) || (!defined BLOCKENTITIES && !defined ENTITIES && !defined HAND && defined SHADER_GRASS && !defined COLORWHEEL && defined WORLD && !defined CUTOUT)
 		vec4 texcoordam; // .st for add, .pq for mul
 	#endif
 
-	#if defined POM && !defined CUTOUT && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 		vec2 texcoord;
 	#endif
 
@@ -78,7 +83,7 @@ const float   MAX_OCCLUSION_POINTS_DIV = 1.0 / MAX_OCCLUSION_POINTS;
 uniform vec2 texelSize;
 uniform int framemod8;
 
-#if defined POM && !defined CUTOUT && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	vec2 dcdx = dFdx(data_in.texcoord.st*data_in.texcoordam.pq);
 	vec2 dcdy = dFdy(data_in.texcoord.st*data_in.texcoordam.pq);
 #else
@@ -118,6 +123,7 @@ uniform sampler2D depthtex0;
 #endif
 
 uniform vec4 entityColor;
+uniform float is_soul_burning;
 
 // in vec3 velocity;
 
@@ -234,14 +240,103 @@ vec3 toClipSpace3(vec3 viewSpacePosition) {
     return projMAD(gbufferProjection, viewSpacePosition) / -viewSpacePosition.z * 0.5 + 0.5;
 }
 
-#if defined POM && !defined CUTOUT && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-	vec4 readNormal(in vec2 coord)
+#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+	const float VANILLA_POM_DEPTH = POM_DEPTH;
+	const float TEXTUREPACK_POM_DEPTH = POM_DEPTH;
+
+	bool useVanillaPOMFallback()
 	{
-		return textureGrad(normals,fract(coord)*data_in.texcoordam.pq+data_in.texcoordam.st,dcdx,dcdy);
+		int id = data_in.blockID;
+		return id == BLOCK_GRASS || id == GRASS_BLOCK_SNOWY || id == BLOCK_SNOW_LAYERS ||
+		       id == BLOCK_SSS_WEAK_2 || id == BLOCK_SSS_WEIRD ||
+		       id == BLOCK_CRYING_OBSIDIAN ||
+		       id == 502 || id == 503 || id == 506 || id == 507 || id == 508 ||
+		       id == 511 || id == 512 || id == 514 || id == 515 || id == 517 || id == 518 ||
+		       id == 524 ||
+		       id == 519 || id == 520 || id == 521 || id == 522 || id == 218 || id == 186;
 	}
-	vec4 readTexture(in vec2 coord)
+	bool isOreOrDarkPOMBlock()
 	{
-		return textureGrad(gtexture,fract(coord)*data_in.texcoordam.pq+data_in.texcoordam.st,dcdx,dcdy);
+		int id = data_in.blockID;
+		return id == BLOCK_CRYING_OBSIDIAN ||
+		       id == 502 || id == 506 || id == 507 || id == 519 ||
+		       id == 520 || id == 521 || id == 522;
+	}
+	bool isGrassBlockPOM()
+	{
+		return data_in.blockID == BLOCK_GRASS || data_in.blockID == GRASS_BLOCK_SNOWY;
+	}
+
+	float blockEdgeSeamMask(in vec2 coord)
+	{
+		vec2 p = fract(coord);
+		float edgeDist = min(min(p.x, 1.0 - p.x), min(p.y, 1.0 - p.y));
+		return 1.0 - smoothstep(0.010, 0.045, edgeDist);
+	}
+
+	float texturePackPOMDepthScale()
+	{
+		int id = data_in.blockID;
+		if (id == BLOCK_GRASS || id == GRASS_BLOCK_SNOWY) return 0.45;
+		if (id == 524) return 6.0;
+		if (id == 503 || id == 515) return 0.70;
+		if (id == 502 || id == 218 || id == 186) return 0.85;
+		if (id == 521) return 0.85;
+		if (id == 506) return 0.85;
+		if (id == 520) return 0.85;
+		if (id == 522) return 0.85;
+		if (id == 507) return 0.85;
+		if (id == 519) return 0.80;
+		if (id == 511) return 0.80;
+		if (id == BLOCK_CRYING_OBSIDIAN) return 0.80;
+		return 1.0;
+	}
+
+    vec4 readNormal(in vec2 coord)
+    {
+        return textureGrad(normals,fract(coord)*data_in.texcoordam.pq+data_in.texcoordam.st,dcdx,dcdy);
+    }
+    vec4 readTexture(in vec2 coord)
+    {
+        return textureGrad(gtexture,fract(coord)*data_in.texcoordam.pq+data_in.texcoordam.st,dcdx,dcdy);
+    }
+	float readVanillaPOMHeight(in vec2 coord)
+	{
+		vec3 albedoSample = readTexture(coord).rgb * data_in.color.rgb;
+		float luminanceHeight = dot(albedoSample, vec3(0.21, 0.72, 0.07));
+		if (isOreOrDarkPOMBlock()) {
+			vec3 hsv = RgbToHsv(albedoSample);
+			float coloredOre = smoothstep(0.10, 0.46, hsv.y) * smoothstep(0.10, 0.52, hsv.z);
+			float brightOre = smoothstep(0.34, 0.82, luminanceHeight) * smoothstep(0.04, 0.24, hsv.y);
+			float darkOre = smoothstep(0.38, 0.08, luminanceHeight) * smoothstep(0.03, 0.18, hsv.y);
+			float oreMask = clamp(max(coloredOre, max(brightOre, darkOre)), 0.0, 1.0);
+			return mix(0.18 + luminanceHeight * 0.26, 0.92, oreMask);
+		}
+		return clamp(luminanceHeight, 0.02, 0.98);
+	}
+
+	float readPOMHeight(in vec2 coord, bool vanillaPOMFallback)
+	{
+		float height = vanillaPOMFallback ? readVanillaPOMHeight(coord) : readNormal(coord).a;
+		if (isOreOrDarkPOMBlock() && !vanillaPOMFallback) {
+			height = mix(height, readVanillaPOMHeight(coord), 0.70);
+		}
+		if (!vanillaPOMFallback) height = mix(height, 0.56, blockEdgeSeamMask(coord) * 0.35);
+		return height;
+	}
+	bool missingTexturePackPOMHeight(in vec2 coord)
+	{
+		vec2 tileBase = floor(coord);
+		float minHeight = 1.0;
+
+		for (int y = 0; y < 8; ++y) {
+			for (int x = 0; x < 8; ++x) {
+				vec2 sampleCoord = tileBase + (vec2(x, y) + 0.5) * 0.125;
+				minHeight = min(minHeight, readNormal(sampleCoord).a);
+			}
+		}
+
+		return minHeight > 0.999;
 	}
 #endif
 
@@ -289,7 +384,7 @@ vec4 texture_POMSwitch(
 	bool ifPOM,
 	float LOD
 ){
-	#if defined POM && !defined CUTOUT && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
+	#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	if(ifPOM){
 		return textureGrad(sampler, lightmapCoord, dcdxdcdy.xy, dcdxdcdy.zw);
 	}else
@@ -388,6 +483,10 @@ layout(location = 1) out vec4 OutSpecular;
 #endif
 
 void main() {
+	#ifdef ENTITIES
+		if (data_in.blockID == ENTITY_SHADOW || (data_in.blockID == 0 && data_in.color.a < 0.35)) discard;
+	#endif
+
 	vec3 FragCoord = gl_FragCoord.xyz;
         float emissiveMask = 0.0;
 
@@ -411,13 +510,16 @@ void main() {
 	bool SIGN = data_in.blockID == BLOCK_SIGN;
 
 	#ifdef ENTITIES
-		// disallow POM to work on item frames.
 		SIGN = data_in.blockID == ENTITY_ITEM_FRAME;
 	#else
 		SIGN = data_in.blockID == BLOCK_SIGN;
 	#endif
 
 	if(SIGN) ifPOM = false;
+	if(data_in.blockID == 523) ifPOM = false;
+	#ifdef POM
+		if(data_in.blockID == BLOCK_LPV_IGNORE || (data_in.blockID >= BLOCK_REDSTONE_WIRE_1 && data_in.blockID <= BLOCK_REDSTONE_WIRE_15)) ifPOM = false;
+	#endif
 
 	vec3 normal = data_in.normalMat;
 
@@ -440,13 +542,15 @@ void main() {
 	vec2 adjustedTexCoord = data_in.lmtexcoord.xy;
 
 	float saveDepth = 0.0;
-#if defined POM && !defined CUTOUT && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
-
+#if defined POM && (defined WORLD && !defined ENTITIES && !defined HAND || defined COLORWHEEL)
 	vec3 viewVector = normalize(tbnMatrix*fragpos);
 	float dist = length(playerpos);
 
 	float falloff = min(max(1.0-dist/MAX_OCCLUSION_DISTANCE,0.0) * 2.0,1.0);
+
 	falloff = pow(1.0-pow(1.0-falloff,1.0),2.0);
+
+	// falloff =  1;
 
 	float maxdist = MAX_OCCLUSION_DISTANCE;
 	if(!ifPOM) maxdist = 0.0;
@@ -461,69 +565,69 @@ void main() {
 	 if (falloff > 0.0)
 	#endif
 	{
-		bool isLumBlock = (data_in.blockID == 196 || data_in.blockID == 511 || data_in.blockID == 519 || data_in.blockID == 520 || data_in.blockID == 521 || data_in.blockID == 508 || data_in.blockID == 515 || data_in.blockID == 503 || data_in.blockID == 502 ||  data_in.blockID == 507 || data_in.blockID == 185 || data_in.blockID == 509 || data_in.blockID == 218 || data_in.blockID == 506);
+		float rawDepthmap = readNormal(data_in.texcoord.st).a;
+		float depthmap = rawDepthmap;
+		float pomdepth = TEXTUREPACK_POM_DEPTH * texturePackPOMDepthScale() * falloff;
+		float edgePomFade = mix(1.0, 0.72, blockEdgeSeamMask(data_in.texcoord.st));
+		pomdepth *= edgePomFade;
 
-		float depthmap;
-		if(isLumBlock) {
-			vec4 albedoSample = readTexture(data_in.texcoord.st);
-			float lum = dot(albedoSample.rgb, vec3(0.299, 0.587, 0.114));
-			float lumMin = 0.0;
-			float lumMax = 1.0;
-			lum = clamp((lum - lumMin) / max(lumMax - lumMin, 0.001), 0.0, 1.0);
-			lum = pow(lum, 0.5);
-			depthmap = (data_in.blockID == 515) ? lum : 1.0 - lum;
-		} else {
-			depthmap = readNormal(data_in.texcoord.st).a;
-		}
+		#ifdef USE_LUMINANCE_AS_HEIGHTMAP
+			bool vanillaPOMFallback = useVanillaPOMFallback() && missingTexturePackPOMHeight(data_in.texcoord.st);
+			#ifdef MC_TEXTURE_FORMAT_LAB_PBR
+				// if (isOreOrDarkPOMBlock()) vanillaPOMFallback = false;
+			#endif
+			if (vanillaPOMFallback) {
+				depthmap = readVanillaPOMHeight(data_in.texcoord.st);
+				pomdepth = VANILLA_POM_DEPTH * falloff;
+			}
+		#else
+			const bool vanillaPOMFallback = false;
+		#endif
+		if (isOreOrDarkPOMBlock()) depthmap = readPOMHeight(data_in.texcoord.st, vanillaPOMFallback);
 
-		float pomdepth = POM_DEPTH * falloff;
-		if(isLumBlock) pomdepth = min(pomdepth, 0.12);
-		else           pomdepth = min(pomdepth, 0.20);
+ 		if ( viewVector.z < 0.0 && depthmap < 0.9999 && depthmap > 0.00001) {	
+			float noise = BN;
+			#ifdef Adaptive_Step_length
+				depthmap = clamp(1.0 - depthmap * depthmap, 0.1, 1.0);
+				vec3 interval = (viewVector.xyz / -viewVector.z * MAX_OCCLUSION_POINTS_DIV * pomdepth) * depthmap;
+			#else
+				vec3 interval = viewVector.xyz /-viewVector.z * MAX_OCCLUSION_POINTS_DIV * pomdepth;
+			#endif
+			vec3 coord = vec3(data_in.texcoord.st , 1.0);
 
-		if(depthmap > 0.995 || depthmap < 0.005) {
-			adjustedTexCoord = mix(
-				fract(data_in.texcoord.st) * data_in.texcoordam.pq + data_in.texcoordam.st,
-				adjustedTexCoord,
-				max(dist - MIX_OCCLUSION_DISTANCE, 0.0) / (MAX_OCCLUSION_DISTANCE - MIX_OCCLUSION_DISTANCE)
-			);
-		} else if(viewVector.z < 0.0) {
+			coord += interval * noise;
 
-			vec3 clampedView = viewVector;
-			clampedView.z = min(clampedView.z, -0.3);
+			float sumVec = noise;
+			for (int loopCount = 0; (loopCount < MAX_OCCLUSION_POINTS) && (1.0 - pomdepth + pomdepth * readPOMHeight(coord.st, vanillaPOMFallback)) < coord.p && coord.p >= 0.0; ++loopCount) {
+				coord = coord + interval; 
+				sumVec += 1.0; 
+			}
 
-			vec3 interval = clampedView.xyz / -clampedView.z * MAX_OCCLUSION_POINTS_DIV * pomdepth;
+			#if defined POM_OFFSET_SHADOW_BIAS
+				#ifdef Adaptive_Step_length
+					saveDepth += clamp(MAX_OCCLUSION_POINTS_DIV * depthmap-0.0001, 0.0, 1.0);
+				#else
+					saveDepth += clamp(MAX_OCCLUSION_POINTS_DIV-0.0001, 0.0, 1.0);
+				#endif
+			#endif
+	
+			if (coord.t < mincoord) {
+				if (readTexture(vec2(coord.s,mincoord)).a == 0.0) {
+					coord.t = mincoord;
+					discard;
+				}
+			}
+			vec2 tileBase = floor(data_in.texcoord.st);
+			coord.st = clamp(coord.st, tileBase + vec2(mincoord), tileBase + vec2(maxcoord));
 			
-			vec3 coord = vec3(data_in.texcoord.st, 1.0);
-			float sumVec = 0.0;
-
-			for(int loopCount = 0; loopCount < MAX_OCCLUSION_POINTS && (1.0 - pomdepth + pomdepth * (isLumBlock ? (1.0 - dot(readTexture(coord.st).rgb, vec3(0.299, 0.587, 0.114))) : readNormal(coord.st).a)) < coord.p && coord.p >= 0.0; ++loopCount) {
-				coord += interval;
-				sumVec += 1.0;
-			}
-
-			if(sumVec > 0.0 && sumVec < float(MAX_OCCLUSION_POINTS)) {
-				float afterDepth  = (1.0 - pomdepth + pomdepth * (isLumBlock ? (1.0 - dot(readTexture(coord.st).rgb, vec3(0.299, 0.587, 0.114))) : readNormal(coord.st).a)) - coord.p;
-				vec2 prevCoord = coord.st - interval.xy;
-				float beforeDepth = (coord.p - interval.z) - (1.0 - pomdepth + pomdepth * (isLumBlock ? (1.0 - dot(readTexture(prevCoord).rgb, vec3(0.299, 0.587, 0.114))) : readNormal(prevCoord).a));
-
-				float weight = clamp(afterDepth / (afterDepth + beforeDepth), 0.0, 1.0);
-				coord.st = mix(coord.st, prevCoord, weight);
-				sumVec -= weight;
-			}
-
-			adjustedTexCoord = mix(
-				fract(coord.st) * data_in.texcoordam.pq + data_in.texcoordam.st,
-				adjustedTexCoord,
-				max(dist - MIX_OCCLUSION_DISTANCE, 0.0) / (MAX_OCCLUSION_DISTANCE - MIX_OCCLUSION_DISTANCE)
-			);
+			adjustedTexCoord = mix(fract(coord.st)*data_in.texcoordam.pq+data_in.texcoordam.st, adjustedTexCoord, max(dist-MIX_OCCLUSION_DISTANCE,0.0)/(MAX_OCCLUSION_DISTANCE-MIX_OCCLUSION_DISTANCE));
 
 			#if defined DEPTH_WRITE_POM
-				vec3 truePos = fragpos + sumVec * inverseMatrix(tbnMatrix) * interval;
+				vec3 truePos = fragpos + sumVec*inverseMatrix(tbnMatrix)*interval;
 				gl_FragDepth = toClipSpace3(truePos).z;
 			#endif
 		}
 	}
-
 #endif
 	if(!ifPOM) adjustedTexCoord = data_in.lmtexcoord.xy;
 
@@ -620,37 +724,47 @@ void main() {
 
 	float torchlightmap = lmcoord.x;
 
-	#ifdef FIRE_COLOR_CORRECTION
-		#ifdef IS_LPV_ENABLED
+	#if defined FIRE_COLOR_CORRECTION
+		#if defined ENTITIES || defined HAND
+			bool checkFireColor = false;
 			#ifdef ENTITIES
-				if (data_in.blockID != ENTITY_BLAZE && data_in.blockID != ENTITY_MAGMA_CUBE) {
-					vec3 fireHSV = RgbToHsv(Albedo.rgb);
-					if (fireHSV.y > 0.4 && fireHSV.z > 0.6 && fireHSV.x < 0.16 && fireHSV.x > 0.02) {
-						vec3 _lpvPos = GetLpvPosition(playerpos);
-						
-						vec3 lpvCol = SampleLpvLinear(_lpvPos).rgb;
-						bool isBlueLight = lpvCol.b > lpvCol.r * 1.1 && lpvCol.b > 0.003;
-						
-						bool soulFireFound = false;
-						ivec3 vPosBase = ivec3(floor(_lpvPos));
-						// Larger search radius: entity fire lingers even after leaving soul fire block
-						for(int x = -4; x <= 4; x++) {
-							for(int z = -4; z <= 4; z++) {
-								for(int y = -4; y <= 4; y++) {
-									uint b = imageLoad(imgVoxelMask, vPosBase + ivec3(x,y,z)).r;
-									if (b == 244u || b == 245u || b == 246u) soulFireFound = true;
+				checkFireColor = (data_in.blockID != ENTITY_BLAZE && data_in.blockID != ENTITY_MAGMA_CUBE);
+			#endif
+			#ifdef HAND
+				checkFireColor = true;
+			#endif
+
+			if (checkFireColor) {
+				vec3 fireHSV = RgbToHsv(Albedo.rgb); // Check direct albedo rather than toLinear, colors are more predictable
+				bool isFire = (fireHSV.y > 0.05 && fireHSV.z > 0.15 && fireHSV.x < 0.22 && fireHSV.x >= -0.1);
+				
+				if (isFire && torchlightmap > 0.95) {
+					bool soulFireActive = is_soul_burning > 0.01;
+					
+					#ifdef IS_LPV_ENABLED
+						if (!soulFireActive) {
+							vec3 _lpvPos = GetLpvPosition(playerpos);
+							bool soulFireFound = false;
+							ivec3 vPosBase = ivec3(floor(_lpvPos));
+							for(int x = -1; x <= 1 && !soulFireFound; x++) {
+								for(int z = -1; z <= 1 && !soulFireFound; z++) {
+									for(int y = -5; y <= 3 && !soulFireFound; y++) {
+										uint b = imageLoad(imgVoxelMask, vPosBase + ivec3(x,y,z)).r;
+										if (b == 244u || b == 245u || b == 246u) soulFireFound = true;
+									}
 								}
 							}
+							soulFireActive = soulFireFound;
 						}
-						
-						if (soulFireFound || isBlueLight) {
-							vec3 sRgbHSV = RgbToHsv(Albedo.rgb);
-							Albedo.rgb = HsvToRgb(vec3(0.53, min(sRgbHSV.y * 0.75, 0.8), min(sRgbHSV.z * 1.8, 1.0)));
-							torchlightmap *= 0.05;
-						}
+					#endif
+
+					if (soulFireActive) {
+						vec3 sRgbHSV = RgbToHsv(Albedo.rgb);
+						Albedo.rgb = HsvToRgb(vec3(0.51, min(sRgbHSV.y * 0.5, 0.6), min(sRgbHSV.z * 1.3, 1.0)));
+						torchlightmap *= 0.05;
 					}
 				}
-			#endif
+			}
 		#endif
 	#endif
 
@@ -1346,4 +1460,5 @@ if(data_in.blockID == 509 || data_in.blockID == 516 || data_in.blockID == 517 ||
 
 	#endif
 	
+#endif
 }

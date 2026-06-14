@@ -223,7 +223,7 @@ vec2 CleanSample(
 	
 	// for every sample, the sample position must change its distance from the origin.
 	// otherwise, you will just have a circle.
-    float spiralShape = variedSamples / (totalSamples + variance);
+    float spiralShape = sqrt(variedSamples / (totalSamples + variance));
 
 	float shape = 2.26;
     float theta = variedSamples * (PI * shape);
@@ -506,7 +506,7 @@ void main() {
 	if (!isSky){
 		vec3 feetPlayerPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
 		#ifdef END_SHADER
-			vec3 sunVec = normalize(END_LIGHT_POS-(feetPlayerPos+cameraPosition));
+			vec3 sunVec = END_LIGHT_DIR;
 		#else
 			vec3 sunVec = WsunVec;
 		#endif
@@ -528,15 +528,12 @@ void main() {
 		#ifdef BASIC_SHADOW_FILTER
 			if (LabSSS > 0.0 && NdotL < 0.001){  
 				minshadowfilt = 50;
-			//  maxshadowfilt = 50;
 			}
 		#endif
 
 		gl_FragData[0] = vec4(minshadowfilt, 0.0, 0.0, 0.0);
 
-		#ifdef Variable_Penumbra_Shadows
-			// if (LabSSS > -1) {
-
+		#if defined Variable_Penumbra_Shadows
 				#if LIGHTLEAKFIX_MODE == 1
 					if(!hand) GriAndEminShadowFix(feetPlayerPos, FlatNormals, lightLeakFix);
 				#endif
@@ -549,7 +546,6 @@ void main() {
 					#endif
 					projectedShadowPosition = diagonal3(shadowProjection) * projectedShadowPosition + shadowProjection[3].xyz;
 					
-					//apply distortion
 					#ifdef DISTORT_SHADOWMAP
 						float distortFactor = calcDistort(projectedShadowPosition.xy);
 						projectedShadowPosition.xy *= distortFactor;
@@ -561,22 +557,36 @@ void main() {
 				#endif
 
 				#ifdef END_SHADER
-					vec4 shadowPos = customShadowMatrixSSBO * (gbufferModelViewInverse * vec4(viewPos, 1.0));
-					shadowPos = customShadowPerspectiveSSBO * shadowPos;
-					vec3 projectedShadowPosition = shadowPos.xyz / shadowPos.w;
+					vec3 projectedShadowPosition = mat3(customShadowMatrixSSBO) * feetPlayerPos + customShadowMatrixSSBO[3].xyz;
+					applyShadowBias(projectedShadowPosition, feetPlayerPos, FlatNormals);
+					vec4 shadowPos = customShadowPerspectiveSSBO * vec4(projectedShadowPosition, 1.0);
+					projectedShadowPosition = shadowPos.xyz / shadowPos.w;
+					distortFactor = calcDistort(projectedShadowPosition.xy);
+					projectedShadowPosition.xy *= distortFactor;
 				#endif
 
-				//do shadows only if on shadow map
 				if (abs(projectedShadowPosition.x) < 1.0-1.5/shadowMapResolution && abs(projectedShadowPosition.y) < 1.0-1.5/shadowMapResolution && abs(projectedShadowPosition.z) < 6.0 ){
 					
 					#ifdef OVERWORLD_SHADER
-						projectedShadowPosition.z += shadowProjection[3].z * 0.0013;
+
+   						projectedShadowPosition.z += shadowProjection[3].z * 0.0013;
+
+					#endif
+
+					#ifdef END_SHADER
+
+						projectedShadowPosition.z -= 0.0012;
+
 					#endif
 
 					
 					const float threshMul = max(2048.0/shadowMapResolution*shadowDistance/128.0,0.95);
-					float distortThresh = (sqrt(1.0-NdotL*NdotL)/NdotL+0.7)/distortFactor;
-					float diffthresh = distortThresh/6000.0*threshMul;
+					float distortThresh = (sqrt(1.0-NdotL*NdotL)/max(NdotL, 0.08)+0.7)/distortFactor;
+					#ifdef END_SHADER
+						float diffthresh = distortThresh/1800.0*threshMul;
+					#else
+						float diffthresh = distortThresh/6000.0*threshMul;
+					#endif
 					
 					projectedShadowPosition = projectedShadowPosition * vec3(0.5,0.5,0.5/6.0) + vec3(0.5,0.5,0.5);
 
@@ -590,11 +600,15 @@ void main() {
 					float blockerCount = 0.0;
 					float rdMul = distortFactor*(1.0+mult)*d0k;
 					float avgDepth = 0.0;
+					#ifdef END_SHADER
+						float endShadowDetail = smoothstep(0.8, 0.15, length(projectedShadowPosition.xy));
+						int searchSamples = int(mix(4.0, VPS_Search_Samples, endShadowDetail));
+					#else
+						int searchSamples = int(VPS_Search_Samples);
+					#endif
 
-					for(int i = 0; i < VPS_Search_Samples; i++){
-
-						// vec2 offsetS = SpiralSample(i, 7, 8, noise) * 0.5;
-						vec2 offsetS = CleanSample(i, VPS_Search_Samples - 1, noise) * 0.5;
+					for(int i = 0; i < searchSamples; i++){
+						vec2 offsetS = CleanSample(i, searchSamples - 1, noise) * 0.5;
 					
 						float weight = 3.0 + (i+noise) * rdMul/SHADOW_FILTER_SAMPLE_COUNT*shadowMapResolution*distortFactor/2.7;
 						
@@ -612,18 +626,21 @@ void main() {
 						avgBlockerDepth += d * b;
 					}
 
-						gl_FragData[0].g = avgDepth / VPS_Search_Samples;
+						gl_FragData[0].g = avgDepth / searchSamples;
 
-						gl_FragData[0].b = blockerCount / VPS_Search_Samples;
+						gl_FragData[0].b = blockerCount / searchSamples;
 
 						if (blockerCount >= 0.9){
 							avgBlockerDepth /= blockerCount;
 							float ssample = max(projectedShadowPosition.z - avgBlockerDepth,0.0)*1500.0;
-							gl_FragData[0].r = clamp(ssample, scales.x, scales.y)/(scales.y)*(mult-minshadowfilt)+minshadowfilt;
+							#ifdef END_SHADER
+								gl_FragData[0].r = clamp(mix(ssample, END_SHADOW_FILTER_RADIUS, 0.35), scales.x, scales.y)/(scales.y)*(mult-minshadowfilt)+minshadowfilt;
+							#else
+								gl_FragData[0].r = clamp(ssample, scales.x, scales.y)/(scales.y)*(mult-minshadowfilt)+minshadowfilt;
+							#endif
 						}
 
 				}
-			// }
 		#endif
 	}
 #endif

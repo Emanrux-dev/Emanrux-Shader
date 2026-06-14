@@ -46,6 +46,7 @@ uniform ivec2 eyeBrightnessSmooth;
 uniform float caveDetection;
 uniform int isEyeInWater;
 uniform float auroraAmount;
+uniform bool isSnowBiome;
 
 #define LUT
 
@@ -319,14 +320,14 @@ if (gl_FragCoord.x > 18.+257. && gl_FragCoord.y > 1. && gl_FragCoord.x < 18+257+
 
 	#if AURORA_LOCATION > 0
 		if (WsunVec.y < 0.0 && volumetricClouds.a > 0.01
-		#if AURORA_LOCATION < 2
+		#if AURORA_LOCATION == 1 || AURORA_LOCATION == 3
 		 && auroraAmount > 0.001
 		#endif
 		#ifdef AURORA_MOON
 		 && WmoonVec.y < 0.1
 		#endif
-		#if AURORA_CHANCE < 100
-		 && hash_aurora(float(worldDay)) <= 0.01 * float(AURORA_CHANCE)
+		#if AURORA_CHANCE < 100 && AURORA_LOCATION != 3
+		 && (isSnowBiome || hash_aurora(float(worldDay)) <= 0.01 * float(AURORA_CHANCE))
 		#endif
 		)
 		{

@@ -1,10 +1,7 @@
 #ifndef STARS_GLSL
 #define STARS_GLSL
 
-//Original star code : https://www.shadertoy.com/view/Md2SR3 , optimised
 
-
-//  1 out, 3 in...
 float hash13(vec3 p3)
 {
 	p3  = fract(p3 * .1031);
@@ -12,7 +9,6 @@ float hash13(vec3 p3)
     return fract((p3.x + p3.y) * p3.z);
 }
 
-// Convert Noise2d() into a "star field" by stomping everthing below fThreshhold to zero.
 float NoisyStarField( in vec3 vSamplePos, float fThreshhold )
 {
     float StarVal = hash13( vSamplePos );
@@ -21,7 +17,6 @@ float NoisyStarField( in vec3 vSamplePos, float fThreshhold )
     return StarVal;
 }
 
-// Stabilize NoisyStarField() by only sampling at integer values.
 float StableStarField( in vec3 vSamplePos, float fThreshhold )
 {
     // Linear interpolation between four samples.
@@ -44,8 +39,6 @@ float StableStarField( in vec3 vSamplePos, float fThreshhold )
 	return StarVal;
 }
 
-// alternative star code from https://www.shadertoy.com/view/4sBXzG , edited
-
 float hash12_alt(vec2 co) { return fract(sin(2.0*PI*fract(dot(co.xy, vec2(12.9898,78.233)))) * 43758.5453); }
 
 float starTemp(float hash) {
@@ -55,7 +48,6 @@ float starTemp(float hash) {
 float starplane(vec3 dir, out vec3 starColor) { 
     float scale = 1.0/600.0;
 
-    // Project to a cube-map plane and scale with the resolution
     vec2 basePos = dir.xy * (0.4 / scale) / max(1e-3, abs(dir.z));
              	
 	float color = 0.0;
@@ -64,8 +56,8 @@ float starplane(vec3 dir, out vec3 starColor) {
 	vec2 pos = floor(basePos);
     vec2 center = pos + vec2(0.5);
     float d = distance(basePos, center);    
+    vec2 localBasePos = basePos;
 
-    // Stabilize stars under motion by locking to a grid
     basePos = floor(basePos);
 
     if (hash12_alt(basePos.xy * scale) > 0.997) {
@@ -73,12 +65,16 @@ float starplane(vec3 dir, out vec3 starColor) {
         float brightness = exp(-(d*d)/(2.0*radius*radius));
 
         float r = hash12_alt(basePos.xy * 0.5);
+        float spikeGate = smoothstep(0.82, 1.0, r);
+        vec2 starDelta = localBasePos - center;
+        float crossSpike = (exp(-abs(starDelta.x) * 18.0) + exp(-abs(starDelta.y) * 18.0)) * exp(-d * 2.7);
+        float diagonalSpike = (exp(-abs(starDelta.x + starDelta.y) * 14.0) + exp(-abs(starDelta.x - starDelta.y) * 14.0)) * exp(-d * 3.4);
         color = r * (0.3 * sin(1 * (r * 5.0) + r) + 0.7) * brightness;
+        color += spikeGate * (crossSpike * 0.26 + diagonalSpike * 0.08);
 
         starColor = 2.0 * blackbody(starTemp(hash12_alt(center)));
     } 
 	
-    // Weight by the z-plane
     return color * pow(abs(dir.z), 2);
 }
 
@@ -100,47 +96,38 @@ uniform sampler2D galaxyTex;
 #endif
 #endif
 
-// Galaxy rendering logic
 void CalculateGalaxy(vec3 viewPos, out float galaxyBrightness, out vec3 galaxyColor) {
     vec3 dir = normalize(viewPos);
     
-// Smoothly fade the galaxy in/out during transitions (night, rain)
     float nightFactor = clamp(sunElevation * -10.0, 0.0, 1.0); // Simple night detection
     float rainFactor = clamp(1.0 - rainStrength, 0.0, 1.0);
     
-    // Early escape for daytime or bad weather to save GPU cycles over the entire sky dome
     if(nightFactor * rainFactor < 0.001) {
         galaxyColor = vec3(0.0);
         galaxyBrightness = 0.0;
         return;
     }
 
-    // Rotation for better alignment
-    float a1 = 1.25;
-    float a2 = 0.65;
-    float s1 = sin(a1), c1 = cos(a1);
-    float s2 = sin(a2), c2 = cos(a2);
-    dir.xz *= mat2(c1, s1, -s1, c1);
-    dir.xy *= mat2(c2, s2, -s2, c2);
-
-    // Spherical mapping for the galaxy texture
-    vec2 uv = vec2(atan(dir.z, dir.x) / (2.0 * PI) + 0.5, acos(dir.y) / PI);
-    
     #ifdef GALAXY_SKY
-    vec4 tex = texture2D(galaxyTex, uv);
-    galaxyColor = tex.rgb;
-    
-    // Calculate brightness from luminance and alpha
-    float luminance = dot(galaxyColor, vec3(0.2126, 0.7152, 0.0722));
-    
-    galaxyBrightness = luminance * tex.a * rainFactor * nightFactor * 0.75;
-    
-    // Enhance contrast without overexposing
-    galaxyBrightness = smoothstep(0.0, 1.0, galaxyBrightness);
-    galaxyBrightness = pow(galaxyBrightness, 1.2);
+        float a1 = 1.25;
+        float a2 = 0.65;
+        float s1 = sin(a1), c1 = cos(a1);
+        float s2 = sin(a2), c2 = cos(a2);
+        dir.xz *= mat2(c1, s1, -s1, c1);
+        dir.xy *= mat2(c2, s2, -s2, c2);
+
+        vec3 rdir = vec3(dir.x, dir.z, dir.y);
+        vec2 uv = vec2(atan(rdir.z, rdir.x) / (2.0 * PI) + 0.5, acos(rdir.y) / PI);
+        vec4 tex = texture2D(galaxyTex, uv);
+        galaxyColor = pow(tex.rgb, vec3(1.1)) * 0.72;
+
+        float luminance = dot(galaxyColor, vec3(0.2126, 0.7152, 0.0722));
+        galaxyBrightness = luminance * tex.a * rainFactor * nightFactor * 0.52;
+        galaxyBrightness = smoothstep(0.0, 1.0, galaxyBrightness);
+        galaxyBrightness = pow(galaxyBrightness, 1.1);
     #else
-    galaxyColor = vec3(0.0);
-    galaxyBrightness = 0.0;
+        galaxyColor = vec3(0.0);
+        galaxyBrightness = 0.0;
     #endif
 }
 
@@ -161,8 +148,9 @@ float stars(vec3 viewPos, out vec3 starColor){
     #endif
 
     #ifdef GALAXY_SKY
-    starColor = mix(starColor * starVal, gCol * gBright * 0.5, gBright / (starVal + gBright + 1e-6));
-    return starVal + gBright * 0.4;
+    float totalVal = starVal + gBright * 0.32;
+    starColor = (starColor * starVal + gCol * gBright * 0.46) / max(totalVal, 1e-6);
+    return totalVal;
     #else
     return starVal;
     #endif

@@ -484,7 +484,10 @@ float GetCloudShadow(vec3 playerPos, vec3 sunVector){
 #endif
 
 #if !defined CLOUDSHADOWSONLY && !defined CLOUD_SHADOW_PASS
-uniform sampler2D colortex4;
+#ifndef COLORTEX4_UNIFORM_EXISTS
+	#define COLORTEX4_UNIFORM_EXISTS
+	uniform sampler2D colortex4;
+#endif
 
 #if CLOUD_PHASE == 0
 	// Henyey-Greenstein
@@ -822,14 +825,19 @@ vec4 raymarchCloud(
 				if(shapeWithDensityFaded > 1e-5){
 					
 					#ifdef TERRAIN_SHADOW_ON_CLOUDS
-						#ifdef CUSTOM_MOON_ROTATION
+						#if defined CUSTOM_MOON_ROTATION || (defined END_SHADER && defined END_ISLAND_LIGHT)
 							vec3 fragposition = mat3(customShadowMatrixSSBO) * newPos + customShadowMatrixSSBO[3].xyz;
 						#else
 							vec3 fragposition = mat3(shadowModelView) * newPos + shadowModelView[3].xyz;
 						#endif
-						fragposition = diagonal3(shadowProjection) * fragposition + shadowProjection[3].xyz;
 
-						#if defined DISTORT_SHADOWMAP && defined OVERWORLD_SHADER
+						#if defined END_SHADER && defined END_ISLAND_LIGHT
+							fragposition = diagonal3(customShadowPerspectiveSSBO) * fragposition + customShadowPerspectiveSSBO[3].xyz;
+						#else
+							fragposition = diagonal3(shadowProjection) * fragposition + shadowProjection[3].xyz;
+						#endif
+
+						#if defined DISTORT_SHADOWMAP
 							float distortFactor = calcDistort(fragposition.xy);
 						#else
 							float distortFactor = 1.0;
@@ -976,6 +984,18 @@ vec4 GetVolumetricClouds(
 			cloudPlaneDistance = far*8.0;
 		#endif
 		return vec4(0.0,0.0,0.0,1.0);
+	#endif
+
+	#if defined NO_CLOUDS_AT_NIGHT && defined OVERWORLD_SHADER
+		if(sunElevation < -0.035) {
+			#if defined VOXY || defined DISTANT_HORIZONS
+				cloudPlaneDistance = max(far*8.0, dhVoxyFarPlane*2.0);
+			#else
+				cloudPlaneDistance = far*8.0;
+			#endif
+			cloudDistance = vec2(0.0);
+			return vec4(0.0,0.0,0.0,1.0);
+		}
 	#endif
 
 

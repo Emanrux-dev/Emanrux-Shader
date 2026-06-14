@@ -43,6 +43,12 @@ out DATA {
 		flat int NAMETAG;
 	#endif
 
+	#if defined ENTITIES
+		flat int ENTITY_SHADOW_LIKE;
+	#endif
+
+	flat int blockID;
+
 	#ifdef LARGE_WAVE_DISPLACEMENT
 		vec3 largeWaveDisplacementNormal;
 	#endif
@@ -139,6 +145,10 @@ void main() {
 
 	color = gl_Color;
 
+	#if defined ENTITIES
+		ENTITY_SHADOW_LIKE = (entityId == ENTITY_SHADOW || (entityId == 0 && color.a < 0.35)) ? 1 : 0;
+	#endif
+
 	bool isWater = mc_Entity.x == 8.0;
 
 	#if defined PHYSICSMOD_OCEAN_SHADER && defined PHYSICS_OCEAN
@@ -179,14 +189,21 @@ void main() {
 	#endif
 
 	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 0 && !defined HAND
-		chunkFade = abs(mc_chunkFade);
+		bool isGlass = mc_Entity.x >= 301 && mc_Entity.x <= 338 || mc_Entity.x == 516.0;
+		#if !defined ENTITIES && !defined BLOCKENTITIES
+			if (isGlass) chunkFade = 1.0;
+			else chunkFade = abs(mc_chunkFade);
+		#else
+			chunkFade = 1.0;
+		#endif
 	#endif
 	
 	// keep this OUT of the #if block... otherwise there will be z-fighting when using some overlay textures for some random ass reason.....
 	vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
 
-	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND
-		worldpos.y += -45.0*(1.0-chunkFade)*(1.0-caveDetection)*smoothstep(25.0, far, length(worldpos));
+	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND && !defined ENTITIES && !defined BLOCKENTITIES
+		bool isGlass = mc_Entity.x >= 301 && mc_Entity.x <= 338 || mc_Entity.x == 516.0;
+		if (!isGlass) worldpos.y += -45.0*(1.0-chunkFade)*(1.0-caveDetection)*smoothstep(25.0, far, length(worldpos));
 	#endif
 
 	#ifdef PLANET_CURVATURE
@@ -200,7 +217,7 @@ void main() {
 
 	#if defined ENTITIES && defined IS_IRIS
 		// force out of frustum
-		if (entityId == 1599) gl_Position.z -= 10000.0;
+		if (ENTITY_SHADOW_LIKE == 1) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
 	#endif
 	
 	// 1.0 = water mask
@@ -243,6 +260,7 @@ void main() {
 
 	tangent = vec4(normalize(gl_NormalMatrix * at_tangent.rgb),at_tangent.w);
 	normalMat = vec4(normalize(gl_NormalMatrix * gl_Normal), mat);
+	blockID = int(mc_Entity.x + 0.5);
 	vec3 binormal = normalize(cross(tangent.rgb,normalMat.xyz)*at_tangent.w);
 	mat3 tbnMatrix = mat3(tangent.x, binormal.x, normalMat.x,
 						  tangent.y, binormal.y, normalMat.y,

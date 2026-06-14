@@ -57,10 +57,10 @@ vec3 toShadowSpaceProjected(vec3 p3){
         p3 = mat3(shadowModelView) * p3 + shadowModelView[3].xyz;
     #endif
     #if defined END_ISLAND_LIGHT && defined END_SHADER
-        p3 = diagonal3(customShadowPerspectiveSSBO) * p3 + customShadowPerspectiveSSBO[3].xyz;
-    #else
-        p3 = diagonal3(shadowProjection) * p3 + shadowProjection[3].xyz;
-    #endif
+		p3 = diagonal3(customShadowPerspectiveSSBO) * p3 + customShadowPerspectiveSSBO[3].xyz;
+	#else
+		p3 = diagonal3(shadowProjection) * p3 + shadowProjection[3].xyz;
+	#endif
 
     return p3;
 }

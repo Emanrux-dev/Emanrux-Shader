@@ -1,4 +1,5 @@
 #version 430 compatibility
+#define END_SHADER
 
 #if defined IS_LPV_ENABLED
 	#extension GL_ARB_explicit_attrib_location: enable
@@ -52,11 +53,14 @@ out vec4 color;
 
 out vec2 texcoord;
 
+#include "/lib/Shadow_Params.glsl"
 
-//#include "/lib/Shadow_Params.glsl"
+#define diagonal3(m) vec3((m)[0].x, (m)[1].y, m[2].z)
+#define projMAD(m, v) (diagonal3(m) * (v) + (m)[3].xyz)
 
-// uniform int entityId;
-
+vec4 toClipSpace3(vec3 viewSpacePosition) {
+    return customShadowPerspectiveSSBO * vec4(viewSpacePosition, 1.0);
+}
 
 void main() {
 	#if defined END_ISLAND_LIGHT || (defined IS_LPV_ENABLED && defined MC_GL_ARB_shader_image_load_store)
@@ -83,9 +87,20 @@ void main() {
 			feetPlayerPos.y -= curvature*curvature * CURVATURE_AMOUNT;
 		#endif
 
-		gl_Position = customShadowPerspectiveSSBO * customShadowMatrixSSBO * vec4(feetPlayerPos, 1.0);
+			bool hideEntityShadow =
+				entityId == ENTITY_SHADOW ||
+				entityId == ENTITY_NAME_TAG ||
+				(renderStage == MC_RENDER_STAGE_ENTITIES && entityId == 0 && gl_Color.a < 0.35 && length(feetPlayerPos) < 32.0);
+
+		if (hideEntityShadow) {
+			gl_Position = vec4(-1.0);
+		} else {
+			vec3 position = mat3(customShadowMatrixSSBO) * feetPlayerPos + customShadowMatrixSSBO[3].xyz;
+			gl_Position = customShadowPerspectiveSSBO * vec4(position, 1.0);
+			gl_Position = BiasShadowProjection(gl_Position);
 	
-  		gl_Position.z /= 6.0;
+  			gl_Position.z /= 6.0;
+		}
 	#else
 		gl_Position = vec4(-1.0);
 	#endif

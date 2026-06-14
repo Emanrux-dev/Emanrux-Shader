@@ -237,15 +237,3 @@ vec4 volumetricsFromTex(vec3 pos,sampler2D sampler, float LOD){
 
 	return textureLod(sampler, uv, LOD);
 }
-
-#ifdef GALAXY_SKY
-	#ifndef GALAXY_TEX_UNIFORM
-	#define GALAXY_TEX_UNIFORM
-	uniform sampler2D galaxyTex;
-	#endif
-
-	vec3 galaxyFromTex(vec3 pos, sampler2D sampler) {
-		vec2 p = sphereToCarte(pos);
-		return texture(sampler, p).rgb;
-	}
-#endif

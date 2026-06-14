@@ -44,7 +44,6 @@ vec3 rodSample(vec2 Xi)
 
     return normalize(vec3(cos(phi) * r, sin(phi) * r, Xi.x)).xzy;
 }
-//Low discrepancy 2D sequence, integration error is as low as sobol but easier to compute : http://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
 vec2 R2_samples(int n){
 	vec2 alpha = vec2(0.75487765, 0.56984026);
 	return fract(alpha * float(n));
@@ -67,7 +66,6 @@ vec3 toLinear(vec3 sRGB){
     uniform mat4 shadowModelView;
     uniform int worldTime;
     uniform float worldTimeSmooth;
-    // uniform float frameTimeCounter;
     uniform vec4 lightningBoltPosition;
 
     vec3 moonDirection(float worldTime, float latitude, float pathRotation) {
@@ -78,18 +76,18 @@ vec3 toLinear(vec3 sRGB){
 
         t *= 1.0 + 1.0 / float(MONTH_LENGTH);
 
-        float H = t * 2.0 * PI - PI; // hour angle
+        float H = t * 2.0 * PI - PI;
         
         float sin_h = sin(phi)*sin(del) + cos(phi)*cos(del)*cos(H);
-        float h     = asin(sin_h); // height
+        float h     = asin(sin_h);
         float cos_h = cos(h);
         
         float cosA = (sin(del) - sin(phi)*sin_h) / (cos(phi)*cos_h);
 
-        cosA = clamp(cosA, -1.0, 1.0); // otherwise it bugs out...
+        cosA = clamp(cosA, -1.0, 1.0);
 
-        float A = acos(cosA);  // Azimuth
-        if (sin(H) > 0.0) A = 2.0 * PI - A; // mirror onto other hemisphere
+        float A = acos(cosA);
+        if (sin(H) > 0.0) A = 2.0 * PI - A;
 
         return vec3(cos_h * sin(A), sin_h, cos_h * cos(A));
     }
@@ -97,24 +95,23 @@ vec3 toLinear(vec3 sRGB){
 
 #if (defined CUSTOM_MOON_ROTATION && defined OVERWORLD_SHADER) || (defined END_ISLAND_LIGHT && defined END_SHADER)
     #if defined END_ISLAND_LIGHT && defined END_SHADER
-        const float NEAR = 15.0;
-        const float FAR = 256.0;
-
         mat4 createPerspectiveMatrix() {
-            float yScale = 1.0 / tan(radians(END_LIGHT_FOV) * 0.5);
+            float halfSize = shadowDistance;
+            float zNear = -shadowDistance;
+            float zFar  =  shadowDistance;
+
+            float rl = 1.0 / (halfSize - (-halfSize));
+            float tb = 1.0 / (halfSize - (-halfSize));
+            float fn = 1.0 / (zFar - zNear);
 
             return mat4(
-                    yScale, 0.0, 0.0, 0.0,
-                    0.0, yScale, 0.0, 0.0,
-                    0.0, 0.0, (FAR + NEAR) / (NEAR - FAR), -1.0,
-                    0.0, 0.0, 2.0 * FAR * NEAR / (NEAR - FAR), 1.0
-                );
-
+                2.0 * rl,       0.0,            0.0,            0.0,
+                0.0,            2.0 * tb,       0.0,            0.0,
+                0.0,            0.0,           -2.0 * fn,       0.0,
+                0.0,            0.0,           -(zFar + zNear) * fn, 1.0
+            );
         }
     #endif
-
-    // these matrices are from old experiments with custom light directions from Xonk
-    // thanks to Null for providing these to him
 
     mat4 BuildTranslationMatrix(vec3 delta) {
         return mat4(
@@ -151,8 +148,13 @@ vec3 toLinear(vec3 sRGB){
         #ifdef OVERWORLD_SHADER
             vec3 intervalOffset = -100.0 * localLightDir;
         #else
-            vec3 intervalOffset = (-vec3(END_LIGHT_POS) + cameraPosition);
+            float shadowTexelSize = (2.0 * shadowDistance) / float(shadowMapResolution);
+            vec3 lightSpaceCamera = mat3(shadowModelViewEx) * cameraPosition;
+            vec2 snappedLightSpaceCamera = floor(lightSpaceCamera.xy / shadowTexelSize) * shadowTexelSize;
+            vec3 cameraSnapOffset = transpose(mat3(shadowModelViewEx)) * vec3(lightSpaceCamera.xy - snappedLightSpaceCamera, 0.0);
+            vec3 intervalOffset = cameraSnapOffset - vec3(END_LIGHT_POS);
         #endif
+
         mat4 translation = BuildTranslationMatrix(intervalOffset);
         
         return shadowModelViewEx * translation;
@@ -172,16 +174,15 @@ void main() {
     #if defined CUSTOM_MOON_ROTATION && defined OVERWORLD_SHADER
 
         #ifdef CAELUM_SUPPORT
-            customMoonVecSSBO = -normalize(mat3(gbufferModelViewInverse) * moonPosition); //idk why it's negative
+            customMoonVecSSBO = -normalize(mat3(gbufferModelViewInverse) * moonPosition);
         #else
-            // ensure the world time gets reset at a multiple of the month length
             #ifdef SMOOTH_MOON_ROTATION
                 float time = worldTimeSmooth;
             #else
                 float time = worldTime;
             #endif
 
-            float absWorldTime = worldTimeSmooth  + mod(worldDay, 100 - mod(100, MONTH_LENGTH))*24000.0 - 48000.0; // offset by two days to align to vanilla moon phases by default
+            float absWorldTime = worldTimeSmooth  + mod(worldDay, 100 - mod(100, MONTH_LENGTH))*24000.0 - 48000.0;
 
             float yearLengthTicks = float(MONTH_LENGTH) * 12.0 * 24000.0;
             float timeInYear = mod(absWorldTime, yearLengthTicks)/(yearLengthTicks);
@@ -208,7 +209,7 @@ void main() {
             if (sunElevation > 0.0)
             #endif
             {
-                customShadowMatrixSSBO = BuildShadowViewMatrix(WsunVec); //replace only the matrix
+                customShadowMatrixSSBO = BuildShadowViewMatrix(WsunVec);
             } else {
                 customShadowMatrixSSBO = BuildShadowViewMatrix(customMoonVecSSBO);
             }
@@ -227,9 +228,6 @@ void main() {
     #endif
     
     #ifdef OVERWORLD_SHADER
-        ////////////////////////////////
-        /// --- SCENE CONTROLLER --- ///
-        ////////////////////////////////
         float mixhistory = 0.06;
         if(worldTimeChangeCheck) mixhistory = 1.0;
 
@@ -246,7 +244,6 @@ void main() {
                 int dayCounter = int(mod(worldDay, 10));
             #endif
             
-            //----------- cloud coverage
             vec4 weatherProfile_cloudCoverage[10] = vec4[](
                 vec4(DAY0_l0_coverage, DAY0_l1_coverage, DAY0_l2_coverage, DAY0_l3_coverage),
                 vec4(DAY1_l0_coverage, DAY1_l1_coverage, DAY1_l2_coverage, DAY1_l3_coverage),
@@ -260,7 +257,6 @@ void main() {
                 vec4(DAY9_l0_coverage, DAY9_l1_coverage, DAY9_l2_coverage, DAY9_l3_coverage)
             );
 
-            //----------- cloud density
             vec4 weatherProfile_cloudDensity[10] = vec4[](
                 vec4(DAY0_l0_density, DAY0_l1_density, DAY0_l2_density, DAY0_l3_density),
                 vec4(DAY1_l0_density, DAY1_l1_density, DAY1_l2_density, DAY1_l3_density),
@@ -282,7 +278,6 @@ void main() {
             altostratus =  vec2(getWeatherProfile_coverage.b, getWeatherProfile_density.b);
             cirrus =  vec2(getWeatherProfile_coverage.a, getWeatherProfile_density.a);
 
-            //----------- fog density
             vec2 weatherProfile_fogDensity[10] = vec2[](
                 vec2(DAY0_ufog_density, DAY0_cfog_density),
                 vec2(DAY1_ufog_density, DAY1_cfog_density),
@@ -307,10 +302,6 @@ void main() {
         SC_cirrus = interpolateValue(SC_cirrus, cirrus, SCmixhistory);
         SC_fog = interpolateValue(SC_fog, fog, SCmixhistory);
 
-        ///////////////////////////////////
-        /// --- AMBIENT LIGHT STUFF --- ///
-        ///////////////////////////////////
-
         vec3 averageSkyCol_Clouds = vec3(0.0);
         vec3 averageSkyCol = vec3(0.0);
 
@@ -329,16 +320,6 @@ void main() {
             vec2( 1.0, -1.0)
         );
 
-        // sample in a 3x3 pattern to get a good area for average color
-        
-        // int maxIT = 9;
-        // for (int i = 0; i < maxIT; i++) {
-        // 	vec3 pos = vec3(0.0,1.0,0.0);
-        // 	pos.xy += normalize(sample3x3[i]) * vec2(0.3183,0.9000);
-
-        // 	averageSkyCol_Clouds += skyCloudsFromTex(pos,colortex4).rgb/maxIT/150.0;
-        // 	averageSkyCol += skyFromTex(pos,colortex4).rgb/maxIT/150.0;
-        // }
         float maxIT = 20.0;
         for (int i = 0; i < int(maxIT); i++) {
             vec2 ij = R2_samples(((i*50+1)%1000)*int(maxIT)+i) * vec2(1.0,0.9000);
@@ -348,23 +329,15 @@ void main() {
             averageSkyCol += 1.5 * skyFromTex(pos,colortex4).rgb/maxIT/150.0;
         }
 
-
-        // vec3 minimumlight =  vec3(1.0) * 0.01 * MIN_LIGHT_AMOUNT + nightVision * 0.05;
-
-        // luminance based reinhard is useful ouside of tonemapping too.
         averageSkyCol_Clouds = averageSkyCol_Clouds / (1.0+luma(averageSkyCol_Clouds)*0.2);
 
-        averageSkyCol = max(averageSkyCol, 0.0); // + minimumlight;
+        averageSkyCol = max(averageSkyCol, 0.0);
 
         #ifdef USE_CUSTOM_SKY_GROUND_LIGHTING_COLORS
             averageSkyCol = luma(averageSkyCol) * vec3(SKY_GROUND_R,SKY_GROUND_G,SKY_GROUND_B);
         #endif
 
         averageSkyColSSBO = averageSkyCol;
-
-        ////////////////////////////////////////
-        /// --- SUNLIGHT/MOONLIGHT STUFF --- ///
-        ////////////////////////////////////////
 
         vec2 planetSphere = vec2(0.0);
 
@@ -389,7 +362,6 @@ void main() {
             
         #endif
 
-        // lightSourceColor = sunVis >= 1e-5 ? sunColor * sunVis : moonColor * moonVis;
         vec3 lightSourceColor = sunColor * sunVis + moonColor * moonVis;
         #ifdef CUSTOM_MOON_ROTATION
             lightSourceColor *= smoothstep(0.005, 0.09, length(WmoonVec - WsunVec));
@@ -400,20 +372,13 @@ void main() {
             vec3 moonColor = vec3(0.0);
         #endif
 
-        /////////////////////////////////
-        ///// --- STORE COLOR LUT --- ///
-        /////////////////////////////////
-
         #ifdef SeparateAmbientColorRain
             vec3 AmbientLightTint = mix(vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B), mix(vec3(AmbientLightRain_R, AmbientLightRain_G, AmbientLightRain_B), vec3(AmbientLightThunder_R, AmbientLightThunder_G, AmbientLightThunder_B), thunderStrength), rainStrength*noPuddleAreas);
         #else
             vec3 AmbientLightTint = vec3(AmbientLight_R, AmbientLight_G, AmbientLight_B);
         #endif
-        // --- the color of the atmosphere + the average color of the atmosphere.
         vec3 skyGroundCol = skyFromTex(vec3(0, -1 ,0), colortex4).rgb * AmbientLightTint;
 
-
-        /// --- Save light values
         averageSkyCol_CloudsSSBO = interpolateValue(averageSkyCol_CloudsSSBO, averageSkyCol_Clouds * AmbientLightTint * 150.0, mixhistory);
 
         skyGroundColSSBO = interpolateValue(skyGroundColSSBO, skyGroundCol, mixhistory);
@@ -440,8 +405,6 @@ void main() {
     #endif
 
     #if defined FLASHLIGHT && defined FLASHLIGHT_BOUNCED_INDIRECT
-    	// sample center pixel of albedo color, and interpolate it overtime.
-
         vec3 data = texelFetch(colortex1, ivec2(0.5/texelSize), 0).rgb;
         vec3 decodeAlbedo = vec3(decodeVec2(data.x).x,decodeVec2(data.y).x, decodeVec2(data.z).x);
         vec3 albedo = toLinear(decodeAlbedo);

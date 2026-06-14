@@ -169,21 +169,23 @@ void main() {
     ivec3 vBase = ivec3(floor(searchBase));
     
 #ifdef FIRE_COLOR_CORRECTION
-    for(int x = -1; x <= 1 && foundSoulBlock == 0; x++) {
-        for(int y = -1; y <= 1 && foundSoulBlock == 0; y++) {
-            for(int z = -1; z <= 1 && foundSoulBlock == 0; z++) {
+    for(int y = -3; y <= 1 && foundSoulBlock == 0; y++) {
+        uint b = GetVoxelBlock(vBase + ivec3(0,y,0));
+        if (b == 244u || b == 245u || b == 246u) foundSoulBlock = 1;
+    }
+    for(int x = -2; x <= 2 && foundSoulBlock == 0; x++) {
+        for(int y = -3; y <= 1 && foundSoulBlock == 0; y++) {
+            for(int z = -2; z <= 2 && foundSoulBlock == 0; z++) {
                 uint b = GetVoxelBlock(vBase + ivec3(x,y,z));
                 if (b == 244u || b == 245u || b == 246u) foundSoulBlock = 1;
             }
         }
     }
-    for(int r = 2; r <= 4 && foundSoulBlock == 0; r++) {
-        for(int x = -r; x <= r && foundSoulBlock == 0; x += r) {
-            for(int y = -r; y <= r && foundSoulBlock == 0; y += r) {
-                for(int z = -r; z <= r && foundSoulBlock == 0; z += r) {
-                    uint b = GetVoxelBlock(vBase + ivec3(x,y,z));
-                    if (b == 244u || b == 245u || b == 246u) foundSoulBlock = 1;
-                }
+    for(int x = -4; x <= 4 && foundSoulBlock == 0; x += 2) {
+        for(int y = -4; y <= 2 && foundSoulBlock == 0; y += 2) {
+            for(int z = -4; z <= 4 && foundSoulBlock == 0; z += 2) {
+                uint b = GetVoxelBlock(vBase + ivec3(x,y,z));
+                if (b == 244u || b == 245u || b == 246u) foundSoulBlock = 1;
             }
         }
     }

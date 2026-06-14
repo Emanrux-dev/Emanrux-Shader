@@ -171,6 +171,10 @@ vec4 raymarchLPV(
 		return vec4(0.0);
 	#endif
 
+	#if defined END_SHADER && (!defined TOGGLE_VL_FOG || END_FOG_LEVEL <= 0)
+		return vec4(0.0, 0.0, 0.0, 1.0);
+	#endif
+
 	const int SAMPLECOUNT = 4;
 	float minimumDensity = 0.000025;
 	if(eyeInWater) minimumDensity = 0.00006;
@@ -221,9 +225,11 @@ vec4 raymarchLPV(
 
 			density = plumeDensity + ceilingSmokeDensity;
 		#elif defined END_SHADER
-			float volumeDensity = fogShape(rayProgress + cameraPosition);
+			vec3 progressW = rayProgress + cameraPosition;
+			float endFog = EndFogAmount();
+			float volumeDensity = fogShape(progressW) * EndOuterIslandFogMultiplier(progressW);
 			float clearArea =  1.0-min(max(1.0 - length(rayProgress) / 100,0.0),1.0);
-			density = min(volumeDensity, clearArea*clearArea * END_STORM_DENSTIY);
+			density = min(volumeDensity, clearArea*clearArea * END_STORM_DENSTIY * endFog);
 		#endif
 		
 		density = max(density/1000.0, _minimumDensity);

@@ -106,14 +106,27 @@ void applyGameplayEffects(inout vec3 color, in vec2 texcoord, float noise){
     #endif
 
     #if defined FIRE_COLOR_CORRECTION
-        bool nearSoulBlock = (nearSoulBlockSSBO == 1);
+        bool soulBurning = is_soul_burning > 0.01;
+        bool nearSoulBlock = soulBurning || (nearSoulBlockSSBO == 1);
 
         if (nearSoulBlock) {
-            if (is_burning > 0.0) {
+            if (is_burning > 0.0 || soulBurning) {
+                vec3 baseFireColor = color;
                 float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+                float orangeFire = smoothstep(0.02, 0.22, baseFireColor.r - baseFireColor.b);
+                orangeFire *= smoothstep(0.01, 0.12, baseFireColor.g - baseFireColor.b);
+                orangeFire *= smoothstep(0.02, 0.20, baseFireColor.r - baseFireColor.g);
+                orangeFire *= smoothstep(0.03, 0.20, luma);
+                float fireOverlayRegion = max(
+                    1.0 - smoothstep(0.18, 0.72, texcoord.y),
+                    smoothstep(0.22, 0.48, abs(texcoord.x - 0.5)) * (1.0 - smoothstep(0.20, 0.95, texcoord.y))
+                );
                 vec3 soulColor = vec3(0.08, 0.38, 1.0) * luma * 1.8;
                 float strength = clamp((0.22 + vignette * 0.32), 0.0, 0.6);
                 color = mix(color, soulColor, strength);
+
+                vec3 soulOverlayColor = vec3(0.04, 0.58, 1.0) * luma * 2.2;
+                color = mix(color, soulOverlayColor, orangeFire * fireOverlayRegion * 0.95);
 
                 vec2 fuv = texcoord;
                 float ftime = frameTimeCounter * 3.0;

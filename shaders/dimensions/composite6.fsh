@@ -22,6 +22,8 @@ const int colortex12Format = RGBA16F;				// reflections
 const int colortex13Format = RGBA16F;				// low res VL (composite5->composite15)
 const int colortex14Format = RGBA16;				// rg = SSAO and SS-SSS. z = skylightmap for translucents.
 const int colortex15Format = R11F_G11F_B10F;		// PHOTONICS GI
+const int colortex17Format = RG16F;
+const int colortex18Format = RG16F;
 
 #ifdef VOXY
 	const int colortex16Format = RGBA16F;				// voxy translucent stuff...

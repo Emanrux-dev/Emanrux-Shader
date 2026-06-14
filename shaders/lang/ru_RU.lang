@@ -1,11 +1,12 @@
-option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - An Eclipse Edit
+option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Редакция Eclipse
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 1.0.0
+    value.SHADER_VERSION_LABEL.482 = 1.1.0
 
-profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lНАСТРОЙКИ §6§lEMANRUX §r§l«§4§l◆
+iris_extension.keybind.key0.name=Фонарик
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lEMANRUX §6§lНАСТРОЙКИ §r§l«§4§l◆
 
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 screen.Emanrux_Settings=Настройки Emanrux
 screen.POM_Settings=Настройки POM
@@ -13,58 +14,190 @@ screen.Emanrux_Configs=Конфигурации Emanrux
 option.CUSTOM_REFLECTIONS=ПОЛЬЗОВАТЕЛЬСКИЕ ОТРАЖЕНИЯ
 option.EXTRA_EMISSIVE_BLOCKS=ДОПОЛНИТЕЛЬНЫЕ СВЕТЯЩИЕСЯ БЛОКИ
 option.CONNECTED_GLASS=СВЯЗАННОЕ СТЕКЛО
-screen.Rain_on_Glass_Settings=Настройки дождя на стекле
+screen.Rain_on_Glass_Settings=Дождь на Стекле
 option.RAIN_ON_GLASS=ДОЖДЬ НА СТЕКЛЕ
-option.RAIN_SPEED=Скорость дождя
-option.RAIN_SPEED_VARIANCE=Разброс скорости дождя
-option.RAIN_DENSITY=Плотность дождя
-option.RAIN_TRAIL=Длина следа капли
-option.RAIN_SIZE=Размер капли дождя
+option.RAIN_SPEED=Скорость Дождя
+option.RAIN_SPEED_VARIANCE=Разброс Скорости
+option.RAIN_DENSITY=Плотность Дождя
+option.RAIN_TRAIL=Длина Следа
+option.RAIN_SIZE=Размер Капель
 
-screen.Rain_on_Glass_Settings.comment=Настройка внешнего вида и поведения капель дождя на стекле
+screen.Rain_on_Glass_Settings.comment=Настраивает внешний вид и поведение капель дождя на стекле
 screen.Emanrux_Configs.comment=Пользовательские настройки от Emanrux
-screen.POM_Settings.comment=Настройка глубины и качества параллакс-окклюзионного маппинга
+screen.POM_Settings.comment=Настраивает глубину и качество Параллакс-окклюзионного маппинга
 
-option.CUSTOM_REFLECTIONS.comment=Включает пользовательские экранные отражения на поверхностях. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §eсредняя
-option.EXTRA_EMISSIVE_BLOCKS.comment=Добавляет дополнительное свечение к дополнительным типам блоков. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкая
-option.CONNECTED_GLASS.comment=Включает бесшовные связанные текстуры на стеклянных блоках. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкая
+option.CUSTOM_REFLECTIONS.comment=Включает пользовательские отражения в пространстве экрана на поверхностях. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §eсредние
+option.EXTRA_EMISSIVE_BLOCKS.comment=Добавляет дополнительное свечение дополнительным типам блоков. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+option.CONNECTED_GLASS.comment=Включает бесшовные связанные текстуры на стеклянных блоках. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
 
-option.RAIN_ON_GLASS.comment=Включает анимированные капли дождя на стеклянных поверхностях. §eВидно только во время дождя. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкая
-option.RAIN_SPEED.comment=Управляет скоростью падения капель дождя на стекле. §7Более высокие значения делают капли падающими быстрее. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §2нет
-option.RAIN_SPEED_VARIANCE.comment=Добавляет случайность к индивидуальной скорости каждой капли. §7Более высокие значения создают более разнообразное движение. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §2нет
-option.RAIN_DENSITY.comment=Управляет количеством капель дождя на стеклянной поверхности. §7Более высокие значения создают более сильный эффект дождя. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкая
-option.RAIN_TRAIL.comment=Длина затухающего следа за каждой каплей дождя. §7Более низкие значения создают более короткие, округлые капли. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §2нет
-option.RAIN_SIZE.comment=Размер отдельных капель дождя на стекле. §7Меньшие значения выглядят более реалистично. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §2нет
+option.RAIN_ON_GLASS.comment=Включает анимированные капли дождя на стеклянных поверхностях. §eВидно только во время дождя. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+option.RAIN_SPEED.comment=Управляет скоростью падения капель на стекле. §7Более высокие значения заставляют капли падать быстрее. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §2нет
+option.RAIN_SPEED_VARIANCE.comment=Добавляет случайность к индивидуальной скорости каждой капли. §7Более высокие значения создают более разнообразное движение. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §2нет
+option.RAIN_DENSITY.comment=Управляет количеством капель дождя на стеклянной поверхности. §7Более высокие значения создают более сильный эффект дождя. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+option.RAIN_TRAIL.comment=Длина затухающего следа за каждой каплей. §7Более низкие значения создают более короткие и округлые капли. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §2нет
+option.RAIN_SIZE.comment=Размер отдельных капель на стекле. §7Меньшие значения выглядят реалистичнее. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §2нет
 
-screen.Frost_on_Glass_Settings=Настройки инея на стекле
 option.FROST_ON_GLASS=ИНЕЙ НА СТЕКЛЕ
-option.FROST_ON_GLASS.comment=Включает эффект кристаллов инея на стеклянных поверхностях во время снегопада. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкая
+option.FROST_ON_GLASS.comment=Включает кристаллы инея на стекле во время снегопада. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие-средние
 
-option.EXTRA_BLOCK_LIGHTS=ДОПОЛНИТЕЛЬНОЕ ОСВЕЩЕНИЕ БЛОКОВ
-option.EXTRA_BLOCK_LIGHTS.comment=Включает реальное LPV-излучение света от дополнительных блоков, таких как блоки редстоуна. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §eсредняя
+option.EXTRA_BLOCK_LIGHTS=ДОПОЛНИТЕЛЬНАЯ ПОДСВЕТКА БЛОКОВ
+option.EXTRA_BLOCK_LIGHTS.comment=Включает реальное LPV-излучение света от дополнительных блоков, таких как блоки редстоуна. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §eсредние
 
 option.CUSTOM_NETHER_PORTAL=ПОЛЬЗОВАТЕЛЬСКИЙ ПОРТАЛ В АД
-option.CUSTOM_NETHER_PORTAL.comment=Добавляет пользовательский анимированный эффект вихря к порталам в Ад. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкая
+option.CUSTOM_NETHER_PORTAL.comment=Добавляет анимированный эффект вихря к Порталам в Ад. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
 
 option.BRIGHT_ORES=БОЛЕЕ ЯРКИЕ РУДЫ
-option.BRIGHT_ORES.comment=Делает руды более ярко светящимися в темноте (включая уголь). §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкая
+option.BRIGHT_ORES.comment=Заставляет руды светиться интенсивнее в темноте (включая уголь). §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
 
 option.GALAXY_SKY=ГАЛАКТИЧЕСКОЕ НЕБО
-option.GALAXY_SKY.comment=Добавляет реалистичную галактику на ночное небо. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкая
+option.GALAXY_SKY.comment=Добавляет реалистичную галактику на ночное небо. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+
+option.NO_CLOUDS_AT_NIGHT=БЕЗ ОБЛАКОВ НОЧЬЮ
+option.NO_CLOUDS_AT_NIGHT.comment=Отключает объёмные облака в ночное время, оставляя звёздное небо полностью видимым. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §2положительные
+
+option.SUN_FLARE_RING=КОЛЬЦО СОЛНЕЧНОГО БЛИКА
+option.SUN_FLARE_RING.comment=Включает светящееся кольцо вокруг солнца во время бликов линзы. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §2нет
+
+option.black_hole_effect_strength=ИНТЕНСИВНОСТЬ ЭФФЕКТА ЧЁРНОЙ ДЫРЫ
+option.black_hole_effect_strength.comment=Управляет притяжением и дрожанием чёрной дыры от центра. Установите 0 для отключения. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+
+option.END_SHADOW_QUALITY=КАЧЕСТВО ТЕНЕЙ КРАЯ
+option.END_SHADOW_QUALITY.comment=Управляет качеством фильтра тени чёрной дыры Края при ограничении карты теней до 2048px. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §eнизкие-средние
+    value.END_SHADOW_QUALITY.0=НИЗКОЕ
+    value.END_SHADOW_QUALITY.1=СРЕДНЕЕ
+    value.END_SHADOW_QUALITY.2=ВЫСОКОЕ
+    value.END_SHADOW_QUALITY.3=УЛЬТРА
+
+option.END_FOG_LEVEL=УРОВЕНЬ ТУМАНА КРАЯ
+option.END_FOG_LEVEL.comment=Управляет всем туманом Края, объёмным туманом, сгустками тумана и туманной спиралью главного острова от 0 до 100.
+suffix.END_FOG_LEVEL=%
+
+option.END_VOID_SPIRAL=СПИРАЛЬ ПУСТОТЫ КРАЯ
+option.END_VOID_SPIRAL.comment=Добавляет анимированную фиолетовую спираль под пустотой Края. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+option.END_WANDERING_DRAGONS=БЛУЖДАЮЩИЕ ДРАКОНЫ КРАЯ
+option.END_WANDERING_DRAGONS.comment=Отображает процедурные силуэты Эндер-Дракона в небе Края. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+
+option.AURORA_LOCATION=РАСПОЛОЖЕНИЕ АВРОРЫ
+option.AURORA_LOCATION.comment=Управляет тем, в каких биомах появляется эффект северного сияния. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+    value.AURORA_LOCATION.0=ОТКЛЮЧЕНО
+    value.AURORA_LOCATION.1=ТОЛЬКО ЗАСНЕЖЕННЫЕ БИОМЫ
+    value.AURORA_LOCATION.2=ВСЕГДА (ВСЕ БИОМЫ)
+    value.AURORA_LOCATION.3=ВСЕ БИОМЫ (РЕДКО В НЕЗАСНЕЖЕННЫХ)
 
 option.FIRE_COLOR_CORRECTION=ПРИСУТСТВИЕ ДУШ
-option.FIRE_COLOR_CORRECTION.comment=Добавляет присутствие душ на экране игрока, цветокоррекцию для огня душ, одержимость душами тела игрока и некоторых мобов, пока они находятся рядом с душами (синий свет). §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aНИЗКАЯ
+option.FIRE_COLOR_CORRECTION.comment=Добавляет коррекцию цвета огня душ, присутствие на экране и эффекты душ рядом с блоками душ или огнём душ. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
 
-option.ENCHANTING_TABLE_EFFECTS=ЭФФЕКТЫ СТОЛА ЗАЧАРОВАНИЙ
-option.ENCHANTING_TABLE_EFFECTS.comment=Активирует магические рунические полы и парящие частицы вблизи стола зачарований. §aСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aНИЗКАЯ
+option.ENCHANTING_TABLE_EFFECTS=ЭФФЕКТЫ СТОЛА ЗАЧАРОВАНИЯ
+option.ENCHANTING_TABLE_EFFECTS.comment=Включает магические рунические полы и парящие частицы вблизи Стола Зачарования. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
 
-option.CINEMATIC_MODE=Кинематографический режим
-option.CINEMATIC_MODE.comment=Добавляет полосы letterbox, обесцвечивание, затемнение и виньетку для кинематографического вида. §cСТОИМОСТЬ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкая
+option.LENS_FLARE_MODE=РЕЖИМ БЛИКА ЛИНЗЫ
+option.LENS_FLARE_MODE.comment=Выбирает стиль блика линзы. 0 отключает его, 1 — текущий блик, 2 добавляет больше колец, 3 добавляет более яркие лучи. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+    value.LENS_FLARE_MODE.0=ВЫКЛ
+    value.LENS_FLARE_MODE.1=1
+    value.LENS_FLARE_MODE.2=2 - КОЛЬЦА
+    value.LENS_FLARE_MODE.3=3 - ЛУЧИ
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+option.CINEMATIC_MODE=Кинематографический Режим
+option.CINEMATIC_MODE.comment=Добавляет полосы letterbox, обесцвечивание, затемнение и виньетку для кинематографического вида. §cЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
 
 
-
+screen.Night_Options=Ночные Настройки
+screen.Night_Options.comment=Быстрые настройки лунного света, ночной яркости, фонарика, звёзд и деталей ночного неба.
+option.RAIN_ON_GLASS_MODE=Дождь на Стекле
+option.RAIN_ON_GLASS_MODE.comment=Выкл отключает оверлей дождя на стекле. Лёгкий сохраняет текущие простые капли. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие                                      §fРеалистичный добавляет разнообразные капли, изогнутые следы и процедурное слияние. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §eсредние
+value.RAIN_ON_GLASS_MODE.0=Выкл
+value.RAIN_ON_GLASS_MODE.1=Лёгкий
+value.RAIN_ON_GLASS_MODE.2=Реалистичный
+option.PULSAR=Пульсар
+option.PULSAR.comment=Добавляет небольшой далёкий синий пульсар на ночном небе с хаотично вращающимся лучом. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+option.PULSAR_BRIGHTNESS=Яркость Пульсара
+option.PULSAR_SIZE=Размер Пульсара
+option.PLANET_0=Планета 1
+option.PLANET_1=Планета с Кольцами
+option.PLANET_2=Планета 3
+option.PLANET_3=Планета 4
+option.PLANET_4=Планета 5
+screen.Rain_on_Glass_Light_Settings=Лёгкий Режим
+screen.Rain_on_Glass_Realistic_Settings=Реалистичный Режим
+option.RAIN_REALISTIC_SPEED=Реалистичная Скорость Потока
+option.RAIN_REALISTIC_DENSITY=Реалистичная Плотность Капель
+option.RAIN_REALISTIC_DROP_SIZE=Реалистичный Размер Капель
+option.RAIN_REALISTIC_TRAILS=Реалистичная Толщина Следа
+option.RAIN_REALISTIC_HIGHLIGHTS=Реалистичные Блики
+option.RAIN_LIGHT_BRIGHTNESS=Яркость Лёгкого Режима
+screen.Space_Objects_Settings=Космические Объекты
+screen.Space_Objects_Settings.comment=Небесные объекты только для Обычного мира: планеты, метеоры и пульсар.
+screen.End_Options=Настройки Края
+screen.End_Options.comment=Эксклюзивная атмосфера Края, тени, спираль пустоты, драконы, чёрная дыра, метеоры и планеты.
+option.BRIGHT_ORES_INTENSITY=Интенсивность Ярких Руд
+option.PLANETS=Планеты Обычного Мира
+option.PLANETS.comment=Отображает настраиваемые планеты в небе Обычного мира.
+option.PLANET_BRIGHTNESS=Яркость Планет
+option.PLANET_QUALITY=Качество Планет
+value.PLANET_QUALITY.0=Низкое
+value.PLANET_QUALITY.1=Среднее
+value.PLANET_QUALITY.2=Высокое
+option.METEORS_OW=МЕТЕОРЫ
+value.METEORS_OW.0=Выкл
+value.METEORS_OW.1=Вкл
+option.METEORS_OW.comment=Отображает метеоры в небе Обычного мира. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+option.METEOR_COUNT=Количество Метеоров
+option.METEOR_RARITY=Редкость Метеоров
+option.METEOR_SPEED=Скорость Метеоров
+option.END_PLANETS=Планеты Края
+option.END_PLANETS.comment=Отображает настраиваемые планеты только в небе Края. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+option.END_PLANET_0=Планета 1
+option.END_PLANET_1=Планета 2
+option.END_PLANET_2=Планета 3
+option.END_PLANET_3=Планета 4
+option.END_PLANET_4=Планета 5
+option.END_METEORS=Метеоры Края
+option.END_METEORS.comment=Отображает метеоры только в небе Края. §аЗАТРАТЫ ПРОИЗВОДИТЕЛЬНОСТИ: §aнизкие
+option.END_BLACK_HOLE=Чёрная Дыра Края
+option.END_BLACK_HOLE.comment=Отображает чёрную дыру Края и её аккреционный диск.
+option.END_BH_JETS=Джеты Чёрной Дыры Края
+option.END_BH_JETS.comment=Добавляет вертикальные энергетические джеты к чёрной дыре Края.
+option.BLACK_HOLE_SIZE=Размер Чёрной Дыры
+option.BLACK_HOLE_LENSING=Гравитационная Линза Чёрной Дыры
+value.PLANETS.0=Выкл
+value.PLANETS.1=Вкл
+value.PLANET_0.0=Выкл
+value.PLANET_0.1=Вкл
+value.PLANET_1.0=Выкл
+value.PLANET_1.1=Вкл
+value.PLANET_2.0=Выкл
+value.PLANET_2.1=Вкл
+value.PLANET_3.0=Выкл
+value.PLANET_3.1=Вкл
+value.PLANET_4.0=Выкл
+value.PLANET_4.1=Вкл
+value.END_PLANETS.0=Выкл
+value.END_PLANETS.1=Вкл
+value.END_PLANET_0.0=Выкл
+value.END_PLANET_0.1=Вкл
+value.END_PLANET_1.0=Выкл
+value.END_PLANET_1.1=Вкл
+value.END_PLANET_2.0=Выкл
+value.END_PLANET_2.1=Вкл
+value.END_PLANET_3.0=Выкл
+value.END_PLANET_3.1=Вкл
+value.END_PLANET_4.0=Выкл
+value.END_PLANET_4.1=Вкл
+value.END_METEORS.0=Выкл
+value.END_METEORS.1=Вкл
+value.END_BLACK_HOLE.0=Выкл
+value.END_BLACK_HOLE.1=Вкл
+value.END_BH_JETS.0=Выкл
+value.END_BH_JETS.1=Вкл
+option.END_PLANET_BRIGHTNESS=Яркость Планет Края
+option.END_PLANET_QUALITY=Качество Планет Края
+value.END_PLANET_QUALITY.0=Низкое
+value.END_PLANET_QUALITY.1=Среднее
+value.END_PLANET_QUALITY.2=Высокое
+option.END_METEOR_COUNT=Количество Метеоров Края
+option.END_METEOR_RARITY=Редкость Метеоров Края
+option.END_METEOR_SPEED=Скорость Метеоров Края
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 option.OLD_LIGHTLEAK_FIX = Старое исправление засветки
 option.CAVE_DETECTION = Обнаружение пещер

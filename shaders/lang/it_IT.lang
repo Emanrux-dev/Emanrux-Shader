@@ -1,12 +1,12 @@
-option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - An Eclipse Edit 
+option.SHADER_VERSION_LABEL = §e§lEMANRUX§r§s - Una modifica di Eclipse
     prefix.SHADER_VERSION_LABEL = V
-    value.SHADER_VERSION_LABEL.482 = 1.0.0
+    value.SHADER_VERSION_LABEL.482 = 1.1.0
 
 iris_extension.keybind.key0.name=Torcia
 
 profile.CUSTOM_EMANRUX=§4§l◆§r§l» §e§lEMANRUX §6§lIMPOSTAZIONI §r§l«§4§l◆
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 
 screen.Emanrux_Settings=Impostazioni Emanrux
 screen.POM_Settings=Impostazioni POM
@@ -17,7 +17,7 @@ option.CONNECTED_GLASS=VETRO CONNESSO
 screen.Rain_on_Glass_Settings=Pioggia sul Vetro
 option.RAIN_ON_GLASS=PIOGGIA SUL VETRO
 option.RAIN_SPEED=Velocità della Pioggia
-option.RAIN_SPEED_VARIANCE=Variazione di Velocità della Pioggia
+option.RAIN_SPEED_VARIANCE=Varianza di Velocità
 option.RAIN_DENSITY=Densità della Pioggia
 option.RAIN_TRAIL=Lunghezza della Scia
 option.RAIN_SIZE=Dimensione delle Gocce
@@ -26,44 +26,178 @@ screen.Rain_on_Glass_Settings.comment=Configura l'aspetto e il comportamento del
 screen.Emanrux_Configs.comment=Impostazioni personalizzate create da Emanrux
 screen.POM_Settings.comment=Configura la profondità e la qualità del Parallax Occlusion Mapping
 
-option.CUSTOM_REFLECTIONS.comment=Abilita riflessi personalizzati screen-space sulle superfici. §aCOSTO PRESTAZIONI: §emedio
-option.EXTRA_EMISSIVE_BLOCKS.comment=Aggiunge bagliore emissivo extra a tipi di blocchi aggiuntivi. §aCOSTO PRESTAZIONI: §abasso
-option.CONNECTED_GLASS.comment=Abilita texture connesse senza giunture sui blocchi di vetro. §aCOSTO PRESTAZIONI: §abasso
+option.CUSTOM_REFLECTIONS.comment=Attiva riflessi personalizzati in spazio schermo sulle superfici. §aCOSTO DI PRESTAZIONE: §emedio
+option.EXTRA_EMISSIVE_BLOCKS.comment=Aggiunge una luminosità emissiva extra a tipi di blocchi aggiuntivi. §aCOSTO DI PRESTAZIONE: §abasso
+option.CONNECTED_GLASS.comment=Attiva texture connesse sui blocchi di vetro. §aCOSTO DI PRESTAZIONE: §abasso
 
-option.RAIN_ON_GLASS.comment=Abilita gocce di pioggia animate sulle superfici di vetro. §eSolo visibile durante la pioggia. §aCOSTO PRESTAZIONI: §abasso
-option.RAIN_SPEED.comment=Controlla la velocità di caduta delle gocce di pioggia sul vetro. §7Valori più alti fanno cadere le gocce più velocemente. §aCOSTO PRESTAZIONI: §2nessuno
-option.RAIN_SPEED_VARIANCE.comment=Aggiunge casualità alla velocità individuale di ogni goccia. §7Valori più alti creano movimenti più vari. §aCOSTO PRESTAZIONI: §2nessuno
-option.RAIN_DENSITY.comment=Controlla quante gocce di pioggia appaiono sulla superficie del vetro. §7Valori più alti creano un effetto pioggia più intensa. §aCOSTO PRESTAZIONI: §abasso
-option.RAIN_TRAIL.comment=Lunghezza della scia sbiadita lasciata da ogni goccia di pioggia. §7Valori più bassi creano gocce più corte e tondeggianti. §aCOSTO PRESTAZIONI: §2nessuno
-option.RAIN_SIZE.comment=Dimensione delle singole gocce di pioggia sul vetro. §7Valori più piccoli risultano più realistici. §aCOSTO PRESTAZIONI: §2nessuno
+option.RAIN_ON_GLASS.comment=Attiva gocce di pioggia animate sulle superfici di vetro. §eVisibile solo durante la pioggia. §aCOSTO DI PRESTAZIONE: §abasso
+option.RAIN_SPEED.comment=Controlla la velocità di caduta delle gocce sul vetro. §7Valori più alti fanno cadere le gocce più velocemente. §aCOSTO DI PRESTAZIONE: §2nessuno
+option.RAIN_SPEED_VARIANCE.comment=Aggiunge casualità alla velocità individuale di ogni goccia. §7Valori più alti creano movimenti più vari. §aCOSTO DI PRESTAZIONE: §2nessuno
+option.RAIN_DENSITY.comment=Controlla quante gocce appaiono sulla superficie di vetro. §7Valori più alti creano un effetto pioggia più intensa. §aCOSTO DI PRESTAZIONE: §abasso
+option.RAIN_TRAIL.comment=Lunghezza della scia lasciata da ogni goccia. §7Valori più bassi creano gocce più corte e tondeggianti. §aCOSTO DI PRESTAZIONE: §2nessuno
+option.RAIN_SIZE.comment=Dimensione delle singole gocce sul vetro. §7Valori più piccoli risultano più realistici. §aCOSTO DI PRESTAZIONE: §2nessuno
 
-screen.Frost_on_Glass_Settings=Brina sul Vetro
 option.FROST_ON_GLASS=BRINA SUL VETRO
-option.FROST_ON_GLASS.comment=Abilita l'effetto cristalli di brina sulle superfici di vetro durante le nevicate. §aCOSTO PRESTAZIONI: §abasso
+option.FROST_ON_GLASS.comment=Attiva cristalli di brina sul vetro durante le nevicate. §aCOSTO DI PRESTAZIONE: §abasso-medio
 
-option.EXTRA_BLOCK_LIGHTS=LUCI BLOCCHI EXTRA
-option.EXTRA_BLOCK_LIGHTS.comment=Abilita l'emissione di luce LPV reale da blocchi aggiuntivi come i blocchi di redstone. §aCOSTO PRESTAZIONI: §emedio
+option.EXTRA_BLOCK_LIGHTS=LUCI DI BLOCCHI EXTRA
+option.EXTRA_BLOCK_LIGHTS.comment=Attiva l'emissione di luce LPV reale da blocchi aggiuntivi come i blocchi di redstone. §aCOSTO DI PRESTAZIONE: §emedio
 
 option.CUSTOM_NETHER_PORTAL=PORTALE DEL NETHER PERSONALIZZATO
-option.CUSTOM_NETHER_PORTAL.comment=Aggiunge un effetto vortice animato personalizzato ai Portali del Nether. §aCOSTO PRESTAZIONI: §abasso
+option.CUSTOM_NETHER_PORTAL.comment=Aggiunge un effetto vortice animato ai Portali del Nether. §aCOSTO DI PRESTAZIONE: §abasso
 
 option.BRIGHT_ORES=MINERALI PIÙ LUMINOSI
-option.BRIGHT_ORES.comment=Fa brillare i minerali più intensamente al buio (incluso il carbone). §aCOSTO PRESTAZIONI: §abasso
+option.BRIGHT_ORES.comment=Fa brillare i minerali più intensamente al buio (incluso il carbone). §aCOSTO DI PRESTAZIONE: §abasso
 
 option.GALAXY_SKY=CIELO GALATTICO
-option.GALAXY_SKY.comment=Aggiunge una galassia realistica al cielo notturno. §aCOSTO PRESTAZIONI: §abasso
+option.GALAXY_SKY.comment=Aggiunge una galassia realistica al cielo notturno. §aCOSTO DI PRESTAZIONE: §abasso
+
+option.NO_CLOUDS_AT_NIGHT=NIENTE NUVOLE DI NOTTE
+option.NO_CLOUDS_AT_NIGHT.comment=Disattiva le nuvole volumetriche durante la notte, lasciando il cielo stellato completamente visibile. §aCOSTO DI PRESTAZIONE: §2positivo
+
+option.SUN_FLARE_RING=ANELLO DI BAGLIORE SOLARE
+option.SUN_FLARE_RING.comment=Attiva un anello luminoso attorno al sole durante i bagliori della lente. §aCOSTO DI PRESTAZIONE: §2nessuno
+
+option.black_hole_effect_strength=INTENSITÀ DELL'EFFETTO BUCO NERO
+option.black_hole_effect_strength.comment=Controlla l'attrazione centrale e il tremore del buco nero. Impostare a 0 per disattivare. §aCOSTO DI PRESTAZIONE: §abasso
+
+option.END_SHADOW_QUALITY=QUALITÀ DELLE OMBRE DELL'END
+option.END_SHADOW_QUALITY.comment=Controlla la qualità del filtro ombra del buco nero dell'End mantenendo la mappa delle ombre limitata a 2048px. §aCOSTO DI PRESTAZIONE: §ebasso-medio
+    value.END_SHADOW_QUALITY.0=BASSA
+    value.END_SHADOW_QUALITY.1=MEDIA
+    value.END_SHADOW_QUALITY.2=ALTA
+    value.END_SHADOW_QUALITY.3=ULTRA
+
+option.END_FOG_LEVEL=LIVELLO DI NEBBIA DELL'END
+option.END_FOG_LEVEL.comment=Controlla tutta la nebbia dell'End, la nebbia volumetrica, i grumi di nebbia e la spirale nebulosa dell'isola principale da 0 a 100.
+suffix.END_FOG_LEVEL=%
+
+option.END_VOID_SPIRAL=SPIRALE DEL VUOTO DELL'END
+option.END_VOID_SPIRAL.comment=Aggiunge una spirale viola animata sotto il vuoto dell'End. §aCOSTO DI PRESTAZIONE: §abasso
+option.END_WANDERING_DRAGONS=DRAGHI ERRANTI DELL'END
+option.END_WANDERING_DRAGONS.comment=Mostra sagome procedurali di Ender Dragon nel cielo dell'End. §aCOSTO DI PRESTAZIONE: §abasso
+
+option.AURORA_LOCATION=POSIZIONE DELL'AURORA
+option.AURORA_LOCATION.comment=Controlla in quali biomi appare l'effetto aurora boreale. §aCOSTO DI PRESTAZIONE: §abasso
+    value.AURORA_LOCATION.0=DISATTIVATA
+    value.AURORA_LOCATION.1=SOLO BIOMI INNEVATI
+    value.AURORA_LOCATION.2=SEMPRE (TUTTI I BIOMI)
+    value.AURORA_LOCATION.3=TUTTI I BIOMI (RARA NEI BIOMI NON INNEVATI)
 
 option.FIRE_COLOR_CORRECTION=PRESENZA DI ANIME
-option.FIRE_COLOR_CORRECTION.comment=Aggiunge la presenza di anime sullo schermo del giocatore, correzione del colore per il fuoco delle anime, possessione delle anime del corpo del giocatore e di alcuni mob, finché si trovano vicino alle anime (luce blu). §aCOSTO PRESTAZIONI: §abasso
+option.FIRE_COLOR_CORRECTION.comment=Aggiunge correzione del colore del fuoco delle anime, presenza a schermo ed effetti anima vicino a blocchi di anime o fuoco delle anime. §aCOSTO DI PRESTAZIONE: §abasso
 
-option.ENCHANTING_TABLE_EFFECTS=EFFETTI TAVOLO DEGLI INCANTESIMI
-option.ENCHANTING_TABLE_EFFECTS.comment=Abilita pavimenti runici magici e particelle fluttuanti vicino a un Tavolo degli Incantesimi. §aCOSTO PRESTAZIONI: §abasso
+option.ENCHANTING_TABLE_EFFECTS=EFFETTI DEL TAVOLO DEGLI INCANTESIMI
+option.ENCHANTING_TABLE_EFFECTS.comment=Attiva pavimenti runici magici e particelle fluttuanti vicino a un Tavolo degli Incantesimi. §aCOSTO DI PRESTAZIONE: §abasso
+
+option.LENS_FLARE_MODE=MODALITÀ BAGLIORE DELLA LENTE
+option.LENS_FLARE_MODE.comment=Seleziona lo stile del bagliore della lente. 0 lo disattiva, 1 è il bagliore attuale, 2 aggiunge più anelli e 3 aggiunge raggi più intensi. §aCOSTO DI PRESTAZIONE: §abasso
+    value.LENS_FLARE_MODE.0=SPENTO
+    value.LENS_FLARE_MODE.1=1
+    value.LENS_FLARE_MODE.2=2 - ANELLI
+    value.LENS_FLARE_MODE.3=3 - RAGGI
 
 option.CINEMATIC_MODE=Modalità Cinematica
-option.CINEMATIC_MODE.comment=Aggiunge barre letterbox, desaturazione, scurimento e vignetta per un aspetto cinematografico. §cCOSTO PRESTAZIONI: §abasso
+option.CINEMATIC_MODE.comment=Aggiunge barre letterbox, desaturazione, scurimento e vignettatura per un aspetto cinematico. §cCOSTO DI PRESTAZIONE: §abasso
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+screen.Night_Options=Opzioni Notturne
+screen.Night_Options.comment=Controlli rapidi per la luce lunare, la luminosità notturna, la torcia, le stelle e i dettagli del cielo notturno.
+option.RAIN_ON_GLASS_MODE=Pioggia sul Vetro
+option.RAIN_ON_GLASS_MODE.comment=Spento disattiva l'overlay della pioggia sul vetro. Leggero mantiene le semplici gocce attuali. §aCOSTO DI PRESTAZIONE: §abasso                                      §fRealistico aggiunge gocce variate, scie curve e fusione procedurale. §aCOSTO DI PRESTAZIONE: §emedio
+value.RAIN_ON_GLASS_MODE.0=Spento
+value.RAIN_ON_GLASS_MODE.1=Leggero
+value.RAIN_ON_GLASS_MODE.2=Realistico
+option.PULSAR=Pulsar
+option.PULSAR.comment=Aggiunge un piccolo pulsar blu distante nel cielo notturno con un raggio rotante erratico. §aCOSTO DI PRESTAZIONE: §abasso
+option.PULSAR_BRIGHTNESS=Luminosità del Pulsar
+option.PULSAR_SIZE=Dimensione del Pulsar
+option.PLANET_0=Pianeta 1
+option.PLANET_1=Pianeta con Anelli
+option.PLANET_2=Pianeta 3
+option.PLANET_3=Pianeta 4
+option.PLANET_4=Pianeta 5
+screen.Rain_on_Glass_Light_Settings=Modalità Leggera
+screen.Rain_on_Glass_Realistic_Settings=Modalità Realistica
+option.RAIN_REALISTIC_SPEED=Velocità di Flusso Realistica
+option.RAIN_REALISTIC_DENSITY=Densità di Gocce Realistica
+option.RAIN_REALISTIC_DROP_SIZE=Dimensione Gocce Realistica
+option.RAIN_REALISTIC_TRAILS=Peso della Scia Realistico
+option.RAIN_REALISTIC_HIGHLIGHTS=Riflessi Realistici
+option.RAIN_LIGHT_BRIGHTNESS=Luminosità Modalità Leggera
+screen.Space_Objects_Settings=Oggetti Spaziali
+screen.Space_Objects_Settings.comment=Oggetti celesti esclusivi dell'Overworld: pianeti, meteore e pulsar.
+screen.End_Options=Opzioni dell'End
+screen.End_Options.comment=Atmosfera esclusiva dell'End, ombre, spirale del vuoto, draghi, buco nero, meteore e pianeti.
+option.BRIGHT_ORES_INTENSITY=Intensità dei Minerali Luminosi
+option.PLANETS=Pianeti dell'Overworld
+option.PLANETS.comment=Mostra pianeti configurabili nel cielo dell'Overworld.
+option.PLANET_BRIGHTNESS=Luminosità dei Pianeti
+option.PLANET_QUALITY=Qualità dei Pianeti
+value.PLANET_QUALITY.0=Bassa
+value.PLANET_QUALITY.1=Media
+value.PLANET_QUALITY.2=Alta
+option.METEORS_OW=METEORE
+value.METEORS_OW.0=Spento
+value.METEORS_OW.1=Acceso
+option.METEORS_OW.comment=Mostra meteore nel cielo dell'Overworld. §aCOSTO DI PRESTAZIONE: §abasso
+option.METEOR_COUNT=Numero di Meteore
+option.METEOR_RARITY=Rarità delle Meteore
+option.METEOR_SPEED=Velocità delle Meteore
+option.END_PLANETS=Pianeti dell'End
+option.END_PLANETS.comment=Mostra pianeti configurabili solo nel cielo dell'End. §aCOSTO DI PRESTAZIONE: §abasso
+option.END_PLANET_0=Pianeta 1
+option.END_PLANET_1=Pianeta 2
+option.END_PLANET_2=Pianeta 3
+option.END_PLANET_3=Pianeta 4
+option.END_PLANET_4=Pianeta 5
+option.END_METEORS=Meteore dell'End
+option.END_METEORS.comment=Mostra meteore solo nel cielo dell'End. §aCOSTO DI PRESTAZIONE: §abasso
+option.END_BLACK_HOLE=Buco Nero dell'End
+option.END_BLACK_HOLE.comment=Mostra il buco nero dell'End e il suo disco di accrescimento.
+option.END_BH_JETS=Getti del Buco Nero dell'End
+option.END_BH_JETS.comment=Aggiunge getti di energia verticali al buco nero dell'End.
+option.BLACK_HOLE_SIZE=Dimensione del Buco Nero
+option.BLACK_HOLE_LENSING=Lente Gravitazionale del Buco Nero
+value.PLANETS.0=Spento
+value.PLANETS.1=Acceso
+value.PLANET_0.0=Spento
+value.PLANET_0.1=Acceso
+value.PLANET_1.0=Spento
+value.PLANET_1.1=Acceso
+value.PLANET_2.0=Spento
+value.PLANET_2.1=Acceso
+value.PLANET_3.0=Spento
+value.PLANET_3.1=Acceso
+value.PLANET_4.0=Spento
+value.PLANET_4.1=Acceso
+value.END_PLANETS.0=Spento
+value.END_PLANETS.1=Acceso
+value.END_PLANET_0.0=Spento
+value.END_PLANET_0.1=Acceso
+value.END_PLANET_1.0=Spento
+value.END_PLANET_1.1=Acceso
+value.END_PLANET_2.0=Spento
+value.END_PLANET_2.1=Acceso
+value.END_PLANET_3.0=Spento
+value.END_PLANET_3.1=Acceso
+value.END_PLANET_4.0=Spento
+value.END_PLANET_4.1=Acceso
+value.END_METEORS.0=Spento
+value.END_METEORS.1=Acceso
+value.END_BLACK_HOLE.0=Spento
+value.END_BLACK_HOLE.1=Acceso
+value.END_BH_JETS.0=Spento
+value.END_BH_JETS.1=Acceso
+option.END_PLANET_BRIGHTNESS=Luminosità dei Pianeti dell'End
+option.END_PLANET_QUALITY=Qualità dei Pianeti dell'End
+value.END_PLANET_QUALITY.0=Bassa
+value.END_PLANET_QUALITY.1=Media
+value.END_PLANET_QUALITY.2=Alta
+option.END_METEOR_COUNT=Numero di Meteore dell'End
+option.END_METEOR_RARITY=Rarità delle Meteore dell'End
+option.END_METEOR_SPEED=Velocità delle Meteore dell'End
+////////////////////////////////////////////////////////////EMANRUX////////////////////////////////////////////////////////////
 option.OLD_LIGHTLEAK_FIX = Correzione Vecchia Perdita di Luce
 option.CAVE_DETECTION = Rilevamento Grotte
     value.CAVE_DETECTION.0 = ATTIVO

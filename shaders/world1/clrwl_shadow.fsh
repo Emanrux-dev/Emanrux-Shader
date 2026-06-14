@@ -1,4 +1,5 @@
 #version 430 compatibility
+#define END_SHADER
 
 
 #include "/lib/settings.glsl"
@@ -35,7 +36,9 @@ void main() {
 		// gl_FragData[0] = vec4(texture(tex,texcoord.xy).rgb * color.rgb,  textureLod(tex, texcoord.xy, 0).a);
 
 		#ifdef Stochastic_Transparent_Shadows
-			if(gl_FragData[0].a < blueNoise()) { discard; return;}
+			#ifndef END_SHADER
+				if(gl_FragData[0].a < blueNoise()) { discard; return;}
+			#endif
 		#endif
 	#else
 		gl_FragData[0] = vec4(0.0);

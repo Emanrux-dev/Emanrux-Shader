@@ -51,6 +51,7 @@ in DATA {
 
 uniform int renderStage;
 uniform int isEyeInWater;
+uniform float is_soul_burning;
 uniform vec3 sunPosition;
 
 uniform sampler2D gtexture;
@@ -468,34 +469,37 @@ void main() {
 	///////////////////////// BLOCKLIGHT LIGHTING OR LPV LIGHTING OR FLOODFILL COLORED LIGHTING
 	vec2 lightmap = clamp(lmtexcoord.zw,0.0,0.97);
 
-	#ifdef FIRE_COLOR_CORRECTION
+	#if defined FIRE_COLOR_CORRECTION
     #if defined IS_LPV_ENABLED || defined LPV_ENABLED
         vec3 rawTexRGB = TEXTURE.rgb / max(color.rgb, vec3(0.0001));
         vec3 fireHSV = RgbToHsv(rawTexRGB);
-        if (fireHSV.y > 0.25 && fireHSV.z > 0.35 && fireHSV.x < 0.22 && fireHSV.x >= 0.0) {
-            
-            // Posición del ojo para detectar soul fire donde está el jugador
-            vec3 _lpvPos = GetLpvPosition(vec3(0.0));
-            
-            vec3 lpvCol = SampleLpvLinear(_lpvPos).rgb;
-            bool isBlueLight = lpvCol.b > max(lpvCol.r, lpvCol.g) * 1.01 && lpvCol.b > 0.0004;
+        vec3 tintedFireHSV = RgbToHsv(TEXTURE.rgb);
+        bool rawFire = fireHSV.y > 0.25 && fireHSV.z > 0.35 && fireHSV.x < 0.22 && fireHSV.x >= 0.0;
+        bool tintedFire = tintedFireHSV.y > 0.25 && tintedFireHSV.z > 0.35 && tintedFireHSV.x < 0.22 && tintedFireHSV.x >= 0.0;
+        if (rawFire || tintedFire) {
+            bool soulBurning = is_soul_burning > 0.01;
 
             bool soulFireFound = false;
-            if (!isBlueLight) {
-                ivec3 vPosBase = ivec3(floor(_lpvPos));
-                for(int x = -2; x <= 2 && !soulFireFound; x++) {
-                    for(int z = -2; z <= 2 && !soulFireFound; z++) {
-                        for(int y = -2; y <= 2 && !soulFireFound; y++) {
-                            uint b = imageLoad(imgVoxelMask, vPosBase + ivec3(x,y,z)).r;
-                            if (b == 244u || b == 245u || b == 246u) soulFireFound = true;
-                        }
-                    }
-                }
-            }
+			#if SOUL_PRESENCE_BLUE_PIXEL_TINT == 1
+				soulBurning = soulBurning || nearSoulBlockSSBO == 1;
+				if (!soulBurning) {
+					vec3 _lpvPos = GetLpvPosition(vec3(0.0));
+					ivec3 vPosBase = ivec3(floor(_lpvPos));
+					for(int x = -2; x <= 2 && !soulFireFound; x++) {
+						for(int z = -2; z <= 2 && !soulFireFound; z++) {
+							for(int y = -2; y <= 2 && !soulFireFound; y++) {
+								uint b = imageLoad(imgVoxelMask, vPosBase + ivec3(x,y,z)).r;
+								if (b == 244u || b == 245u || b == 246u) soulFireFound = true;
+							}
+						}
+					}
+				}
+			#endif
             
-            if (soulFireFound || isBlueLight) {
-                const vec3 SOUL_FIRE_COLOR = vec3(0.3, 0.75, 1.0);
-                TEXTURE.rgb = sqrt(SOUL_FIRE_COLOR * (fireHSV.z * 0.9 + 0.1));
+            if (soulBurning || soulFireFound) {
+                const vec3 SOUL_FIRE_COLOR = vec3(0.35, 0.95, 1.0);
+                float fireValue = max(fireHSV.z, tintedFireHSV.z);
+                TEXTURE.rgb = sqrt(SOUL_FIRE_COLOR * (fireValue * 0.9 + 0.1));
                 Albedo = toLinear(TEXTURE.rgb);
                 lightmap.x *= 0.05;
             }
@@ -633,7 +637,16 @@ void main() {
 			const vec3 lpvPos = vec3(0.0);
 		#endif
 
-		Indirect_lighting += doBlockLightLighting( vec3(TORCH_R,TORCH_G,TORCH_B), lightmap.x, feetPlayerPos, lpvPos);
+		vec3 blockLightColor = doBlockLightLighting( vec3(TORCH_R,TORCH_G,TORCH_B), lightmap.x, feetPlayerPos, lpvPos);
+		Indirect_lighting += blockLightColor;
+		float eyeBlockLight = clamp(float(eyeBrightnessSmooth.x) / 240.0, 0.0, 1.0);
+		float eyeSkyLight = clamp(float(eyeBrightnessSmooth.y) / 240.0, 0.0, 1.0);
+		float particleBlockLight = max(lightmap.x, eyeBlockLight * 0.35);
+		float particleSkyLight = max(lightmap.y, eyeSkyLight * 0.12);
+		vec3 particleLightFloor = MinimumLightColor * (0.012 + particleSkyLight * 0.055 + nightVision * 0.03);
+		particleLightFloor += Torch_Color * (pow(particleBlockLight, 1.25) * 0.48);
+		particleLightFloor += blockLightColor * 0.6;
+		Indirect_lighting = max(Indirect_lighting, particleLightFloor);
 
 		#ifdef LINES
 			gl_FragData[0].rgb = (Indirect_lighting + Direct_lighting) * toLinear(color.rgb);
@@ -675,7 +688,11 @@ void main() {
 			}
 		#endif
 
-		gl_FragData[0].rgb *= 0.1;	
+		#ifndef LINES
+			gl_FragData[0].rgb = max(gl_FragData[0].rgb * 0.1, particleLightFloor * Albedo * 0.75);
+		#else
+			gl_FragData[0].rgb *= 0.1;
+		#endif
 
 		#if defined DISTANT_HORIZONS && DH_CHUNK_FADING > 0
 				float ditherFade = smoothstep(0.98*far, 1.0*far, viewDist);

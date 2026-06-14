@@ -10,9 +10,9 @@ I value optimization that does not compromise visual fidelity, so my goal has al
 This shader is currently under testing and is not a final version by any means. There are still bugs to fix and more features to add, so stay tuned for future updates and improvements.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Main changes:
+All Eclipse features, plus:
 
-- Dynamic Rain on Glass: Raindrops that slide down realistically.
+- Dynamic Rain on Glass (light/realistic): Raindrops that slide down realistically.
 
 - Frosted Glass: Frost effects on windows in snowy biomes.
 
@@ -32,11 +32,21 @@ Main changes:
 
 - Souls appear at the edge of the screen when near soul light (Emanrux Config: "Soul Presence")
 
-- Fixed blue fire color correction when a mob burns near soul fire.
+- Fixed blue fire color correction when a mob burns near soul fire. Soul light takes over the player's skin and some mobs, tinting pixels blue.
 
-- Soul light takes over the player's skin and some mobs, tinting pixels blue.
+- Parallax occlusion mapping (POM) for many more blocks and "3D" minerals with POM enabled. (disabled by default for performance reasons) 
 
-- Parallax occlusion mapping (POM) for many more blocks (disabled by default for performance reasons)
+- 3 selectable Lens Flare types when looking at the sun.
+
+- 5 new detailed planets, toggleable, for both the Overworld and the End.
+
+- Complete End dimension overhaul: new lighting, shadows, and colors based on the light source. A moving black hole has been added, with a screen shake and zoom-in effect when looking directly at it.
+
+- Spiral vortex in the void of the End.
+
+- Meteors in the night sky and the End.
+
+- Wandering dragons fly through the End, adding atmosphere and life to its sky.
 
 - Cloud Optimization: Reduced excessive cloud layers for better light passage and effects.
 

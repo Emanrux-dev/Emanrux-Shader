@@ -10,9 +10,9 @@ I value optimization that does not compromise visual fidelity, so my goal has al
 This shader is currently under testing and is not a final version by any means. There are still bugs to fix and more features to add, so stay tuned for future updates and improvements.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Main changes:
+All Eclipse features, plus:
 
-- Dynamic Rain on Glass: Raindrops that slide down realistically.
+- Dynamic Rain on Glass (light/realistic): Raindrops that slide down realistically.
 
 - Frosted Glass: Frost effects on windows in snowy biomes.
 
@@ -32,11 +32,21 @@ Main changes:
 
 - Souls appear at the edge of the screen when near soul light (Emanrux Config: "Soul Presence")
 
-- Fixed blue fire color correction when a mob burns near soul fire.
+- Fixed blue fire color correction when a mob burns near soul fire. Soul light takes over the player's skin and some mobs, tinting pixels blue.
 
-- Soul light takes over the player's skin and some mobs, tinting pixels blue.
+- Parallax occlusion mapping (POM) for many more blocks and "3D" minerals with POM enabled. (disabled by default for performance reasons) 
 
-- Parallax occlusion mapping (POM) for many more blocks (disabled by default for performance reasons)
+- 3 selectable Lens Flare types when looking at the sun.
+
+- 5 new detailed planets, toggleable, for both the Overworld and the End.
+
+- Complete End dimension overhaul: new lighting, shadows, and colors based on the light source. A moving black hole has been added, with a screen shake and zoom-in effect when looking directly at it.
+
+- Spiral vortex in the void of the End.
+
+- Meteors in the night sky and the End.
+
+- Wandering dragons fly through the End, adding atmosphere and life to its sky.
 
 - Cloud Optimization: Reduced excessive cloud layers for better light passage and effects.
 
@@ -55,12 +65,15 @@ Main changes:
 <img width="800" alt="5" src="https://github.com/user-attachments/assets/aa7f6624-02d3-4ebc-bf59-eada6f3a1b60" />
 <img width="800" alt="4" src="https://github.com/user-attachments/assets/80d6a09f-f6bd-46c3-a5c8-958bb15498a0" />
 <img width="800" alt="8" src="https://github.com/user-attachments/assets/0e1e8783-2ee9-413c-a5dd-9ac94c87c470" />
-<img width="800" alt="9" src="https://github.com/user-attachments/assets/d6e6ecc6-36ff-4a6e-ac1a-59cec8e1e66a" />
+<img width="800" alt="9" src="https://github.com/user-attachments/assets/e0ead02e-fdcf-4f6b-9c28-9adb0c4f4046" />
 <img width="800" alt="10" src="https://github.com/user-attachments/assets/9dca7a17-f08e-4de8-aef8-6a18c0ddf75f" />
 <img width="800" alt="442" src="https://github.com/user-attachments/assets/f6ba9e45-0305-4d60-9bbd-a7b98ed7ba02" />
 <img width="800" alt="225" src="https://github.com/user-attachments/assets/dc648f1f-2912-4e96-bf82-3963a9d1808d" />
-<img width="800" alt="118" src="https://github.com/user-attachments/assets/b0a1b864-96b9-45b2-91e3-727ab721ce5d" />
+<img width="800" alt="Rain" src="https://github.com/user-attachments/assets/d2acbc66-883a-4855-9dd7-d8ca2a04300a" />
+<img width="800" alt="26" src="https://github.com/user-attachments/assets/f662468f-a9a1-41aa-889b-48612ff5425f" />
 
+<img width="800" alt="27" src="https://github.com/user-attachments/assets/f3d0621f-72e3-479a-8968-f11135e6be4a" />
+<img width="800" alt="118" src="https://github.com/user-attachments/assets/b0a1b864-96b9-45b2-91e3-727ab721ce5d" />
 <img width="800" alt="11" src="https://github.com/user-attachments/assets/85a6fba0-db78-4897-83a9-eae2ebc248b1" />
 
 SPECIAL THANKS:

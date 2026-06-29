@@ -202,7 +202,7 @@ void main() {
 	vec3 worldpos = mat3(gbufferModelViewInverse) * position + gbufferModelViewInverse[3].xyz;
 
 	#if defined IRIS_FEATURE_FADE_VARIABLE && VANILLA_CHUNK_FADING > 1 && !defined HAND && !defined ENTITIES && !defined BLOCKENTITIES
-		bool isGlass = mc_Entity.x >= 301 && mc_Entity.x <= 338 || mc_Entity.x == 516.0;
+		isGlass = mc_Entity.x >= 301 && mc_Entity.x <= 338 || mc_Entity.x == 516.0;
 		if (!isGlass) worldpos.y += -45.0*(1.0-chunkFade)*(1.0-caveDetection)*smoothstep(25.0, far, length(worldpos));
 	#endif
 

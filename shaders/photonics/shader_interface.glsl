@@ -3,6 +3,7 @@
 
 uniform sampler2D colortex1;// albedo, detailed_normal
 uniform sampler2D colortex8;// flat_normal
+uniform sampler2D depthtex0;
 
 uniform vec3 sunPosition;
 uniform vec3 moonPosition;

@@ -1,7 +1,8 @@
 Emanrux Shader - An Edition of Eclipse
+------------------------------------------
 Status: development paused.
 I currently don't have the hardware to keep developing and testing the shader. This is temporary and I plan to resume. Suggestions and bug reports are still welcome in Issues; I'll go through them when development restarts.
-------------------------------------------
+
 Eclipse is already an excellent shader; the work of Chocapic13, modified by Xonk and then further modified by Merlin1809 is incredible. 
 I added and adjusted features that I always wanted to have in a shader.
 

@@ -1,5 +1,6 @@
 Emanrux Shader - An Edition of Eclipse
 ------------------------------------------
+[!NOTE]
 Status: development paused.
 I currently don't have the hardware to keep developing and testing the shader. This is temporary and I plan to resume. Suggestions and bug reports are still welcome in Issues; I'll go through them when development restarts.
 
